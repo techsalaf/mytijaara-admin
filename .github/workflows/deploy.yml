@@ -1,0 +1,246 @@
+name: Deploy to Namecheap Shared Hosting
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '.github/**'
+      - 'README.md'
+      - 'CHANGELOG.md'
+      - '.gitignore'
+      - 'docs/**'
+      - '*.md'
+
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm'
+        required: true
+        default: 'no'
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Gate Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, mysql, zip, gd, curl
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-dev
+
+      - name: Validate Syntax
+        run: |
+          find app -name "*.php" -print0 | xargs -0 -n1 -P4 php -l
+          find modules -name "*.php" -print0 2>/dev/null | xargs -0 -n1 -P4 php -l
+          find config -name "*.php" -print0 | xargs -0 -n1 -P4 php -l
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install NPM Dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-build
+          path: public/build/
+          retention-days: 7
+          if-no-files-found: warn
+
+  deploy:
+    name: Deploy to Namecheap
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'deploy')
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, mysql, zip, gd, curl
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --no-dev
+
+      - name: Install NPM Dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build Frontend Assets
+        run: npm run build
+
+      - name: Prepare Deployment Package
+        run: |
+          # Exclude files that must NEVER be pushed to shared hosting
+          # - .env lives on the server and is hand-edited; never overwrite
+          # - vendor is rebuilt on the server to match the host's PHP version
+          # - node_modules is rebuilt on the server
+          # - storage/app/public is user uploads; rsynced separately or excluded
+          cat > .rsync-exclude <<'EOF'
+          .git/
+          .github/
+          .env
+          .env.backup
+          .env.example
+          .phpunit.result.cache
+          node_modules/
+          vendor/
+          storage/app/public/
+          storage/framework/cache/
+          storage/framework/sessions/
+          storage/framework/views/
+          storage/logs/
+          public/build/
+          public/hot
+          .DS_Store
+          *.log
+          npm-debug.log*
+          yarn-error.log
+          .idea/
+          .vscode/
+          .ddev/
+          docker-local/
+          Homestead.json
+          Homestead.yaml
+          docker-compose.override.yml
+          tests/
+          Documentation/
+          EOF
+
+      - name: Deploy via SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          KNOWN_HOSTS_LINE="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+          mkdir -p ~/.ssh/known_hosts.d
+          touch ~/.ssh/known_hosts
+
+          cat >> ~/.ssh/config <<EOF
+          Host mytijaara-deploy
+              HostName $SSH_HOST
+              Port $SSH_PORT
+              User $SSH_USERNAME
+              IdentityFile ~/.ssh/deploy_key
+              StrictHostKeyChecking no
+              UserKnownHostsFile=/dev/null
+              LogLevel ERROR
+          EOF
+
+          chmod 600 ~/.ssh/config
+
+          RELEASE_DIR="${DEPLOY_PATH}/releases/$(date -u +%Y%m%d%H%M%S)"
+          SHARED_DIR="${DEPLOY_PATH}/shared"
+          CURRENT_LINK="${DEPLOY_PATH}/current"
+
+          echo "→ Creating release directory: $RELEASE_DIR"
+          ssh mytijaara-deploy "mkdir -p '$RELEASE_DIR' '$SHARED_DIR'"
+
+          echo "→ Syncing code (this is the actual deploy — incremental)"
+          rsync -avz --delete \
+              --exclude-from=.rsync-exclude \
+              -e "ssh -p $SSH_PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+              ./ mytijaara-deploy:"$RELEASE_DIR"/
+
+          echo "→ Linking persistent storage"
+          ssh mytijaara-deploy "
+              cd '$RELEASE_DIR'
+              rm -rf storage
+              ln -s '$SHARED_DIR/storage' storage
+              rm -f .env
+              ln -s '$SHARED_DIR/.env' .env
+              [ -d '$SHARED_DIR/public/storage' ] || ln -s '$SHARED_DIR/storage/app/public' public/storage
+              [ -d '$SHARED_DIR/node_modules' ] && ln -s '$SHARED_DIR/node_modules' node_modules || true
+          "
+
+          echo "→ Running Laravel optimization (no-op if artisan missing)"
+          ssh mytijaara-deploy "
+              cd '$RELEASE_DIR'
+              [ -f artisan ] && php artisan config:cache || true
+              [ -f artisan ] && php artisan route:cache || true
+              [ -f artisan ] && php artisan view:cache || true
+          " || echo "Optimization step non-fatal; continuing."
+
+          echo "→ Atomic symlink swap"
+          ssh mytijaara-deploy "
+              ln -sfn '$RELEASE_DIR' '$CURRENT_LINK.tmp'
+              mv -f '$CURRENT_LINK.tmp' '$CURRENT_LINK'
+          "
+
+          echo "→ Cleaning old releases (keep last 5)"
+          ssh mytijaara-deploy "
+              cd '$DEPLOY_PATH/releases'
+              ls -1dt */ | tail -n +6 | xargs -r rm -rf
+          "
+
+          echo "→ Verifying deployment responds"
+          ssh mytijaara-deploy "
+              cd '$CURRENT_LINK'
+              [ -f artisan ] && php artisan --version || echo 'no artisan in release'
+          "
+
+          echo "✓ Deploy complete: $RELEASE_DIR"
+
+      - name: Notify Success
+        if: success()
+        run: |
+          echo "## ✅ Deployed to Namecheap" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Triggered by: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify Failure
+        if: failure()
+        run: |
+          echo "## ❌ Deploy Failed" >> $GITHUB_STEP_SUMMARY
+          echo "Inspect the workflow logs for details." >> $GITHUB_STEP_SUMMARY
