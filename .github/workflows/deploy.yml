@@ -131,7 +131,6 @@ jobs:
           storage/framework/sessions/
           storage/framework/views/
           storage/logs/
-          public/build/
           public/hot
           .DS_Store
           *.log
