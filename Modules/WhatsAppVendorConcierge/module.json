@@ -1,0 +1,11 @@
+{
+    "name": "WhatsAppVendorConcierge",
+    "alias": "whatsapp-vendor-concierge",
+    "description": "WhatsApp Business Platform integration for vendor onboarding and AI concierge",
+    "keywords": ["whatsapp", "vendor", "onboarding", "ai", "concierge"],
+    "priority": 10,
+    "providers": [
+        "Modules\\WhatsAppVendorConcierge\\app\\Providers\\WhatsAppVendorConciergeServiceProvider"
+    ],
+    "files": []
+}
