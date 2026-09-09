@@ -80,7 +80,7 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'deploy')
     environment:
       name: production
-      url: ${{ secrets.PRODUCTION_URL }}
+      url: https://dashboard.mytijaara.com
 
     steps:
       - name: Checkout
