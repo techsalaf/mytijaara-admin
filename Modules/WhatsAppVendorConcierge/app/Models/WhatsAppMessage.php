@@ -69,6 +69,12 @@ class WhatsAppMessage extends Model
             $mediaId = $message[$type]['id'] ?? null;
         }
 
+        // Idempotency: check if message already exists
+        $existing = self::where('whatsapp_message_id', $message['id'])->first();
+        if ($existing) {
+            return $existing;
+        }
+
         return self::create([
             'conversation_id' => $conversationId,
             'whatsapp_message_id' => $message['id'],

@@ -37,6 +37,28 @@ class WhatsAppGateway
     }
 
     /**
+     * Validate webhook signature from incoming request.
+     */
+    public function validateWebhookSignature(\Illuminate\Http\Request $request): bool
+    {
+        $signature = $request->header(config('whatsapp-vendor-concierge.webhook.signature_header', 'X-Hub-Signature-256'));
+        $appSecret = config('whatsapp-vendor-concierge.api.app_secret');
+
+        if (!$signature || !$appSecret) {
+            return false;
+        }
+
+        if (!str_starts_with($signature, 'sha256=')) {
+            return false;
+        }
+
+        $expectedHash = hash_hmac('sha256', $request->getContent(), $appSecret);
+        $providedHash = substr($signature, 7);
+
+        return hash_equals($expectedHash, $providedHash);
+    }
+
+    /**
      * Send a text message
      */
     public function sendTextMessage(string $to, string $body, ?string $previewUrl = null): array
