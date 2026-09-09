@@ -17,8 +17,6 @@ use App\Models\Zone;
 
 class WhatsAppVendorConciergeTest extends TestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();
