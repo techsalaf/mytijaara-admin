@@ -21,9 +21,10 @@ class WebhookController extends \App\Http\Controllers\Controller
      */
     public function verify(Request $request): JsonResponse
     {
-        $mode = $request->query('hub_mode');
-        $token = $request->query('hub_verify_token');
-        $challenge = $request->query('hub_challenge');
+        // Meta sends parameters with dots: hub.mode, hub.verify_token, hub.challenge
+        $mode = $request->query('hub.mode');
+        $token = $request->query('hub.verify_token');
+        $challenge = $request->query('hub.challenge');
 
         $expectedToken = config('whatsapp-vendor-concierge.webhook.verify_token');
 
