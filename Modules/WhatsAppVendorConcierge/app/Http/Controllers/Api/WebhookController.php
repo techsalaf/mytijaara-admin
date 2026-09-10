@@ -19,7 +19,7 @@ class WebhookController extends \App\Http\Controllers\Controller
     /**
      * GET /webhooks/whatsapp - Meta webhook verification
      */
-    public function verify(Request $request): JsonResponse
+    public function verify(Request $request)
     {
         // PHP converts dots to underscores in query params: hub.mode -> hub_mode, but let's check both
         $mode = $request->query('hub_mode', $request->query('hub.mode'));
