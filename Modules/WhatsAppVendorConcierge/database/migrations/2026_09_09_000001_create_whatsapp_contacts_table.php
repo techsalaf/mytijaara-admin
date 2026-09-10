@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('whatsapp_contacts', function (Blueprint $table) {
             $table->id();
-            $table->string('whatsapp_id')->unique()->comment('Meta WhatsApp user ID (wa_id)');
-            $table->string('phone_number')->unique()->comment('E.164 format phone number');
+            $table->string('whatsapp_id', 191)->unique()->comment('Meta WhatsApp user ID (wa_id)');
+            $table->string('phone_number', 191)->unique()->comment('E.164 format phone number');
             $table->string('display_name')->nullable()->comment('WhatsApp profile name');
             $table->string('profile_picture_url')->nullable();
             $table->unsignedBigInteger('vendor_id')->nullable()->comment('Linked Vendor (if registered)');

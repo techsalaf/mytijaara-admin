@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('whatsapp_messages', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('conversation_id')->index();
-            $table->string('whatsapp_message_id')->unique()->comment('Meta message ID for idempotency');
+            $table->string('whatsapp_message_id', 191)->unique()->comment('Meta message ID for idempotency');
             $table->enum('direction', ['inbound', 'outbound']);
             $table->enum('type', [
                 'text',

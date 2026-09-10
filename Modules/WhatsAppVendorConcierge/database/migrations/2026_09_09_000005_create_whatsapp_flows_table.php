@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('whatsapp_flows', function (Blueprint $table) {
             $table->id();
-            $table->string('flow_id')->unique()->comment('Meta Flow ID');
+            $table->string('flow_id', 191)->unique()->comment('Meta Flow ID');
             $table->string('name');
             $table->string('version')->default('1.0');
             $table->json('schema')->nullable()->comment('Flow JSON schema');
