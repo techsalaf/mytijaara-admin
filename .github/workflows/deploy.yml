@@ -114,7 +114,6 @@ jobs:
         run: |
           # Exclude files that must NEVER be pushed to shared hosting
           # - .env lives on the server and is hand-edited; never overwrite
-          # - vendor is rebuilt on the server to match the host's PHP version
           # - node_modules is rebuilt on the server
           # - storage/app/public is user uploads; rsynced separately or excluded
           cat > .rsync-exclude <<'EOF'
@@ -125,7 +124,6 @@ jobs:
           .env.example
           .phpunit.result.cache
           node_modules/
-          vendor/
           storage/app/public/
           storage/framework/cache/
           storage/framework/sessions/
@@ -193,6 +191,12 @@ jobs:
 
           echo "→ Linking persistent storage"
           ssh mytijaara-deploy "
+              mkdir -p '$SHARED_DIR/storage/app/public' \
+                '$SHARED_DIR/storage/framework/cache/data' \
+                '$SHARED_DIR/storage/framework/sessions' \
+                '$SHARED_DIR/storage/framework/views' \
+                '$SHARED_DIR/storage/logs'
+              chmod -R ug+rwX '$SHARED_DIR/storage'
               cd '$RELEASE_DIR'
               rm -rf storage
               ln -s '$SHARED_DIR/storage' storage
