@@ -21,10 +21,10 @@ class WebhookController extends \App\Http\Controllers\Controller
      */
     public function verify(Request $request): JsonResponse
     {
-        // PHP converts dots to underscores in query params: hub.mode -> hub_mode
-        $mode = $request->query('hub_mode');
-        $token = $request->query('hub_verify_token');
-        $challenge = $request->query('hub_challenge');
+        // PHP converts dots to underscores in query params: hub.mode -> hub_mode, but let's check both
+        $mode = $request->query('hub_mode', $request->query('hub.mode'));
+        $token = $request->query('hub_verify_token', $request->query('hub.verify_token'));
+        $challenge = $request->query('hub_challenge', $request->query('hub.challenge'));
 
         $expectedToken = config('whatsapp-vendor-concierge.webhook.verify_token');
 
@@ -32,6 +32,8 @@ class WebhookController extends \App\Http\Controllers\Controller
             'mode' => $mode,
             'token_provided' => $token !== null,
             'token_match' => $token === $expectedToken,
+            'expected_token_length' => $expectedToken ? strlen($expectedToken) : 0,
+            'provided_token_length' => $token ? strlen($token) : 0,
         ]);
 
         if ($mode === 'subscribe' && $token === $expectedToken) {
@@ -42,7 +44,7 @@ class WebhookController extends \App\Http\Controllers\Controller
 
         Log::warning('WhatsApp webhook verification failed', [
             'mode' => $mode,
-            'expected_token' => $expectedToken !== null,
+            'expected_token_matches' => $token === $expectedToken,
         ]);
 
         return response()->json(['error' => 'Forbidden'], 403);
