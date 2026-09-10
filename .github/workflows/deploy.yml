@@ -4,7 +4,6 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - '.github/**'
       - 'README.md'
       - 'CHANGELOG.md'
       - '.gitignore'
@@ -17,6 +16,11 @@ on:
         description: 'Type "deploy" to confirm'
         required: true
         default: 'no'
+      run_seed:
+        description: 'Run php artisan db:seed --force'
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: production-deploy
@@ -110,12 +114,28 @@ jobs:
       - name: Build Frontend Assets
         run: npm run build
 
+      - name: Detect Database Migrations
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            BEFORE="$(git rev-parse HEAD^ 2>/dev/null || true)"
+          fi
+
+          if [ -n "$BEFORE" ] && git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -Eq '(^|/)(database/migrations|Modules/[^/]+/database/migrations)/'; then
+            echo "migrations_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "migrations_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Prepare Deployment Package
         run: |
           # Exclude files that must NEVER be pushed to shared hosting
-          # - .env lives on the server and is hand-edited; never overwrite
+          # - .env and storage live on the server and are hand-managed; never overwrite
           # - node_modules is rebuilt on the server
-          # - storage/app/public is user uploads; rsynced separately or excluded
+          # - runtime storage contains logs, sessions, cache, and user uploads
           cat > .rsync-exclude <<'EOF'
           .git/
           .github/
@@ -124,11 +144,8 @@ jobs:
           .env.example
           .phpunit.result.cache
           node_modules/
-          storage/app/public/
-          storage/framework/cache/
-          storage/framework/sessions/
-          storage/framework/views/
-          storage/logs/
+          storage/
+          public/storage/
           public/hot
           .DS_Store
           *.log
@@ -152,6 +169,8 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          MIGRATIONS_CHANGED: ${{ steps.changes.outputs.migrations_changed }}
+          RUN_SEED: ${{ github.event.inputs.run_seed || 'false' }}
         run: |
           set -euo pipefail
 
@@ -176,63 +195,40 @@ jobs:
 
           chmod 600 ~/.ssh/config
 
-          RELEASE_DIR="${DEPLOY_PATH}/releases/$(date -u +%Y%m%d%H%M%S)"
-          SHARED_DIR="${DEPLOY_PATH}/shared"
-          CURRENT_LINK="${DEPLOY_PATH}/current"
-
-          echo "→ Creating release directory: $RELEASE_DIR"
-          ssh mytijaara-deploy "mkdir -p '$RELEASE_DIR' '$SHARED_DIR'"
-
-          echo "→ Syncing code (this is the actual deploy — incremental)"
-          rsync -avz --delete \
+          echo "→ Syncing changed files to $DEPLOY_PATH"
+          rsync -az --itemize-changes \
               --exclude-from=.rsync-exclude \
               -e "ssh -p $SSH_PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-              ./ mytijaara-deploy:"$RELEASE_DIR"/
+              ./ mytijaara-deploy:"$DEPLOY_PATH"/
 
-          echo "→ Linking persistent storage"
+          echo "→ Ensuring Laravel runtime directories"
           ssh mytijaara-deploy "
-              mkdir -p '$SHARED_DIR/storage/app/public' \
-                '$SHARED_DIR/storage/framework/cache/data' \
-                '$SHARED_DIR/storage/framework/sessions' \
-                '$SHARED_DIR/storage/framework/views' \
-                '$SHARED_DIR/storage/logs'
-              chmod -R ug+rwX '$SHARED_DIR/storage'
-              cd '$RELEASE_DIR'
-              rm -rf storage
-              ln -s '$SHARED_DIR/storage' storage
-              rm -f .env
-              ln -s '$SHARED_DIR/.env' .env
-              [ -d '$SHARED_DIR/public/storage' ] || ln -s '$SHARED_DIR/storage/app/public' public/storage
-              [ -d '$SHARED_DIR/node_modules' ] && ln -s '$SHARED_DIR/node_modules' node_modules || true
+              cd '$DEPLOY_PATH'
+              mkdir -p storage/app/public storage/framework/cache/data \
+              storage/framework/sessions storage/framework/views storage/logs
+              chmod -R ug+rwX storage bootstrap/cache
+              [ -e public/storage ] || ln -s ../storage/app/public public/storage
           "
 
-          echo "→ Running Laravel optimization (no-op if artisan missing)"
-          ssh mytijaara-deploy "
-              cd '$RELEASE_DIR'
-              [ -f artisan ] && php artisan config:cache || true
-              [ -f artisan ] && php artisan route:cache || true
-              [ -f artisan ] && php artisan view:cache || true
-          " || echo "Optimization step non-fatal; continuing."
+          if [ "$MIGRATIONS_CHANGED" = "true" ]; then
+            echo "→ Database migrations changed; running migrate --force"
+            ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan migrate --force"
+          else
+            echo "→ No database migrations changed; skipping migrations"
+          fi
 
-          echo "→ Atomic symlink swap"
-          ssh mytijaara-deploy "
-              ln -sfn '$RELEASE_DIR' '$CURRENT_LINK.tmp'
-              mv -f '$CURRENT_LINK.tmp' '$CURRENT_LINK'
-          "
-
-          echo "→ Cleaning old releases (keep last 5)"
-          ssh mytijaara-deploy "
-              cd '$DEPLOY_PATH/releases'
-              ls -1dt */ | tail -n +6 | xargs -r rm -rf
-          "
+          if [ "$RUN_SEED" = "true" ]; then
+            echo "→ Manual seed requested; running db:seed --force"
+            ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan db:seed --force"
+          fi
 
           echo "→ Verifying deployment responds"
           ssh mytijaara-deploy "
-              cd '$CURRENT_LINK'
-              [ -f artisan ] && php artisan --version || echo 'no artisan in release'
+              cd '$DEPLOY_PATH'
+              php artisan --version
           "
 
-          echo "✓ Deploy complete: $RELEASE_DIR"
+          echo "✓ Deploy complete: $DEPLOY_PATH"
 
       - name: Notify Success
         if: success()
