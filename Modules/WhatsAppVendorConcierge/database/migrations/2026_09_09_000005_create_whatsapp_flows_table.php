@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('whatsapp_flows', function (Blueprint $table) {
             $table->id();
             $table->string('flow_id', 191)->unique()->comment('Meta Flow ID');
-            $table->string('name');
-            $table->string('version')->default('1.0');
+            $table->string('name', 191);
+            $table->string('version', 20)->default('1.0');
             $table->json('schema')->nullable()->comment('Flow JSON schema');
             $table->json('screens')->nullable()->comment('Screen definitions');
             $table->enum('status', ['draft', 'published', 'deprecated'])->default('draft');

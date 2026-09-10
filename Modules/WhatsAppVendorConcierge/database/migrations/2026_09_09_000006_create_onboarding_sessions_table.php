@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('contact_id')->index();
             $table->unsignedBigInteger('vendor_id')->nullable()->index();
             $table->unsignedBigInteger('store_id')->nullable()->index();
-            $table->string('flow_version')->default('1.0');
+            $table->string('flow_version', 20)->default('1.0');
             $table->enum('status', [
                 'started',
                 'business_basics',
@@ -37,8 +37,8 @@ return new class extends Migration
             $table->timestamp('last_activity_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('expires_at')->nullable();
-            $table->string('source')->default('whatsapp')->comment('whatsapp, web, qr_code, referral');
-            $table->string('attribution_code')->nullable()->comment('Field agent/referral code');
+            $table->string('source', 50)->default('whatsapp')->comment('whatsapp, web, qr_code, referral');
+            $table->string('attribution_code', 100)->nullable()->comment('Field agent/referral code');
             $table->timestamps();
 
             $table->foreign('contact_id')->references('id')->on('whatsapp_contacts')->onDelete('cascade');
