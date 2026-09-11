@@ -21,11 +21,10 @@ class ProcessWhatsAppMedia implements ShouldQueue
     public int $timeout = 60;
 
     public function __construct(
-        public WhatsAppMedia $media,
-        public WhatsAppGateway $gateway
+        public WhatsAppMedia $media
     ) {}
 
-    public function handle(): void
+    public function handle(WhatsAppGateway $gateway): void
     {
         try {
             $this->media->refresh();
@@ -39,7 +38,7 @@ class ProcessWhatsAppMedia implements ShouldQueue
             }
 
             // Get media URL from Meta
-            $urlResponse = $this->gateway->getMediaUrl($this->media->whatsapp_media_id);
+            $urlResponse = $gateway->getMediaUrl($this->media->whatsapp_media_id);
 
             if (isset($urlResponse['error'])) {
                 $this->media->markFailed('Failed to get media URL: ' . $urlResponse['error']);
@@ -54,7 +53,7 @@ class ProcessWhatsAppMedia implements ShouldQueue
             }
 
             // Download media
-            $filePath = $this->gateway->downloadMedia($mediaUrl, $this->media->whatsapp_media_id);
+            $filePath = $gateway->downloadMedia($mediaUrl, $this->media->whatsapp_media_id);
 
             if (!$filePath) {
                 $this->media->markFailed('Failed to download media');

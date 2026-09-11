@@ -159,7 +159,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         $message->update(['media_id' => $media->id]);
 
         // Queue media download
-        ProcessWhatsAppMedia::dispatch($media, $gateway)
+        ProcessWhatsAppMedia::dispatch($media)
             ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_media'));
     }
 

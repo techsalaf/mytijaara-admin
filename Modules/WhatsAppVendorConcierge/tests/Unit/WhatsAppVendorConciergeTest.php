@@ -375,4 +375,22 @@ class WhatsAppVendorConciergeTest extends TestCase
         $this->assertEquals('category_selection', $conversation->current_step);
         $this->assertEquals('category_selection', $session->current_step);
     }
+
+    /** @test */
+    public function it_can_serialize_process_whatsapp_media_job()
+    {
+        $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::create([
+            'whatsapp_media_id' => 'media_test_' . uniqid(),
+            'mime_type' => 'image/jpeg',
+            'status' => 'pending_download',
+        ]);
+
+        $job = new \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppMedia($media);
+        $serialized = serialize($job);
+        $this->assertNotEmpty($serialized);
+
+        $unserialized = unserialize($serialized);
+        $this->assertInstanceOf(\Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppMedia::class, $unserialized);
+        $this->assertEquals($media->id, $unserialized->media->id);
+    }
 }
