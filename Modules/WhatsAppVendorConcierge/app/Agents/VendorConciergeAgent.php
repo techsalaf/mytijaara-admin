@@ -237,7 +237,7 @@ INSTRUCTIONS;
             "Delivery: " . ($this->store->delivery ? 'Enabled' : 'Disabled'),
             "Takeaway: " . ($this->store->take_away ? 'Enabled' : 'Disabled'),
             "Module: " . ($this->store->module?->module_name ?? $this->store->module?->name ?? 'Unknown'),
-            "Zone: {$this->store->zone?->name ?? 'Unknown'}",
+            "Zone: " . ($this->store->zone?->name ?? 'Unknown'),
         ];
 
         if ($this->store->off_day) {
