@@ -236,7 +236,7 @@ INSTRUCTIONS;
             "Active (Open): " . ($this->store->active ? 'Yes 🟢' : 'No 🔴'),
             "Delivery: " . ($this->store->delivery ? 'Enabled' : 'Disabled'),
             "Takeaway: " . ($this->store->take_away ? 'Enabled' : 'Disabled'),
-            "Module: {$this->store->module?->name ?? 'Unknown'}",
+            "Module: " . ($this->store->module?->module_name ?? $this->store->module?->name ?? 'Unknown'),
             "Zone: {$this->store->zone?->name ?? 'Unknown'}",
         ];
 

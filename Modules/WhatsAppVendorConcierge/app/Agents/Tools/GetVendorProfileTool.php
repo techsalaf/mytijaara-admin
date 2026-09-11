@@ -55,7 +55,7 @@ class GetVendorProfileTool extends BaseVendorTool
                 'longitude' => $store->longitude,
                 'status' => $store->status ? 'Approved' : 'Pending',
                 'active' => $store->active,
-                'module' => $store->module?->name,
+                'module' => $store->module?->module_name ?? $store->module?->name,
                 'zone' => $store->zone?->name,
                 'delivery_enabled' => $store->delivery,
                 'takeaway_enabled' => $store->take_away,

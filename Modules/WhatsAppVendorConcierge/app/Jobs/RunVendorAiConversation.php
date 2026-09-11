@@ -81,9 +81,22 @@ class RunVendorAiConversation implements ShouldQueue
                 language: $language,
             );
 
+            // Configure AI provider & model
+            $provider = config('whatsapp-vendor-concierge.ai.provider', 'openai');
+            $model = config('whatsapp-vendor-concierge.ai.model', 'gpt-4o');
+
+            // Fallback: If using OpenAI and no key in config/env, check core business settings
+            if ($provider === 'openai' && empty(config('ai.providers.openai.key'))) {
+                $openAiConfig = \App\CentralLogics\Helpers::get_business_settings('openai_config');
+                if (!empty($openAiConfig['OPENAI_API_KEY'])) {
+                    config(['ai.providers.openai.key' => $openAiConfig['OPENAI_API_KEY']]);
+                }
+            }
+
             // Send to AI and get response
             $response = Ai::message([...$history, new UserMessage($userText)])
-                ->usingProvider(config('whatsapp-vendor-concierge.ai.provider', 'anthropic'))
+                ->usingProvider($provider)
+                ->usingModel($model)
                 ->withPrompt($agent)
                 ->send();
 
