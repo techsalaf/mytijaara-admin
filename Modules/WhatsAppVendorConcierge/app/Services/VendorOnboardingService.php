@@ -289,7 +289,7 @@ class VendorOnboardingService
     {
         // Fetch active categories from database
         $categories = \App\Models\Category::where('status', 1)
-            ->whereNull('parent_id')
+            ->where('parent_id', 0)
             ->orderBy('name')
             ->limit(10)
             ->get(['id', 'name'])
