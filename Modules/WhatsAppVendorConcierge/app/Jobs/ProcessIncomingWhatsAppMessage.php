@@ -158,9 +158,16 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         // Update message with media ID
         $message->update(['media_id' => $media->id]);
 
-        // Queue media download
-        ProcessWhatsAppMedia::dispatch($media)
-            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_media'));
+        // Queue media download safely
+        try {
+            ProcessWhatsAppMedia::dispatch($media)
+                ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_media'));
+        } catch (\Throwable $e) {
+            Log::error('ProcessWhatsAppMedia dispatch failed', [
+                'media_id' => $media->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

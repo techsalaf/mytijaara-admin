@@ -392,5 +392,12 @@ class WhatsAppVendorConciergeTest extends TestCase
         $unserialized = unserialize($serialized);
         $this->assertInstanceOf(\Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppMedia::class, $unserialized);
         $this->assertEquals($media->id, $unserialized->media->id);
+
+        // Also verify legacy 2-argument instantiation serializes cleanly without closures
+        $gateway = new \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway();
+        $legacyJob = new \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppMedia($media, $gateway);
+        $legacySerialized = serialize($legacyJob);
+        $this->assertNotEmpty($legacySerialized);
+        $this->assertInstanceOf(\Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppMedia::class, unserialize($legacySerialized));
     }
 }

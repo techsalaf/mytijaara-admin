@@ -21,8 +21,11 @@ class ProcessWhatsAppMedia implements ShouldQueue
     public int $timeout = 60;
 
     public function __construct(
-        public WhatsAppMedia $media
-    ) {}
+        public WhatsAppMedia $media,
+        mixed $legacyGateway = null
+    ) {
+        // Do not store $legacyGateway to prevent Closure serialization errors
+    }
 
     public function handle(WhatsAppGateway $gateway): void
     {
