@@ -39,6 +39,17 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         VendorOnboardingService $onboardingService,
         ConversationManager $conversationManager
     ): void {
+        $messageId = $this->messageData['id'] ?? null;
+        $lock = null;
+
+        if ($messageId) {
+            $lock = \Illuminate\Support\Facades\Cache::lock('process_wa_msg_' . $messageId, 30);
+            if (!$lock->get()) {
+                Log::info('Duplicate concurrent WhatsApp message locked', ['message_id' => $messageId]);
+                return;
+            }
+        }
+
         try {
             // Check idempotency - already processed?
             $existingMessage = WhatsAppMessage::where('whatsapp_message_id', $this->messageData['id'])

@@ -193,4 +193,186 @@ class WhatsAppVendorConciergeTest extends TestCase
         $this->assertEquals('business_basics', $conversation->current_step);
         $this->assertNotNull($conversation->onboarding_session_id);
     }
+
+    /** @test */
+    public function it_resolves_location_from_whatsapp_location_message()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'location',
+            'content' => [
+                'location' => [
+                    'latitude' => 6.5630418,
+                    'longitude' => 3.3677308,
+                    'name' => 'Anthony Village',
+                    'address' => null,
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'location', null);
+
+        $this->assertEquals(6.5630418, $data['latitude']);
+        $this->assertEquals(3.3677308, $data['longitude']);
+        $this->assertNotEmpty($data['address']);
+    }
+
+    /** @test */
+    public function it_resolves_location_from_google_maps_url()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => [
+                'text' => 'location: https://maps.google.com/?q=6.5630418,3.3677308',
+            ],
+            'raw_text' => 'location: https://maps.google.com/?q=6.5630418,3.3677308',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'location', null);
+
+        $this->assertEquals(6.5630418, $data['latitude']);
+        $this->assertEquals(3.3677308, $data['longitude']);
+        $this->assertNotEmpty($data['address']);
+    }
+
+    /** @test */
+    public function it_resolves_location_from_text_address()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => [
+                'text' => '9A, Wing 1, Abiodun Fasakin Street, Lagos',
+            ],
+            'raw_text' => '9A, Wing 1, Abiodun Fasakin Street, Lagos',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'location', null);
+
+        $this->assertNotNull($data['latitude']);
+        $this->assertNotNull($data['longitude']);
+        $this->assertNotEmpty($data['address']);
+    }
+
+    /** @test */
+    public function it_matches_category_from_text_input()
+    {
+        $category = \App\Models\Category::firstOrCreate(
+            ['name' => 'Demo category', 'parent_id' => 0],
+            ['status' => 1, 'position' => 0]
+        );
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'Demo category'],
+            'raw_text' => 'Demo category',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'category_selection', null);
+
+        $this->assertEquals((string) $category->id, $data['category_id']);
+        $this->assertEquals($category->name, $data['category_name']);
+    }
+
+    /** @test */
+    public function it_extracts_contact_info_with_phone_number()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '+2348012345678',
+        ]);
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'testvendor@example.com'],
+            'raw_text' => 'testvendor@example.com',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'contact_info', $contact);
+
+        $this->assertEquals('testvendor@example.com', $data['email']);
+        $this->assertEquals('+2348012345678', $data['phone']);
+    }
+
+    /** @test */
+    public function it_validates_operating_hours_as_string()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('validateStep');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($service, 'operating_hours', ['schedule' => 'Mon-Sat 9am-6pm, Sun Closed']);
+
+        $this->assertTrue($result['valid']);
+        $this->assertEmpty($result['errors']);
+    }
+
+    /** @test */
+    public function it_synchronizes_session_current_step_on_advance()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'business_basics',
+            'collected_data' => ['business_name' => 'Ronix Essentials'],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'business_basics',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('advanceToNextStep');
+        $method->setAccessible(true);
+
+        $method->invoke($service, $conversation, $contact, $session, $gateway);
+
+        $conversation->refresh();
+        $session->refresh();
+
+        $this->assertEquals('category_selection', $conversation->current_step);
+        $this->assertEquals('category_selection', $session->current_step);
+    }
 }

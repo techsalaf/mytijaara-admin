@@ -40,7 +40,7 @@ class VendorOnboardingService
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
         $step = $conversation->current_step ?? 'welcome';
-        $data = $this->extractStepData($message, $step);
+        $data = $this->extractStepData($message, $step, $contact);
 
         // Validate step data
         $validation = $this->validateStep($step, $data);
@@ -80,39 +80,219 @@ class VendorOnboardingService
     /**
      * Extract data from message based on step.
      */
-    protected function extractStepData(\Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage $message, string $step): array
+    protected function extractStepData(\Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage $message, string $step, ?WhatsAppContact $contact = null): array
     {
-        $content = $message->content;
-        $type = $message->type;
+        $content = $message->content ?? [];
+        $type = $message->type ?? 'text';
+        $rawText = trim((string) ($message->raw_text ?? ($content['text'] ?? '')));
 
         return match ($step) {
             'business_basics' => [
-                'business_name' => $content['text'] ?? null,
-                'business_description' => $content['text'] ?? null,
+                'business_name' => $rawText ?: ($content['text'] ?? null),
+                'business_description' => $rawText ?: ($content['text'] ?? null),
             ],
-            'category_selection' => [
-                'category_id' => $content['interactive']['list_reply']['id'] ??
-                                 $content['interactive']['button_reply']['id'] ?? null,
-                'category_name' => $content['interactive']['list_reply']['title'] ??
-                                  $content['interactive']['button_reply']['title'] ?? null,
-            ],
-            'location' => [
-                'latitude' => $content['location']['latitude'] ?? null,
-                'longitude' => $content['location']['longitude'] ?? null,
-                'address' => $content['location']['address'] ?? null,
-            ],
+            'category_selection' => (function () use ($content, $rawText) {
+                $catId = $content['interactive']['list_reply']['id']
+                    ?? $content['interactive']['button_reply']['id']
+                    ?? null;
+                $catName = $content['interactive']['list_reply']['title']
+                    ?? $content['interactive']['button_reply']['title']
+                    ?? null;
+
+                // If user typed category name or number as text
+                if (!$catId && $rawText !== '') {
+                    $matched = \App\Models\Category::where('status', 1)
+                        ->where(function ($query) use ($rawText) {
+                            $query->where('name', 'LIKE', "%{$rawText}%")
+                                  ->orWhere('id', $rawText);
+                        })
+                        ->first();
+
+                    if ($matched) {
+                        $catId = (string) $matched->id;
+                        $catName = $matched->name;
+                    }
+                }
+
+                return [
+                    'category_id' => $catId,
+                    'category_name' => $catName,
+                ];
+            })(),
+            'location' => $this->resolveLocation($content, $rawText),
             'contact_info' => [
-                'email' => $content['text'] ?? null,
-                'phone' => $content['text'] ?? null,
+                'email' => strtolower(trim($rawText ?: ($content['text'] ?? ''))),
+                'phone' => $contact?->phone_number ?? ($content['text'] ?? null),
             ],
             'operating_hours' => [
-                'schedule' => $content['text'] ?? null, // Will parse structured format
+                'schedule' => $rawText ?: ($content['text'] ?? null),
             ],
             'documents' => [
                 'media_id' => $message->media_id,
             ],
             default => [],
         };
+    }
+
+    /**
+     * Resolve location data from message (native location, Google Maps link, or text address).
+     */
+    protected function resolveLocation(array $content, string $rawText): array
+    {
+        // 1. Native WhatsApp location message
+        if (!empty($content['location']['latitude']) && !empty($content['location']['longitude'])) {
+            $lat = (float) $content['location']['latitude'];
+            $lng = (float) $content['location']['longitude'];
+            $address = !empty($content['location']['address'])
+                ? trim($content['location']['address'])
+                : (!empty($content['location']['name']) ? trim($content['location']['name']) : null);
+
+            if (empty($address)) {
+                $address = $this->reverseGeocode($lat, $lng);
+            }
+
+            return [
+                'latitude' => $lat,
+                'longitude' => $lng,
+                'address' => $address ?: "Location at " . round($lat, 5) . ", " . round($lng, 5),
+            ];
+        }
+
+        $textToParse = trim($rawText ?: ($content['text'] ?? ''));
+
+        if ($textToParse === '') {
+            return [
+                'latitude' => null,
+                'longitude' => null,
+                'address' => null,
+            ];
+        }
+
+        // 2. Google Maps URL or coordinates in text
+        if (
+            preg_match('/(?:q|ll|query)=([+-]?\d+(?:\.\d+)?),([+-]?\d+(?:\.\d+)?)/i', $textToParse, $matches) ||
+            preg_match('/@([+-]?\d+(?:\.\d+)?),([+-]?\d+(?:\.\d+)?)/i', $textToParse, $matches) ||
+            preg_match('/^([+-]?\d{1,2}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)$/', $textToParse, $matches)
+        ) {
+            $lat = (float) $matches[1];
+            $lng = (float) $matches[2];
+            $address = $this->reverseGeocode($lat, $lng);
+
+            return [
+                'latitude' => $lat,
+                'longitude' => $lng,
+                'address' => $address ?: "Location at " . round($lat, 5) . ", " . round($lng, 5),
+            ];
+        }
+
+        // 3. Plain text street address (forward geocode via Google Maps)
+        $geocoded = $this->forwardGeocode($textToParse);
+        if ($geocoded) {
+            return [
+                'latitude' => $geocoded['lat'],
+                'longitude' => $geocoded['lng'],
+                'address' => $geocoded['address'] ?: $textToParse,
+            ];
+        }
+
+        // 4. Fallback for text addresses >= 5 characters when geocoding is unavailable
+        if (mb_strlen($textToParse) >= 5) {
+            $defaultLocation = $this->getDefaultLocation();
+            return [
+                'latitude' => $defaultLocation['lat'],
+                'longitude' => $defaultLocation['lng'],
+                'address' => $textToParse,
+            ];
+        }
+
+        return [
+            'latitude' => null,
+            'longitude' => null,
+            'address' => null,
+        ];
+    }
+
+    /**
+     * Reverse geocode coordinates to physical address using Google Maps API.
+     */
+    protected function reverseGeocode(float $lat, float $lng): ?string
+    {
+        $apiKey = BusinessSetting::where('key', 'map_api_key_server')->first()?->value
+            ?? BusinessSetting::where('key', 'map_api_key')->first()?->value;
+
+        if (!$apiKey) {
+            return null;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get('https://maps.googleapis.com/maps/api/geocode/json', [
+                'latlng' => "{$lat},{$lng}",
+                'key' => $apiKey,
+            ]);
+
+            if ($response->successful() && $response->json('status') === 'OK') {
+                return $response->json('results.0.formatted_address');
+            }
+        } catch (\Throwable $e) {
+            Log::warning('WhatsApp reverse geocode failed', ['error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Forward geocode address string to coordinates using Google Maps API.
+     */
+    protected function forwardGeocode(string $address): ?array
+    {
+        $apiKey = BusinessSetting::where('key', 'map_api_key_server')->first()?->value
+            ?? BusinessSetting::where('key', 'map_api_key')->first()?->value;
+
+        if (!$apiKey) {
+            return null;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get('https://maps.googleapis.com/maps/api/geocode/json', [
+                'address' => $address,
+                'key' => $apiKey,
+            ]);
+
+            if ($response->successful() && $response->json('status') === 'OK') {
+                $location = $response->json('results.0.geometry.location');
+                return [
+                    'lat' => (float) ($location['lat'] ?? 0),
+                    'lng' => (float) ($location['lng'] ?? 0),
+                    'address' => $response->json('results.0.formatted_address') ?? $address,
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('WhatsApp forward geocode failed', ['error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get default coordinates fallback.
+     */
+    protected function getDefaultLocation(): array
+    {
+        $defaultSetting = BusinessSetting::where('key', 'default_location')->first()?->value;
+        if ($defaultSetting) {
+            $decoded = json_decode($defaultSetting, true);
+            if (!empty($decoded['lat']) && !empty($decoded['lng'])) {
+                return [
+                    'lat' => (float) $decoded['lat'],
+                    'lng' => (float) $decoded['lng'],
+                ];
+            }
+        }
+
+        return [
+            'lat' => 6.5244,
+            'lng' => 3.3792,
+        ];
     }
 
     /**
@@ -131,14 +311,14 @@ class VendorOnboardingService
             'location' => [
                 'latitude' => 'required|numeric|between:-90,90',
                 'longitude' => 'required|numeric|between:-180,180',
-                'address' => 'required|string|max:1000',
+                'address' => 'required|string|min:3|max:1000',
             ],
             'contact_info' => [
                 'email' => 'required|email|unique:vendors,email',
-                'phone' => 'required|string|min:10|max:20|unique:vendors,phone',
+                'phone' => 'required|string|min:7|max:20',
             ],
             'operating_hours' => [
-                'schedule' => 'nullable|array',
+                'schedule' => 'nullable|string|max:500',
             ],
             'documents' => [
                 'media_id' => 'nullable|integer|exists:whatsapp_media,id',
@@ -155,7 +335,7 @@ class VendorOnboardingService
     }
 
     /**
-     * Send validation errors to user.
+     * Send human-friendly validation errors to user.
      */
     protected function sendValidationErrors(
         WhatsAppConversation $conversation,
@@ -163,16 +343,36 @@ class VendorOnboardingService
         array $errors,
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
-        $errorMessages = [];
-        foreach ($errors as $field => $messages) {
-            $errorMessages[] = "• {$field}: " . implode(', ', $messages);
+        $step = $conversation->current_step ?? 'welcome';
+
+        $message = match ($step) {
+            'business_basics' => "Please provide a valid shop name for your business (between 2 and 100 characters).",
+            'category_selection' => "We couldn't recognize that category. Please tap the **Select** button above to choose from available categories, or type your category name (e.g. *Demo category*).",
+            'location' => "We couldn't detect your shop location. 📍\n\nPlease do one of the following:\n1. Tap 📎 and share your **Location pin** on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical shop address (e.g. *12 Marina Road, Lagos*)",
+            'contact_info' => isset($errors['email']) && in_array('The email has already been taken.', $errors['email'])
+                ? "This email address is already registered to another vendor account. Please provide a different email address."
+                : (isset($errors['phone']) && in_array('The phone has already been taken.', $errors['phone'])
+                    ? "This phone number is already registered to a vendor. Reply *Support* if you need help accessing your account."
+                    : "Please enter a valid email address for account verification (e.g., *yourshop@gmail.com*)."),
+            'operating_hours' => "Please specify your operating hours (e.g. *Mon-Sat 9am - 8pm, Sun Closed*).",
+            'documents' => "Please upload a photo or document of your ID or business registration, or reply *Skip* to continue.",
+            default => "Please check your input and try again, or reply *Support* if you need help.",
+        };
+
+        $gateway->sendTextMessage($contact->phone_number, $message);
+
+        // For category selection, re-send list prompt so user has the button handy
+        if ($step === 'category_selection') {
+            $sections = $this->getCategorySections();
+            if (!empty($sections[0]['rows'])) {
+                $gateway->sendListMessage(
+                    $contact->phone_number,
+                    "Select your business category:",
+                    $sections,
+                    'Business Categories'
+                );
+            }
         }
-
-        $text = "Please correct the following:\n\n" . implode("\n", $errorMessages);
-
-        SendWhatsAppMessage::dispatch($contact->phone_number, 'text', [
-            'body' => $text,
-        ]);
     }
 
     /**
@@ -192,8 +392,12 @@ class VendorOnboardingService
             return;
         }
 
-        // Update conversation state
+        // Update conversation state and session state
         $conversation->update(['current_step' => $nextStep]);
+        $session?->update([
+            'current_step' => $nextStep,
+            'last_activity_at' => now(),
+        ]);
 
         // Send next step prompt
         $this->sendStepPrompt($conversation, $contact, $nextStep, $gateway);
@@ -220,7 +424,7 @@ class VendorOnboardingService
                 'sections' => $this->getCategorySections(),
             ],
             'location' => [
-                'text' => "Where is your business located?\n\nYou can share your location using WhatsApp's location feature 📍",
+                'text' => "Where is your business located?\n\nYou can share your location using WhatsApp's location pin 📍, send a Google Maps link, or type your physical address.",
             ],
             'contact_info' => [
                 'text' => "What's your email address for account verification?",
@@ -229,7 +433,7 @@ class VendorOnboardingService
                 'text' => "What are your operating hours?\n\nExample: Mon-Fri 9am-10pm, Sat 10am-8pm, Sun closed",
             ],
             'documents' => [
-                'text' => "Please upload any required documents (business license, ID, etc.)\n\nYou can send photos or PDFs.",
+                'text' => "Please upload any required documents (business license, ID, etc.)\n\nYou can send photos or PDFs, or reply *Skip* to continue.",
             ],
             'review_submit' => [
                 'type' => 'button',
@@ -337,16 +541,26 @@ class VendorOnboardingService
             $contact->update(['vendor_id' => $vendor->id]);
 
             // Determine module and zone
-            $zone = Zone::whereContains('coordinates',
-                new \MatanYadaev\EloquentSpatial\Objects\Point(
-                    $data['latitude'],
-                    $data['longitude'],
-                    4326
-                ))
-                ->where('id', $data['zone_id'] ?? 1)
-                ->first();
+            $zone = null;
+            if (!empty($data['latitude']) && !empty($data['longitude'])) {
+                $zone = Zone::whereContains('coordinates',
+                    new \MatanYadaev\EloquentSpatial\Objects\Point(
+                        $data['latitude'],
+                        $data['longitude'],
+                        4326
+                    ))->first();
+            }
 
-            $module = Module::find($data['module_id'] ?? config('module.current_module_id'));
+            if (!$zone && !empty($data['zone_id'])) {
+                $zone = Zone::find($data['zone_id']);
+            }
+            if (!$zone) {
+                $zone = Zone::where('status', 1)->first() ?? Zone::first();
+            }
+
+            $category = !empty($data['category_id']) ? \App\Models\Category::find($data['category_id']) : null;
+            $moduleId = $data['module_id'] ?? ($category?->module_id ?? (config('module.current_module_id') ?? (Module::where('status', 1)->first()?->id ?? 1)));
+            $module = Module::find($moduleId);
 
             // Create Store (pending status)
             $store = Store::create([
