@@ -31,13 +31,14 @@ class ConversationManager
         $existingSession = $this->onboardingService->resumeOnboarding($contact, $conversation);
 
         if ($existingSession) {
+            $conversation->update(['state' => 'welcome']);
             $gateway->sendButtonMessage(
                 $contact->phone_number,
                 "Welcome back! 👋\n\nYou have an incomplete vendor application. Would you like to continue where you left off?",
                 [
                     ['id' => 'resume_onboarding', 'title' => '📝 Continue'],
                     ['id' => 'start_fresh', 'title' => '🆕 Start New'],
-                    ['id' => 'talk_support', 'title' => '💬 Support'],
+                    ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
                 ],
                 'Welcome Back!'
             );
@@ -50,7 +51,8 @@ class ConversationManager
             return;
         }
 
-        // New contact - show main menu
+        // New contact - show main menu and transition state out of 'new'
+        $conversation->update(['state' => 'welcome']);
         $this->showMainMenu($conversation, $contact, $gateway);
     }
 
@@ -75,7 +77,7 @@ class ConversationManager
             "Assalaamu Alaikum! Welcome back to MyTijaara. 👋\n\n" .
             "🏪 *{$storeName}*\n" .
             "Status: {$status}\n\n" .
-            "Select an action below or message what you want to do:",
+            "What would you like to do today? (Type your response or select an option below)",
             [
                 [
                     'title' => 'Store Operations',
@@ -106,7 +108,7 @@ class ConversationManager
             [
                 ['id' => 'open_shop', 'title' => '🛍️ Open My Shop'],
                 ['id' => 'manage_shop', 'title' => '🏪 Manage My Shop'],
-                ['id' => 'talk_support', 'title' => '💬 Support'],
+                ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
             ],
             'MyTijaara'
         );
@@ -216,7 +218,7 @@ class ConversationManager
             [
                 ['id' => 'start_onboarding', 'title' => '🏪 Become a Vendor'],
                 ['id' => 'check_status', 'title' => '📋 Check Status'],
-                ['id' => 'talk_support', 'title' => '💬 Support'],
+                ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
             ],
             'How Can I Help?'
         );
@@ -230,20 +232,23 @@ class ConversationManager
         match ($buttonId) {
             'resume_onboarding' => $this->resumeOnboarding($conversation, $contact, $gateway),
             'start_fresh' => $this->startFreshOnboarding($conversation, $contact, $gateway),
-            'open_shop' => $this->startOnboarding($conversation, $contact, $gateway),
+            'open_shop', 'start_onboarding' => $this->startOnboarding($conversation, $contact, $gateway),
+            'check_status' => $this->checkApplicationStatus($conversation, $contact, $gateway),
             'manage_shop' => $contact->isVendor()
                 ? $this->handleExistingVendor($conversation, $contact, $gateway)
-                : $gateway->sendTextMessage($contact->phone_number, "Please register as a vendor first to manage a shop."),
-            'learn_selling' => $this->showSellingInfo($conversation, $contact, $gateway),
+                : $gateway->sendTextMessage($contact->phone_number, "Please register as a vendor first to manage a shop. Tap *Open My Shop* or reply *Register* to begin!"),
+            'learn_selling', 'faq' => $this->showSellingInfo($conversation, $contact, $gateway),
             'talk_support' => $this->initiateHumanHandoff($conversation, $contact, $gateway),
             'add_products' => $this->handleAddProducts($conversation, $contact, $gateway),
             'view_orders' => $this->handleViewOrders($conversation, $contact, $gateway),
             'view_sales' => $this->handleViewSales($conversation, $contact, $gateway),
             'shop_status' => $this->handleShopStatusToggle($conversation, $contact, $gateway),
+            'confirm_open_shop' => $this->handleConfirmShopStatus($conversation, $contact, true, $gateway),
+            'confirm_pause_shop' => $this->handleConfirmShopStatus($conversation, $contact, false, $gateway),
             'submit' => $this->onboardingService->submitApplication($conversation, $contact, OnboardingSession::find($conversation->onboarding_session_id), $gateway),
             'edit' => $this->handleEditApplication($conversation, $contact, $gateway),
             'cancel' => $this->handleCancelApplication($conversation, $contact, $gateway),
-            default => $gateway->sendTextMessage($contact->phone_number, "I didn't understand that option. Please try again."),
+            default => $gateway->sendTextMessage($contact->phone_number, "I didn't understand that option. Please try again or type *Help*."),
         };
     }
 
@@ -263,7 +268,11 @@ class ConversationManager
                 ],
             ];
             $this->onboardingService->processStep($conversation, $contact, $message, $gateway);
+            return;
         }
+
+        // Delegate other list actions (dashboard options, edit sections, etc.) to button handler
+        $this->handleButtonResponse($conversation, $contact, $selectionId, $gateway);
     }
 
     /**
@@ -291,7 +300,7 @@ class ConversationManager
     /**
      * Resume existing onboarding.
      */
-    protected function resumeOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    public function resumeOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         $session = OnboardingSession::find($conversation->onboarding_session_id);
 
@@ -314,7 +323,7 @@ class ConversationManager
     /**
      * Start fresh onboarding (clear old session).
      */
-    protected function startFreshOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    public function startFreshOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         // Expire old sessions
         OnboardingSession::where('contact_id', $contact->id)
@@ -327,7 +336,7 @@ class ConversationManager
     /**
      * Show selling information.
      */
-    protected function showSellingInfo(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    public function showSellingInfo(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         $gateway->sendTextMessage(
             $contact->phone_number,
@@ -343,19 +352,88 @@ class ConversationManager
             "• Valid business registration\n" .
             "• Physical location in our service area\n" .
             "• Phone number for verification\n\n" .
-            "Ready to start? Tap below! 👇",
-            // Note: This should be a button message in practice
+            "Ready to start? Tap *Open My Shop* or reply *Register*! 🚀"
         );
     }
 
     /**
      * Initiate human handoff.
      */
-    protected function initiateHumanHandoff(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    public function initiateHumanHandoff(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         $conversation->update(['state' => 'human_handoff']);
 
         $this->handleHumanHandoff($conversation, $contact, new WhatsAppMessage(), $gateway);
+    }
+
+    /**
+     * Check vendor application status.
+     */
+    public function checkApplicationStatus(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    {
+        if ($contact->isVendor() && $contact->vendor) {
+            $vendor = $contact->vendor;
+            $store = $vendor->store;
+            $statusText = (int) $vendor->status === 1 ? 'Approved & Active ✅' : 'Pending Admin Approval ⏳';
+            $gateway->sendTextMessage(
+                $contact->phone_number,
+                "📋 *Your Vendor Application Status:*\n\n" .
+                "• Store: *" . ($store?->name ?? 'Your Store') . "*\n" .
+                "• Status: *{$statusText}*\n\n" .
+                ((int) $vendor->status === 1
+                    ? "Your shop is ready! Type *Manage Shop* to view orders and products."
+                    : "Your application is under review by our admin team. You will receive a WhatsApp message as soon as it is approved!")
+            );
+            return;
+        }
+
+        $session = OnboardingSession::where('contact_id', $contact->id)->latest()->first();
+        if (!$session) {
+            $gateway->sendTextMessage(
+                $contact->phone_number,
+                "You don't have an active vendor application yet.\n\nType *Register* or tap *Open My Shop* to get started in minutes!"
+            );
+            return;
+        }
+
+        $statusMap = [
+            'started' => 'Draft / In Progress 📝',
+            'submitted' => 'Submitted — Pending Admin Review ⏳',
+            'approved' => 'Approved ✅',
+            'rejected' => 'Rejected ❌',
+        ];
+
+        $statusStr = $statusMap[$session->status] ?? ucfirst($session->status);
+        $updatedAt = $session->updated_at ? $session->updated_at->format('M d, Y H:i') : 'Recently';
+        $gateway->sendTextMessage(
+            $contact->phone_number,
+            "📋 *Your Application Status:*\n\n" .
+            "• Status: *{$statusStr}*\n" .
+            "• Last Updated: {$updatedAt}\n\n" .
+            ($session->status === 'started'
+                ? "You have an unfinished application. Reply *Continue* to finish setting up your shop!"
+                : "We are reviewing your details. We will notify you once approved!")
+        );
+    }
+
+    /**
+     * Handle confirmation of shop status change (open or pause).
+     */
+    public function handleConfirmShopStatus(WhatsAppConversation $conversation, WhatsAppContact $contact, bool $activate, WhatsAppGateway $gateway): void
+    {
+        $store = Store::where('vendor_id', $contact->vendor_id)->first();
+        if (!$store) {
+            $gateway->sendTextMessage($contact->phone_number, "No store found.");
+            return;
+        }
+
+        $store->update(['active' => $activate]);
+        $statusText = $activate ? '🟢 Open (Active)' : '🔴 Paused (Closed)';
+
+        $gateway->sendTextMessage(
+            $contact->phone_number,
+            "Your store status has been updated to: *{$statusText}*.\n\nCustomers can " . ($activate ? 'now view and order from your shop.' : 'no longer place new orders until you reopen.')
+        );
     }
 
     /**

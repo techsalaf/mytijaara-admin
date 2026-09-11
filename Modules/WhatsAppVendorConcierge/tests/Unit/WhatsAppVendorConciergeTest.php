@@ -152,4 +152,45 @@ class WhatsAppVendorConciergeTest extends TestCase
         );
         $this->assertFalse($gateway->validateWebhookSignature($invalidRequest));
     }
+
+    /** @test */
+    public function it_transitions_conversation_state_from_new_on_welcome()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $conversation = WhatsAppConversation::getOrCreateActive($contact->id);
+        $this->assertEquals('new', $conversation->state);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())->method('sendButtonMessage');
+
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $manager->handleWelcome($conversation, $contact, $gateway);
+
+        $conversation->refresh();
+        $this->assertEquals('welcome', $conversation->state);
+    }
+
+    /** @test */
+    public function it_handles_button_reply_and_starts_onboarding()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $conversation = WhatsAppConversation::getOrCreateActive($contact->id);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())->method('sendTextMessage');
+
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $manager->handleButtonResponse($conversation, $contact, 'open_shop', $gateway);
+
+        $conversation->refresh();
+        $this->assertEquals('onboarding_active', $conversation->state);
+        $this->assertEquals('business_basics', $conversation->current_step);
+        $this->assertNotNull($conversation->onboarding_session_id);
+    }
 }

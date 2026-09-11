@@ -202,12 +202,14 @@ class VendorOnboardingService
     /**
      * Send prompt for specific step.
      */
-    protected function sendStepPrompt(
+    public function sendStepPrompt(
         WhatsAppConversation $conversation,
         WhatsAppContact $contact,
         string $step,
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
+        $session = OnboardingSession::find($conversation->onboarding_session_id);
+
         $prompts = [
             'business_basics' => [
                 'text' => "Great! Let's start with the basics.\n\nWhat's your business name?",
@@ -231,7 +233,7 @@ class VendorOnboardingService
             ],
             'review_submit' => [
                 'type' => 'button',
-                'body' => $this->buildReviewSummary($session),
+                'body' => $step === 'review_submit' ? $this->buildReviewSummary($session) : '',
                 'buttons' => [
                     ['id' => 'submit', 'title' => '✅ Submit'],
                     ['id' => 'edit', 'title' => '✏️ Edit'],
@@ -262,6 +264,25 @@ class VendorOnboardingService
     }
 
     /**
+     * Build review summary from session data.
+     */
+    protected function buildReviewSummary(?OnboardingSession $session): string
+    {
+        $data = $session?->collected_data ?? [];
+        $name = $data['business_name'] ?? 'Not provided';
+        $address = $data['address'] ?? 'Not provided';
+        $email = $data['email'] ?? 'Not provided';
+        $phone = $data['phone'] ?? 'Not provided';
+
+        return "Please review your application:\n\n" .
+            "🏪 Business: {$name}\n" .
+            "📍 Location: {$address}\n" .
+            "📧 Email: {$email}\n" .
+            "📱 Phone: {$phone}\n\n" .
+            "Is everything correct?";
+    }
+
+    /**
      * Get category sections for list message.
      */
     protected function getCategorySections(): array
@@ -283,21 +304,6 @@ class VendorOnboardingService
             'title' => 'Business Categories',
             'rows' => $categories,
         ]];
-    }
-
-    /**
-     * Build review summary from session data.
-     */
-    protected function buildReviewSummary(?OnboardingSession $session): string
-    {
-        $data = $session?->collected_data ?? [];
-
-        return "Please review your application:\n\n" .
-            "🏪 Business: {$data['business_name']}\n" .
-            "📍 Location: {$data['address']}\n" .
-            "📧 Email: {$data['email']}\n" .
-            "📱 Phone: {$data['phone']}\n\n" .
-            "Is everything correct?";
     }
 
     /**

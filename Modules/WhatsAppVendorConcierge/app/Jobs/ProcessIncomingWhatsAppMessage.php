@@ -178,22 +178,74 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
             );
         }
 
-        match (true) {
-            // New contact - show welcome
-            $state === 'new' => $conversationManager->handleWelcome($conversation, $contact, $gateway),
+        // 1. Check for interactive button replies (Meta payload or parsed message)
+        $buttonId = $this->messageData['interactive']['button_reply']['id']
+            ?? ($content['interactive']['button_reply']['id'] ?? null);
 
-            // Onboarding flow
-            $state === 'welcome' => $conversationManager->startOnboarding($conversation, $contact, $gateway),
+        if ($buttonId) {
+            $conversationManager->handleButtonResponse($conversation, $contact, $buttonId, $gateway);
+            return;
+        }
+
+        // 2. Check for interactive list replies
+        $listId = $this->messageData['interactive']['list_reply']['id']
+            ?? ($content['interactive']['list_reply']['id'] ?? null);
+        $listTitle = $this->messageData['interactive']['list_reply']['title']
+            ?? ($content['interactive']['list_reply']['title'] ?? '');
+
+        if ($listId) {
+            $conversationManager->handleListResponse($conversation, $contact, $listId, $listTitle, $gateway);
+            return;
+        }
+
+        // 3. Handle global keyword commands from text
+        $rawText = strtolower(trim((string) ($message->raw_text ?? '')));
+
+        if ($rawText !== '') {
+            if (in_array($rawText, ['support', 'human', 'agent', 'help desk', 'talk to support', 'talk_support'])) {
+                $conversationManager->initiateHumanHandoff($conversation, $contact, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['faq', 'info', 'learn', 'how to sell', 'learn about selling'])) {
+                $conversationManager->showSellingInfo($conversation, $contact, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['register', 'open shop', 'create shop', 'sell', 'start onboarding', 'become a vendor', 'i want to sell on mytijaara', 'i want to create a shop', 'open_shop'])) {
+                $conversationManager->startOnboarding($conversation, $contact, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['help'])) {
+                $conversationManager->showHelp($conversation, $contact, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['menu', 'start', 'hi', 'hello', 'hey', 'assalamu alaikum', 'assalaamu alaikum'])) {
+                $conversationManager->handleWelcome($conversation, $contact, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['status', 'check status', 'my application', 'application status'])) {
+                $conversationManager->checkApplicationStatus($conversation, $contact, $gateway);
+                return;
+            }
+        }
+
+        // 4. State-based routing
+        match (true) {
+            // In onboarding flow - process input for current step
             $conversation->isOnboarding() => $onboardingService->processStep($conversation, $contact, $message, $gateway),
 
             // AI concierge for registered vendors
             $contact->isVendor() && $state === 'ai_active' => $conversationManager->handleAiMessage($conversation, $contact, $message, $gateway),
 
-            // Human handoff
+            // Human handoff mode
             $state === 'human_handoff' => $conversationManager->handleHumanHandoff($conversation, $contact, $message, $gateway),
 
-            // Default: show help
-            default => $conversationManager->showHelp($conversation, $contact, $gateway),
+            // Default for any unknown text or first contact
+            default => $conversationManager->handleWelcome($conversation, $contact, $gateway),
         };
     }
 }
