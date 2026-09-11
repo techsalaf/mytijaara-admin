@@ -167,14 +167,16 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         $type = $message->type;
         $content = $message->content;
 
-        // Log event
-        OnboardingEvent::log(
-            $conversation->onboarding_session_id ?? 0,
-            $contact->id,
-            'ai_interaction',
-            $state,
-            ['message_type' => $type, 'content' => $content]
-        );
+        // Log event if onboarding session exists
+        if (!empty($conversation->onboarding_session_id)) {
+            OnboardingEvent::log(
+                $conversation->onboarding_session_id,
+                $contact->id,
+                'ai_interaction',
+                $state,
+                ['message_type' => $type, 'content' => $content]
+            );
+        }
 
         match (true) {
             // New contact - show welcome

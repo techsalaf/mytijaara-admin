@@ -28,6 +28,7 @@ class UpdateProductTool extends BaseVendorTool
             'status' => $schema->boolean()->description('Activate (true) or deactivate (false)')->required()->nullable(),
             'veg' => $schema->boolean()->description('Is vegetarian')->required()->nullable(),
             'recommended' => $schema->boolean()->description('Mark as recommended')->required()->nullable(),
+            'confirm' => $schema->boolean()->description('Confirmation flag (must be true to apply updates)')->required()->nullable(),
         ];
     }
 
@@ -38,6 +39,7 @@ class UpdateProductTool extends BaseVendorTool
         $store = $this->requireStore();
         $args = $request->all();
         $productId = $args['product_id'] ?? null;
+        $confirm = $args['confirm'] ?? false;
 
         if (!$productId) {
             return "I need the product ID to update. Please provide the product ID (you can find it in your product list).";
@@ -76,6 +78,24 @@ class UpdateProductTool extends BaseVendorTool
 
         if (empty($updateData)) {
             return "No changes provided. Please specify what you'd like to update.";
+        }
+
+        // Check confirmation guard if write verification is enabled
+        if (config('whatsapp-vendor-concierge.security.require_verification_for_writes', true) && !$confirm) {
+            $preview = [];
+            foreach ($updateData as $key => $val) {
+                $label = ucfirst(str_replace('_', ' ', $key));
+                $currentVal = $item->$key ?? 'N/A';
+                if ($key === 'price') {
+                    $preview[] = "• **{$label}:** currently {$this->formatNaira($currentVal)} → change to **{$this->formatNaira($val)}**";
+                } else {
+                    $preview[] = "• **{$label}:** currently '{$currentVal}' → change to **'{$val}'**";
+                }
+            }
+            return "⚠️ **Confirm Product Update**\n\n" .
+                   "I found **{$item->name}** [ID:{$item->id}]. Please confirm the following changes:\n\n" .
+                   implode("\n", $preview) . "\n\n" .
+                   "Reply with \"Yes, update product\" or \"Confirm\" to apply.";
         }
 
         try {

@@ -27,6 +27,7 @@ class CreateProductTool extends BaseVendorTool
             'image' => $schema->string()->description('Image URL or media ID (optional)')->required()->nullable(),
             'veg' => $schema->boolean()->description('Is vegetarian (for food modules)')->required()->nullable(),
             'recommended' => $schema->boolean()->description('Mark as recommended')->required()->nullable(),
+            'confirm' => $schema->boolean()->description('Confirmation flag (must be true to create the product)')->required()->nullable(),
         ];
     }
 
@@ -40,6 +41,7 @@ class CreateProductTool extends BaseVendorTool
         $name = $args['name'] ?? null;
         $price = $args['price'] ?? null;
         $categoryId = $args['category_id'] ?? null;
+        $confirm = $args['confirm'] ?? false;
 
         if (!$name || !$price || !$categoryId) {
             // Ask for missing info
@@ -64,6 +66,18 @@ class CreateProductTool extends BaseVendorTool
 
         if (!$category) {
             return "Category ID {$categoryId} not found or not available for your store's module. Please check with GetCategoriesTool.";
+        }
+
+        // Check confirmation guard if write verification is enabled
+        if (config('whatsapp-vendor-concierge.security.require_verification_for_writes', true) && !$confirm) {
+            $stock = (int) ($args['stock'] ?? 10);
+            return "⚠️ **Confirm New Product Listing**\n\n" .
+                   "Please review the product details before I add it to your shop:\n\n" .
+                   "• **Product Name:** {$name}\n" .
+                   "• **Price:** {$this->formatNaira($price)}\n" .
+                   "• **Category:** {$category->name}\n" .
+                   "• **Initial Stock:** {$stock}\n\n" .
+                   "Reply with \"Yes, create product\" or \"Confirm\" to publish it to your shop catalog!";
         }
 
         try {

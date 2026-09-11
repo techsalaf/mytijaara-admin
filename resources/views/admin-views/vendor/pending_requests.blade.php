@@ -131,6 +131,11 @@
                                             <div class="font-light">
                                                 {{translate('messages.id')}}:{{$store->id}}
                                             </div>
+                                            @if(class_exists('\Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact') && \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact::where('vendor_id', $store->vendor_id)->exists())
+                                                <span class="badge badge-soft-success font-weight-normal mt-1" style="display:inline-block; font-size:11px; padding:2px 6px;">
+                                                    WhatsApp
+                                                </span>
+                                            @endif
                                         </div>
                                     </a>
                                 </div>

@@ -142,6 +142,22 @@ class ConversationManager
      */
     public function handleAiMessage(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppMessage $message, WhatsAppGateway $gateway): void
     {
+        // If vendor sends a photo, guide them into the photo-to-product workflow
+        if ($message->type === 'image') {
+            $context = $conversation->context ?? [];
+            $context['last_product_media_id'] = $message->media_id;
+            $conversation->update(['context' => $context]);
+
+            $gateway->sendTextMessage(
+                $contact->phone_number,
+                "📸 **Product Photo Received!**\n\n" .
+                "I've saved this image for your shop catalog. What is the **product name** and **selling price**?\n\n" .
+                "• *Example: \"Chicken Shawarma, ₦3,500\"*\n\n" .
+                "Reply with the name and price, and I'll draft the listing for you!"
+            );
+            return;
+        }
+
         // Queue AI processing
         RunVendorAiConversation::dispatch($conversation, $contact, $message)
             ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
@@ -162,14 +178,16 @@ class ConversationManager
             "Reference: **WHATSAPP-{$conversation->id}**"
         );
 
-        // Log handoff event
-        OnboardingEvent::log(
-            $conversation->onboarding_session_id ?? 0,
-            $contact->id,
-            'human_handoff',
-            $conversation->current_step ?? 'unknown',
-            ['conversation_id' => $conversation->id]
-        );
+        // Log handoff event if onboarding session exists
+        if (!empty($conversation->onboarding_session_id)) {
+            OnboardingEvent::log(
+                $conversation->onboarding_session_id,
+                $contact->id,
+                'human_handoff',
+                $conversation->current_step ?? 'unknown',
+                ['conversation_id' => $conversation->id]
+            );
+        }
 
         // Notify admin/support team
         $this->notifySupportTeam($conversation, $contact);
@@ -456,11 +474,25 @@ class ConversationManager
      */
     protected function notifySupportTeam(WhatsAppConversation $conversation, WhatsAppContact $contact): void
     {
-        // In production: send to admin panel, Slack, email, etc.
         Log::info('Human handoff requested', [
             'conversation_id' => $conversation->id,
             'contact_id' => $contact->id,
             'vendor_id' => $contact->vendor_id,
         ]);
+
+        try {
+            $adminEmail = config('mail.from.address') ?? 'admin@mytijaara.com';
+            $businessSettingEmail = \App\Models\BusinessSetting::where('key', 'email_address')->first()?->value;
+            if ($businessSettingEmail && filter_var($businessSettingEmail, FILTER_VALIDATE_EMAIL)) {
+                $adminEmail = $businessSettingEmail;
+            }
+
+            \Illuminate\Support\Facades\Mail::to($adminEmail)
+                ->send(new \Modules\WhatsAppVendorConcierge\app\Mail\VendorSupportEscalationMail($conversation, $contact));
+
+            Log::info("Support escalation email dispatched to {$adminEmail} for conversation #{$conversation->id}");
+        } catch (\Throwable $e) {
+            Log::warning("Failed to dispatch support escalation email: " . $e->getMessage());
+        }
     }
 }

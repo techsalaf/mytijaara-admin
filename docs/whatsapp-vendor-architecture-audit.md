@@ -501,7 +501,7 @@ OPENAI_API_KEY=                           # Already in .env.example
 ANTHROPIC_API_KEY=                        # Alternative
 
 # Optional: Webhook URL (for Meta config)
-WHATSAPP_WEBHOOK_URL=https://api.mytijaara.com/api/webhooks/whatsapp
+WHATSAPP_WEBHOOK_URL=https://dashboard.mytijaara.com/api/webhooks/whatsapp
 
 # Queue (separate worker recommended)
 QUEUE_CONNECTION_WHATSAPP=database        # or redis

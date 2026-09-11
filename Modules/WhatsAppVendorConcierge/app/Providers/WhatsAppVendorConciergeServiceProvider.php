@@ -22,7 +22,11 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
-        $this->loadRoutes();
+        $this->loadRoutesFrom(module_path($this->moduleName, 'routes/web.php'));
+        $this->loadRoutesFrom(module_path($this->moduleName, 'routes/api.php'));
+
+        // Register vendor approval/denial observer for WhatsApp notifications
+        \App\Models\Vendor::observe(\Modules\WhatsAppVendorConcierge\app\Observers\VendorApprovalObserver::class);
     }
 
     /**
@@ -36,18 +40,6 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
         $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
         $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
-    }
-
-    /**
-     * Load routes for the module.
-     */
-    protected function loadRoutes(): void
-    {
-        // Webhook routes (no auth, public)
-        $this->loadRoutesFrom(module_path($this->moduleName, 'routes/web.php'));
-
-        // Internal API routes (authenticated)
-        $this->loadRoutesFrom(module_path($this->moduleName, 'routes/api.php'));
     }
 
     /**
