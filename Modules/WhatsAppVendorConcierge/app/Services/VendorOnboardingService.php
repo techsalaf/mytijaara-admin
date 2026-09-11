@@ -233,7 +233,7 @@ class VendorOnboardingService
                 'type' => 'button',
                 'body' => $this->buildReviewSummary($session),
                 'buttons' => [
-                    ['id' => 'submit', 'title' => '✅ Submit Application'],
+                    ['id' => 'submit', 'title' => '✅ Submit'],
                     ['id' => 'edit', 'title' => '✏️ Edit'],
                     ['id' => 'cancel', 'title' => '❌ Cancel'],
                 ],

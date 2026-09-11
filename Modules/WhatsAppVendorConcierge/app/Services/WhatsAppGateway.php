@@ -82,27 +82,40 @@ class WhatsAppGateway
     public function sendButtonMessage(string $to, string $body, array $buttons, ?string $header = null, ?string $footer = null): array
     {
         $actionButtons = [];
-        foreach ($buttons as $index => $button) {
+        $slicedButtons = array_slice($buttons, 0, 3);
+        foreach ($slicedButtons as $index => $button) {
+            $title = (string) ($button['title'] ?? 'Button');
+            if (mb_strlen($title) > 20) {
+                $title = mb_substr($title, 0, 20);
+            }
             $actionButtons[] = [
                 'type' => 'reply',
                 'reply' => [
-                    'id' => $button['id'] ?? "btn_{$index}",
-                    'title' => $button['title'] ?? 'Button',
+                    'id' => (string) ($button['id'] ?? "btn_{$index}"),
+                    'title' => $title,
                 ],
             ];
+        }
+
+        $interactive = [
+            'type' => 'button',
+            'body' => ['text' => $body],
+            'action' => ['buttons' => $actionButtons],
+        ];
+
+        if (!empty($header)) {
+            $interactive['header'] = ['type' => 'text', 'text' => $header];
+        }
+
+        if (!empty($footer)) {
+            $interactive['footer'] = ['text' => $footer];
         }
 
         $payload = [
             'messaging_product' => 'whatsapp',
             'to' => $to,
             'type' => 'interactive',
-            'interactive' => [
-                'type' => 'button',
-                'header' => $header ? ['type' => 'text', 'text' => $header] : null,
-                'body' => ['text' => $body],
-                'footer' => $footer ? ['text' => $footer] : null,
-                'action' => ['buttons' => $actionButtons],
-            ],
+            'interactive' => $interactive,
         ];
 
         return $this->sendMessage($payload);
@@ -113,20 +126,57 @@ class WhatsAppGateway
      */
     public function sendListMessage(string $to, string $body, array $sections, ?string $header = null, ?string $footer = null, string $buttonText = 'Select'): array
     {
+        $sanitizedSections = [];
+        foreach ($sections as $section) {
+            $secTitle = (string) ($section['title'] ?? 'Options');
+            if (mb_strlen($secTitle) > 24) {
+                $secTitle = mb_substr($secTitle, 0, 24);
+            }
+            $rows = [];
+            foreach (($section['rows'] ?? []) as $rIndex => $row) {
+                $rowTitle = (string) ($row['title'] ?? "Option {$rIndex}");
+                if (mb_strlen($rowTitle) > 24) {
+                    $rowTitle = mb_substr($rowTitle, 0, 24);
+                }
+                $r = [
+                    'id' => (string) ($row['id'] ?? "row_{$rIndex}"),
+                    'title' => $rowTitle,
+                ];
+                if (!empty($row['description'])) {
+                    $r['description'] = mb_substr((string) $row['description'], 0, 72);
+                }
+                $rows[] = $r;
+            }
+            $sanitizedSections[] = [
+                'title' => $secTitle,
+                'rows' => array_slice($rows, 0, 10),
+            ];
+        }
+
+        $buttonLabel = mb_substr($buttonText, 0, 20);
+
+        $interactive = [
+            'type' => 'list',
+            'body' => ['text' => $body],
+            'action' => [
+                'button' => $buttonLabel,
+                'sections' => array_slice($sanitizedSections, 0, 10),
+            ],
+        ];
+
+        if (!empty($header)) {
+            $interactive['header'] = ['type' => 'text', 'text' => $header];
+        }
+
+        if (!empty($footer)) {
+            $interactive['footer'] = ['text' => $footer];
+        }
+
         $payload = [
             'messaging_product' => 'whatsapp',
             'to' => $to,
             'type' => 'interactive',
-            'interactive' => [
-                'type' => 'list',
-                'header' => $header ? ['type' => 'text', 'text' => $header] : null,
-                'body' => ['text' => $body],
-                'footer' => $footer ? ['text' => $footer] : null,
-                'action' => [
-                    'button' => $buttonText,
-                    'sections' => $sections,
-                ],
-            ],
+            'interactive' => $interactive,
         ];
 
         return $this->sendMessage($payload);

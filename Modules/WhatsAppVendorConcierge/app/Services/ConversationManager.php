@@ -35,9 +35,9 @@ class ConversationManager
                 $contact->phone_number,
                 "Welcome back! 👋\n\nYou have an incomplete vendor application. Would you like to continue where you left off?",
                 [
-                    ['id' => 'resume_onboarding', 'title' => '📝 Continue Application'],
+                    ['id' => 'resume_onboarding', 'title' => '📝 Continue'],
                     ['id' => 'start_fresh', 'title' => '🆕 Start New'],
-                    ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
+                    ['id' => 'talk_support', 'title' => '💬 Support'],
                 ],
                 'Welcome Back!'
             );
@@ -70,21 +70,28 @@ class ConversationManager
         $storeName = $store?->name ?? 'Your Shop';
         $status = $store?->status ? '🟢 Open' : '🔴 Closed';
 
-        $gateway->sendButtonMessage(
+        $gateway->sendListMessage(
             $contact->phone_number,
             "Assalaamu Alaikum! Welcome back to MyTijaara. 👋\n\n" .
-            "🏪 **{$storeName}**\n" .
+            "🏪 *{$storeName}*\n" .
             "Status: {$status}\n\n" .
-            "What would you like to do today?",
+            "Select an action below or message what you want to do:",
             [
-                ['id' => 'add_products', 'title' => '➕ Add Products'],
-                ['id' => 'manage_shop', 'title' => '🏪 Manage Shop'],
-                ['id' => 'view_orders', 'title' => '📦 View Orders'],
-                ['id' => 'view_sales', 'title' => '💰 Sales Report'],
-                ['id' => 'shop_status', 'title' => $store?->active ? '🔴 Pause Shop' : '🟢 Open Shop'],
-                ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
+                [
+                    'title' => 'Store Operations',
+                    'rows' => [
+                        ['id' => 'add_products', 'title' => '➕ Add Products', 'description' => 'Add new items to catalog'],
+                        ['id' => 'manage_shop', 'title' => '🏪 Manage Shop', 'description' => 'View profile and settings'],
+                        ['id' => 'view_orders', 'title' => '📦 View Orders', 'description' => 'Check recent orders'],
+                        ['id' => 'view_sales', 'title' => '💰 Sales Report', 'description' => 'Summary of shop sales'],
+                        ['id' => 'shop_status', 'title' => $store?->active ? '🔴 Pause Shop' : '🟢 Open Shop', 'description' => 'Toggle store availability'],
+                        ['id' => 'talk_support', 'title' => '💬 Talk to Support', 'description' => 'Get human assistance'],
+                    ],
+                ],
             ],
-            'MyTijaara Vendor Dashboard'
+            'MyTijaara Vendor Dashboard',
+            null,
+            'Dashboard Menu'
         );
     }
 
@@ -95,12 +102,11 @@ class ConversationManager
     {
         $gateway->sendButtonMessage(
             $contact->phone_number,
-            "Assalaamu Alaikum 👋\n\nWelcome to **MyTijaara** — Nigeria's trusted marketplace for local businesses.\n\nWhat would you like to do?",
+            "Assalaamu Alaikum 👋\n\nWelcome to *MyTijaara* — Nigeria's trusted marketplace for local businesses.\n\nWhat would you like to do?\n\n_(Reply 'Help' or 'FAQ' anytime for info)_",
             [
                 ['id' => 'open_shop', 'title' => '🛍️ Open My Shop'],
                 ['id' => 'manage_shop', 'title' => '🏪 Manage My Shop'],
-                ['id' => 'learn_selling', 'title' => 'ℹ️ Learn About Selling'],
-                ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
+                ['id' => 'talk_support', 'title' => '💬 Support'],
             ],
             'MyTijaara'
         );
@@ -206,12 +212,11 @@ class ConversationManager
             "• \"How do I open my shop?\"\n" .
             "• \"Where is my application?\"\n" .
             "• \"How many orders do I have today?\"\n\n" .
-            "Or choose an option below:",
+            "Or choose an option below (or type 'FAQ'):",
             [
                 ['id' => 'start_onboarding', 'title' => '🏪 Become a Vendor'],
-                ['id' => 'check_status', 'title' => '📋 Check Application Status'],
-                ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
-                ['id' => 'faq', 'title' => '❓ FAQ'],
+                ['id' => 'check_status', 'title' => '📋 Check Status'],
+                ['id' => 'talk_support', 'title' => '💬 Support'],
             ],
             'How Can I Help?'
         );
@@ -436,7 +441,7 @@ class ConversationManager
                 [[
                     'title' => 'Application Sections',
                     'rows' => [
-                        ['id' => 'edit_business_basics', 'title' => '🏪 Business Name & Description'],
+                        ['id' => 'edit_business_basics', 'title' => '🏪 Business Info', 'description' => 'Name and description'],
                         ['id' => 'edit_category', 'title' => '📂 Category'],
                         ['id' => 'edit_location', 'title' => '📍 Location'],
                         ['id' => 'edit_contact', 'title' => '📧 Contact Info'],
