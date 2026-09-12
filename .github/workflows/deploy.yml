@@ -222,10 +222,12 @@ jobs:
             ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan db:seed --force"
           fi
 
-          echo "→ Verifying deployment responds"
+          echo "→ Verifying deployment responds and refreshing queue workers"
           ssh mytijaara-deploy "
               cd '$DEPLOY_PATH'
               php artisan --version
+              php artisan optimize:clear
+              php artisan queue:restart
           "
 
           echo "✓ Deploy complete: $DEPLOY_PATH"

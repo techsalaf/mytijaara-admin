@@ -127,9 +127,39 @@ class VendorOnboardingService
             'operating_hours' => [
                 'schedule' => $rawText ?: ($content['text'] ?? null),
             ],
-            'documents' => [
-                'media_id' => $message->media_id,
-            ],
+            'documents' => (function () use ($message, $content) {
+                // 1. If message already has a media record ID
+                if (!empty($message->media_id)) {
+                    $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($message->media_id);
+                    if ($media) {
+                        return ['media_id' => $media->id];
+                    }
+                    $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::where('whatsapp_media_id', $message->media_id)->first();
+                    if ($media) {
+                        return ['media_id' => $media->id];
+                    }
+                }
+
+                // 2. Check for uploaded document (PDF, Word, Excel, etc.) or image
+                $mediaPayload = $content['document'] ?? ($content['image'] ?? null);
+                if (!empty($mediaPayload['id'])) {
+                    $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::firstOrCreate(
+                        ['whatsapp_media_id' => $mediaPayload['id']],
+                        [
+                            'mime_type' => $mediaPayload['mime_type'] ?? ($content['document']['mime_type'] ?? ($content['image']['mime_type'] ?? 'application/octet-stream')),
+                            'file_size' => $mediaPayload['file_size'] ?? null,
+                            'status' => 'pending_download',
+                            'expires_at' => now()->addDays(7),
+                        ]
+                    );
+
+                    $message->update(['media_id' => $media->id]);
+                    return ['media_id' => $media->id];
+                }
+
+                // 3. User typed text ("Skip", "none", or continuing without document)
+                return ['media_id' => null];
+            })(),
             default => [],
         };
     }

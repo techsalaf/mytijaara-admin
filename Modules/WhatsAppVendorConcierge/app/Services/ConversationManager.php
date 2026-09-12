@@ -302,15 +302,30 @@ class ConversationManager
      */
     public function resumeOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        $session = OnboardingSession::find($conversation->onboarding_session_id);
+        $session = OnboardingSession::find($conversation->onboarding_session_id)
+            ?? OnboardingSession::where('contact_id', $contact->id)
+                ->where('status', '!=', 'submitted')
+                ->where('status', '!=', 'approved')
+                ->where('status', '!=', 'rejected')
+                ->where('expires_at', '>', now())
+                ->latest()
+                ->first();
 
         if ($session && $session->canResume()) {
+            $currentStep = $session->current_step ?? 'business_basics';
+
+            $conversation->update([
+                'onboarding_session_id' => $session->id,
+                'state' => 'onboarding_active',
+                'current_step' => $currentStep,
+            ]);
+
             $gateway->sendTextMessage(
                 $contact->phone_number,
-                "Welcome back! Let's continue from **{$session->current_step}**."
+                "Welcome back! Let's continue from **{$currentStep}**."
             );
 
-            $this->onboardingService->sendStepPrompt($conversation, $contact, $session->current_step, $gateway);
+            $this->onboardingService->sendStepPrompt($conversation, $contact, $currentStep, $gateway);
         } else {
             $gateway->sendTextMessage(
                 $contact->phone_number,

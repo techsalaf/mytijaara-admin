@@ -400,4 +400,127 @@ class WhatsAppVendorConciergeTest extends TestCase
         $this->assertNotEmpty($legacySerialized);
         $this->assertInstanceOf(\Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppMedia::class, unserialize($legacySerialized));
     }
+
+    /** @test */
+    public function it_resumes_onboarding_and_sets_active_state()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'documents',
+            'collected_data' => ['business_name' => 'Ronix Essentials'],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'welcome',
+            'current_step' => 'welcome',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+
+        $manager->resumeOnboarding($conversation, $contact, $gateway);
+
+        $conversation->refresh();
+        $this->assertEquals('onboarding_active', $conversation->state);
+        $this->assertEquals('documents', $conversation->current_step);
+        $this->assertTrue($conversation->isOnboarding());
+    }
+
+    /** @test */
+    public function it_extracts_document_from_image_upload()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $metaId = 'wamid_media_' . uniqid();
+        $msg = new WhatsAppMessage([
+            'type' => 'image',
+            'content' => [
+                'image' => [
+                    'id' => $metaId,
+                    'mime_type' => 'image/jpeg',
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'documents', null);
+
+        $this->assertNotNull($data['media_id']);
+        $this->assertDatabaseHas('whatsapp_media', [
+            'id' => $data['media_id'],
+            'whatsapp_media_id' => $metaId,
+        ]);
+    }
+
+    /** @test */
+    public function it_extracts_document_from_pdf_document_upload()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $metaId = 'wamid_doc_' . uniqid();
+        $msg = new WhatsAppMessage([
+            'type' => 'document',
+            'content' => [
+                'document' => [
+                    'id' => $metaId,
+                    'mime_type' => 'application/pdf',
+                    'filename' => 'cac_certificate.pdf',
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'documents', null);
+
+        $this->assertNotNull($data['media_id']);
+        $this->assertDatabaseHas('whatsapp_media', [
+            'id' => $data['media_id'],
+            'whatsapp_media_id' => $metaId,
+            'mime_type' => 'application/pdf',
+        ]);
+    }
+
+    /** @test */
+    public function it_allows_skipping_document_upload()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => [
+                'text' => 'Skip',
+            ],
+            'raw_text' => 'Skip',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $method = $reflection->getMethod('extractStepData');
+        $method->setAccessible(true);
+
+        $data = $method->invoke($service, $msg, 'documents', null);
+
+        $this->assertNull($data['media_id']);
+
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        $validation = $validateMethod->invoke($service, 'documents', $data);
+        $this->assertTrue($validation['valid']);
+    }
 }

@@ -252,10 +252,19 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         }
 
         // 4. State-based routing
-        match (true) {
-            // In onboarding flow - process input for current step
-            $conversation->isOnboarding() => $onboardingService->processStep($conversation, $contact, $message, $gateway),
+        $hasActiveOnboarding = $conversation->isOnboarding()
+            || (!empty($conversation->onboarding_session_id) && !empty($conversation->current_step))
+            || (!empty($conversation->onboarding_session_id) && in_array($type, ['image', 'document']));
 
+        if ($hasActiveOnboarding) {
+            if ($conversation->state !== 'onboarding_active') {
+                $conversation->update(['state' => 'onboarding_active']);
+            }
+            $onboardingService->processStep($conversation, $contact, $message, $gateway);
+            return;
+        }
+
+        match (true) {
             // AI concierge for registered vendors
             $contact->isVendor() && $state === 'ai_active' => $conversationManager->handleAiMessage($conversation, $contact, $message, $gateway),
 
