@@ -1040,6 +1040,19 @@ class VendorController extends Controller
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
+        // GEMINI-MYTJ START: WhatsApp store account status toggle synchronization
+        try {
+            if (class_exists('\Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification')) {
+                \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::dispatch(
+                    $store->id,
+                    $request->status == 0 ? 'suspended' : 'unsuspended'
+                );
+            }
+        } catch (\Exception $ex) {
+            info('WhatsApp store status notification failed: ' . $ex->getMessage());
+        }
+        // GEMINI-MYTJ END: WhatsApp store account status toggle synchronization
+
         Toastr::success(translate('messages.store_status_updated'));
 
         return back();
@@ -1250,6 +1263,20 @@ class VendorController extends Controller
         } catch (\Exception $ex) {
             info($ex->getMessage());
         }
+
+        // GEMINI-MYTJ START: WhatsApp vendor application status synchronization
+        try {
+            if (class_exists('\Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification')) {
+                \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::dispatch(
+                    $store->id,
+                    (int) $request->status,
+                    $request->rejection_note
+                );
+            }
+        } catch (\Exception $ex) {
+            info('WhatsApp vendor status notification failed: ' . $ex->getMessage());
+        }
+        // GEMINI-MYTJ END: WhatsApp vendor application status synchronization
 
         return true;
     }

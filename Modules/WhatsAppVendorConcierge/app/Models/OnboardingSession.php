@@ -67,11 +67,15 @@ class OnboardingSession extends Model
         return [
             'welcome',
             'business_basics',
+            'owner_info',
             'category_selection',
             'location',
             'contact_info',
-            'operating_hours',
-            'documents',
+            'account_password',
+            'store_branding',
+            'business_plan',
+            'kyc_documents',
+            'terms_acceptance',
             'review_submit',
         ];
     }
@@ -82,7 +86,17 @@ class OnboardingSession extends Model
     public function getNextStep(): ?string
     {
         $steps = self::getSteps();
-        $currentIndex = array_search($this->current_step ?? 'welcome', $steps);
+        $current = $this->current_step ?? 'welcome';
+
+        // Backward compatibility for legacy step names
+        if ($current === 'operating_hours') {
+            return 'store_branding';
+        }
+        if ($current === 'documents') {
+            return 'business_plan';
+        }
+
+        $currentIndex = array_search($current, $steps);
 
         if ($currentIndex === false || $currentIndex >= count($steps) - 1) {
             return null;
@@ -162,7 +176,18 @@ class OnboardingSession extends Model
      */
     public function canResume(): bool
     {
-        return in_array($this->status, ['started', 'business_basics', 'category_selection', 'location', 'contact_info', 'operating_hours', 'documents', 'review_submit', 'onboarding_paused'])
+        $validStatuses = array_merge(self::getSteps(), [
+            'started',
+            'onboarding_paused',
+            'operating_hours',
+            'documents',
+            'store_branding',
+            'business_plan',
+            'kyc_documents',
+            'terms_acceptance',
+        ]);
+
+        return in_array($this->status, $validStatuses)
             && !$this->isExpired();
     }
 }

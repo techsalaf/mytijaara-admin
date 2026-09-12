@@ -231,15 +231,34 @@ class ConversationManager
     {
         $editMap = [
             'edit_business_basics' => 'business_basics',
+            'edit_owner_info' => 'owner_info',
             'edit_category' => 'category_selection',
             'edit_location' => 'location',
             'edit_contact' => 'contact_info',
+            'edit_password' => 'account_password',
+            'edit_branding' => 'store_branding',
+            'edit_plan' => 'business_plan',
+            'edit_kyc' => 'kyc_documents',
+            'edit_terms' => 'terms_acceptance',
             'edit_hours' => 'operating_hours',
-            'edit_documents' => 'documents',
+            'edit_documents' => 'kyc_documents',
         ];
 
         if (isset($editMap[$buttonId])) {
             $this->handleEditSection($conversation, $contact, $editMap[$buttonId], $gateway);
+            return;
+        }
+
+        // Onboarding interactive buttons (business plan selection, terms acceptance)
+        if (in_array($buttonId, ['plan_commission', 'plan_subscription', 'accept_terms', 'decline_terms'])) {
+            $msg = new WhatsAppMessage();
+            $msg->type = 'interactive';
+            $msg->content = [
+                'interactive' => [
+                    'button_reply' => ['id' => $buttonId, 'title' => $buttonId],
+                ],
+            ];
+            $this->onboardingService->processStep($conversation, $contact, $msg, $gateway);
             return;
         }
 
@@ -287,11 +306,17 @@ class ConversationManager
 
         $editMap = [
             'edit_business_basics' => 'business_basics',
+            'edit_owner_info' => 'owner_info',
             'edit_category' => 'category_selection',
             'edit_location' => 'location',
             'edit_contact' => 'contact_info',
+            'edit_password' => 'account_password',
+            'edit_branding' => 'store_branding',
+            'edit_plan' => 'business_plan',
+            'edit_kyc' => 'kyc_documents',
+            'edit_terms' => 'terms_acceptance',
             'edit_hours' => 'operating_hours',
-            'edit_documents' => 'documents',
+            'edit_documents' => 'kyc_documents',
         ];
 
         if (isset($editMap[$selectionId])) {
@@ -562,12 +587,15 @@ class ConversationManager
                 [[
                     'title' => 'Application Sections',
                     'rows' => [
-                        ['id' => 'edit_business_basics', 'title' => '🏪 Business Info', 'description' => 'Name and description'],
-                        ['id' => 'edit_category', 'title' => '📂 Category'],
-                        ['id' => 'edit_location', 'title' => '📍 Location'],
-                        ['id' => 'edit_contact', 'title' => '📧 Contact Info'],
-                        ['id' => 'edit_hours', 'title' => '🕐 Operating Hours'],
-                        ['id' => 'edit_documents', 'title' => '📄 Documents'],
+                        ['id' => 'edit_business_basics', 'title' => '🏪 Business Name', 'description' => 'Update shop name'],
+                        ['id' => 'edit_owner_info', 'title' => '👤 Owner Name', 'description' => 'Update your full name'],
+                        ['id' => 'edit_category', 'title' => '📂 Category', 'description' => 'Update business category'],
+                        ['id' => 'edit_location', 'title' => '📍 Location', 'description' => 'Update physical address or pin'],
+                        ['id' => 'edit_contact', 'title' => '📧 Contact Email', 'description' => 'Update notification email'],
+                        ['id' => 'edit_password', 'title' => '🔐 Password', 'description' => 'Update dashboard password'],
+                        ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Update shop logo / photo'],
+                        ['id' => 'edit_plan', 'title' => '💼 Business Plan', 'description' => 'Commission or Subscription'],
+                        ['id' => 'edit_kyc', 'title' => '📑 KYC & TIN', 'description' => 'Update TIN or registration doc'],
                     ],
                 ]],
                 'Edit Application'

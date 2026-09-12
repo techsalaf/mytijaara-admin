@@ -372,8 +372,8 @@ class WhatsAppVendorConciergeTest extends TestCase
         $conversation->refresh();
         $session->refresh();
 
-        $this->assertEquals('category_selection', $conversation->current_step);
-        $this->assertEquals('category_selection', $session->current_step);
+        $this->assertEquals('owner_info', $conversation->current_step);
+        $this->assertEquals('owner_info', $session->current_step);
     }
 
     /** @test */
@@ -667,5 +667,217 @@ class WhatsAppVendorConciergeTest extends TestCase
         $this->assertEquals('review_submit', $conversation->current_step);
         $this->assertEquals('review_submit', $session->current_step);
         $this->assertEquals('Mon-Sat 9am - 6pm', $session->collected_data['schedule']);
+    }
+
+    /** @test */
+    public function it_extracts_and_validates_owner_info()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'Rasheed Bello'],
+            'raw_text' => 'Rasheed Bello',
+        ]);
+
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+
+        $data = $extractMethod->invoke($service, $msg, 'owner_info', null);
+
+        $this->assertEquals('Rasheed', $data['f_name']);
+        $this->assertEquals('Bello', $data['l_name']);
+
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        $validation = $validateMethod->invoke($service, 'owner_info', $data);
+        $this->assertTrue($validation['valid']);
+    }
+
+    /** @test */
+    public function it_validates_strong_account_password_and_scrubs_plaintext()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        // Weak password fails
+        $weakValidation = $validateMethod->invoke($service, 'account_password', ['password' => 'simple']);
+        $this->assertFalse($weakValidation['valid']);
+
+        // Strong password passes
+        $strongValidation = $validateMethod->invoke($service, 'account_password', ['password' => 'ShopPass@2026']);
+        $this->assertTrue($strongValidation['valid']);
+    }
+
+    /** @test */
+    public function it_extracts_business_plan_selection()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+
+        // Commission button
+        $msgComm = new WhatsAppMessage([
+            'type' => 'interactive',
+            'content' => [
+                'interactive' => [
+                    'button_reply' => ['id' => 'plan_commission', 'title' => '💼 Commission-Based'],
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+        $dataComm = $extractMethod->invoke($service, $msgComm, 'business_plan', null);
+        $this->assertEquals('commission-base', $dataComm['business_plan']);
+
+        // Subscription button
+        $msgSub = new WhatsAppMessage([
+            'type' => 'interactive',
+            'content' => [
+                'interactive' => [
+                    'button_reply' => ['id' => 'plan_subscription', 'title' => '📅 Subscription Plan'],
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+        $dataSub = $extractMethod->invoke($service, $msgSub, 'business_plan', null);
+        $this->assertEquals('subscription-base', $dataSub['business_plan']);
+    }
+
+    /** @test */
+    public function it_extracts_kyc_documents_and_supports_skip()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+
+        // TIN text
+        $msgTin = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'RC-12345678'],
+            'raw_text' => 'RC-12345678',
+        ]);
+        $dataTin = $extractMethod->invoke($service, $msgTin, 'kyc_documents', null);
+        $this->assertEquals('RC-12345678', $dataTin['tin']);
+
+        // Skip
+        $msgSkip = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'Skip'],
+            'raw_text' => 'Skip',
+        ]);
+        $dataSkip = $extractMethod->invoke($service, $msgSkip, 'kyc_documents', null);
+        $this->assertNull($dataSkip['tin']);
+        $this->assertTrue($dataSkip['kyc_skipped']);
+    }
+
+    /** @test */
+    public function it_validates_terms_and_conditions_acceptance()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        // Accept
+        $msgAccept = new WhatsAppMessage([
+            'type' => 'interactive',
+            'content' => [
+                'interactive' => [
+                    'button_reply' => ['id' => 'accept_terms', 'title' => '✅ I Accept'],
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+        $dataAccept = $extractMethod->invoke($service, $msgAccept, 'terms_acceptance', null);
+        $this->assertTrue($dataAccept['terms_accepted']);
+        $validation = $validateMethod->invoke($service, 'terms_acceptance', $dataAccept);
+        $this->assertTrue($validation['valid']);
+
+        // Decline
+        $msgDecline = new WhatsAppMessage([
+            'type' => 'interactive',
+            'content' => [
+                'interactive' => [
+                    'button_reply' => ['id' => 'decline_terms', 'title' => '❌ Decline'],
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+        $dataDecline = $extractMethod->invoke($service, $msgDecline, 'terms_acceptance', null);
+        $this->assertFalse($dataDecline['terms_accepted']);
+        $validationDecline = $validateMethod->invoke($service, 'terms_acceptance', $dataDecline);
+        $this->assertFalse($validationDecline['valid']);
+    }
+
+    /** @test */
+    public function it_submits_application_with_null_vendor_status_for_pending_approval()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_sub_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'review_submit',
+        ]);
+
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'review_submit',
+            'collected_data' => [
+                'business_name' => 'Canonical Shop Test',
+                'f_name' => 'Rasheed',
+                'l_name' => 'Bello',
+                'email' => 'canonical_' . uniqid() . '@mytijaara.test',
+                'phone' => '234' . rand(8000000000, 8099999999),
+                'password_hash' => bcrypt('SecurePass@123'),
+                'latitude' => 6.5244,
+                'longitude' => 3.3792,
+                'address' => '10 Marina Street, Lagos Island',
+                'business_plan' => 'commission-base',
+                'terms_accepted' => true,
+            ],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $conversation->update(['onboarding_session_id' => $session->id]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendTextMessage')
+            ->with($contact->phone_number, $this->stringContains('Application Has Been Submitted'));
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $service->submitApplication($conversation, $contact, $session, $gateway);
+
+        $session->refresh();
+        $this->assertEquals('submitted', $session->status);
+        $this->assertNotNull($session->vendor_id);
+        $this->assertNotNull($session->store_id);
+
+        $vendor = \App\Models\Vendor::find($session->vendor_id);
+        $this->assertNotNull($vendor);
+        $this->assertEquals('Rasheed', $vendor->f_name);
+        $this->assertEquals('Bello', $vendor->l_name);
+        // CRITICAL BUG FIX VERIFICATION: vendor status MUST be null to be in Pending Requests!
+        $this->assertNull($vendor->status, 'Vendor status must be null so application appears in Admin Pending Requests');
+
+        $store = \App\Models\Store::find($session->store_id);
+        $this->assertNotNull($store);
+        $this->assertEquals('Canonical Shop Test', $store->name);
+        $this->assertEquals(0, $store->status);
+        $this->assertEquals('commission', $store->store_business_model);
     }
 }
