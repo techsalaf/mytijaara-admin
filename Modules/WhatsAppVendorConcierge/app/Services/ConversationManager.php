@@ -229,6 +229,20 @@ class ConversationManager
      */
     public function handleButtonResponse(WhatsAppConversation $conversation, WhatsAppContact $contact, string $buttonId, WhatsAppGateway $gateway): void
     {
+        $editMap = [
+            'edit_business_basics' => 'business_basics',
+            'edit_category' => 'category_selection',
+            'edit_location' => 'location',
+            'edit_contact' => 'contact_info',
+            'edit_hours' => 'operating_hours',
+            'edit_documents' => 'documents',
+        ];
+
+        if (isset($editMap[$buttonId])) {
+            $this->handleEditSection($conversation, $contact, $editMap[$buttonId], $gateway);
+            return;
+        }
+
         match ($buttonId) {
             'resume_onboarding' => $this->resumeOnboarding($conversation, $contact, $gateway),
             'start_fresh' => $this->startFreshOnboarding($conversation, $contact, $gateway),
@@ -268,6 +282,20 @@ class ConversationManager
                 ],
             ];
             $this->onboardingService->processStep($conversation, $contact, $message, $gateway);
+            return;
+        }
+
+        $editMap = [
+            'edit_business_basics' => 'business_basics',
+            'edit_category' => 'category_selection',
+            'edit_location' => 'location',
+            'edit_contact' => 'contact_info',
+            'edit_hours' => 'operating_hours',
+            'edit_documents' => 'documents',
+        ];
+
+        if (isset($editMap[$selectionId])) {
+            $this->handleEditSection($conversation, $contact, $editMap[$selectionId], $gateway);
             return;
         }
 
@@ -522,7 +550,7 @@ class ConversationManager
     /**
      * Handle edit application request.
      */
-    protected function handleEditApplication(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    public function handleEditApplication(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         $session = OnboardingSession::find($conversation->onboarding_session_id);
 
@@ -548,9 +576,37 @@ class ConversationManager
     }
 
     /**
+     * Handle editing a specific onboarding section.
+     */
+    public function handleEditSection(WhatsAppConversation $conversation, WhatsAppContact $contact, string $targetStep, WhatsAppGateway $gateway): void
+    {
+        $session = OnboardingSession::find($conversation->onboarding_session_id);
+
+        if (!$session) {
+            $gateway->sendTextMessage($contact->phone_number, "No active application found to edit. Reply *Start* to begin a new application.");
+            return;
+        }
+
+        $conversation->update([
+            'state' => 'onboarding_active',
+            'current_step' => $targetStep,
+            'onboarding_session_id' => $session->id,
+        ]);
+
+        $session->update([
+            'current_step' => $targetStep,
+            'last_activity_at' => now(),
+        ]);
+
+        $session->updateData(['_in_review' => true]);
+
+        $this->onboardingService->sendStepPrompt($conversation, $contact, $targetStep, $gateway);
+    }
+
+    /**
      * Handle cancel application.
      */
-    protected function handleCancelApplication(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    public function handleCancelApplication(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         $session = OnboardingSession::find($conversation->onboarding_session_id);
 

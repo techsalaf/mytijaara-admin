@@ -40,6 +40,58 @@ class VendorOnboardingService
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
         $step = $conversation->current_step ?? 'welcome';
+        $session = OnboardingSession::find($conversation->onboarding_session_id);
+
+        // Special handling when currently on review_submit
+        if ($step === 'review_submit') {
+            $rawText = strtolower(trim((string) ($message->raw_text ?? ($message->content['text'] ?? ''))));
+
+            if (in_array($rawText, ['submit', 'yes', 'confirm', 'proceed', 'done', 'ok', 'okay', 'correct'])) {
+                $this->submitApplication($conversation, $contact, $session, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['cancel', 'stop', 'abort'])) {
+                $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+                $conversationManager->handleCancelApplication($conversation, $contact, $gateway);
+                return;
+            }
+
+            if (in_array($rawText, ['edit', 'change', 'modify', 'update'])) {
+                $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+                $conversationManager->handleEditApplication($conversation, $contact, $gateway);
+                return;
+            }
+
+            $editKeywordMap = [
+                'business' => 'business_basics',
+                'name' => 'business_basics',
+                'category' => 'category_selection',
+                'location' => 'location',
+                'address' => 'location',
+                'email' => 'contact_info',
+                'phone' => 'contact_info',
+                'contact' => 'contact_info',
+                'hour' => 'operating_hours',
+                'hours' => 'operating_hours',
+                'operating' => 'operating_hours',
+                'document' => 'documents',
+                'documents' => 'documents',
+            ];
+
+            foreach ($editKeywordMap as $keyword => $targetStep) {
+                if (str_contains($rawText, $keyword)) {
+                    $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+                    $conversationManager->handleEditSection($conversation, $contact, $targetStep, $gateway);
+                    return;
+                }
+            }
+
+            // If user typed anything else, re-send the review summary with action buttons
+            $this->sendStepPrompt($conversation, $contact, 'review_submit', $gateway);
+            return;
+        }
+
         $data = $this->extractStepData($message, $step, $contact);
 
         // Validate step data
@@ -126,6 +178,7 @@ class VendorOnboardingService
             ],
             'operating_hours' => [
                 'schedule' => $rawText ?: ($content['text'] ?? null),
+                'operating_hours' => $rawText ?: ($content['text'] ?? null),
             ],
             'documents' => (function () use ($message, $content) {
                 // 1. If message already has a media record ID
@@ -414,11 +467,31 @@ class VendorOnboardingService
         ?OnboardingSession $session,
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
+        $inReview = !empty($session?->collected_data['_in_review']);
+
+        if ($inReview) {
+            // User was editing a section; return directly to review summary
+            $conversation->update(['current_step' => 'review_submit']);
+            $session?->update([
+                'current_step' => 'review_submit',
+                'last_activity_at' => now(),
+            ]);
+
+            $this->sendStepPrompt($conversation, $contact, 'review_submit', $gateway);
+            return;
+        }
+
         $nextStep = $session?->getNextStep();
 
         if (!$nextStep) {
-            // All steps complete - submit application
-            $this->submitApplication($conversation, $contact, $session, $gateway);
+            // All steps complete - advance to review_submit
+            $conversation->update(['current_step' => 'review_submit']);
+            $session?->update([
+                'current_step' => 'review_submit',
+                'last_activity_at' => now(),
+            ]);
+
+            $this->sendStepPrompt($conversation, $contact, 'review_submit', $gateway);
             return;
         }
 
@@ -443,6 +516,11 @@ class VendorOnboardingService
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
         $session = OnboardingSession::find($conversation->onboarding_session_id);
+
+        if ($step === 'review_submit' && $session) {
+            $session->updateData(['_in_review' => true]);
+            $session->refresh();
+        }
 
         $prompts = [
             'business_basics' => [
@@ -500,19 +578,33 @@ class VendorOnboardingService
     /**
      * Build review summary from session data.
      */
-    protected function buildReviewSummary(?OnboardingSession $session): string
+    public function buildReviewSummary(?OnboardingSession $session): string
     {
         $data = $session?->collected_data ?? [];
         $name = $data['business_name'] ?? 'Not provided';
+
+        $category = $data['category_name'] ?? null;
+        if (!$category && !empty($data['category_id'])) {
+            $category = \App\Models\Category::find($data['category_id'])?->name;
+        }
+        $category = $category ?: 'Not specified';
+
         $address = $data['address'] ?? 'Not provided';
         $email = $data['email'] ?? 'Not provided';
         $phone = $data['phone'] ?? 'Not provided';
+        $hours = $data['schedule'] ?? ($data['operating_hours'] ?? 'Standard business hours');
+
+        $hasDoc = !empty($data['media_id']);
+        $documents = $hasDoc ? 'Uploaded' : 'Skipped';
 
         return "Please review your application:\n\n" .
             "🏪 Business: {$name}\n" .
+            "📂 Category: {$category}\n" .
             "📍 Location: {$address}\n" .
             "📧 Email: {$email}\n" .
-            "📱 Phone: {$phone}\n\n" .
+            "📱 Phone: {$phone}\n" .
+            "🕐 Hours: {$hours}\n" .
+            "📄 Document: {$documents}\n\n" .
             "Is everything correct?";
     }
 

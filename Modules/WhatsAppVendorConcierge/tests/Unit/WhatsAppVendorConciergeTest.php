@@ -523,4 +523,149 @@ class WhatsAppVendorConciergeTest extends TestCase
         $validation = $validateMethod->invoke($service, 'documents', $data);
         $this->assertTrue($validation['valid']);
     }
+
+    /** @test */
+    public function it_builds_complete_review_summary_including_hours_and_category_and_documents()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'review_submit',
+            'collected_data' => [
+                'business_name' => 'Ronix Superstore',
+                'category_name' => 'Groceries & Staples',
+                'address' => 'Plot 4, Commercial Ave, Lagos',
+                'email' => 'store@ronix.com',
+                'phone' => '2348012345678',
+                'schedule' => 'Mon-Sat 8am - 9pm, Sun 10am - 4pm',
+                'media_id' => 999,
+            ],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $summary = $service->buildReviewSummary($session);
+
+        $this->assertStringContainsString('Ronix Superstore', $summary);
+        $this->assertStringContainsString('Groceries & Staples', $summary);
+        $this->assertStringContainsString('Plot 4, Commercial Ave, Lagos', $summary);
+        $this->assertStringContainsString('store@ronix.com', $summary);
+        $this->assertStringContainsString('2348012345678', $summary);
+        $this->assertStringContainsString('Mon-Sat 8am - 9pm, Sun 10am - 4pm', $summary);
+        $this->assertStringContainsString('Uploaded', $summary);
+    }
+
+    /** @test */
+    public function it_handles_edit_section_from_list_and_sets_target_step()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'review_submit',
+            'collected_data' => [
+                'business_name' => 'Ronix Superstore',
+                '_in_review' => true,
+            ],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'review_submit',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendTextMessage')
+            ->with(
+                $contact->phone_number,
+                $this->stringContains('What are your operating hours?')
+            );
+
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $manager->handleListResponse($conversation, $contact, 'edit_hours', '🕐 Operating Hours', $gateway);
+
+        $conversation->refresh();
+        $session->refresh();
+
+        $this->assertEquals('operating_hours', $conversation->current_step);
+        $this->assertEquals('operating_hours', $session->current_step);
+        $this->assertTrue($session->collected_data['_in_review']);
+    }
+
+    /** @test */
+    public function it_returns_to_review_submit_after_editing_section_when_in_review()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'operating_hours',
+            'collected_data' => [
+                'business_name' => 'Ronix Superstore',
+                'category_id' => 1,
+                'address' => 'Plot 4, Commercial Ave',
+                'latitude' => 6.5,
+                'longitude' => 3.3,
+                'email' => 'store@ronix.com',
+                'phone' => '2348012345678',
+                '_in_review' => true,
+            ],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'operating_hours',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendButtonMessage')
+            ->with(
+                $contact->phone_number,
+                $this->stringContains('Mon-Sat 9am - 6pm'),
+                $this->isType('array'),
+                'Review Your Application'
+            );
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'Mon-Sat 9am - 6pm'],
+            'raw_text' => 'Mon-Sat 9am - 6pm',
+        ]);
+
+        $service->processStep($conversation, $contact, $msg, $gateway);
+
+        $conversation->refresh();
+        $session->refresh();
+
+        $this->assertEquals('review_submit', $conversation->current_step);
+        $this->assertEquals('review_submit', $session->current_step);
+        $this->assertEquals('Mon-Sat 9am - 6pm', $session->collected_data['schedule']);
+    }
 }
