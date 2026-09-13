@@ -225,7 +225,7 @@ jobs:
 
           if [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ]; then
             echo "→ Database migrations changed or forced; running migrate --force"
-            ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan migrate --force"
+            ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan migrate --force && php artisan module:migrate --all --force"
           else
             echo "→ No database migrations changed; skipping migrations"
           fi
