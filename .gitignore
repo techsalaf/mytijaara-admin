@@ -34,6 +34,7 @@ PROJECT_CONTEXT.md
 AGENTS.md
 Modules/Builder/AGENTS.md
 Modules/Builder/resources/dist/build.zip
+.agents/
 
 # Feature documentation (local)
 /Documentation/last-orders-store-wise.md
