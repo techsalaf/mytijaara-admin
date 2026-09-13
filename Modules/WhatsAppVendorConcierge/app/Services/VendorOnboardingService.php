@@ -1325,208 +1325,36 @@ class VendorOnboardingService
                 }
             }
 
-            // Check if vendor already exists with this phone or email
-            $existingVendorByPhone = Vendor::where('phone', $phone)->first();
-            $existingVendorByEmail = Vendor::where('email', $email)->first();
+            $dto = \App\DTOs\VendorApplicationDTO::fromWhatsAppSession($session, $contact);
+            $appService = app(\App\Services\VendorApplicationService::class);
+            $result = $appService->submit($dto);
+            $vendor = $result['vendor'];
+            $store = $result['store'];
 
-            if ($existingVendorByEmail && (!$existingVendorByPhone || $existingVendorByEmail->id !== $existingVendorByPhone->id)) {
-                $gateway->sendTextMessage($contact->phone_number, "⚠️ The email *{$email}* is already associated with another vendor account. Please reply *Edit Email* to use a different email address.");
-                return;
-            }
-
-            DB::beginTransaction();
-
-            $fName = $data['f_name'] ?? ($data['business_name'] ?? 'Business');
+            $fName = $data['f_name'] ?? ($data['business_name'] ?? 'Vendor');
             $lName = $data['l_name'] ?? 'Owner';
-            $passwordHash = $data['password_hash'] ?? bcrypt(\Illuminate\Support\Str::random(16));
-
-            if ($existingVendorByPhone) {
-                $existingStore = Store::where('vendor_id', $existingVendorByPhone->id)->first();
-                if ($existingStore && (int)$existingStore->status === 1) {
-                    DB::rollBack();
-                    $gateway->sendTextMessage(
-                        $contact->phone_number,
-                        "ℹ️ An approved store (*{$existingStore->name}*) is already registered with this phone number.\n\nYou can log into your merchant dashboard at:\nhttps://dashboard.mytijaara.com/vendor/auth/login\n\nIf you need assistance, reply *Support*."
-                    );
-                    return;
-                }
-
-                // Refresh existing vendor record from previous test / unapproved application
-                $vendor = $existingVendorByPhone;
-                $vendor->f_name = $fName;
-                $vendor->l_name = $lName;
-                $vendor->email = $email;
-                if (!empty($passwordHash)) {
-                    $vendor->password = $passwordHash;
-                }
-                $vendor->status = null; // CRITICAL: null guarantees store appears in Admin Pending Requests!
-                $vendor->save();
-            } else {
-                $vendor = new Vendor();
-                $vendor->f_name = $fName;
-                $vendor->l_name = $lName;
-                $vendor->email = $email;
-                $vendor->phone = $phone;
-                $vendor->password = $passwordHash;
-                $vendor->status = null; // CRITICAL: null guarantees store appears in Admin Pending Requests!
-                $vendor->save();
-            }
 
             // Link contact to vendor
-            $contact->linkToApplicant();
             $contact->update(['vendor_id' => $vendor->id]);
 
-            // Canonical media placement to store/ and store/cover/
-            $targetDisk = Helpers::getDisk();
-            $logoName = 'def.png';
-            $coverName = 'def.png';
-            $tinCertName = null;
-
-            // Handle store logo (mandatory)
-            $logoMediaId = $data['logo_media_id'] ?? ($data['media_id'] ?? null);
-            if (!empty($logoMediaId)) {
-                $logoMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($logoMediaId);
-                if ($logoMedia && !empty($logoMedia->file_path)) {
-                    $sourceDisk = $logoMedia->storage_disk ?: 'public';
-                    if (\Illuminate\Support\Facades\Storage::disk($sourceDisk)->exists($logoMedia->file_path)) {
-                        $content = \Illuminate\Support\Facades\Storage::disk($sourceDisk)->get($logoMedia->file_path);
-                        $ext = pathinfo($logoMedia->file_path, PATHINFO_EXTENSION) ?: 'png';
-                        $logoName = \Carbon\Carbon::now()->toDateString() . '-' . uniqid() . '.' . $ext;
-                        \Illuminate\Support\Facades\Storage::disk($targetDisk)->put('store/' . $logoName, $content);
-                    }
-                }
-            }
-
-            // Handle cover photo (optional)
-            if (!empty($data['cover_media_id'])) {
-                $coverMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['cover_media_id']);
-                if ($coverMedia && !empty($coverMedia->file_path)) {
-                    $sourceDisk = $coverMedia->storage_disk ?: 'public';
-                    if (\Illuminate\Support\Facades\Storage::disk($sourceDisk)->exists($coverMedia->file_path)) {
-                        $content = \Illuminate\Support\Facades\Storage::disk($sourceDisk)->get($coverMedia->file_path);
-                        $ext = pathinfo($coverMedia->file_path, PATHINFO_EXTENSION) ?: 'png';
-                        $coverName = \Carbon\Carbon::now()->toDateString() . '-' . uniqid() . '.' . $ext;
-                        \Illuminate\Support\Facades\Storage::disk($targetDisk)->put('store/cover/' . $coverName, $content);
-                    }
-                }
-            }
-
-            // KYC remains on WhatsAppMedia's private disk. The core store record
-            // retains the tax number; admin retrieval uses the authorized media ID.
-            if (!empty($data['tin_media_id'])) {
-                $tinMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['tin_media_id']);
-                if (!$tinMedia || $tinMedia->status !== 'processed' || empty($tinMedia->file_path)) {
-                    DB::rollBack();
-                    $gateway->sendTextMessage($contact->phone_number, 'Your KYC document is still being checked. Please wait for confirmation before submitting.');
-                    return;
-                }
-            }
-
-            // The canonical payment flow changes this from `none` to `subscription`
-            // only after a successful payment or free-trial activation.
-            $businessModel = ($data['business_plan'] ?? '') === 'subscription-base' ? 'none' : 'commission';
-
-            // Create or update Store (pending status: 0)
-            $store = Store::where('vendor_id', $vendor->id)->first() ?? new Store();
-            $store->name = $data['business_name'] ?? 'Store';
-            $store->phone = $phone;
-            $store->email = $email;
-            $store->logo = $logoName;
-            $store->cover_photo = $coverName;
-            $store->latitude = $data['latitude'];
-            $store->longitude = $data['longitude'];
-            $store->address = $data['address'];
-            $store->vendor_id = $vendor->id;
-            $store->zone_id = $zone->id;
-            $store->module_id = $module->id;
-            $store->pickup_zone_id = json_encode(!empty($data['pickup_zone_id']) ? [(string) $data['pickup_zone_id']] : []);
-            $store->status = 0; // 0 = inactive, awaiting admin approval
-            $store->store_business_model = $businessModel;
-            $store->delivery_time = $data['delivery_time'] ?? '20-40 min';
-            $store->tin = $data['tin'] ?? ($data['cac_number'] ?? null);
-            $store->tin_expire_date = $data['tin_expire_date'] ?? null;
-            $store->tin_certificate_image = null;
-
-            // Structured metadata for Nigerian KYC & onboarding audit
-            $metadata = [
-                'onboarding_source' => 'whatsapp',
-                'kyc_type' => $data['kyc_type'] ?? (!empty($data['tin']) ? 'tin' : (!empty($data['cac_number']) ? 'cac' : (!empty($data['nin']) ? 'nin' : 'none'))),
-                'cac_number' => $data['cac_number'] ?? null,
-                'nin' => $data['nin'] ?? null,
-                'kyc_media_id' => $data['tin_media_id'] ?? null,
-                'operating_hours_raw' => $data['operating_hours'] ?? null,
-                'terms_accepted_at' => now()->toIso8601String(),
-                'privacy_accepted_at' => now()->toIso8601String(),
-            ];
-            $store->meta_data = json_encode($metadata);
-            $store->save();
-
-            // Translations matching VendorController.php:168-169
-            try {
-                Helpers::add_or_update_translations(
-                    request: new \Illuminate\Http\Request([
-                        'lang' => ['default'],
-                        'name' => ['default' => $store->name],
-                        'address' => ['default' => $store->address],
-                    ]),
-                    key_data: 'name',
-                    name_field: 'name',
-                    model_name: 'Store',
-                    data_id: $store->id,
-                    data_value: $store->name
-                );
-                Helpers::add_or_update_translations(
-                    request: new \Illuminate\Http\Request([
-                        'lang' => ['default'],
-                        'name' => ['default' => $store->name],
-                        'address' => ['default' => $store->address],
-                    ]),
-                    key_data: 'address',
-                    name_field: 'address',
-                    model_name: 'Store',
-                    data_id: $store->id,
-                    data_value: $store->address
-                );
-            } catch (\Throwable $transEx) {
-                Log::warning('Translations insertion warning: ' . $transEx->getMessage());
-            }
-
-            // Preserve the chosen package, but do not create or activate a
-            // subscription record here. The existing payment service owns that
-            // state transition and its transaction/audit records.
-            if ($subscriptionPackage) {
-                $store->package_id = $subscriptionPackage->id;
-                $store->save();
-            }
-
-            // Insert operating hours schedule
-            try {
-                $this->insertStoreSchedule($store, $data['operating_hours'] ?? null);
-            } catch (\Throwable $schedEx) {
-                Log::warning('Schedule insertion warning: ' . $schedEx->getMessage());
-            }
-
-            // Update session
             if ($session) {
                 $session->update([
                     'vendor_id' => $vendor->id,
                     'store_id' => $store->id,
                     'status' => 'submitted',
+                    'state' => 'onboarding_completed',
                     'completed_at' => now(),
                 ]);
             }
 
-            // Update conversation
-            $conversation->update([
-                'vendor_id' => $vendor->id,
-                'state' => 'onboarding_completed',
-            ]);
+            // Insert operating hours if specified
+            $this->insertStoreSchedule($store, $data['operating_hours'] ?? null);
 
-            DB::commit();
-
-            $paymentUrl = $subscriptionPackage && $session
-                ? URL::temporarySignedRoute('whatsapp.onboarding.subscription-payment', now()->addDays(7), ['session' => $session->id])
-                : null;
+            $paymentUrl = null;
+            if ($subscriptionPackage && $session) {
+                $paymentLifecycle = app(\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class);
+                $paymentUrl = $paymentLifecycle->issuePaymentLink($session, 7);
+            }
 
             // Send confirmation to vendor
             $confirmation =
@@ -1550,9 +1378,6 @@ class VendorOnboardingService
                 );
             }
 
-            // Notify admin (reuse existing email)
-            $this->notifyAdmin($vendor, $store);
-
             OnboardingEvent::log(
                 $session?->id ?? 0,
                 $contact->id,
@@ -1560,9 +1385,10 @@ class VendorOnboardingService
                 'review_submit',
                 ['vendor_id' => $vendor->id, 'store_id' => $store->id]
             );
-
         } catch (\Throwable $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
             Log::error('Application submission failed', [
                 'contact_id' => $contact->id,
                 'error' => $e->getMessage(),

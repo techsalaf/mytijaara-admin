@@ -27,6 +27,12 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
 
         // Register vendor approval/denial observer for WhatsApp notifications
         \App\Models\Vendor::observe(\Modules\WhatsAppVendorConcierge\app\Observers\VendorApprovalObserver::class);
+
+        // Register canonical domain event listener for status transitions
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\VendorApplicationStatusChanged::class,
+            \Modules\WhatsAppVendorConcierge\app\Listeners\SendWhatsAppStatusNotificationOnDomainEvent::class
+        );
     }
 
     /**
@@ -40,6 +46,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
         $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
         $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class);
     }
 
     /**
@@ -129,6 +136,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class,
             \Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class,
             \Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class,
+            \Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class,
         ];
     }
 

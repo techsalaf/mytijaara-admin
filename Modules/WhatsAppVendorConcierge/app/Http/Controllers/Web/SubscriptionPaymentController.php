@@ -6,9 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Store;
 use Illuminate\Http\RedirectResponse;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
+use Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService;
 
 class SubscriptionPaymentController extends Controller
 {
+    public function __construct(
+        protected SubscriptionLifecycleService $lifecycleService
+    ) {}
+
     /**
      * Send a verified WhatsApp applicant into the existing subscription payment
      * flow. The signed route prevents guessed application IDs from becoming a
@@ -24,6 +29,8 @@ class SubscriptionPaymentController extends Controller
             ->firstOrFail();
 
         abort_unless($store->store_business_model === 'none', 409);
+
+        $this->lifecycleService->recordPending($session);
 
         return redirect()->route('restaurant.secondStep', [
             'store_id' => $store->id,

@@ -16,6 +16,10 @@ use Modules\WhatsAppVendorConcierge\app\Agents\VendorAiContext;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
+use Modules\WhatsAppVendorConcierge\app\Services\AiBudgetService;
+use Modules\WhatsAppVendorConcierge\app\Services\LanguagePreferenceService;
+use Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService;
+use Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService;
 
 class RunVendorAiConversation implements ShouldQueue
 {
@@ -31,8 +35,12 @@ class RunVendorAiConversation implements ShouldQueue
         public WhatsAppMessage $message,
     ) {}
 
-    public function handle(): void
-    {
+    public function handle(
+        AiBudgetService $budgetService,
+        LanguagePreferenceService $languageService,
+        NotificationPreferenceService $prefService,
+        SupportCaseService $supportService
+    ): void {
         try {
             // Refresh conversation
             $this->conversation->refresh();
@@ -41,27 +49,7 @@ class RunVendorAiConversation implements ShouldQueue
                 return;
             }
 
-            // Get vendor and store
-            $vendor = $this->contact->vendor;
-            if (!$vendor) {
-                Log::warning('RunVendorAiConversation: No vendor for contact', [
-                    'contact_id' => $this->contact->id,
-                ]);
-                return;
-            }
-
-            $store = $vendor->store;
-            if (!$store) {
-                Log::warning('RunVendorAiConversation: No store for vendor', [
-                    'vendor_id' => $vendor->id,
-                ]);
-                return;
-            }
-
-            // Load conversation history (last N messages)
-            $history = $this->loadHistory();
-
-            // Build user message from incoming message
+            // Extract text from incoming message
             $userText = $this->extractMessageText($this->message);
             if (!$userText) {
                 Log::info('RunVendorAiConversation: No text to process', [
@@ -70,8 +58,81 @@ class RunVendorAiConversation implements ShouldQueue
                 return;
             }
 
-            // Detect language from message
-            $language = $this->detectLanguage($userText);
+            $trimmed = trim($userText);
+
+            // 1. Check deterministic notification preference commands (STOP, PAUSE ALERTS, etc.)
+            $prefResult = $prefService->handleInboundCommand($this->contact, $trimmed);
+            if ($prefResult !== null) {
+                $this->sendReply($prefResult['message']);
+                return;
+            }
+
+            // 2. Check deterministic language preference commands (CHANGE LANGUAGE, 1, 2, etc.)
+            $langResult = $languageService->handleLanguageCommand($this->contact, $trimmed);
+            if ($langResult !== null) {
+                $this->sendReply($langResult['body']);
+                return;
+            }
+
+            // 3. Check deterministic human support trigger
+            if (preg_match('/^(support|agent|human|talk to support|help desk|reopen\b)/i', $trimmed)) {
+                $activeCase = $supportService->getActiveCase($this->contact);
+                if ($activeCase) {
+                    $supportService->appendCustomerMessage($activeCase, $trimmed);
+                    $this->sendReply("You have an active support ticket *#{$activeCase->ticket_id}* ({$activeCase->status}).\n\nYour message has been added to the ticket. A support representative will respond shortly.");
+                } else {
+                    $newCase = $supportService->createCase(
+                        contact: $this->contact,
+                        subject: 'Vendor requested human support via WhatsApp',
+                        initialMessage: $trimmed,
+                        conversation: $this->conversation
+                    );
+                    $this->sendReply("🎫 Support ticket *#{$newCase->ticket_id}* has been created for your request.\n\nA MyTijaara support specialist has been assigned and will follow up with you directly here. Thank you for your patience!");
+                }
+                return;
+            }
+
+            // 4. Resolve vendor and store
+            $vendor = $this->contact->vendor;
+            if (!$vendor) {
+                Log::warning('RunVendorAiConversation: No vendor for contact', [
+                    'contact_id' => $this->contact->id,
+                ]);
+                return;
+            }
+
+            $store = $vendor->store ?? $vendor->stores?->first();
+            if (!$store) {
+                Log::warning('RunVendorAiConversation: No store for vendor', [
+                    'vendor_id' => $vendor->id,
+                ]);
+                return;
+            }
+
+            // 5. Check AI budget and circuit breaker
+            $budgetCheck = $budgetService->canInvokeAi($this->contact, $vendor);
+            if (!$budgetCheck['allowed']) {
+                Log::warning('RunVendorAiConversation: AI budget/rate limit check failed', [
+                    'reason' => $budgetCheck['reason'],
+                    'contact_id' => $this->contact->id,
+                    'vendor_id' => $vendor->id,
+                ]);
+                $this->sendReply($budgetCheck['fallback_message']);
+                return;
+            }
+
+            // Record turn usage
+            $budgetService->recordTurn($this->contact, $vendor);
+
+            // Load and limit conversation history
+            $rawHistory = $this->loadHistory();
+            $history = $budgetService->limitHistory($rawHistory, AiBudgetService::MAX_HISTORY_TURNS);
+
+            // Sanitize user text before sending to LLM (PII, credentials, bank accounts)
+            $sanitizedUserText = $budgetService->sanitizePromptInput($userText);
+
+            // Resolve persisted language preference
+            $language = $languageService->getLanguage($this->contact);
 
             // Create context for this turn
             $context = new VendorAiContext($this->contact->id, $this->conversation->id);
@@ -98,17 +159,27 @@ class RunVendorAiConversation implements ShouldQueue
             }
 
             // Send to AI and get response
-            $response = $agent->prompt($userText, provider: $provider, model: $model, timeout: 60);
+            $response = $agent->prompt($sanitizedUserText, provider: $provider, model: $model, timeout: 60);
 
             $replyText = (string) $response->text;
 
+            // Log AI token usage and estimated cost
+            $promptTokens = (int) ($response->usage->promptTokens ?? 0);
+            $completionTokens = (int) ($response->usage->completionTokens ?? 0);
+            $estimatedCost = ($promptTokens * 0.000005) + ($completionTokens * 0.000015);
+
+            $budgetService->logAiUsage(
+                contact: $this->contact,
+                vendor: $vendor,
+                model: $model,
+                promptTokens: $promptTokens,
+                completionTokens: $completionTokens,
+                cost: $estimatedCost,
+                isFallback: false
+            );
+
             // Send the response via WhatsApp
-            \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
-                $this->contact->phone_number,
-                'text',
-                ['body' => $replyText],
-                $this->conversation->id
-            )->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp-outbound'));
+            $this->sendReply($replyText);
 
             Log::info('Vendor AI conversation completed', [
                 'conversation_id' => $this->conversation->id,
@@ -118,25 +189,29 @@ class RunVendorAiConversation implements ShouldQueue
             ]);
 
         } catch (\Throwable $e) {
+            $budgetService->recordFailure($e);
+
             Log::error('RunVendorAiConversation failed', [
                 'conversation_id' => $this->conversation->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // Send error message to vendor
-            \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
-                $this->contact->phone_number,
-                'text',
-                [
-                    'body' => "Sorry, I'm having trouble understanding right now. 😓\n\n" .
-                             "Please try again in a moment, or say \"talk to support\" to connect with our team."
-                ],
-                $this->conversation->id
-            )->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp-outbound'));
+            // Send error fallback message to vendor
+            $this->sendReply("Sorry, I'm having trouble processing that right now. 😓\n\nPlease try again in a moment, or reply *SUPPORT* to connect directly with our support team.");
 
             throw $e;
         }
+    }
+
+    protected function sendReply(string $text): void
+    {
+        \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
+            $this->contact->phone_number,
+            'text',
+            ['body' => $text],
+            $this->conversation->id
+        )->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp-outbound'));
     }
 
     /**
@@ -216,49 +291,5 @@ class RunVendorAiConversation implements ShouldQueue
         }
 
         return null;
-    }
-
-    /**
-     * Detect language from message text.
-     * Returns ISO code: en, ha, yo, ig, pcm
-     */
-    protected function detectLanguage(string $text): string
-    {
-        $text = strtolower($text);
-
-        // Pidgin markers
-        $pidgin = ['wetin', 'dey', 'una', 'abeg', 'oya', 'naija', 'biko', 'abia'];
-        foreach ($pidgin as $marker) {
-            if (str_contains($text, $marker)) {
-                return 'pcm';
-            }
-        }
-
-        // Hausa markers
-        $hausa = ['yaya', 'naka', 'zan', 'don', 'ina', 'me', 'kuma', 'wannan'];
-        foreach ($hausa as $marker) {
-            if (str_contains($text, $marker)) {
-                return 'ha';
-            }
-        }
-
-        // Yoruba markers
-        $yoruba = ['bawo', 'jowo', 'mo', 'fun', 'ni', 'ti', 'ko', 'wa'];
-        foreach ($yoruba as $marker) {
-            if (str_contains($text, $marker)) {
-                return 'yo';
-            }
-        }
-
-        // Igbo markers
-        $igbo = ['kedu', 'biko', 'maka', 'nke', 'gi', 'ya', 'm', 'na'];
-        foreach ($igbo as $marker) {
-            if (str_contains($text, $marker)) {
-                return 'ig';
-            }
-        }
-
-        // Default to English
-        return 'en';
     }
 }

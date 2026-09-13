@@ -10,19 +10,34 @@ class UpdateOrderStatusTool extends BaseVendorTool
 {
     public function description(): string
     {
-        return 'Update an order\'s status. Requires order ID and new status. Valid statuses: "confirmed", "processing", "picked_up", "delivered", "cancelled".';
+        return 'Update an order status with explicit vendor confirmation. Requires order ID and target status. Valid statuses: "confirmed" (accept), "processing" (preparing), "handover" (ready for pickup), "delivered", "canceled" (reject).';
     }
 
     public function schema(JsonSchema $schema): array
     {
         return [
-            'order_id' => $schema->number()->description('Order ID (internal ID) - required')->required(),
-            'status' => $schema->string()->description('New status: "confirmed", "processing", "picked_up", "delivered", "cancelled"')->required(),
+            'order_id' => $schema->number()->description('Order ID (required)')->required(),
+            'status' => $schema->string()->description('Target status: "confirmed", "processing", "handover", "delivered", "canceled"')->required(),
+            'reason' => $schema->string()->description('Cancellation reason if rejecting/cancelling order')->required()->nullable(),
         ];
     }
 
     public function handle(Request $request): string
     {
-        return 'Please complete product and order changes in your secure vendor dashboard: '.rtrim(config('app.url'), '/').'/vendor-panel';
+        $this->recordTool('UpdateOrderStatusTool');
+        $orderId = (int) $request['order_id'];
+        $status = strtolower(trim($request['status']));
+
+        // Normalize status aliases
+        if ($status === 'picked_up' || $status === 'ready_for_pickup') {
+            $status = 'handover';
+        }
+        if ($status === 'cancelled') {
+            $status = 'canceled';
+        }
+
+        $reason = $request['reason'] ?? ($status === 'canceled' ? 'Rejected by vendor via WhatsApp' : null);
+
+        return $this->prepareOrderStatus($orderId, $status, $reason);
     }
 }

@@ -44,6 +44,42 @@ class WhatsAppMessage extends Model
         return $this->belongsTo(WhatsAppMedia::class, 'media_id');
     }
 
+    public function getReadAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        $ts = $this->metadata['receipt_timestamps']['read'] ?? null;
+        if ($ts !== null) {
+            return \Carbon\Carbon::createFromTimestampUTC((int) $ts);
+        }
+        return \Carbon\Carbon::parse($value);
+    }
+
+    public function getDeliveredAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        $ts = $this->metadata['receipt_timestamps']['delivered'] ?? null;
+        if ($ts !== null) {
+            return \Carbon\Carbon::createFromTimestampUTC((int) $ts);
+        }
+        return \Carbon\Carbon::parse($value);
+    }
+
+    public function getSentAtAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        $ts = $this->metadata['receipt_timestamps']['sent'] ?? null;
+        if ($ts !== null) {
+            return \Carbon\Carbon::createFromTimestampUTC((int) $ts);
+        }
+        return \Carbon\Carbon::parse($value);
+    }
+
     /**
      * Log an inbound message.
      */
@@ -144,7 +180,7 @@ class WhatsAppMessage extends Model
     public function applyReceipt(array $receipt): void
     {
         $status = $receipt['status'];
-        $at = \Carbon\Carbon::createFromTimestampUTC((int) $receipt['timestamp']);
+        $at = \Carbon\Carbon::createFromTimestamp((int) $receipt['timestamp'], config('app.timezone'));
         $rank = ['pending' => 0, 'failed' => 0, 'sent' => 1, 'delivered' => 2, 'read' => 3];
         $metadata = $this->metadata ?? [];
         $timestamps = $metadata['receipt_timestamps'] ?? [];

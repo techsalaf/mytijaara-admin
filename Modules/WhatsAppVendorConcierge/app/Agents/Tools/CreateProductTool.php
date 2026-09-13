@@ -32,6 +32,20 @@ class CreateProductTool extends BaseVendorTool
 
     public function handle(Request $request): string
     {
-        return 'Please complete product and order changes in your secure vendor dashboard: '.rtrim(config('app.url'), '/').'/vendor-panel';
+        $this->recordTool('CreateProductTool');
+
+        $data = [
+            'name' => $request['name'],
+            'price' => (float) $request['price'],
+            'category_id' => (int) $request['category_id'],
+            'description' => $request['description'] ?? null,
+            'stock' => isset($request['stock']) ? (int) $request['stock'] : 10,
+            'discount' => isset($request['discount']) ? (float) $request['discount'] : 0,
+            'discount_type' => $request['discount_type'] ?? 'percent',
+            'image' => $request['image'] ?? 'def.png',
+            'veg' => !empty($request['veg']),
+        ];
+
+        return $this->prepareProductCreate($data);
     }
 }

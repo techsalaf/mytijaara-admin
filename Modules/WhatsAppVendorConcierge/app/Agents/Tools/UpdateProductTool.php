@@ -33,6 +33,21 @@ class UpdateProductTool extends BaseVendorTool
 
     public function handle(Request $request): string
     {
-        return 'Please complete product and order changes in your secure vendor dashboard: '.rtrim(config('app.url'), '/').'/vendor-panel';
+        $this->recordTool('UpdateProductTool');
+        $productId = (int) $request['product_id'];
+
+        if (isset($request['price']) && $request['price'] !== null) {
+            return $this->prepareProductPrice($productId, (float) $request['price']);
+        }
+
+        if (isset($request['stock']) && $request['stock'] !== null) {
+            return $this->prepareProductStock($productId, (int) $request['stock']);
+        }
+
+        if (isset($request['status']) && $request['status'] !== null) {
+            return $this->prepareProductAvailability($productId, (bool) $request['status']);
+        }
+
+        return 'To update product details, please specify a new price, stock quantity, or active status (e.g. "Update price of product #12 to ₦2,500").';
     }
 }

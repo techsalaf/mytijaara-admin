@@ -40,15 +40,15 @@ class VendorApprovalObserver
             return;
         }
 
+        $store = $vendor->store;
+        if (!$store) {
+            return;
+        }
+
         if ((int) $vendor->status === 1) {
-            $store = $vendor->store;
-            if ($store) {
-                SendVendorStatusNotification::dispatch($store->id, SendVendorStatusNotification::TYPE_APPROVED)->afterCommit();
-            }
+            event(new \App\Events\VendorApplicationStatusChanged($store, $vendor, 'approved'));
         } elseif ((int) $vendor->status === 0 && !empty($vendor->rejection_note)) {
-            if ($vendor->store) {
-                SendVendorStatusNotification::dispatch($vendor->store->id, SendVendorStatusNotification::TYPE_DENIED, $vendor->rejection_note)->afterCommit();
-            }
+            event(new \App\Events\VendorApplicationStatusChanged($store, $vendor, 'denied', $vendor->rejection_note));
         }
     }
 }

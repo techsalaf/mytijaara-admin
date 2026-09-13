@@ -75,4 +75,79 @@ abstract class BaseVendorTool implements Tool
             return 'This store change is unavailable. Please check your dashboard or contact support.';
         }
     }
+
+    protected function prepareProductPrice(int $itemId, float $newPrice): string
+    {
+        if (!$this->context->contactId || !$this->context->conversationId) {
+            return 'Please request this action in your active WhatsApp conversation.';
+        }
+        try {
+            $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareProductPrice(
+                $this->context->contactId, $this->context->conversationId, $itemId, $newPrice
+            );
+            return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to apply the new price.";
+        } catch (\Throwable $e) {
+            return 'Unable to prepare price update: ' . $e->getMessage();
+        }
+    }
+
+    protected function prepareProductStock(int $itemId, int $newStock): string
+    {
+        if (!$this->context->contactId || !$this->context->conversationId) {
+            return 'Please request this action in your active WhatsApp conversation.';
+        }
+        try {
+            $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareProductStock(
+                $this->context->contactId, $this->context->conversationId, $itemId, $newStock
+            );
+            return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to apply the stock change.";
+        } catch (\Throwable $e) {
+            return 'Unable to prepare stock update: ' . $e->getMessage();
+        }
+    }
+
+    protected function prepareProductAvailability(int $itemId, bool $active): string
+    {
+        if (!$this->context->contactId || !$this->context->conversationId) {
+            return 'Please request this action in your active WhatsApp conversation.';
+        }
+        try {
+            $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareProductAvailability(
+                $this->context->contactId, $this->context->conversationId, $itemId, $active
+            );
+            return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to apply.";
+        } catch (\Throwable $e) {
+            return 'Unable to prepare product availability update: ' . $e->getMessage();
+        }
+    }
+
+    protected function prepareProductCreate(array $data): string
+    {
+        if (!$this->context->contactId || !$this->context->conversationId) {
+            return 'Please request this action in your active WhatsApp conversation.';
+        }
+        try {
+            $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareProductCreate(
+                $this->context->contactId, $this->context->conversationId, $this->requireStore()->id, $data
+            );
+            return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to add the product to your shop.";
+        } catch (\Throwable $e) {
+            return 'Unable to prepare product creation: ' . $e->getMessage();
+        }
+    }
+
+    protected function prepareOrderStatus(int $orderId, string $status, ?string $reason = null): string
+    {
+        if (!$this->context->contactId || !$this->context->conversationId) {
+            return 'Please request this action in your active WhatsApp conversation.';
+        }
+        try {
+            $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareOrderStatus(
+                $this->context->contactId, $this->context->conversationId, $orderId, $status, $reason
+            );
+            return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to update order status.";
+        } catch (\Throwable $e) {
+            return 'Unable to prepare order update: ' . $e->getMessage();
+        }
+    }
 }
