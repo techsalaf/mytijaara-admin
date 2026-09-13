@@ -48,6 +48,23 @@ class ReceiptSecurityTest extends HardeningTestCase
     }
 
     #[Test]
+    public function newer_same_state_receipts_are_retained_while_older_replays_are_ignored(): void
+    {
+        [, , $conversation] = $this->application();
+        $message = WhatsAppMessage::create([
+            'conversation_id' => $conversation->id, 'whatsapp_message_id' => 'wamid.timestamp',
+            'direction' => 'outbound', 'type' => 'text', 'status' => 'sent',
+        ]);
+
+        $message->applyReceipt(['status' => 'delivered', 'timestamp' => '1750000001']);
+        $message->applyReceipt(['status' => 'delivered', 'timestamp' => '1750000003']);
+        $message->applyReceipt(['status' => 'delivered', 'timestamp' => '1750000002']);
+
+        $this->assertSame(1750000003, $message->fresh()->delivered_at->timestamp);
+        $this->assertSame(1750000003, $message->fresh()->metadata['receipt_timestamps']['delivered']);
+    }
+
+    #[Test]
     public function signature_and_verification_fail_closed(): void
     {
         $this->postJson('/webhooks/whatsapp', ['entry' => []])->assertUnauthorized();

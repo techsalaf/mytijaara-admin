@@ -80,6 +80,26 @@ class CredentialSecurityTest extends HardeningTestCase
     }
 
     #[Test]
+    public function failed_password_attempts_are_atomically_limited_and_revoke_the_link(): void
+    {
+        config(['whatsapp-vendor-concierge.security.credential_token_max_attempts' => 3]);
+        [, $session] = $this->application();
+        $token = basename(app(CredentialTokenService::class)->issue($session));
+        $path = '/whatsapp/onboarding/password/' . $token;
+
+        $this->postJson($path, ['password' => 'weak', 'password_confirmation' => 'weak'])->assertUnprocessable();
+        $this->postJson($path, ['password' => 'weak', 'password_confirmation' => 'weak'])->assertUnprocessable();
+        $this->assertSame(2, CredentialToken::first()->attempt_count);
+
+        $this->postJson($path, ['password' => 'weak', 'password_confirmation' => 'weak'])->assertUnprocessable();
+        $record = CredentialToken::first()->fresh();
+        $this->assertSame(3, $record->attempt_count);
+        $this->assertNotNull($record->revoked_at);
+        $this->assertNull(app(CredentialTokenService::class)->resolve($token));
+        $this->assertFalse(app(CredentialTokenService::class)->consume($token, Hash::make('StrongPass@2026')));
+    }
+
+    #[Test]
     public function redaction_removes_password_from_message_raw_text_metadata_and_serialized_job(): void
     {
         [$contact, , $conversation] = $this->application();

@@ -150,7 +150,9 @@ class WhatsAppMessage extends Model
         $timestamps = $metadata['receipt_timestamps'] ?? [];
         $previous = $timestamps[$status] ?? null;
         $timestamp = (int) $receipt['timestamp'];
-        if ($previous !== null && $timestamp >= $previous) {
+        // Identical receipt deliveries and older replayed receipts must not
+        // overwrite a newer event timestamp for the same delivery state.
+        if ($previous !== null && $timestamp <= $previous) {
             return;
         }
         $timestamps[$status] = $timestamp;

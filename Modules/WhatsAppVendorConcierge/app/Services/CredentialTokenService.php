@@ -50,9 +50,27 @@ class CredentialTokenService
             ->where('expires_at', '>', now())->first();
     }
 
-    public function recordAttempt(string $token): void
+    /**
+     * Atomically count a failed password submission. A reached limit revokes
+     * the token, so a brute-force attempt can never become a valid credential.
+     */
+    public function recordFailedAttempt(string $token): bool
     {
-        $this->validToken($token)->increment('attempt_count');
+        return DB::transaction(function () use ($token) {
+            $record = CredentialToken::where('token_hash', hash('sha256', $token))
+                ->where('purpose', 'vendor_onboarding_password')->lockForUpdate()->first();
+            if (!$record || !$this->isUsable($record)) {
+                return false;
+            }
+
+            $attempts = $record->attempt_count + 1;
+            $record->update([
+                'attempt_count' => $attempts,
+                'revoked_at' => $attempts >= $this->maxAttempts() ? now() : null,
+            ]);
+
+            return $attempts < $this->maxAttempts();
+        });
     }
 
     public function consume(string $token, string $passwordHash): bool
@@ -61,16 +79,18 @@ class CredentialTokenService
         if (!$candidate) {
             return false;
         }
-        return DB::transaction(function () use ($candidate, $token, $passwordHash) {
+        return DB::transaction(function () use ($candidate, $passwordHash) {
             // Regeneration and consumption share the same lock order.
             $session = OnboardingSession::lockForUpdate()->find($candidate->onboarding_session_id);
             if (!$session || $session->status !== 'started' || $session->isExpired()
                 || $session->current_step !== 'account_password') {
                 return false;
             }
-            if ($this->validToken($token)->update(['consumed_at' => now()]) !== 1) {
+            $record = CredentialToken::whereKey($candidate->id)->lockForUpdate()->first();
+            if (!$record || !$this->isUsable($record)) {
                 return false;
             }
+            $record->update(['consumed_at' => now()]);
             $data = $session->collected_data ?? [];
             unset($data['_pwd_token_hash'], $data['_pwd_token_expires_at'], $data['password']);
             $data['password_hash'] = $passwordHash;
@@ -89,6 +109,18 @@ class CredentialTokenService
     {
         return CredentialToken::where('token_hash', hash('sha256', $token))
             ->where('purpose', 'vendor_onboarding_password')->whereNull('revoked_at')
-            ->whereNull('consumed_at')->where('expires_at', '>', now());
+            ->whereNull('consumed_at')->where('expires_at', '>', now())
+            ->where('attempt_count', '<', $this->maxAttempts());
+    }
+
+    private function isUsable(CredentialToken $record): bool
+    {
+        return !$record->revoked_at && !$record->consumed_at && $record->expires_at->isFuture()
+            && $record->attempt_count < $this->maxAttempts();
+    }
+
+    private function maxAttempts(): int
+    {
+        return max(1, (int) config('whatsapp-vendor-concierge.security.credential_token_max_attempts', 5));
     }
 }

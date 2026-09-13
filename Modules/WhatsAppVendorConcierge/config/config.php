@@ -179,6 +179,10 @@ return [
         'max_verification_attempts' => 3,
         'audit_log_retention_days' => 90,
         'encrypt_sensitive_data' => true,
+        // Password-link failures are bounded separately from route throttling.
+        // Reaching this limit revokes the hashed credential token.
+        'credential_token_max_attempts' => (int) env('WHATSAPP_CREDENTIAL_TOKEN_MAX_ATTEMPTS', 5),
+        'credential_token_rate_limit_per_minute' => (int) env('WHATSAPP_CREDENTIAL_TOKEN_RATE_LIMIT_PER_MINUTE', 10),
     ],
 
     /*
