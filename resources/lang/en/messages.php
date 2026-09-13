@@ -12680,4 +12680,5 @@ Smartly or Earn. ',
   'Disable AI Personalization?' => 'Disable AI Personalization?',
   'Enable AI Personalization?' => 'Enable AI Personalization?',
   'Short_description' => 'Short description',
+  'an_approved_store_already_exists_for_this_phone' => 'An approved store already exists for this phone',
 );

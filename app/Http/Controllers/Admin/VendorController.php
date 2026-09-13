@@ -1040,18 +1040,19 @@ class VendorController extends Controller
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
-        // GEMINI-MYTJ START: WhatsApp store account status toggle synchronization
+        // GEMINI-MYTJ START: Dispatch canonical domain event for vendor application status change
         try {
-            if (class_exists('\Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification')) {
-                \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::dispatch(
-                    $store->id,
+            if ($store && $store->vendor) {
+                event(new \App\Events\VendorApplicationStatusChanged(
+                    $store,
+                    $store->vendor,
                     $request->status == 0 ? 'suspended' : 'unsuspended'
-                );
+                ));
             }
-        } catch (\Exception $ex) {
-            info('WhatsApp store status notification failed: ' . $ex->getMessage());
+        } catch (\Throwable $ex) {
+            info('Vendor application status event dispatch failed: ' . $ex->getMessage());
         }
-        // GEMINI-MYTJ END: WhatsApp store account status toggle synchronization
+        // GEMINI-MYTJ END: Dispatch canonical domain event for vendor application status change
 
         Toastr::success(translate('messages.store_status_updated'));
 
@@ -1264,19 +1265,20 @@ class VendorController extends Controller
             info($ex->getMessage());
         }
 
-        // GEMINI-MYTJ START: WhatsApp vendor application status synchronization
+        // GEMINI-MYTJ START: Dispatch canonical domain event for vendor application status change
         try {
-            if (class_exists('\Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification')) {
-                \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::dispatch(
-                    $store->id,
-                    (int) $request->status,
+            if ($store && $store->vendor) {
+                event(new \App\Events\VendorApplicationStatusChanged(
+                    $store,
+                    $store->vendor,
+                    (int) $request->status === 1 ? 'approved' : 'denied',
                     $request->rejection_note
-                );
+                ));
             }
-        } catch (\Exception $ex) {
-            info('WhatsApp vendor status notification failed: ' . $ex->getMessage());
+        } catch (\Throwable $ex) {
+            info('Vendor application status event dispatch failed: ' . $ex->getMessage());
         }
-        // GEMINI-MYTJ END: WhatsApp vendor application status synchronization
+        // GEMINI-MYTJ END: Dispatch canonical domain event for vendor application status change
 
         return true;
     }
