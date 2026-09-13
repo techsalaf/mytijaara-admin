@@ -21,6 +21,11 @@ on:
         required: true
         type: boolean
         default: false
+      run_migrations:
+        description: 'Run php artisan migrate --force'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: production-deploy
@@ -124,11 +129,18 @@ jobs:
             BEFORE="$(git rev-parse HEAD^ 2>/dev/null || true)"
           fi
 
-          if [ -n "$BEFORE" ] && git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -Eq '(^|/)(database/migrations|Modules/[^/]+/database/migrations)/'; then
-            echo "migrations_changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "migrations_changed=false" >> "$GITHUB_OUTPUT"
+          MIGRATION_PATTERN='(^|/)(database/migrations|modules/.*/database/migrations)/'
+
+          # Check changes in current push diff (supports both PascalCase and lowercase paths)
+          MIGRATIONS_CHANGED="false"
+          if [ -n "$BEFORE" ] && git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -Eiq "$MIGRATION_PATTERN"; then
+            MIGRATIONS_CHANGED="true"
+          # Also check recent commits (up to 5 commits) in case previous deployment skipped them
+          elif git diff --name-only HEAD~5 HEAD 2>/dev/null | grep -Eiq "$MIGRATION_PATTERN"; then
+            MIGRATIONS_CHANGED="true"
           fi
+
+          echo "migrations_changed=$MIGRATIONS_CHANGED" >> "$GITHUB_OUTPUT"
 
       - name: Prepare Deployment Package
         run: |
@@ -170,6 +182,7 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           MIGRATIONS_CHANGED: ${{ steps.changes.outputs.migrations_changed }}
+          FORCE_MIGRATE: ${{ github.event.inputs.run_migrations || 'false' }}
           RUN_SEED: ${{ github.event.inputs.run_seed || 'false' }}
         run: |
           set -euo pipefail
@@ -210,8 +223,8 @@ jobs:
               [ -e public/storage ] || ln -s ../storage/app/public public/storage
           "
 
-          if [ "$MIGRATIONS_CHANGED" = "true" ]; then
-            echo "→ Database migrations changed; running migrate --force"
+          if [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ]; then
+            echo "→ Database migrations changed or forced; running migrate --force"
             ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan migrate --force"
           else
             echo "→ No database migrations changed; skipping migrations"
