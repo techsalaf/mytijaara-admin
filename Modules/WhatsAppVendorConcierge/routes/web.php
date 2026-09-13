@@ -54,3 +54,7 @@ Route::middleware(['web', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\S
         ->name('whatsapp.onboarding.password.store')
         ->middleware('throttle:10,1');
 });
+
+Route::get('/whatsapp/onboarding/subscription-payment/{session}', \Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\SubscriptionPaymentController::class)
+    ->middleware(['web', 'signed', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\SecureCredentialPage::class, 'throttle:20,1'])
+    ->name('whatsapp.onboarding.subscription-payment');

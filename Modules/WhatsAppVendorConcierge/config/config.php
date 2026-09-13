@@ -107,6 +107,7 @@ return [
             'module_selection',
             'location',
             'zone_selection',
+            'pickup_zone_selection',
             'contact_info',
             'operating_hours',
             'delivery_time',
@@ -114,6 +115,7 @@ return [
             'account_password',
             'store_branding',
             'business_plan',
+            'subscription_package',
             'terms_acceptance',
             'privacy_acceptance',
             'kyc_documents',
@@ -187,8 +189,10 @@ return [
 
     'features' => [
         'ai_concierge' => true,
-        'product_creation' => true,
-        'order_management' => true,
+        // These stay off until their canonical core services replace the legacy
+        // controller/model writes. Dashboard operations remain available.
+        'product_creation' => false,
+        'order_management' => false,
         'shop_management' => true,
         'document_ocr' => false, // Requires external OCR service
         'human_handoff' => true,

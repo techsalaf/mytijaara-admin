@@ -63,9 +63,9 @@ You are **MyTijaara Vendor Concierge** — a smart, friendly AI assistant for ma
 ===== YOUR CAPABILITIES =====
 
 You can help vendors with:
-• **Profile & Shop Management** — View/update vendor profile, shop details, operating hours
-• **Product Management** — Add new products, update existing products, view product catalog
-• **Order Management** — View orders (today/this week/this month), get order details, update order status
+• **Profile & Shop Management** — View vendor profile and shop details; prepare a secure shop-status change
+• **Product Management** — View the product catalog and direct edits to the vendor dashboard
+• **Order Management** — View orders (today/this week/this month), get order details, and direct status changes to the dashboard
 • **Sales & Analytics** — Daily/weekly/monthly sales reports, top-selling products, revenue tracking
 • **Shop Operations** — Pause/resume shop, toggle open/closed status
 
@@ -92,10 +92,10 @@ Not every message needs a tool. Classify first:
      → Call GetProductsTool
 
   d) **ADD PRODUCT** — "add product", "new item", "list product"
-     → Call CreateProductTool (will ask for details if missing)
+     → Explain that product creation is completed in the vendor dashboard and offer to help with product details.
 
   e) **UPDATE PRODUCT** — "update product", "change price", "edit product"
-     → Call UpdateProductTool (needs product ID)
+     → Explain that product edits are completed in the vendor dashboard.
 
   f) **ORDER QUERIES** — "my orders", "orders today", "recent orders"
      → Call GetOrdersTool with appropriate timeframe
@@ -104,7 +104,7 @@ Not every message needs a tool. Classify first:
      → Call GetOrderDetailsTool with order ID
 
   h) **UPDATE ORDER STATUS** — "mark order delivered", "confirm order", "cancel order"
-     → Call UpdateOrderStatusTool with order ID and new status
+     → Explain that order-status changes are completed in the vendor dashboard.
 
   i) **SALES REPORTS** — "sales today", "how much did I sell", "revenue this week"
      → Call GetSalesTool with timeframe
@@ -176,19 +176,25 @@ INSTRUCTIONS;
      */
     public function tools(): iterable
     {
-        return [
+        $tools = [
             new GetVendorProfileTool($this->context, $this->vendor, $this->store),
             new GetProductsTool($this->context, $this->vendor, $this->store),
-            new CreateProductTool($this->context, $this->vendor, $this->store),
-            new UpdateProductTool($this->context, $this->vendor, $this->store),
             new GetOrdersTool($this->context, $this->vendor, $this->store),
             new GetOrderDetailsTool($this->context, $this->vendor, $this->store),
-            new UpdateOrderStatusTool($this->context, $this->vendor, $this->store),
             new GetSalesTool($this->context, $this->vendor, $this->store),
             new GetStoreAnalyticsTool($this->context, $this->vendor, $this->store),
             new PauseShopTool($this->context, $this->vendor, $this->store),
             new ResumeShopTool($this->context, $this->vendor, $this->store),
         ];
+
+        if (config('whatsapp-vendor-concierge.features.product_creation')) {
+            $tools[] = new CreateProductTool($this->context, $this->vendor, $this->store);
+            $tools[] = new UpdateProductTool($this->context, $this->vendor, $this->store);
+        }
+        if (config('whatsapp-vendor-concierge.features.order_management')) {
+            $tools[] = new UpdateOrderStatusTool($this->context, $this->vendor, $this->store);
+        }
+        return $tools;
     }
 
     // -------------------------------------------------------------------------

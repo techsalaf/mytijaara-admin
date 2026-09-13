@@ -50,6 +50,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->commands([
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupMedia::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ProcessStuckSessions::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\Preflight::class,
         ]);
     }
 

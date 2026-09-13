@@ -9,15 +9,16 @@ use App\Models\Store;
 use App\Models\Vendor;
 use App\Models\Zone;
 use App\Models\SubscriptionPackage;
-use App\Models\StoreSubscription;
 use App\Models\StoreSchedule;
 use App\Mail\VendorSelfRegistration;
 use App\Mail\StoreRegistration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rule;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingEvent;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
@@ -402,6 +403,18 @@ class VendorOnboardingService
                     'plan_name' => 'Commission-Based',
                 ];
             })(),
+            'subscription_package' => (function () use ($content, $rawText) {
+                $value = $content['interactive']['list_reply']['id']
+                    ?? $content['interactive']['button_reply']['id'] ?? $rawText;
+                $id = preg_match('/^pkg_(\d+)$/', (string) $value, $matches) ? (int) $matches[1] : null;
+                return ['package_id' => $id];
+            })(),
+            'pickup_zone_selection' => (function () use ($content, $rawText) {
+                $value = $content['interactive']['list_reply']['id']
+                    ?? $content['interactive']['button_reply']['id'] ?? $rawText;
+                $id = preg_match('/^pickup_zone_(\d+)$/', (string) $value, $matches) ? (int) $matches[1] : null;
+                return ['pickup_zone_id' => $id];
+            })(),
             'terms_acceptance' => (function () use ($content, $rawText) {
                 $btnId = $content['interactive']['button_reply']['id'] ?? null;
                 $lower = strtolower(trim($btnId ?: $rawText));
@@ -663,6 +676,9 @@ class VendorOnboardingService
             'zone_selection' => [
                 'zone_id' => 'required|integer|exists:zones,id',
             ],
+            'pickup_zone_selection' => [
+                'pickup_zone_id' => 'required|integer|exists:zones,id',
+            ],
             'operating_hours' => [
                 'operating_hours' => 'required_without:schedule|string|max:255',
                 'schedule' => 'nullable|string|max:255',
@@ -686,6 +702,9 @@ class VendorOnboardingService
             ],
             'business_plan' => [
                 'business_plan' => 'required|string|in:commission-base,subscription-base',
+            ],
+            'subscription_package' => [
+                'package_id' => ['required', 'integer', Rule::exists('subscription_packages', 'id')->where('status', 1)],
             ],
             'terms_acceptance' => [
                 'terms_accepted' => 'required|accepted',
@@ -732,6 +751,7 @@ class VendorOnboardingService
             'category_selection' => "We couldn't recognize that category. Please choose from available categories or type your category name.",
             'location' => "We couldn't detect your shop location. 📍\n\nPlease do one of the following:\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical shop address (e.g. *12 Marina Road, Lagos*)",
             'zone_selection' => "Please select or confirm your business operating zone from the available options.",
+            'pickup_zone_selection' => "Rental providers must select a valid pickup zone from the available options.",
             'operating_hours' => "Please select or reply with your store's regular operating hours (e.g. *Mon-Sat 8am - 8pm*).",
             'delivery_time' => "Please select or reply with your store's approximate delivery window (e.g. *20-40 min*).",
             'owner_info' => "Please enter your first and last name (e.g. *Rasheed Bello*).",
@@ -743,6 +763,7 @@ class VendorOnboardingService
             'account_password' => 'Passwords cannot be entered in WhatsApp. Reply Resend Link for a new secure link.',
             'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
             'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
+            'subscription_package' => "Please select one of the active subscription packages shown in the list.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
             'privacy_acceptance' => "You must accept MyTijaara's Merchant Privacy Policy (https://mytijaara.com/privacy-policy) to proceed. Tap *✅ Accept Privacy* or reply *Accept*.",
             'kyc_documents' => "Please provide a valid TIN / CAC / NIN number, upload a document (max 2MB), or reply *Skip* to complete verification later in your dashboard.",
@@ -769,6 +790,8 @@ class VendorOnboardingService
             $this->sendStepPrompt($conversation, $contact, 'module_selection', $gateway);
         } elseif ($step === 'zone_selection') {
             $this->sendStepPrompt($conversation, $contact, 'zone_selection', $gateway);
+        } elseif ($step === 'pickup_zone_selection') {
+            $this->sendStepPrompt($conversation, $contact, 'pickup_zone_selection', $gateway);
         } elseif ($step === 'operating_hours') {
             $this->sendStepPrompt($conversation, $contact, 'operating_hours', $gateway);
         } elseif ($step === 'delivery_time') {
@@ -816,6 +839,20 @@ class VendorOnboardingService
         }
 
         $nextStep = $session?->getNextStep();
+        if ($session?->current_step === 'business_plan') {
+            $nextStep = ($session->collected_data['business_plan'] ?? null) === 'subscription-base'
+                ? 'subscription_package' : 'terms_acceptance';
+        } elseif ($session?->current_step === 'subscription_package') {
+            $nextStep = 'terms_acceptance';
+        } elseif ($session?->current_step === 'zone_selection'
+            && Module::find($session->collected_data['module_id'] ?? null)?->module_type === 'rental'
+            && addon_published_status('Rental')) {
+            $nextStep = 'pickup_zone_selection';
+        } elseif ($session?->current_step === 'zone_selection') {
+            $nextStep = 'operating_hours';
+        } elseif ($session?->current_step === 'pickup_zone_selection') {
+            $nextStep = 'operating_hours';
+        }
 
         if (!$nextStep) {
             // All steps complete - advance to review_submit
@@ -965,6 +1002,20 @@ class VendorOnboardingService
                     ]],
                 ];
             })(),
+            'pickup_zone_selection' => (function () {
+                $zones = Zone::active()->get(['id', 'name']);
+                $rows = $zones->take(10)->map(fn ($zone) => [
+                    'id' => 'pickup_zone_' . $zone->id,
+                    'title' => mb_substr($zone->name, 0, 24),
+                    'description' => 'Vehicle pickup area',
+                ])->values()->all();
+
+                return [
+                    'type' => 'list',
+                    'body' => "[Section 2 of 5: Rental Pickup Zone] 🚗\n\nSelect the zone where customers can pick up your rental vehicles.",
+                    'sections' => [['title' => 'Pickup zones', 'rows' => $rows]],
+                ];
+            })(),
             'operating_hours' => [
                 'type' => 'button',
                 'body' => "[Section 2 of 5: Operating Hours] 🕒\n\nWhen will your store be open for customer orders?\n\nSelect a standard schedule or reply with your custom hours (e.g. *Mon-Fri 9am-6pm*):",
@@ -1007,6 +1058,29 @@ class VendorOnboardingService
                     ['id' => 'plan_subscription', 'title' => '📅 Subscription Plan'],
                 ],
             ],
+            'subscription_package' => (function () use ($session) {
+                $moduleType = Module::find($session?->collected_data['module_id'] ?? null)?->module_type;
+                $packageType = $moduleType === 'rental' && addon_published_status('Rental') ? 'rental' : 'all';
+                $rows = SubscriptionPackage::where('status', 1)
+                    ->where('module_type', $packageType)
+                    ->latest()
+                    ->limit(10)
+                    ->get(['id', 'package_name', 'price', 'validity'])
+                    ->map(fn ($package) => [
+                        'id' => 'pkg_' . $package->id,
+                        'title' => mb_substr($package->package_name, 0, 24),
+                        'description' => '₦' . number_format((float) $package->price, 2) . ' / ' . $package->validity . ' days',
+                    ])->values()->all();
+
+                return [
+                    'type' => empty($rows) ? 'text' : 'list',
+                    'body' => empty($rows)
+                        ? 'There are no active subscription packages for this module. Reply Support for help choosing a plan.'
+                        : "Choose the subscription package for your store. You will complete payment securely after submitting your application.",
+                    'text' => 'There are no active subscription packages for this module. Reply Support for help choosing a plan.',
+                    'sections' => [['title' => 'Active packages', 'rows' => $rows]],
+                ];
+            })(),
             'terms_acceptance' => [
                 'type' => 'button',
                 'body' => "[Section 5 of 5: Terms & Conditions] 📜\n\nPlease review MyTijaara's Vendor Terms and Conditions:\n🔗 https://mytijaara.com/terms\n\nDo you accept the Vendor Terms and Conditions to proceed?",
@@ -1184,7 +1258,8 @@ class VendorOnboardingService
             }
 
             if (empty($data['password_hash']) || empty($data['module_id']) || empty($data['zone_id'])
-                || !isset($data['latitude'], $data['longitude']) || empty($data['logo_media_id'])) {
+                || !isset($data['latitude'], $data['longitude']) || empty($data['logo_media_id'])
+                || empty($data['business_plan']) || empty($data['terms_accepted']) || empty($data['privacy_accepted'])) {
                 $gateway->sendTextMessage($contact->phone_number, 'Your application is incomplete. Please use Edit to complete every required section before submitting.');
                 return;
             }
@@ -1197,6 +1272,31 @@ class VendorOnboardingService
             if (!$module || !$zone || !\App\Models\ModuleZone::where('module_id', $module->id)->where('zone_id', $zone->id)->exists()) {
                 $gateway->sendTextMessage($contact->phone_number, 'Your selected module and zone no longer match the shared location. Please edit Location, Zone or Business Module and submit again.');
                 return;
+            }
+
+            if ($module->module_type === 'rental' && addon_published_status('Rental')
+                && empty($data['pickup_zone_id'])) {
+                $gateway->sendTextMessage($contact->phone_number, 'Rental providers must choose a pickup zone before submitting. Please use Edit to complete that step.');
+                return;
+            }
+
+            $logoMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['logo_media_id']);
+            if (!$logoMedia || $logoMedia->status !== 'processed' || empty($logoMedia->file_path)
+                || !in_array($logoMedia->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                $gateway->sendTextMessage($contact->phone_number, 'Your store logo is still being checked or is not a supported image. Please wait for confirmation before submitting.');
+                return;
+            }
+
+            $subscriptionPackage = null;
+            if (($data['business_plan'] ?? null) === 'subscription-base') {
+                $packageType = $module->module_type === 'rental' && addon_published_status('Rental') ? 'rental' : 'all';
+                $subscriptionPackage = SubscriptionPackage::where('status', 1)
+                    ->where('module_type', $packageType)
+                    ->find($data['package_id'] ?? null);
+                if (!$subscriptionPackage) {
+                    $gateway->sendTextMessage($contact->phone_number, 'Please select an active subscription package for your business module before submitting.');
+                    return;
+                }
             }
 
             // Check if vendor already exists with this phone or email
@@ -1296,7 +1396,9 @@ class VendorOnboardingService
                 }
             }
 
-            $businessModel = ($data['business_plan'] ?? '') === 'subscription-base' ? 'subscription' : 'commission';
+            // The canonical payment flow changes this from `none` to `subscription`
+            // only after a successful payment or free-trial activation.
+            $businessModel = ($data['business_plan'] ?? '') === 'subscription-base' ? 'none' : 'commission';
 
             // Create or update Store (pending status: 0)
             $store = Store::where('vendor_id', $vendor->id)->first() ?? new Store();
@@ -1311,6 +1413,7 @@ class VendorOnboardingService
             $store->vendor_id = $vendor->id;
             $store->zone_id = $zone->id;
             $store->module_id = $module->id;
+            $store->pickup_zone_id = json_encode(!empty($data['pickup_zone_id']) ? [(string) $data['pickup_zone_id']] : []);
             $store->status = 0; // 0 = inactive, awaiting admin approval
             $store->store_business_model = $businessModel;
             $store->delivery_time = $data['delivery_time'] ?? '20-40 min';
@@ -1362,39 +1465,12 @@ class VendorOnboardingService
                 Log::warning('Translations insertion warning: ' . $transEx->getMessage());
             }
 
-            // Handle subscription if subscription-base selected
-            if ($businessModel === 'subscription') {
-                $package = null;
-                if (!empty($data['package_id'])) {
-                    $package = SubscriptionPackage::find($data['package_id']);
-                }
-                if (!$package) {
-                    $package = SubscriptionPackage::where('status', 1)->first();
-                }
-
-                if ($package) {
-                    $store->update([
-                        'package_id' => $package->id,
-                    ]);
-
-                    StoreSubscription::updateOrCreate(
-                        ['store_id' => $store->id],
-                        [
-                            'package_id' => $package->id,
-                            'expiry_date' => now()->addDays($package->validity)->format('Y-m-d'),
-                            'validity' => $package->validity,
-                            'max_order' => $package->max_order,
-                            'max_product' => $package->max_product,
-                            'pos' => $package->pos ?? 0,
-                            'mobile_app' => $package->mobile_app ?? 0,
-                            'chat' => $package->chat ?? 0,
-                            'review' => $package->review ?? 0,
-                            'self_delivery' => $package->self_delivery ?? 0,
-                            'status' => 0, // Inactive pending approval
-                            'is_trial' => $data['is_trial'] ?? 0,
-                        ]
-                    );
-                }
+            // Preserve the chosen package, but do not create or activate a
+            // subscription record here. The existing payment service owns that
+            // state transition and its transaction/audit records.
+            if ($subscriptionPackage) {
+                $store->package_id = $subscriptionPackage->id;
+                $store->save();
             }
 
             // Insert operating hours schedule
@@ -1422,9 +1498,12 @@ class VendorOnboardingService
 
             DB::commit();
 
+            $paymentUrl = $subscriptionPackage && $session
+                ? URL::temporarySignedRoute('whatsapp.onboarding.subscription-payment', now()->addDays(7), ['session' => $session->id])
+                : null;
+
             // Send confirmation to vendor
-            $gateway->sendTextMessage(
-                $contact->phone_number,
+            $confirmation =
                 "🎉 *Your Application Has Been Submitted!*\n\n" .
                 "• Application ID: #{$vendor->id}\n" .
                 "• Business: *{$data['business_name']}*\n" .
@@ -1432,8 +1511,18 @@ class VendorOnboardingService
                 "• Status: *Under Review (Pending)* ⏳\n\n" .
                 "Our team will review your application within 24-48 hours. " .
                 "You will receive a WhatsApp notification here once your store is approved!\n\n" .
-                "Thank you for choosing MyTijaara! 🙏"
-            );
+                "Thank you for choosing MyTijaara! 🙏";
+            $gateway->sendTextMessage($contact->phone_number, $confirmation);
+
+            if ($paymentUrl) {
+                $gateway->sendCtaUrlMessage(
+                    $contact->phone_number,
+                    "Your selected subscription package needs payment before activation. Tap below to continue through MyTijaara's secure payment flow. This link expires in 7 days.",
+                    'Complete Payment',
+                    $paymentUrl,
+                    'MyTijaara Subscription'
+                );
+            }
 
             // Notify admin (reuse existing email)
             $this->notifyAdmin($vendor, $store);
