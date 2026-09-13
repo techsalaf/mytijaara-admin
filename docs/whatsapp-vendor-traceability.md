@@ -8,12 +8,12 @@ implementation prompt; it is not a production-readiness claim.
 
 | Requirement | Current owner / evidence | Gap and plan | Tests | Result |
 |---|---|---|---|---|
-| Credential token lockout | `CredentialTokenService`, `SecurePasswordController` | Enforce atomic configured failed-attempt limit and keyed rate limit | `CredentialSecurityTest` | In progress |
-| Fail-closed KYC documents | `ProcessVendorDocument`, `WhatsAppMedia` | Validate actual stored bytes and document state; never mark missing data processed | `DocumentSecurityTest` | In progress |
+| Credential token lockout | `CredentialTokenService`, `SecurePasswordController` | Atomic configured failed-attempt limit, token revocation and token/IP keyed rate limit added | `CredentialSecurityTest` | Implemented and verified |
+| Fail-closed KYC documents | `ProcessVendorDocument`, `WhatsAppMedia` | Validate actual stored bytes and document state; never mark missing data processed | `DocumentSecurityTest` | Implemented and verified (full policy remains partial) |
 | Media policy | `ProcessWhatsAppMedia`, `KycDocumentController` | Add purpose-specific validation/quarantine and access audit | Media policy tests | Partial |
-| Receipt ordering | `WhatsAppMessage::applyReceipt` | Correct duplicate/older timestamp handling | `ReceiptSecurityTest` | In progress |
+| Receipt ordering | `WhatsAppMessage::applyReceipt` | Corrected duplicate/older timestamp handling | `ReceiptSecurityTest` | Implemented and verified |
 | Canonical application service | `VendorController`, `VendorOnboardingService` | Extract shared core DTO/service and migrate both callers | Parity integration tests | Not implemented |
-| Cover-photo parity | `VendorController`, `VendorOnboardingService` | Add conditional conversational capture and review state | Onboarding integration tests | Partial |
+| Cover-photo parity | `VendorController`, `VendorOnboardingService` | Added optional conversational capture, skip, review, edit and final media gate | `OnboardingFlowTest` | Implemented and verified |
 | Field parity | `VendorController::store` | Record and reconcile each canonical field | Parity matrix tests | Partial |
 | Subscription lifecycle | `VendorController`, subscription services | Reconcile verified payment callbacks and WhatsApp continuation | Payment tests | Partial |
 | Canonical notifications | admin vendor controller, observer, status job | One post-commit event and leased delivery claim | Concurrency tests | Partial |
