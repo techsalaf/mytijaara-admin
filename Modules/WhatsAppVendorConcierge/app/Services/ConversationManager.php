@@ -253,6 +253,7 @@ class ConversationManager
             'edit_contact' => 'contact_info',
             'edit_password' => 'account_password',
             'edit_branding' => 'store_branding',
+            'edit_cover' => 'cover_branding',
             'edit_plan' => 'business_plan',
             'edit_terms' => 'terms_acceptance',
             'edit_privacy' => 'privacy_acceptance',
@@ -317,8 +318,8 @@ class ConversationManager
     {
         $step = $conversation->current_step;
 
-        $onboardingListSteps = ['module_selection', 'zone_selection', 'category_selection', 'operating_hours', 'delivery_time', 'business_plan', 'kyc_documents'];
-        if (in_array($step, $onboardingListSteps) || str_starts_with($selectionId, 'mod_') || str_starts_with($selectionId, 'zone_') || str_starts_with($selectionId, 'hours_') || str_starts_with($selectionId, 'deliv_')) {
+        $onboardingListSteps = ['module_selection', 'zone_selection', 'pickup_zone_selection', 'category_selection', 'operating_hours', 'delivery_time', 'business_plan', 'subscription_package', 'kyc_documents'];
+        if (in_array($step, $onboardingListSteps) || str_starts_with($selectionId, 'mod_') || str_starts_with($selectionId, 'zone_') || str_starts_with($selectionId, 'pickup_zone_') || str_starts_with($selectionId, 'pkg_') || str_starts_with($selectionId, 'hours_') || str_starts_with($selectionId, 'deliv_')) {
             $message = new WhatsAppMessage();
             $message->type = 'interactive';
             $message->content = [
@@ -342,6 +343,7 @@ class ConversationManager
             'edit_contact' => 'contact_info',
             'edit_password' => 'account_password',
             'edit_branding' => 'store_branding',
+            'edit_cover' => 'cover_branding',
             'edit_plan' => 'business_plan',
             'edit_terms' => 'terms_acceptance',
             'edit_privacy' => 'privacy_acceptance',
@@ -640,6 +642,7 @@ class ConversationManager
                     ['id' => 'edit_business_basics', 'title' => '🏪 Shop Name', 'description' => 'Update store / business name'],
                     ['id' => 'edit_module', 'title' => '📦 Business Module', 'description' => 'Grocery, Food, Pharmacy, etc.'],
                     ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Upload 1:1 store logo'],
+                    ['id' => 'edit_cover', 'title' => '🏞️ Cover Photo', 'description' => 'Upload or skip optional store cover'],
                 ],
             ],
             'edit_cat_location' => [

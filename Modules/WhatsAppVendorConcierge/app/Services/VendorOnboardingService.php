@@ -88,8 +88,8 @@ class VendorOnboardingService
                 'pass' => 'account_password',
                 'logo' => 'store_branding',
                 'branding' => 'store_branding',
-                'photo' => 'store_branding',
-                'image' => 'store_branding',
+                'logo photo' => 'store_branding',
+                'cover' => 'cover_branding',
                 'plan' => 'business_plan',
                 'subscription' => 'business_plan',
                 'commission' => 'business_plan',
@@ -403,6 +403,13 @@ class VendorOnboardingService
                     'plan_name' => 'Commission-Based',
                 ];
             })(),
+            'cover_branding' => (function () use ($message, $content, $rawText) {
+                $skip = in_array(strtolower(trim($rawText)), ['skip', 'no', 'none', 'later', 'pass'], true);
+                return [
+                    'cover_media_id' => $skip ? null : $this->extractMediaId($message, $content),
+                    'cover_skipped' => $skip,
+                ];
+            })(),
             'subscription_package' => (function () use ($content, $rawText) {
                 $value = $content['interactive']['list_reply']['id']
                     ?? $content['interactive']['button_reply']['id'] ?? $rawText;
@@ -700,6 +707,10 @@ class VendorOnboardingService
             'store_branding' => [
                 'logo_media_id' => 'required|integer|exists:whatsapp_media,id',
             ],
+            'cover_branding' => [
+                'cover_media_id' => 'nullable|integer|exists:whatsapp_media,id',
+                'cover_skipped' => 'nullable|boolean',
+            ],
             'business_plan' => [
                 'business_plan' => 'required|string|in:commission-base,subscription-base',
             ],
@@ -762,6 +773,7 @@ class VendorOnboardingService
                     : "Please enter a valid email address for account notifications (e.g. *yourshop@gmail.com*)."),
             'account_password' => 'Passwords cannot be entered in WhatsApp. Reply Resend Link for a new secure link.',
             'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
+            'cover_branding' => "Please upload a cover photo or reply *Skip*. Cover photos are optional, but help customers recognise your store.",
             'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
             'subscription_package' => "Please select one of the active subscription packages shown in the list.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
@@ -1058,6 +1070,10 @@ class VendorOnboardingService
                     ['id' => 'plan_subscription', 'title' => '📅 Subscription Plan'],
                 ],
             ],
+            'cover_branding' => [
+                'type' => 'text',
+                'text' => "[Section 4 of 5: Store Cover Photo] 🏞️\n\nUpload an optional cover photo (JPG, PNG or WEBP; maximum 2 MB), or reply *Skip*. Please do not send documents in this step.",
+            ],
             'subscription_package' => (function () use ($session) {
                 $moduleType = Module::find($session?->collected_data['module_id'] ?? null)?->module_type;
                 $packageType = $moduleType === 'rental' && addon_published_status('Rental') ? 'rental' : 'all';
@@ -1170,6 +1186,7 @@ class VendorOnboardingService
         $logoStatus = !empty($data['logo_media_id']) || !empty($data['has_logo']) || !empty($data['media_id'])
             ? 'Uploaded (1:1 Verified) 🖼️'
             : 'Required ⚠️';
+        $coverStatus = !empty($data['cover_media_id']) ? 'Uploaded 🏞️' : 'Skipped (optional)';
 
         $plan = ($data['business_plan'] ?? '') === 'subscription-base'
             ? 'Subscription Plan 📅'
@@ -1204,7 +1221,8 @@ class VendorOnboardingService
             "• Phone: *{$phone}*\n" .
             "• Password: *{$passwordStatus}*\n\n" .
             "🖼️ *Branding:*\n" .
-            "• Logo: *{$logoStatus}*\n\n" .
+            "• Logo: *{$logoStatus}*\n" .
+            "• Cover photo: *{$coverStatus}*\n\n" .
             "📜 *Plan, Policies & KYC:*\n" .
             "• Business Plan: *{$plan}*\n" .
             "• Terms & Conditions: *{$terms}*\n" .
@@ -1285,6 +1303,14 @@ class VendorOnboardingService
                 || !in_array($logoMedia->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)) {
                 $gateway->sendTextMessage($contact->phone_number, 'Your store logo is still being checked or is not a supported image. Please wait for confirmation before submitting.');
                 return;
+            }
+            if (!empty($data['cover_media_id'])) {
+                $coverMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['cover_media_id']);
+                if (!$coverMedia || $coverMedia->status !== 'processed' || empty($coverMedia->file_path)
+                    || !in_array($coverMedia->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+                    $gateway->sendTextMessage($contact->phone_number, 'Your cover photo is still being checked or is not a supported image. Please wait for confirmation, replace it, or skip it before submitting.');
+                    return;
+                }
             }
 
             $subscriptionPackage = null;

@@ -87,6 +87,7 @@ class OnboardingSession extends Model
             'contact_info',
             'account_password',
             'store_branding',
+            'cover_branding',
             'business_plan',
             'subscription_package',
             'terms_acceptance',
