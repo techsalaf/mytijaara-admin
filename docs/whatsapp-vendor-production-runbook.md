@@ -7,7 +7,7 @@
 3. Configure and approve the four status templates in `whatsapp-vendor-meta-template-register.md`.
 4. Run `php artisan module:migrate WhatsAppVendorConcierge`, then `php artisan config:cache` and `php artisan queue:restart`.
 5. Run workers for `whatsapp.process_incoming`, `whatsapp.send_message`, `whatsapp.process_media`, `whatsapp.process_document`, `whatsapp.process_onboarding`, and `whatsapp.run_ai_conversation`. Set queue `retry_after` above the longest job timeout (at least 150 seconds) before enabling workers.
-6. Schedule `php artisan schedule:run` every minute only after the missing cleanup/stuck-session commands are implemented; the existing module provider references commands that do not currently exist.
+6. Schedule `php artisan schedule:run` every minute. The module includes `whatsapp:cleanup-media` and `whatsapp:process-stuck-sessions`; run each with `--dry-run` first after deployment.
 
 ## Sandbox acceptance
 

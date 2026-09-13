@@ -48,7 +48,8 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
-            // \Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupMedia::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupMedia::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ProcessStuckSessions::class,
         ]);
     }
 
