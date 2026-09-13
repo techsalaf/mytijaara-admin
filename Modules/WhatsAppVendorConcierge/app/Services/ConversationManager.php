@@ -253,6 +253,11 @@ class ConversationManager
             return;
         }
 
+        if (str_starts_with($buttonId, 'edit_cat_')) {
+            $this->handleEditCategorySelection($conversation, $contact, $buttonId, $gateway);
+            return;
+        }
+
         // Onboarding interactive buttons (business plan, terms, privacy, modules, zones, hours, delivery, kyc)
         $onboardingPrefixes = ['plan_', 'accept_', 'decline_', 'hours_', 'deliv_', 'mod_', 'zone_', 'kyc_'];
         $isOnboardingButton = in_array($buttonId, ['plan_commission', 'plan_subscription', 'accept_terms', 'decline_terms', 'accept_privacy', 'decline_privacy'])
@@ -331,6 +336,11 @@ class ConversationManager
             'edit_kyc' => 'kyc_documents',
             'edit_documents' => 'kyc_documents',
         ];
+
+        if (str_starts_with($selectionId, 'edit_cat_')) {
+            $this->handleEditCategorySelection($conversation, $contact, $selectionId, $gateway);
+            return;
+        }
 
         if (isset($editMap[$selectionId])) {
             $this->handleEditSection($conversation, $contact, $editMap[$selectionId], $gateway);
@@ -593,36 +603,83 @@ class ConversationManager
         $session = OnboardingSession::find($conversation->onboarding_session_id);
 
         if ($session) {
-            // Show steps to edit
+            // Show categorized options to stay well within Meta's 10-row limit
             $gateway->sendListMessage(
                 $contact->phone_number,
-                "Which section would you like to edit?",
+                "Which category of your application would you like to edit?",
                 [[
                     'title' => 'Application Sections',
                     'rows' => [
-                        ['id' => 'edit_business_basics', 'title' => '🏪 Business Name', 'description' => 'Update shop name'],
-                        ['id' => 'edit_module', 'title' => '📦 Business Module', 'description' => 'Grocery, Food, Pharmacy, etc.'],
-                        ['id' => 'edit_location', 'title' => '📍 Store Location', 'description' => 'Update physical address or pin'],
-                        ['id' => 'edit_zone', 'title' => '🌐 Business Zone', 'description' => 'Update operating zone'],
-                        ['id' => 'edit_hours', 'title' => '🕒 Operating Hours', 'description' => 'Update store schedule'],
-                        ['id' => 'edit_delivery', 'title' => '🚚 Delivery Time', 'description' => 'Update delivery estimate'],
-                        ['id' => 'edit_owner_info', 'title' => '👤 Owner Name', 'description' => 'Update your full name'],
-                        ['id' => 'edit_contact', 'title' => '📧 Email & Contact', 'description' => 'Update email & phone'],
-                        ['id' => 'edit_password', 'title' => '🔐 Password', 'description' => 'Update dashboard password'],
-                        ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Update required store logo'],
-                    ],
-                ], [
-                    'title' => 'Plans & Legal Policies',
-                    'rows' => [
-                        ['id' => 'edit_plan', 'title' => '💼 Business Plan', 'description' => 'Commission or Subscription'],
-                        ['id' => 'edit_terms', 'title' => '📜 Terms & Conditions', 'description' => 'Vendor Terms acceptance'],
-                        ['id' => 'edit_privacy', 'title' => '🔒 Privacy Policy', 'description' => 'Privacy Policy acceptance'],
-                        ['id' => 'edit_kyc', 'title' => '📑 KYC Verification', 'description' => 'TIN, CAC, or NIN verification'],
+                        ['id' => 'edit_cat_business', 'title' => '🏪 Business Identity', 'description' => 'Shop name, module, logo'],
+                        ['id' => 'edit_cat_location', 'title' => '📍 Location & Schedule', 'description' => 'Address, zone, hours, delivery'],
+                        ['id' => 'edit_cat_security', 'title' => '👤 Owner & Security', 'description' => 'Owner name, email, password'],
+                        ['id' => 'edit_cat_legal', 'title' => '📜 Plans & Compliance', 'description' => 'Plan, terms, privacy, KYC'],
                     ],
                 ]],
-                'Edit Application'
+                'Edit Application',
+                'Select a category to view fields'
             );
         }
+    }
+
+    /**
+     * Handle category selection when editing an application.
+     */
+    public function handleEditCategorySelection(WhatsAppConversation $conversation, WhatsAppContact $contact, string $catId, WhatsAppGateway $gateway): void
+    {
+        $categoryMenus = [
+            'edit_cat_business' => [
+                'body' => "Which business detail would you like to update?",
+                'rows' => [
+                    ['id' => 'edit_business_basics', 'title' => '🏪 Shop Name', 'description' => 'Update store / business name'],
+                    ['id' => 'edit_module', 'title' => '📦 Business Module', 'description' => 'Grocery, Food, Pharmacy, etc.'],
+                    ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Upload 1:1 store logo'],
+                ],
+            ],
+            'edit_cat_location' => [
+                'body' => "Which location detail would you like to update?",
+                'rows' => [
+                    ['id' => 'edit_location', 'title' => '📍 Store Address', 'description' => 'Update physical address or GPS pin'],
+                    ['id' => 'edit_zone', 'title' => '🌐 Business Zone', 'description' => 'Update operational zone'],
+                    ['id' => 'edit_hours', 'title' => '🕒 Operating Hours', 'description' => 'Update open days and store hours'],
+                    ['id' => 'edit_delivery', 'title' => '🚚 Delivery Time', 'description' => 'Update estimated delivery duration'],
+                ],
+            ],
+            'edit_cat_security' => [
+                'body' => "Which account detail would you like to update?",
+                'rows' => [
+                    ['id' => 'edit_owner_info', 'title' => '👤 Owner Name', 'description' => 'Update your full name'],
+                    ['id' => 'edit_contact', 'title' => '📧 Email & Contact', 'description' => 'Update email and phone number'],
+                    ['id' => 'edit_password', 'title' => '🔐 Dashboard Password', 'description' => 'Generate secure link to update password'],
+                ],
+            ],
+            'edit_cat_legal' => [
+                'body' => "Which policy or document would you like to update?",
+                'rows' => [
+                    ['id' => 'edit_plan', 'title' => '💼 Business Plan', 'description' => 'Commission or Subscription'],
+                    ['id' => 'edit_terms', 'title' => '📜 Terms & Conditions', 'description' => 'View and accept vendor terms'],
+                    ['id' => 'edit_privacy', 'title' => '🔒 Privacy Policy', 'description' => 'View and accept privacy policy'],
+                    ['id' => 'edit_kyc', 'title' => '📑 KYC Verification', 'description' => 'TIN, CAC RC/BN, or NIN verification'],
+                ],
+            ],
+        ];
+
+        $menu = $categoryMenus[$catId] ?? null;
+        if (!$menu) {
+            $this->handleEditApplication($conversation, $contact, $gateway);
+            return;
+        }
+
+        $gateway->sendListMessage(
+            $contact->phone_number,
+            $menu['body'],
+            [[
+                'title' => 'Select Field',
+                'rows' => $menu['rows'],
+            ]],
+            'Edit Field',
+            'Select an option above to edit'
+        );
     }
 
     /**

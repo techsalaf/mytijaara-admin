@@ -127,30 +127,49 @@ class WhatsAppGateway
     public function sendListMessage(string $to, string $body, array $sections, ?string $header = null, ?string $footer = null, string $buttonText = 'Select'): array
     {
         $sanitizedSections = [];
+        $totalRowCount = 0;
+        $maxTotalRows = 10;
+
         foreach ($sections as $section) {
+            if ($totalRowCount >= $maxTotalRows) {
+                break;
+            }
+
             $secTitle = (string) ($section['title'] ?? 'Options');
             if (mb_strlen($secTitle) > 24) {
                 $secTitle = mb_substr($secTitle, 0, 24);
             }
+
             $rows = [];
             foreach (($section['rows'] ?? []) as $rIndex => $row) {
+                if ($totalRowCount >= $maxTotalRows) {
+                    break;
+                }
+
                 $rowTitle = (string) ($row['title'] ?? "Option {$rIndex}");
                 if (mb_strlen($rowTitle) > 24) {
                     $rowTitle = mb_substr($rowTitle, 0, 24);
                 }
+
                 $r = [
                     'id' => (string) ($row['id'] ?? "row_{$rIndex}"),
                     'title' => $rowTitle,
                 ];
+
                 if (!empty($row['description'])) {
                     $r['description'] = mb_substr((string) $row['description'], 0, 72);
                 }
+
                 $rows[] = $r;
+                $totalRowCount++;
             }
-            $sanitizedSections[] = [
-                'title' => $secTitle,
-                'rows' => array_slice($rows, 0, 10),
-            ];
+
+            if (!empty($rows)) {
+                $sanitizedSections[] = [
+                    'title' => $secTitle,
+                    'rows' => $rows,
+                ];
+            }
         }
 
         $buttonLabel = mb_substr($buttonText, 0, 20);
@@ -180,6 +199,59 @@ class WhatsAppGateway
         ];
 
         return $this->sendMessage($payload);
+    }
+
+    /**
+     * Send an interactive CTA URL button message with automated text fallback
+     */
+    public function sendCtaUrlMessage(string $to, string $body, string $buttonText, string $url, ?string $header = null, ?string $footer = null): array
+    {
+        $interactive = [
+            'type' => 'cta_url',
+            'body' => ['text' => $body],
+            'action' => [
+                'name' => 'cta_url',
+                'parameters' => [
+                    'display_text' => mb_substr($buttonText, 0, 20),
+                    'url' => $url,
+                ],
+            ],
+        ];
+
+        if (!empty($header)) {
+            $interactive['header'] = ['type' => 'text', 'text' => mb_substr($header, 0, 60)];
+        }
+
+        if (!empty($footer)) {
+            $interactive['footer'] = ['text' => mb_substr($footer, 0, 60)];
+        }
+
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'to' => $to,
+            'type' => 'interactive',
+            'interactive' => $interactive,
+        ];
+
+        $res = $this->sendMessage($payload);
+
+        // If Meta Cloud API returns error on cta_url, fallback seamlessly to text message with formatted HTTPS URL
+        if (isset($res['error'])) {
+            Log::info('Interactive cta_url message returned error; sending text message fallback', [
+                'to' => $to,
+                'url' => $url,
+                'error' => $res['error'],
+            ]);
+
+            $fallbackText = ($header ? "*{$header}*\n\n" : "")
+                . $body . "\n\n"
+                . "👉 *" . $buttonText . ":*\n" . $url
+                . ($footer ? "\n\n_{$footer}_" : "");
+
+            return $this->sendTextMessage($to, $fallbackText);
+        }
+
+        return $res;
     }
 
     /**

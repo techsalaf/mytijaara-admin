@@ -18,6 +18,8 @@ class WhatsAppVendorConciergeTest extends TestCase
     {
         parent::setUp();
 
+        \Illuminate\Support\Facades\URL::forceRootUrl('http://localhost');
+
         config([
             'whatsapp-vendor-concierge.api.phone_number_id' => '123456789',
             'whatsapp-vendor-concierge.api.access_token' => 'test_token',
@@ -1088,5 +1090,275 @@ class WhatsAppVendorConciergeTest extends TestCase
         $existingVendor->refresh();
         $this->assertNull($existingVendor->status, 'Vendor status must remain null for pending approval');
         $this->assertEquals('Updated', $existingVendor->f_name);
+    }
+
+    /** @test */
+    public function it_enforces_max_10_rows_in_send_list_message()
+    {
+        $gateway = $this->getMockBuilder(WhatsAppGateway::class)
+            ->onlyMethods(['sendMessage'])
+            ->getMock();
+
+        $capturedPayload = null;
+        $gateway->expects($this->once())
+            ->method('sendMessage')
+            ->willReturnCallback(function ($payload) use (&$capturedPayload) {
+                $capturedPayload = $payload;
+                return ['messages' => [['id' => 'wamid.123']]];
+            });
+
+        // 14 rows total (exceeding Meta's 10 limit)
+        $sections = [
+            [
+                'title' => 'Section 1',
+                'rows' => [
+                    ['id' => 'r1', 'title' => 'Row 1'],
+                    ['id' => 'r2', 'title' => 'Row 2'],
+                    ['id' => 'r3', 'title' => 'Row 3'],
+                    ['id' => 'r4', 'title' => 'Row 4'],
+                    ['id' => 'r5', 'title' => 'Row 5'],
+                    ['id' => 'r6', 'title' => 'Row 6'],
+                    ['id' => 'r7', 'title' => 'Row 7'],
+                    ['id' => 'r8', 'title' => 'Row 8'],
+                ],
+            ],
+            [
+                'title' => 'Section 2',
+                'rows' => [
+                    ['id' => 'r9', 'title' => 'Row 9'],
+                    ['id' => 'r10', 'title' => 'Row 10'],
+                    ['id' => 'r11', 'title' => 'Row 11'],
+                    ['id' => 'r12', 'title' => 'Row 12'],
+                ],
+            ],
+        ];
+
+        $gateway->sendListMessage('2348012345678', 'Test list', $sections);
+
+        $this->assertNotNull($capturedPayload);
+        $actionSections = $capturedPayload['interactive']['action']['sections'];
+
+        $totalRows = 0;
+        foreach ($actionSections as $sec) {
+            $totalRows += count($sec['rows']);
+        }
+
+        $this->assertLessThanOrEqual(10, $totalRows, 'Total rows in list message must not exceed 10');
+        $this->assertEquals(10, $totalRows);
+    }
+
+    /** @test */
+    public function it_displays_categorized_edit_sections_within_row_limits()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'review_submit',
+            'collected_data' => ['business_name' => 'Categorized Edit Store'],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'review_submit',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendListMessage')
+            ->with(
+                $contact->phone_number,
+                $this->stringContains('category of your application'),
+                $this->callback(function ($sections) {
+                    // Category list must have exactly 4 rows (<= 10)
+                    return count($sections[0]['rows']) === 4;
+                }),
+                'Edit Application'
+            );
+
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $manager->handleEditApplication($conversation, $contact, $gateway);
+    }
+
+    /** @test */
+    public function it_routes_category_selection_to_sublist_with_few_rows()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'review_submit',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendListMessage')
+            ->with(
+                $contact->phone_number,
+                $this->stringContains('business detail'),
+                $this->callback(function ($sections) {
+                    // Business category sub-list has 3 items
+                    return count($sections[0]['rows']) === 3;
+                }),
+                'Edit Field'
+            );
+
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $manager->handleListResponse($conversation, $contact, 'edit_cat_business', '🏪 Business Identity', $gateway);
+    }
+
+    /** @test */
+    public function it_generates_secure_password_token_and_sends_cta_url()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'account_password',
+            'collected_data' => ['business_name' => 'Secure Pass Store'],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'account_password',
+        ]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendCtaUrlMessage')
+            ->with(
+                $contact->phone_number,
+                $this->stringContains('passwords cannot be entered in WhatsApp'),
+                'Set Password 🔐',
+                $this->stringContains('/whatsapp/onboarding/password/')
+            );
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $service->sendStepPrompt($conversation, $contact, 'account_password', $gateway);
+
+        $session->refresh();
+        $this->assertNotEmpty($session->collected_data['_pwd_token_hash']);
+        $this->assertNotEmpty($session->collected_data['_pwd_token_expires_at']);
+    }
+
+    /** @test */
+    public function it_rejects_plaintext_passwords_sent_in_whatsapp_chat()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'account_password',
+            'collected_data' => ['business_name' => 'Reject Plaintext Store'],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'account_password',
+        ]);
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        // User attempts to type a password into WhatsApp chat
+        $msg = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'MySecretPassword123!'],
+            'raw_text' => 'MySecretPassword123!',
+        ]);
+
+        $extracted = $extractMethod->invoke($service, $msg, 'account_password', $contact);
+        $this->assertFalse($extracted['has_password']);
+        $this->assertTrue($extracted['plaintext_sent']);
+
+        $validation = $validateMethod->invoke($service, 'account_password', $extracted);
+        $this->assertFalse($validation['valid']);
+    }
+
+    /** @test */
+    public function it_renders_and_submits_secure_password_over_https()
+    {
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => '234' . rand(8000000000, 8099999999),
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'account_password',
+            'collected_data' => [
+                'business_name' => 'HTTPS Store',
+                'email' => 'https_store@mytijaara.test',
+            ],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'onboarding_session_id' => $session->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'account_password',
+        ]);
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $passwordUrl = $service->generateSecurePasswordUrl($session);
+
+        // Extract token from URL
+        preg_match('/\/whatsapp\/onboarding\/password\/([a-f0-9]+)/', $passwordUrl, $matches);
+        $token = $matches[1];
+
+        // 1. GET page
+        $response = $this->get('/whatsapp/onboarding/password/' . $token);
+        $response->assertStatus(200);
+        $response->assertSee('Create Dashboard Password');
+        $response->assertSee('HTTPS Store');
+
+        // 2. POST valid strong password
+        $postResponse = $this->post('/whatsapp/onboarding/password/' . $token, [
+            'password' => 'SecureP@ss2026',
+            'password_confirmation' => 'SecureP@ss2026',
+        ]);
+        $postResponse->assertStatus(200);
+        $postResponse->assertSee('Password Created!');
+
+        // 3. Verify session was updated and step advanced to store_branding
+        $session->refresh();
+        $this->assertTrue($session->collected_data['has_password']);
+        $this->assertNotEmpty($session->collected_data['password_hash']);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('SecureP@ss2026', $session->collected_data['password_hash']));
+        $this->assertEquals('store_branding', $session->current_step);
+
+        $conversation->refresh();
+        $this->assertEquals('store_branding', $conversation->current_step);
+
+        // 4. Verify token was single-use and is now invalidated
+        $reuseResponse = $this->get('/whatsapp/onboarding/password/' . $token);
+        $reuseResponse->assertStatus(200);
+        $reuseResponse->assertSee('Link Expired or Used');
     }
 }

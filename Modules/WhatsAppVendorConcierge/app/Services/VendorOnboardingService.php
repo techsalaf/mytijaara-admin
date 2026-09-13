@@ -351,13 +351,17 @@ class VendorOnboardingService
                 'email' => strtolower(trim($rawText ?: ($content['text'] ?? ''))),
                 'phone' => $contact?->phone_number ?? ($content['text'] ?? null),
             ],
-            'account_password' => (function () use ($rawText, $content) {
-                $password = trim($rawText ?: ($content['text'] ?? ''));
+            'account_password' => (function () use ($rawText, $contact) {
+                $session = $contact
+                    ? OnboardingSession::where('contact_id', $contact->id)->where('status', 'started')->latest('last_activity_at')->first()
+                    : null;
+                $hasPassword = !empty($session?->collected_data['has_password']) || !empty($session?->collected_data['password_hash']);
+                $testPassword = trim($rawText);
 
                 return [
-                    'password' => $password,
-                    'password_hash' => $password !== '' ? bcrypt($password) : null,
-                    'has_password' => $password !== '',
+                    'has_password' => $hasPassword,
+                    'password' => $testPassword,
+                    'plaintext_sent' => $testPassword !== '',
                 ];
             })(),
             'store_branding' => (function () use ($message, $content, $rawText) {
@@ -704,9 +708,9 @@ class VendorOnboardingService
                 'email' => 'required|email|unique:vendors,email',
                 'phone' => 'required|string|min:7|max:20',
             ],
-            'account_password' => [
-                'password' => ['required', 'string', Password::min(8)->mixedCase()->letters()->numbers()->symbols()],
-            ],
+            'account_password' => isset($data['has_password'])
+                ? ['has_password' => 'required|accepted']
+                : ['password' => ['required', 'string', Password::min(8)->mixedCase()->letters()->numbers()->symbols()]],
             'store_branding' => [
                 'logo_media_id' => 'required|integer|exists:whatsapp_media,id',
             ],
@@ -750,6 +754,8 @@ class VendorOnboardingService
     ): void {
         $step = $conversation->current_step ?? 'welcome';
 
+        $session = OnboardingSession::find($conversation->onboarding_session_id);
+
         $message = match ($step) {
             'business_basics' => "Please provide a valid shop name for your business (between 2 and 100 characters).",
             'module_selection' => "Please choose a valid business module from the list (e.g. Grocery, Food, Pharmacy, etc.).",
@@ -764,7 +770,7 @@ class VendorOnboardingService
                 : (isset($errors['phone']) && in_array('The phone has already been taken.', $errors['phone'])
                     ? "This phone number is already registered to an approved vendor account. Reply *Support* if you need assistance."
                     : "Please enter a valid email address for account notifications (e.g. *yourshop@gmail.com*)."),
-            'account_password' => "⚠️ Password does not meet security requirements.\n\nYour password must:\n• Be at least 8 characters long\n• Contain uppercase & lowercase letters\n• Contain at least one number\n• Contain at least one symbol (!@#$%^&*)\n\n*(Example: ShopPass@2026)*\nPlease try again:",
+            'account_password' => "🔒 *Security Reminder*\n\nFor your account protection, passwords cannot be sent in WhatsApp messages.\n\nPlease tap the secure link below to set your vendor dashboard password over encrypted HTTPS:\n\n👉 " . ($session ? $this->generateSecurePasswordUrl($session) : url('/')) . "\n\n⏳ *This secure link is single-use and expires in 15 minutes.*",
             'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
             'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
@@ -773,6 +779,18 @@ class VendorOnboardingService
             'documents' => "Please upload a photo or document of your ID or business registration, or reply *Skip* to continue.",
             default => "Please check your input and try again, or reply *Support* if you need help.",
         };
+
+        if ($step === 'account_password' && $session) {
+            $passwordUrl = $this->generateSecurePasswordUrl($session);
+            $gateway->sendCtaUrlMessage(
+                $contact->phone_number,
+                "🔒 *Security Reminder*\n\nFor your account protection and privacy, passwords cannot be entered in WhatsApp messages.\n\nPlease tap the button below to set your vendor dashboard password securely over HTTPS:\n\n👉 {$passwordUrl}\n\n⏳ *This secure link is single-use and expires in 15 minutes.*",
+                'Set Password 🔐',
+                $passwordUrl,
+                'MyTijaara Security'
+            );
+            return;
+        }
 
         $gateway->sendTextMessage($contact->phone_number, $message);
 
@@ -869,6 +887,18 @@ class VendorOnboardingService
         if ($step === 'review_submit' && $session) {
             $session->updateData(['_in_review' => true]);
             $session->refresh();
+        }
+
+        if ($step === 'account_password') {
+            $passwordUrl = $session ? $this->generateSecurePasswordUrl($session) : url('/');
+            $gateway->sendCtaUrlMessage(
+                $contact->phone_number,
+                "[Section 3 of 5: Account Security] 🔐\n\nFor your account protection and privacy, dashboard passwords cannot be entered in WhatsApp chat.\n\nPlease tap the button below to set your vendor dashboard password securely over HTTPS:\n\n👉 {$passwordUrl}\n\n⏳ *This secure link is single-use and expires in 15 minutes.*",
+                'Set Password 🔐',
+                $passwordUrl,
+                'MyTijaara Security'
+            );
+            return;
         }
 
         $prompts = [
@@ -1061,6 +1091,25 @@ class VendorOnboardingService
         } else {
             $gateway->sendTextMessage($contact->phone_number, $prompt['text']);
         }
+    }
+
+    /**
+     * Generate a single-use secure HTTPS password setup URL with 15-minute TTL.
+     */
+    public function generateSecurePasswordUrl(OnboardingSession $session): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $token);
+        $expiresAt = now()->addMinutes(15);
+
+        $session->updateData([
+            '_pwd_token_hash' => $tokenHash,
+            '_pwd_token_expires_at' => $expiresAt->toIso8601String(),
+        ]);
+
+        \Illuminate\Support\Facades\Cache::put('wa_pwd_token:' . $tokenHash, $session->id, $expiresAt);
+
+        return route('whatsapp.onboarding.password', ['token' => $token]);
     }
 
     /**

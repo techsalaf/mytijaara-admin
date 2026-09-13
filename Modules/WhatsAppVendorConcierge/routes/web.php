@@ -31,3 +31,21 @@ Route::get('webhooks/whatsapp/health', function () {
         'timestamp' => now()->toISOString(),
     ]);
 })->name('whatsapp.webhook.health');
+
+/*
+|--------------------------------------------------------------------------
+| Secure Credential Creation (HTTPS Web Flow)
+|--------------------------------------------------------------------------
+|
+| Mobile-first secure password setup page for WhatsApp vendor onboarding.
+| Zero plaintext passwords are ever sent or logged in WhatsApp.
+|
+*/
+Route::middleware(['web'])->group(function () {
+    Route::get('/whatsapp/onboarding/password/{token}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\SecurePasswordController::class, 'show'])
+        ->name('whatsapp.onboarding.password');
+
+    Route::post('/whatsapp/onboarding/password/{token}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\SecurePasswordController::class, 'store'])
+        ->name('whatsapp.onboarding.password.store')
+        ->middleware('throttle:10,1');
+});
