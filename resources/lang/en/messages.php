@@ -12679,4 +12679,5 @@ Smartly or Earn. ',
   'Toggle this option to enable or disable login through this provider.' => 'Toggle this option to enable or disable login through this provider.',
   'Disable AI Personalization?' => 'Disable AI Personalization?',
   'Enable AI Personalization?' => 'Enable AI Personalization?',
+  'Short_description' => 'Short description',
 );
