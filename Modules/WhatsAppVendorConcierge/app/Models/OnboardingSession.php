@@ -67,15 +67,19 @@ class OnboardingSession extends Model
         return [
             'welcome',
             'business_basics',
-            'owner_info',
-            'category_selection',
+            'module_selection',
             'location',
+            'zone_selection',
+            'operating_hours',
+            'delivery_time',
+            'owner_info',
             'contact_info',
             'account_password',
             'store_branding',
             'business_plan',
-            'kyc_documents',
             'terms_acceptance',
+            'privacy_acceptance',
+            'kyc_documents',
             'review_submit',
         ];
     }
@@ -89,8 +93,8 @@ class OnboardingSession extends Model
         $current = $this->current_step ?? 'welcome';
 
         // Backward compatibility for legacy step names
-        if ($current === 'operating_hours') {
-            return 'store_branding';
+        if ($current === 'category_selection') {
+            return 'location';
         }
         if ($current === 'documents') {
             return 'business_plan';

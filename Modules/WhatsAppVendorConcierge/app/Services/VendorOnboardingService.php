@@ -66,11 +66,20 @@ class VendorOnboardingService
             $editKeywordMap = [
                 'business' => 'business_basics',
                 'shop' => 'business_basics',
-                'owner' => 'owner_info',
-                'name' => 'owner_info',
-                'category' => 'category_selection',
+                'module' => 'module_selection',
+                'category' => 'module_selection',
                 'location' => 'location',
                 'address' => 'location',
+                'pin' => 'location',
+                'zone' => 'zone_selection',
+                'hour' => 'operating_hours',
+                'hours' => 'operating_hours',
+                'operating' => 'operating_hours',
+                'schedule' => 'operating_hours',
+                'delivery' => 'delivery_time',
+                'time' => 'delivery_time',
+                'owner' => 'owner_info',
+                'name' => 'owner_info',
                 'email' => 'contact_info',
                 'phone' => 'contact_info',
                 'contact' => 'contact_info',
@@ -83,15 +92,16 @@ class VendorOnboardingService
                 'plan' => 'business_plan',
                 'subscription' => 'business_plan',
                 'commission' => 'business_plan',
+                'terms' => 'terms_acceptance',
+                'privacy' => 'privacy_acceptance',
+                'policy' => 'privacy_acceptance',
                 'kyc' => 'kyc_documents',
                 'tin' => 'kyc_documents',
                 'cac' => 'kyc_documents',
+                'nin' => 'kyc_documents',
                 'document' => 'kyc_documents',
-                'terms' => 'terms_acceptance',
-                'hour' => 'store_branding',
-                'hours' => 'store_branding',
-                'operating' => 'store_branding',
                 'documents' => 'kyc_documents',
+                'certificate' => 'kyc_documents',
             ];
 
             foreach ($editKeywordMap as $keyword => $targetStep) {
@@ -167,16 +177,35 @@ class VendorOnboardingService
                 'business_name' => $rawText ?: ($content['text'] ?? null),
                 'business_description' => $rawText ?: ($content['text'] ?? null),
             ],
-            'owner_info' => (function () use ($rawText, $content) {
-                $text = trim($rawText ?: ($content['text'] ?? ''));
-                $parts = preg_split('/\s+/', $text, 2);
-                $fName = $parts[0] ?? '';
-                $lName = $parts[1] ?? '';
+            'module_selection' => (function () use ($content, $rawText) {
+                $modId = $content['interactive']['list_reply']['id']
+                    ?? $content['interactive']['button_reply']['id']
+                    ?? null;
 
+                if ($modId && str_starts_with($modId, 'mod_')) {
+                    $modId = str_replace('mod_', '', $modId);
+                }
+
+                if (!$modId && $rawText !== '') {
+                    $matched = Module::active()->notParcel()
+                        ->where(function ($q) use ($rawText) {
+                            $q->where('module_name', 'LIKE', "%{$rawText}%")
+                              ->orWhere('id', $rawText);
+                        })->first();
+                    if ($matched) {
+                        $modId = (string) $matched->id;
+                    }
+                }
+
+                if (!$modId) {
+                    $firstMod = Module::active()->notParcel()->first();
+                    $modId = $firstMod?->id;
+                }
+
+                $module = $modId ? Module::find($modId) : null;
                 return [
-                    'f_name' => $fName,
-                    'l_name' => $lName,
-                    'owner_name' => $text,
+                    'module_id' => $module?->id ?? ($modId ? (int)$modId : null),
+                    'module_name' => $module?->module_name ?? 'Business Module',
                 ];
             })(),
             'category_selection' => (function () use ($content, $rawText) {
@@ -187,7 +216,6 @@ class VendorOnboardingService
                     ?? $content['interactive']['button_reply']['title']
                     ?? null;
 
-                // If user typed category name or number as text
                 if (!$catId && $rawText !== '') {
                     $matched = \App\Models\Category::where('status', 1)
                         ->where(function ($query) use ($rawText) {
@@ -211,7 +239,114 @@ class VendorOnboardingService
                     'module_id' => $moduleId,
                 ];
             })(),
-            'location' => $this->resolveLocation($content, $rawText),
+            'location' => (function () use ($content, $rawText) {
+                $loc = $this->resolveLocation($content, $rawText);
+                if (!empty($loc['latitude']) && !empty($loc['longitude'])) {
+                    try {
+                        $detectedZone = Zone::whereContains('coordinates',
+                            new \MatanYadaev\EloquentSpatial\Objects\Point(
+                                (float)$loc['latitude'],
+                                (float)$loc['longitude'],
+                                4326
+                            ))->first();
+                        if ($detectedZone) {
+                            $loc['zone_id'] = $detectedZone->id;
+                            $loc['zone_name'] = $detectedZone->name;
+                            $loc['zone_detected'] = true;
+                        }
+                    } catch (\Throwable $e) {
+                        Log::info('Zone detection error: ' . $e->getMessage());
+                    }
+                }
+                return $loc;
+            })(),
+            'zone_selection' => (function () use ($content, $rawText) {
+                $btnId = $content['interactive']['button_reply']['id']
+                    ?? $content['interactive']['list_reply']['id']
+                    ?? null;
+                $raw = trim($btnId ?: $rawText);
+
+                if ($btnId && str_starts_with($btnId, 'zone_')) {
+                    $zoneId = (int) str_replace('zone_', '', $btnId);
+                    $zone = Zone::find($zoneId);
+                    return ['zone_id' => $zone?->id ?? $zoneId, 'zone_name' => $zone?->name ?? 'Selected Zone'];
+                }
+
+                if (in_array(strtolower($raw), ['confirm', 'yes', 'correct', 'ok', 'okay', '1'])) {
+                    $fallbackZone = Zone::active()->first() ?? Zone::first();
+                    return [
+                        'zone_id' => $fallbackZone?->id ?? 1,
+                        'zone_name' => $fallbackZone?->name ?? 'Default Zone',
+                    ];
+                }
+
+                $matched = Zone::active()
+                    ->where(function ($q) use ($raw) {
+                        $q->where('name', 'LIKE', "%{$raw}%")
+                          ->orWhere('id', $raw);
+                    })->first();
+
+                if (!$matched) {
+                    $matched = Zone::active()->first() ?? Zone::first();
+                }
+
+                return [
+                    'zone_id' => $matched?->id ?? 1,
+                    'zone_name' => $matched?->name ?? 'Default Zone',
+                ];
+            })(),
+            'operating_hours' => (function () use ($content, $rawText) {
+                $btnId = $content['interactive']['button_reply']['id']
+                    ?? $content['interactive']['list_reply']['id']
+                    ?? null;
+                $raw = trim($btnId ?: $rawText);
+
+                if ($btnId === 'hours_standard' || str_contains(strtolower($raw), 'standard')) {
+                    $hours = 'Mon - Sat (8:00 AM - 8:00 PM)';
+                    return ['operating_hours' => $hours, 'schedule' => $hours, 'schedule_type' => 'standard'];
+                }
+                if ($btnId === 'hours_everyday' || str_contains(strtolower($raw), 'everyday')) {
+                    $hours = 'Mon - Sun (8:00 AM - 10:00 PM)';
+                    return ['operating_hours' => $hours, 'schedule' => $hours, 'schedule_type' => 'everyday'];
+                }
+                if ($btnId === 'hours_247' || str_contains(strtolower($raw), '24/7') || str_contains(strtolower($raw), 'always')) {
+                    $hours = '24/7 (Always Open)';
+                    return ['operating_hours' => $hours, 'schedule' => $hours, 'schedule_type' => '247'];
+                }
+
+                $hours = $rawText ?: 'Mon - Sat (8:00 AM - 8:00 PM)';
+                return ['operating_hours' => $hours, 'schedule' => $hours, 'schedule_type' => 'custom'];
+            })(),
+            'delivery_time' => (function () use ($content, $rawText) {
+                $btnId = $content['interactive']['button_reply']['id']
+                    ?? $content['interactive']['list_reply']['id']
+                    ?? null;
+                $raw = trim($btnId ?: $rawText);
+
+                if ($btnId === 'deliv_20_40' || str_contains($raw, '20')) {
+                    return ['delivery_time' => '20-40 min'];
+                }
+                if ($btnId === 'deliv_30_60' || str_contains($raw, '30')) {
+                    return ['delivery_time' => '30-60 min'];
+                }
+                if ($btnId === 'deliv_1_2hr' || str_contains($raw, '1-2')) {
+                    return ['delivery_time' => '1-2 hours'];
+                }
+
+                return ['delivery_time' => $rawText ?: '20-40 min'];
+            })(),
+            'owner_info' => (function () use ($rawText, $content) {
+                $text = trim($rawText ?: ($content['text'] ?? ''));
+                $parts = preg_split('/\s+/', $text, 2);
+                $fName = $parts[0] ?? '';
+                $lName = $parts[1] ?? '';
+
+                return [
+                    'f_name' => $fName,
+                    'l_name' => $lName,
+                    'owner_name' => $text,
+                ];
+            })(),
             'contact_info' => [
                 'email' => strtolower(trim($rawText ?: ($content['text'] ?? ''))),
                 'phone' => $contact?->phone_number ?? ($content['text'] ?? null),
@@ -227,11 +362,12 @@ class VendorOnboardingService
             })(),
             'store_branding' => (function () use ($message, $content, $rawText) {
                 $lower = strtolower(trim($rawText));
-                if (in_array($lower, ['skip', 'default', 'none', 'later'])) {
+                // MANDATORY: No skip option allowed!
+                if (in_array($lower, ['skip', 'default', 'none', 'later', 'pass'])) {
                     return [
                         'logo_media_id' => null,
                         'has_logo' => false,
-                        'use_default_logo' => true,
+                        'skipped_attempt' => true,
                     ];
                 }
 
@@ -260,24 +396,6 @@ class VendorOnboardingService
                     'plan_name' => 'Commission-Based',
                 ];
             })(),
-            'kyc_documents' => (function () use ($message, $content, $rawText) {
-                $lower = strtolower(trim($rawText));
-                if (in_array($lower, ['skip', 'none', 'later', 'na', 'n/a'])) {
-                    return [
-                        'tin' => null,
-                        'tin_media_id' => null,
-                        'kyc_skipped' => true,
-                    ];
-                }
-
-                $mediaId = $this->extractMediaId($message, $content);
-
-                return [
-                    'tin' => $rawText !== '' && $mediaId === null ? trim($rawText) : null,
-                    'tin_media_id' => $mediaId,
-                    'kyc_skipped' => false,
-                ];
-            })(),
             'terms_acceptance' => (function () use ($content, $rawText) {
                 $btnId = $content['interactive']['button_reply']['id'] ?? null;
                 $lower = strtolower(trim($btnId ?: $rawText));
@@ -289,10 +407,58 @@ class VendorOnboardingService
                     'terms_accepted' => $isAccepted,
                 ];
             })(),
-            'operating_hours' => [
-                'schedule' => $rawText ?: ($content['text'] ?? null),
-                'operating_hours' => $rawText ?: ($content['text'] ?? null),
-            ],
+            'privacy_acceptance' => (function () use ($content, $rawText) {
+                $btnId = $content['interactive']['button_reply']['id'] ?? null;
+                $lower = strtolower(trim($btnId ?: $rawText));
+
+                $isAccepted = $btnId === 'accept_privacy'
+                    || in_array($lower, ['accept', 'i accept', 'yes', 'agree', 'i agree', 'accept_privacy', 'ok', 'okay', '1']);
+
+                return [
+                    'privacy_accepted' => $isAccepted,
+                ];
+            })(),
+            'kyc_documents' => (function () use ($message, $content, $rawText) {
+                $lower = strtolower(trim($rawText));
+                if (in_array($lower, ['skip', 'none', 'later', 'na', 'n/a'])) {
+                    return [
+                        'tin' => null,
+                        'cac_number' => null,
+                        'nin' => null,
+                        'tin_media_id' => null,
+                        'kyc_type' => 'skipped',
+                        'kyc_skipped' => true,
+                    ];
+                }
+
+                $mediaId = $this->extractMediaId($message, $content);
+                $kycType = 'tin';
+                $tin = null;
+                $cac = null;
+                $nin = null;
+
+                if ($rawText !== '' && $mediaId === null) {
+                    $tin = trim($rawText);
+                    if (str_starts_with($lower, 'cac:') || str_starts_with($lower, 'rc') || str_starts_with($lower, 'bn')) {
+                        $kycType = 'cac';
+                        $cac = trim($rawText);
+                    } elseif (str_starts_with($lower, 'nin:') || strlen(preg_replace('/\D/', '', $rawText)) === 11) {
+                        $kycType = 'nin';
+                        $nin = trim($rawText);
+                    } else {
+                        $kycType = 'tin';
+                    }
+                }
+
+                return [
+                    'tin' => $tin,
+                    'cac_number' => $cac,
+                    'nin' => $nin,
+                    'kyc_type' => $kycType,
+                    'tin_media_id' => $mediaId,
+                    'kyc_skipped' => false,
+                ];
+            })(),
             'documents' => (function () use ($message, $content) {
                 $mediaId = $this->extractMediaId($message, $content);
                 return ['media_id' => $mediaId];
@@ -509,9 +675,8 @@ class VendorOnboardingService
                 'business_name' => 'required|string|min:2|max:100',
                 'business_description' => 'nullable|string|max:500',
             ],
-            'owner_info' => [
-                'f_name' => 'required|string|min:2|max:100',
-                'l_name' => 'nullable|string|max:100',
+            'module_selection' => [
+                'module_id' => 'required|integer|exists:modules,id',
             ],
             'category_selection' => [
                 'category_id' => 'required|integer|exists:categories,id',
@@ -521,6 +686,20 @@ class VendorOnboardingService
                 'longitude' => 'required|numeric|between:-180,180',
                 'address' => 'required|string|min:3|max:1000',
             ],
+            'zone_selection' => [
+                'zone_id' => 'required|integer|exists:zones,id',
+            ],
+            'operating_hours' => [
+                'operating_hours' => 'required_without:schedule|string|max:255',
+                'schedule' => 'nullable|string|max:255',
+            ],
+            'delivery_time' => [
+                'delivery_time' => 'required|string|max:100',
+            ],
+            'owner_info' => [
+                'f_name' => 'required|string|min:2|max:100',
+                'l_name' => 'nullable|string|max:100',
+            ],
             'contact_info' => [
                 'email' => 'required|email|unique:vendors,email',
                 'phone' => 'required|string|min:7|max:20',
@@ -529,20 +708,22 @@ class VendorOnboardingService
                 'password' => ['required', 'string', Password::min(8)->mixedCase()->letters()->numbers()->symbols()],
             ],
             'store_branding' => [
-                'logo_media_id' => 'nullable|integer|exists:whatsapp_media,id',
+                'logo_media_id' => 'required|integer|exists:whatsapp_media,id',
             ],
             'business_plan' => [
                 'business_plan' => 'required|string|in:commission-base,subscription-base',
             ],
-            'kyc_documents' => [
-                'tin' => 'nullable|string|max:100',
-                'tin_media_id' => 'nullable|integer|exists:whatsapp_media,id',
-            ],
             'terms_acceptance' => [
                 'terms_accepted' => 'required|accepted',
             ],
-            'operating_hours' => [
-                'schedule' => 'nullable|string|max:500',
+            'privacy_acceptance' => [
+                'privacy_accepted' => 'required|accepted',
+            ],
+            'kyc_documents' => [
+                'tin' => 'nullable|string|max:100',
+                'cac_number' => 'nullable|string|max:100',
+                'nin' => 'nullable|string|max:50',
+                'tin_media_id' => 'nullable|integer|exists:whatsapp_media,id',
             ],
             'documents' => [
                 'media_id' => 'nullable|integer|exists:whatsapp_media,id',
@@ -571,20 +752,24 @@ class VendorOnboardingService
 
         $message = match ($step) {
             'business_basics' => "Please provide a valid shop name for your business (between 2 and 100 characters).",
+            'module_selection' => "Please choose a valid business module from the list (e.g. Grocery, Food, Pharmacy, etc.).",
+            'category_selection' => "We couldn't recognize that category. Please choose from available categories or type your category name.",
+            'location' => "We couldn't detect your shop location. 📍\n\nPlease do one of the following:\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical shop address (e.g. *12 Marina Road, Lagos*)",
+            'zone_selection' => "Please select or confirm your business operating zone from the available options.",
+            'operating_hours' => "Please select or reply with your store's regular operating hours (e.g. *Mon-Sat 8am - 8pm*).",
+            'delivery_time' => "Please select or reply with your store's approximate delivery window (e.g. *20-40 min*).",
             'owner_info' => "Please enter your first and last name (e.g. *Rasheed Bello*).",
-            'category_selection' => "We couldn't recognize that category. Please tap the **Select** button above to choose from available categories, or type your category name (e.g. *Demo category*).",
-            'location' => "We couldn't detect your shop location. 📍\n\nPlease do one of the following:\n1. Tap 📎 and share your **Location pin** on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical shop address (e.g. *12 Marina Road, Lagos*)",
             'contact_info' => isset($errors['email']) && in_array('The email has already been taken.', $errors['email'])
                 ? "This email address is already registered to another vendor account. Please provide a different email address."
                 : (isset($errors['phone']) && in_array('The phone has already been taken.', $errors['phone'])
-                    ? "This phone number is already registered to a vendor. Reply *Support* if you need help accessing your account."
-                    : "Please enter a valid email address for account verification (e.g., *yourshop@gmail.com*)."),
-            'account_password' => "⚠️ Password does not meet security requirements.\n\nYour password must:\n• Be at least 8 characters long\n• Contain uppercase & lowercase letters\n• Contain at least one number\n• Contain at least one symbol (e.g. @, #, $, !)\n\n*(Example: ShopPass@2026)*\nPlease try again:",
-            'store_branding' => "Please send a photo or image file of your store logo, or reply *Skip* to use a standard shop icon for now.",
-            'business_plan' => "Please choose a valid business plan. Tap one of the buttons above or reply *Commission* or *Subscription*.",
-            'kyc_documents' => "Please provide a valid TIN/CAC number, upload a document, or reply *Skip* to continue.",
-            'terms_acceptance' => "You must accept the Vendor Terms & Conditions to complete your registration. Tap **✅ I Accept** or reply *Accept* to proceed.",
-            'operating_hours' => "Please specify your operating hours (e.g. *Mon-Sat 9am - 8pm, Sun Closed*).",
+                    ? "This phone number is already registered to an approved vendor account. Reply *Support* if you need assistance."
+                    : "Please enter a valid email address for account notifications (e.g. *yourshop@gmail.com*)."),
+            'account_password' => "⚠️ Password does not meet security requirements.\n\nYour password must:\n• Be at least 8 characters long\n• Contain uppercase & lowercase letters\n• Contain at least one number\n• Contain at least one symbol (!@#$%^&*)\n\n*(Example: ShopPass@2026)*\nPlease try again:",
+            'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
+            'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
+            'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
+            'privacy_acceptance' => "You must accept MyTijaara's Merchant Privacy Policy (https://mytijaara.com/privacy-policy) to proceed. Tap *✅ Accept Privacy* or reply *Accept*.",
+            'kyc_documents' => "Please provide a valid TIN / CAC / NIN number, upload a document (max 2MB), or reply *Skip* to complete verification later in your dashboard.",
             'documents' => "Please upload a photo or document of your ID or business registration, or reply *Skip* to continue.",
             default => "Please check your input and try again, or reply *Support* if you need help.",
         };
@@ -592,7 +777,15 @@ class VendorOnboardingService
         $gateway->sendTextMessage($contact->phone_number, $message);
 
         // For interactive steps, re-send prompt with buttons/list
-        if ($step === 'category_selection') {
+        if ($step === 'module_selection') {
+            $this->sendStepPrompt($conversation, $contact, 'module_selection', $gateway);
+        } elseif ($step === 'zone_selection') {
+            $this->sendStepPrompt($conversation, $contact, 'zone_selection', $gateway);
+        } elseif ($step === 'operating_hours') {
+            $this->sendStepPrompt($conversation, $contact, 'operating_hours', $gateway);
+        } elseif ($step === 'delivery_time') {
+            $this->sendStepPrompt($conversation, $contact, 'delivery_time', $gateway);
+        } elseif ($step === 'category_selection') {
             $sections = $this->getCategorySections();
             if (!empty($sections[0]['rows'])) {
                 $gateway->sendListMessage(
@@ -606,6 +799,8 @@ class VendorOnboardingService
             $this->sendStepPrompt($conversation, $contact, 'business_plan', $gateway);
         } elseif ($step === 'terms_acceptance') {
             $this->sendStepPrompt($conversation, $contact, 'terms_acceptance', $gateway);
+        } elseif ($step === 'privacy_acceptance') {
+            $this->sendStepPrompt($conversation, $contact, 'privacy_acceptance', $gateway);
         }
     }
 
@@ -660,6 +855,9 @@ class VendorOnboardingService
     /**
      * Send prompt for specific step.
      */
+    /**
+     * Send prompt for specific step.
+     */
     public function sendStepPrompt(
         WhatsAppConversation $conversation,
         WhatsAppContact $contact,
@@ -676,56 +874,158 @@ class VendorOnboardingService
         $prompts = [
             'business_basics' => [
                 'type' => 'text',
-                'text' => "Great! Let's start with the basics. 🏪\n\nWhat is your **Shop / Business Name**?\n\n*(e.g. Ronix Essentials)*",
+                'text' => "[Section 1 of 5: Business Identity] 🏪\n\nGreat! Let's start with your store details.\n\nWhat is your *Shop / Business Name*?\n\n*(e.g. Ronix Essentials)*",
             ],
-            'owner_info' => [
-                'type' => 'text',
-                'text' => "Who is the business owner? 👤\n\nPlease enter your **First Name** and **Last Name** (e.g. *Rasheed Bello*):",
-            ],
+            'module_selection' => (function () {
+                $modules = Module::active()->notParcel()->get(['id', 'module_name', 'module_type']);
+                if ($modules->count() <= 3) {
+                    $buttons = $modules->map(function ($m) {
+                        return [
+                            'id' => 'mod_' . $m->id,
+                            'title' => mb_substr($m->module_name, 0, 20),
+                        ];
+                    })->toArray();
+                    return [
+                        'type' => 'button',
+                        'body' => "[Section 1 of 5: Business Module] 📦\n\nWhat type of business are you onboarding?\n\nSelect your primary business module below:",
+                        'buttons' => $buttons,
+                    ];
+                }
+
+                $rows = $modules->map(function ($m) {
+                    return [
+                        'id' => 'mod_' . $m->id,
+                        'title' => mb_substr($m->module_name, 0, 24),
+                        'description' => ucfirst($m->module_type) . ' business',
+                    ];
+                })->toArray();
+
+                return [
+                    'type' => 'list',
+                    'body' => "[Section 1 of 5: Business Module] 📦\n\nSelect the business module that best describes your store:",
+                    'sections' => [[
+                        'title' => 'Available Modules',
+                        'rows' => $rows,
+                    ]],
+                ];
+            })(),
             'category_selection' => [
                 'type' => 'list',
-                'body' => 'What category best describes your business?',
+                'body' => '[Section 1 of 5: Category] 📂\n\nWhat category best describes your business?',
                 'sections' => $this->getCategorySections(),
             ],
             'location' => [
                 'type' => 'text',
-                'text' => "Where is your business located? 📍\n\nYou can share your location using WhatsApp's location pin 📎, send a Google Maps link, or type your physical address.",
+                'text' => "[Section 2 of 5: Store Location] 📍\n\nWhere is your shop physically located?\n\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical street address (e.g. *12 Marina Road, Lagos*)",
+            ],
+            'zone_selection' => (function () use ($session) {
+                $detectedName = $session?->collected_data['zone_name'] ?? null;
+                $zones = Zone::active()->get(['id', 'name']);
+
+                if ($detectedName && $zones->count() <= 2) {
+                    $detectedZoneId = $session?->collected_data['zone_id'] ?? ($zones->first()?->id ?? 1);
+                    return [
+                        'type' => 'button',
+                        'body' => "[Section 2 of 5: Operating Zone] 🌐\n\nBased on your location, your store is in:\n• Zone: *{$detectedName}* ✅\n\nConfirm your operating zone to continue:",
+                        'buttons' => [
+                            ['id' => 'zone_' . $detectedZoneId, 'title' => '✅ Confirm Zone'],
+                        ],
+                    ];
+                }
+
+                if ($zones->count() <= 3) {
+                    $buttons = $zones->map(function ($z) {
+                        return [
+                            'id' => 'zone_' . $z->id,
+                            'title' => mb_substr($z->name, 0, 20),
+                        ];
+                    })->toArray();
+
+                    return [
+                        'type' => 'button',
+                        'body' => "[Section 2 of 5: Operating Zone] 🌐\n\nSelect the business zone where your store operates:",
+                        'buttons' => $buttons,
+                    ];
+                }
+
+                $rows = $zones->map(function ($z) {
+                    return [
+                        'id' => 'zone_' . $z->id,
+                        'title' => mb_substr($z->name, 0, 24),
+                        'description' => 'Operating Zone #' . $z->id,
+                    ];
+                })->toArray();
+
+                return [
+                    'type' => 'list',
+                    'body' => "[Section 2 of 5: Operating Zone] 🌐\n\nSelect your store operating zone:",
+                    'sections' => [[
+                        'title' => 'Operating Zones',
+                        'rows' => $rows,
+                    ]],
+                ];
+            })(),
+            'operating_hours' => [
+                'type' => 'button',
+                'body' => "[Section 2 of 5: Operating Hours] 🕒\n\nWhen will your store be open for customer orders?\n\nSelect a standard schedule or reply with your custom hours (e.g. *Mon-Fri 9am-6pm*):",
+                'buttons' => [
+                    ['id' => 'hours_standard', 'title' => '🕒 Mon-Sat (8am-8pm)'],
+                    ['id' => 'hours_everyday', 'title' => '🕒 Everyday (8am-10pm)'],
+                    ['id' => 'hours_247', 'title' => '🕒 24/7 Always Open'],
+                ],
+            ],
+            'delivery_time' => [
+                'type' => 'button',
+                'body' => "[Section 2 of 5: Delivery Time] 🚚\n\nWhat is your typical order preparation & delivery window?\n\nSelect an option or reply with your custom delivery time:",
+                'buttons' => [
+                    ['id' => 'deliv_20_40', 'title' => '⚡ 20 - 40 min'],
+                    ['id' => 'deliv_30_60', 'title' => '📦 30 - 60 min'],
+                    ['id' => 'deliv_1_2hr', 'title' => '🚚 1 - 2 hours'],
+                ],
+            ],
+            'owner_info' => [
+                'type' => 'text',
+                'text' => "[Section 3 of 5: Owner Information] 👤\n\nWho is the primary business owner / manager?\n\nPlease enter your *First Name* and *Last Name* (e.g. *Rasheed Bello*):",
             ],
             'contact_info' => [
                 'type' => 'text',
-                'text' => "What is your **email address** for account notifications and dashboard login? 📧\n\n*(e.g. yourshop@gmail.com)*",
+                'text' => "[Section 3 of 5: Contact Information] 📧\n\nWhat is your *email address* for account notifications and vendor dashboard login?\n\n*(e.g. yourshop@gmail.com)*",
             ],
             'account_password' => [
                 'type' => 'text',
-                'text' => "Create a secure **Account Password** for logging into your vendor dashboard 🔐\n\nRequirements:\n• At least 8 characters\n• Uppercase & lowercase letters\n• At least one number\n• At least one symbol (!@#$%^&*)\n\n*(Example format: ShopPass@2026)*",
+                'text' => "[Section 3 of 5: Account Security] 🔐\n\nCreate a secure password for logging into your vendor dashboard:\n\nRequirements (matching web):\n• At least 8 characters\n• Uppercase & lowercase letters\n• At least one number (0-9)\n• At least one symbol (!@#$%^&*)\n\n*(Example: ShopPass@2026)*",
             ],
             'store_branding' => [
                 'type' => 'text',
-                'text' => "Please upload your **Store Logo** 🖼️\n\nSend a photo or image of your shop logo or storefront, or reply *Skip* to use a standard icon.",
+                'text' => "[Section 4 of 5: Store Branding] 🖼️\n\nPlease upload your *Store Logo*.\n\nSpecifications (matching web requirements):\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n• Requirement: *Mandatory* (No skip)\n\nPlease tap 📎 or camera to send your store logo photo now:",
             ],
             'business_plan' => [
                 'type' => 'button',
-                'body' => "Choose your **Business Plan** on MyTijaara 💼\n\n• **Commission-Based**: Pay only a percentage on completed sales. No upfront fee.\n• **Subscription Plan**: Fixed monthly/yearly subscription with 0% commission.\n\nSelect your preferred plan:",
+                'body' => "[Section 5 of 5: Business Plan] 💼\n\nChoose your preferred business model on MyTijaara:\n\n• *Commission-Based*: Pay only a percentage on completed sales. No upfront fee.\n• *Subscription Plan*: Fixed monthly plan with 0% commission on orders.\n\nSelect your plan:",
                 'buttons' => [
                     ['id' => 'plan_commission', 'title' => '💼 Commission-Based'],
                     ['id' => 'plan_subscription', 'title' => '📅 Subscription Plan'],
                 ],
             ],
-            'kyc_documents' => [
-                'type' => 'text',
-                'text' => "Tax & Business Verification (KYC) 📑\n\nPlease reply with your **Tax Identification Number (TIN)** or **CAC Registration Number**, or upload your business registration document/certificate.\n\n*(Reply **Skip** if you prefer to complete this later)*",
-            ],
             'terms_acceptance' => [
                 'type' => 'button',
-                'body' => "Terms & Conditions 📜\n\nBy continuing, you agree to MyTijaara's Vendor Terms of Service and Merchant Policies (https://mytijaara.com/terms).\n\nDo you accept these terms to submit your application?",
+                'body' => "[Section 5 of 5: Terms & Conditions] 📜\n\nPlease review MyTijaara's Vendor Terms and Conditions:\n🔗 https://mytijaara.com/terms\n\nDo you accept the Vendor Terms and Conditions to proceed?",
                 'buttons' => [
-                    ['id' => 'accept_terms', 'title' => '✅ I Accept'],
+                    ['id' => 'accept_terms', 'title' => '✅ Accept Terms'],
                     ['id' => 'decline_terms', 'title' => '❌ Decline'],
                 ],
             ],
-            'operating_hours' => [
+            'privacy_acceptance' => [
+                'type' => 'button',
+                'body' => "[Section 5 of 5: Privacy Policy] 🔒\n\nPlease review MyTijaara's Merchant Privacy Policy:\n🔗 https://mytijaara.com/privacy-policy\n\nDo you accept the Merchant Privacy Policy to proceed?",
+                'buttons' => [
+                    ['id' => 'accept_privacy', 'title' => '✅ Accept Privacy'],
+                    ['id' => 'decline_privacy', 'title' => '❌ Decline'],
+                ],
+            ],
+            'kyc_documents' => [
                 'type' => 'text',
-                'text' => "What are your operating hours?\n\nExample: Mon-Fri 9am-10pm, Sat 10am-8pm, Sun closed",
+                'text' => "[Section 5 of 5: KYC Verification] 📑\n\nTo speed up your store approval, provide your business or identity verification:\n\n1. *TIN*: Tax Identification Number + Tax Certificate\n2. *CAC*: CAC RC/BN Registration Number + Certificate\n3. *NIN*: National Identity Number + ID card\n\nReply with your TIN / CAC / NIN number, upload a document/certificate (max 2MB), or reply *Skip* to complete verification later in your merchant dashboard.",
             ],
             'documents' => [
                 'type' => 'text',
@@ -756,7 +1056,7 @@ class VendorOnboardingService
                 $contact->phone_number,
                 $prompt['body'],
                 $prompt['buttons'],
-                'Review Your Application'
+                $step === 'review_submit' ? 'Review Your Application' : 'MyTijaara Onboarding'
             );
         } else {
             $gateway->sendTextMessage($contact->phone_number, $prompt['text']);
@@ -769,56 +1069,66 @@ class VendorOnboardingService
     public function buildReviewSummary(?OnboardingSession $session): string
     {
         $data = $session?->collected_data ?? [];
-        $businessName = $data['business_name'] ?? 'Not provided';
 
+        $businessName = $data['business_name'] ?? 'Not provided';
+        $moduleName = $data['module_name'] ?? (!empty($data['module_id']) ? (Module::find($data['module_id'])?->module_name ?? 'Standard') : ($data['category_name'] ?? 'Not selected'));
         $owner = trim(($data['f_name'] ?? '') . ' ' . ($data['l_name'] ?? ''));
         if ($owner === '') {
             $owner = $data['owner_name'] ?? 'Owner';
         }
-
-        $category = $data['category_name'] ?? null;
-        if (!$category && !empty($data['category_id'])) {
-            $category = \App\Models\Category::find($data['category_id'])?->name;
-        }
-        $category = $category ?: 'Not specified';
-
         $address = $data['address'] ?? 'Not provided';
+        $zoneName = $data['zone_name'] ?? (!empty($data['zone_id']) ? (Zone::find($data['zone_id'])?->name ?? 'Default Zone') : 'Pending');
+        $hours = $data['operating_hours'] ?? ($data['schedule'] ?? 'Mon - Sat (8am - 8pm)');
+        $delivery = $data['delivery_time'] ?? '20-40 min';
         $email = $data['email'] ?? 'Not provided';
         $phone = $data['phone'] ?? 'Not provided';
 
-        $passwordStatus = (!empty($data['password_hash']) || !empty($data['has_password'])) ? 'Set (Encrypted 🔒)' : 'Pending';
+        $passwordStatus = (!empty($data['password_hash']) || !empty($data['has_password'])) ? 'Encrypted & Secured 🔒' : 'Pending';
 
-        $hasDoc = !empty($data['logo_media_id']) || !empty($data['has_logo']) || !empty($data['tin_media_id']) || !empty($data['media_id']);
-        $logoStatus = $hasDoc
-            ? 'Uploaded 🖼️'
-            : (!empty($data['use_default_logo']) ? 'Default Icon 🏪' : 'Not provided');
+        $logoStatus = !empty($data['logo_media_id']) || !empty($data['has_logo']) || !empty($data['media_id'])
+            ? 'Uploaded (1:1 Verified) 🖼️'
+            : 'Required ⚠️';
 
         $plan = ($data['business_plan'] ?? '') === 'subscription-base'
             ? 'Subscription Plan 📅'
             : 'Commission-Based 💼';
 
-        $kyc = !empty($data['tin'])
-            ? "TIN: {$data['tin']}"
-            : (!empty($data['tin_media_id']) ? 'Certificate Uploaded 📑' : 'Skipped / Later');
+        $terms = !empty($data['terms_accepted']) ? 'Accepted ✅' : 'Pending ⏳';
+        $privacy = !empty($data['privacy_accepted']) ? 'Accepted ✅' : 'Pending ⏳';
 
-        $terms = !empty($data['terms_accepted']) ? 'Accepted ✅' : 'Pending';
-        $hours = $data['schedule'] ?? ($data['operating_hours'] ?? null);
-        $hoursLine = !empty($hours) ? "🕐 Hours: *{$hours}*\n" : "";
+        $kyc = 'Optional (Upload Later in Dashboard)';
+        if (!empty($data['tin'])) {
+            $kyc = "TIN: {$data['tin']}";
+        } elseif (!empty($data['cac_number'])) {
+            $kyc = "CAC: {$data['cac_number']}";
+        } elseif (!empty($data['nin'])) {
+            $kyc = "NIN: {$data['nin']}";
+        } elseif (!empty($data['tin_media_id'])) {
+            $kyc = 'Document Uploaded 📑';
+        }
 
-        return "📋 *Review Your Application:*\n\n" .
-            "🏪 Business: *{$businessName}*\n" .
-            "👤 Owner: *{$owner}*\n" .
-            "📂 Category: *{$category}*\n" .
-            "📍 Location: *{$address}*\n" .
-            "📧 Email: *{$email}*\n" .
-            "📱 Phone: *{$phone}*\n" .
-            $hoursLine .
-            "🔐 Password: *{$passwordStatus}*\n" .
-            "🖼️ Logo: *{$logoStatus}*\n" .
-            "💼 Plan: *{$plan}*\n" .
-            "📑 KYC / TIN: *{$kyc}*\n" .
-            "📜 Terms: *{$terms}*\n\n" .
-            "Is everything correct?";
+        return "📋 *Review Your Application Details*\n\n" .
+            "🏪 *Business Identity:*\n" .
+            "• Shop Name: *{$businessName}*\n" .
+            "• Module: *{$moduleName}*\n\n" .
+            "📍 *Location & Operations:*\n" .
+            "• Address: *{$address}*\n" .
+            "• Zone: *{$zoneName}*\n" .
+            "• Operating Hours: *{$hours}*\n" .
+            "• Delivery Time: *{$delivery}*\n\n" .
+            "👤 *Owner & Security:*\n" .
+            "• Owner: *{$owner}*\n" .
+            "• Email: *{$email}*\n" .
+            "• Phone: *{$phone}*\n" .
+            "• Password: *{$passwordStatus}*\n\n" .
+            "🖼️ *Branding:*\n" .
+            "• Logo: *{$logoStatus}*\n\n" .
+            "📜 *Plan, Policies & KYC:*\n" .
+            "• Business Plan: *{$plan}*\n" .
+            "• Terms & Conditions: *{$terms}*\n" .
+            "• Privacy Policy: *{$privacy}*\n" .
+            "• KYC Verification: *{$kyc}*\n\n" .
+            "Ready to submit? Tap *Submit* below to finalize your application!";
     }
 
     /**
@@ -826,7 +1136,6 @@ class VendorOnboardingService
      */
     protected function getCategorySections(): array
     {
-        // Fetch active categories from database
         $categories = \App\Models\Category::where('status', 1)
             ->where('parent_id', 0)
             ->orderBy('name')
@@ -858,21 +1167,60 @@ class VendorOnboardingService
         try {
             $data = $session?->collected_data ?? [];
 
+            $phone = $data['phone'] ?? $contact->phone_number;
+            $email = $data['email'] ?? null;
+
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $gateway->sendTextMessage($contact->phone_number, "⚠️ A valid email address is required. Please reply *Edit Email* to provide your email address.");
+                return;
+            }
+
+            // Check if vendor already exists with this phone or email
+            $existingVendorByPhone = Vendor::where('phone', $phone)->first();
+            $existingVendorByEmail = Vendor::where('email', $email)->first();
+
+            if ($existingVendorByEmail && (!$existingVendorByPhone || $existingVendorByEmail->id !== $existingVendorByPhone->id)) {
+                $gateway->sendTextMessage($contact->phone_number, "⚠️ The email *{$email}* is already associated with another vendor account. Please reply *Edit Email* to use a different email address.");
+                return;
+            }
+
             DB::beginTransaction();
 
-            // 1. Create Vendor (pending status: null puts application in Pending Requests)
             $fName = $data['f_name'] ?? ($data['business_name'] ?? 'Business');
             $lName = $data['l_name'] ?? 'Owner';
             $passwordHash = $data['password_hash'] ?? bcrypt(\Illuminate\Support\Str::random(16));
 
-            $vendor = new Vendor();
-            $vendor->f_name = $fName;
-            $vendor->l_name = $lName;
-            $vendor->email = $data['email'];
-            $vendor->phone = $data['phone'];
-            $vendor->password = $passwordHash;
-            $vendor->status = null; // CRITICAL: null guarantees store appears in Admin Pending Requests!
-            $vendor->save();
+            if ($existingVendorByPhone) {
+                $existingStore = Store::where('vendor_id', $existingVendorByPhone->id)->first();
+                if ($existingStore && (int)$existingStore->status === 1) {
+                    DB::rollBack();
+                    $gateway->sendTextMessage(
+                        $contact->phone_number,
+                        "ℹ️ An approved store (*{$existingStore->name}*) is already registered with this phone number.\n\nYou can log into your merchant dashboard at:\nhttps://dashboard.mytijaara.com/vendor/auth/login\n\nIf you need assistance, reply *Support*."
+                    );
+                    return;
+                }
+
+                // Refresh existing vendor record from previous test / unapproved application
+                $vendor = $existingVendorByPhone;
+                $vendor->f_name = $fName;
+                $vendor->l_name = $lName;
+                $vendor->email = $email;
+                if (!empty($passwordHash)) {
+                    $vendor->password = $passwordHash;
+                }
+                $vendor->status = null; // CRITICAL: null guarantees store appears in Admin Pending Requests!
+                $vendor->save();
+            } else {
+                $vendor = new Vendor();
+                $vendor->f_name = $fName;
+                $vendor->l_name = $lName;
+                $vendor->email = $email;
+                $vendor->phone = $phone;
+                $vendor->password = $passwordHash;
+                $vendor->status = null; // CRITICAL: null guarantees store appears in Admin Pending Requests!
+                $vendor->save();
+            }
 
             // Link contact to vendor
             $contact->linkToApplicant();
@@ -897,8 +1245,14 @@ class VendorOnboardingService
             }
 
             // Determine module
-            $category = !empty($data['category_id']) ? \App\Models\Category::find($data['category_id']) : null;
-            $moduleId = $data['module_id'] ?? ($category?->module_id ?? (config('module.current_module_id') ?? (Module::where('status', 1)->first()?->id ?? 1)));
+            $moduleId = $data['module_id'] ?? null;
+            if (!$moduleId && !empty($data['category_id'])) {
+                $category = \App\Models\Category::find($data['category_id']);
+                $moduleId = $category?->module_id;
+            }
+            if (!$moduleId) {
+                $moduleId = config('module.current_module_id') ?? (Module::where('status', 1)->first()?->id ?? 1);
+            }
             $module = Module::find($moduleId);
 
             // Canonical media placement to store/ and store/cover/
@@ -907,7 +1261,7 @@ class VendorOnboardingService
             $coverName = 'def.png';
             $tinCertName = null;
 
-            // Handle store logo
+            // Handle store logo (mandatory)
             $logoMediaId = $data['logo_media_id'] ?? ($data['media_id'] ?? null);
             if (!empty($logoMediaId)) {
                 $logoMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($logoMediaId);
@@ -922,7 +1276,7 @@ class VendorOnboardingService
                 }
             }
 
-            // Handle cover photo
+            // Handle cover photo (optional)
             if (!empty($data['cover_media_id'])) {
                 $coverMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['cover_media_id']);
                 if ($coverMedia && !empty($coverMedia->file_path)) {
@@ -952,27 +1306,70 @@ class VendorOnboardingService
 
             $businessModel = ($data['business_plan'] ?? '') === 'subscription-base' ? 'subscription' : 'commission';
 
-            // Create Store (pending status: 0)
-            $store = new Store();
-            $store->name = $data['business_name'];
-            $store->phone = $data['phone'];
-            $store->email = $data['email'];
+            // Create or update Store (pending status: 0)
+            $store = Store::where('vendor_id', $vendor->id)->first() ?? new Store();
+            $store->name = $data['business_name'] ?? 'Store';
+            $store->phone = $phone;
+            $store->email = $email;
             $store->logo = $logoName;
             $store->cover_photo = $coverName;
-            $store->latitude = $data['latitude'];
-            $store->longitude = $data['longitude'];
-            $store->address = $data['address'];
+            $store->latitude = $data['latitude'] ?? '6.5244';
+            $store->longitude = $data['longitude'] ?? '3.3792';
+            $store->address = $data['address'] ?? 'Nigeria';
             $store->vendor_id = $vendor->id;
             $store->zone_id = $zone?->id ?? 1;
             $store->module_id = $module?->id ?? 1;
             $store->status = 0; // 0 = inactive, awaiting admin approval
             $store->store_business_model = $businessModel;
-            $store->delivery_time = $data['delivery_time'] ?? '30-40 min';
-            $store->tin = $data['tin'] ?? null;
+            $store->delivery_time = $data['delivery_time'] ?? '20-40 min';
+            $store->tin = $data['tin'] ?? ($data['cac_number'] ?? null);
+            $store->tin_expire_date = $data['tin_expire_date'] ?? null;
             if ($tinCertName) {
                 $store->tin_certificate_image = $tinCertName;
             }
+
+            // Structured metadata for Nigerian KYC & onboarding audit
+            $metadata = [
+                'onboarding_source' => 'whatsapp',
+                'kyc_type' => $data['kyc_type'] ?? (!empty($data['tin']) ? 'tin' : (!empty($data['cac_number']) ? 'cac' : (!empty($data['nin']) ? 'nin' : 'none'))),
+                'cac_number' => $data['cac_number'] ?? null,
+                'nin' => $data['nin'] ?? null,
+                'operating_hours_raw' => $data['operating_hours'] ?? null,
+                'terms_accepted_at' => now()->toIso8601String(),
+                'privacy_accepted_at' => now()->toIso8601String(),
+            ];
+            $store->meta_data = json_encode($metadata);
             $store->save();
+
+            // Translations matching VendorController.php:168-169
+            try {
+                Helpers::add_or_update_translations(
+                    request: new \Illuminate\Http\Request([
+                        'lang' => ['default'],
+                        'name' => ['default' => $store->name],
+                        'address' => ['default' => $store->address],
+                    ]),
+                    key_data: 'name',
+                    name_field: 'name',
+                    model_name: 'Store',
+                    data_id: $store->id,
+                    data_value: $store->name
+                );
+                Helpers::add_or_update_translations(
+                    request: new \Illuminate\Http\Request([
+                        'lang' => ['default'],
+                        'name' => ['default' => $store->name],
+                        'address' => ['default' => $store->address],
+                    ]),
+                    key_data: 'address',
+                    name_field: 'address',
+                    model_name: 'Store',
+                    data_id: $store->id,
+                    data_value: $store->address
+                );
+            } catch (\Throwable $transEx) {
+                Log::warning('Translations insertion warning: ' . $transEx->getMessage());
+            }
 
             // Handle subscription if subscription-base selected
             if ($businessModel === 'subscription') {
@@ -989,27 +1386,31 @@ class VendorOnboardingService
                         'package_id' => $package->id,
                     ]);
 
-                    StoreSubscription::create([
-                        'store_id' => $store->id,
-                        'package_id' => $package->id,
-                        'expiry_date' => now()->addDays($package->validity)->format('Y-m-d'),
-                        'validity' => $package->validity,
-                        'max_order' => $package->max_order,
-                        'max_product' => $package->max_product,
-                        'pos' => $package->pos ?? 0,
-                        'mobile_app' => $package->mobile_app ?? 0,
-                        'chat' => $package->chat ?? 0,
-                        'review' => $package->review ?? 0,
-                        'self_delivery' => $package->self_delivery ?? 0,
-                        'status' => 0, // Inactive pending approval
-                        'is_trial' => $data['is_trial'] ?? 0,
-                    ]);
+                    StoreSubscription::updateOrCreate(
+                        ['store_id' => $store->id],
+                        [
+                            'package_id' => $package->id,
+                            'expiry_date' => now()->addDays($package->validity)->format('Y-m-d'),
+                            'validity' => $package->validity,
+                            'max_order' => $package->max_order,
+                            'max_product' => $package->max_product,
+                            'pos' => $package->pos ?? 0,
+                            'mobile_app' => $package->mobile_app ?? 0,
+                            'chat' => $package->chat ?? 0,
+                            'review' => $package->review ?? 0,
+                            'self_delivery' => $package->self_delivery ?? 0,
+                            'status' => 0, // Inactive pending approval
+                            'is_trial' => $data['is_trial'] ?? 0,
+                        ]
+                    );
                 }
             }
 
-            // Create store schedule if always_open module
-            if ($module && config("module.{$module->module_type}.always_open")) {
-                $this->storeLogic->insert_schedule($store->id);
+            // Insert operating hours schedule
+            try {
+                $this->insertStoreSchedule($store, $data['operating_hours'] ?? null);
+            } catch (\Throwable $schedEx) {
+                Log::warning('Schedule insertion warning: ' . $schedEx->getMessage());
             }
 
             // Update session
@@ -1059,12 +1460,35 @@ class VendorOnboardingService
             Log::error('Application submission failed', [
                 'contact_id' => $contact->id,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $gateway->sendTextMessage(
                 $contact->phone_number,
                 "❌ Sorry, there was an error submitting your application. Please try again or contact support."
             );
+        }
+    }
+
+    /**
+     * Insert operating hours schedule into store_schedules table.
+     */
+    protected function insertStoreSchedule(Store $store, ?string $hoursInput): void
+    {
+        $raw = strtolower(trim((string)$hoursInput));
+
+        if (str_contains($raw, 'standard') || str_contains($raw, 'mon-sat')) {
+            // Monday to Saturday: 08:00 to 20:00 (days 1-6)
+            $this->storeLogic->insert_schedule($store->id, [1, 2, 3, 4, 5, 6], '08:00:00', '20:00:00');
+        } elseif (str_contains($raw, 'everyday') || str_contains($raw, 'mon-sun')) {
+            // Everyday: 08:00 to 22:00 (days 0-6)
+            $this->storeLogic->insert_schedule($store->id, [0, 1, 2, 3, 4, 5, 6], '08:00:00', '22:00:00');
+        } elseif (str_contains($raw, '24/7') || str_contains($raw, 'always open')) {
+            // 24/7: days 0-6 00:00 to 23:59:59
+            $this->storeLogic->insert_schedule($store->id, [0, 1, 2, 3, 4, 5, 6], '00:00:00', '23:59:59');
+        } else {
+            // Default schedule
+            $this->storeLogic->insert_schedule($store->id);
         }
     }
 

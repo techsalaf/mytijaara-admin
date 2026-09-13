@@ -231,16 +231,20 @@ class ConversationManager
     {
         $editMap = [
             'edit_business_basics' => 'business_basics',
+            'edit_module' => 'module_selection',
             'edit_owner_info' => 'owner_info',
-            'edit_category' => 'category_selection',
+            'edit_category' => 'module_selection',
             'edit_location' => 'location',
+            'edit_zone' => 'zone_selection',
+            'edit_hours' => 'operating_hours',
+            'edit_delivery' => 'delivery_time',
             'edit_contact' => 'contact_info',
             'edit_password' => 'account_password',
             'edit_branding' => 'store_branding',
             'edit_plan' => 'business_plan',
-            'edit_kyc' => 'kyc_documents',
             'edit_terms' => 'terms_acceptance',
-            'edit_hours' => 'operating_hours',
+            'edit_privacy' => 'privacy_acceptance',
+            'edit_kyc' => 'kyc_documents',
             'edit_documents' => 'kyc_documents',
         ];
 
@@ -249,8 +253,12 @@ class ConversationManager
             return;
         }
 
-        // Onboarding interactive buttons (business plan selection, terms acceptance)
-        if (in_array($buttonId, ['plan_commission', 'plan_subscription', 'accept_terms', 'decline_terms'])) {
+        // Onboarding interactive buttons (business plan, terms, privacy, modules, zones, hours, delivery, kyc)
+        $onboardingPrefixes = ['plan_', 'accept_', 'decline_', 'hours_', 'deliv_', 'mod_', 'zone_', 'kyc_'];
+        $isOnboardingButton = in_array($buttonId, ['plan_commission', 'plan_subscription', 'accept_terms', 'decline_terms', 'accept_privacy', 'decline_privacy'])
+            || array_reduce($onboardingPrefixes, fn($carry, $p) => $carry || str_starts_with($buttonId, $p), false);
+
+        if ($isOnboardingButton) {
             $msg = new WhatsAppMessage();
             $msg->type = 'interactive';
             $msg->content = [
@@ -292,9 +300,10 @@ class ConversationManager
     {
         $step = $conversation->current_step;
 
-        if ($step === 'category_selection') {
-            // Save category and advance
+        $onboardingListSteps = ['module_selection', 'zone_selection', 'category_selection', 'operating_hours', 'delivery_time', 'business_plan', 'kyc_documents'];
+        if (in_array($step, $onboardingListSteps) || str_starts_with($selectionId, 'mod_') || str_starts_with($selectionId, 'zone_') || str_starts_with($selectionId, 'hours_') || str_starts_with($selectionId, 'deliv_')) {
             $message = new WhatsAppMessage();
+            $message->type = 'interactive';
             $message->content = [
                 'interactive' => [
                     'list_reply' => ['id' => $selectionId, 'title' => $selectionTitle],
@@ -306,16 +315,20 @@ class ConversationManager
 
         $editMap = [
             'edit_business_basics' => 'business_basics',
+            'edit_module' => 'module_selection',
             'edit_owner_info' => 'owner_info',
-            'edit_category' => 'category_selection',
+            'edit_category' => 'module_selection',
             'edit_location' => 'location',
+            'edit_zone' => 'zone_selection',
+            'edit_hours' => 'operating_hours',
+            'edit_delivery' => 'delivery_time',
             'edit_contact' => 'contact_info',
             'edit_password' => 'account_password',
             'edit_branding' => 'store_branding',
             'edit_plan' => 'business_plan',
-            'edit_kyc' => 'kyc_documents',
             'edit_terms' => 'terms_acceptance',
-            'edit_hours' => 'operating_hours',
+            'edit_privacy' => 'privacy_acceptance',
+            'edit_kyc' => 'kyc_documents',
             'edit_documents' => 'kyc_documents',
         ];
 
@@ -408,15 +421,15 @@ class ConversationManager
     {
         $gateway->sendTextMessage(
             $contact->phone_number,
-            "📖 **About Selling on MyTijaara**\n\n" .
+            "📖 *About Selling on MyTijaara*\n\n" .
             "MyTijaara helps you reach thousands of customers in your city.\n\n" .
-            "**Benefits:**\n" .
+            "*Benefits:*\n" .
             "✅ Free to join (commission-based)\n" .
             "✅ No upfront costs\n" .
             "✅ Marketing & delivery support\n" .
             "✅ Real-time order management\n" .
             "✅ Weekly payouts\n\n" .
-            "**Requirements:**\n" .
+            "*Requirements:*\n" .
             "• Valid business registration\n" .
             "• Physical location in our service area\n" .
             "• Phone number for verification\n\n" .
@@ -511,7 +524,7 @@ class ConversationManager
     {
         $gateway->sendTextMessage(
             $contact->phone_number,
-            "📸 **Add New Product**\n\n" .
+            "📸 *Add New Product*\n\n" .
             "Send me a photo of your product and I'll help you create the listing!\n\n" .
             "Just send a photo and I'll extract:\n" .
             "• Product name\n" .
@@ -561,7 +574,7 @@ class ConversationManager
 
         $gateway->sendButtonMessage(
             $contact->phone_number,
-            "Are you sure you want to **{$action}** your shop?\n\n" .
+            "Are you sure you want to *{$action}* your shop?\n\n" .
             "Current status: " . ($store->active ? '🟢 Open' : '🔴 Closed') . "\n" .
             "New status: " . ($newStatus ? '🟢 Open' : '🔴 Closed'),
             [
@@ -588,14 +601,23 @@ class ConversationManager
                     'title' => 'Application Sections',
                     'rows' => [
                         ['id' => 'edit_business_basics', 'title' => '🏪 Business Name', 'description' => 'Update shop name'],
+                        ['id' => 'edit_module', 'title' => '📦 Business Module', 'description' => 'Grocery, Food, Pharmacy, etc.'],
+                        ['id' => 'edit_location', 'title' => '📍 Store Location', 'description' => 'Update physical address or pin'],
+                        ['id' => 'edit_zone', 'title' => '🌐 Business Zone', 'description' => 'Update operating zone'],
+                        ['id' => 'edit_hours', 'title' => '🕒 Operating Hours', 'description' => 'Update store schedule'],
+                        ['id' => 'edit_delivery', 'title' => '🚚 Delivery Time', 'description' => 'Update delivery estimate'],
                         ['id' => 'edit_owner_info', 'title' => '👤 Owner Name', 'description' => 'Update your full name'],
-                        ['id' => 'edit_category', 'title' => '📂 Category', 'description' => 'Update business category'],
-                        ['id' => 'edit_location', 'title' => '📍 Location', 'description' => 'Update physical address or pin'],
-                        ['id' => 'edit_contact', 'title' => '📧 Contact Email', 'description' => 'Update notification email'],
+                        ['id' => 'edit_contact', 'title' => '📧 Email & Contact', 'description' => 'Update email & phone'],
                         ['id' => 'edit_password', 'title' => '🔐 Password', 'description' => 'Update dashboard password'],
-                        ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Update shop logo / photo'],
+                        ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Update required store logo'],
+                    ],
+                ], [
+                    'title' => 'Plans & Legal Policies',
+                    'rows' => [
                         ['id' => 'edit_plan', 'title' => '💼 Business Plan', 'description' => 'Commission or Subscription'],
-                        ['id' => 'edit_kyc', 'title' => '📑 KYC & TIN', 'description' => 'Update TIN or registration doc'],
+                        ['id' => 'edit_terms', 'title' => '📜 Terms & Conditions', 'description' => 'Vendor Terms acceptance'],
+                        ['id' => 'edit_privacy', 'title' => '🔒 Privacy Policy', 'description' => 'Privacy Policy acceptance'],
+                        ['id' => 'edit_kyc', 'title' => '📑 KYC Verification', 'description' => 'TIN, CAC, or NIN verification'],
                     ],
                 ]],
                 'Edit Application'

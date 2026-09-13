@@ -372,8 +372,8 @@ class WhatsAppVendorConciergeTest extends TestCase
         $conversation->refresh();
         $session->refresh();
 
-        $this->assertEquals('owner_info', $conversation->current_step);
-        $this->assertEquals('owner_info', $session->current_step);
+        $this->assertEquals('module_selection', $conversation->current_step);
+        $this->assertEquals('module_selection', $session->current_step);
     }
 
     /** @test */
@@ -591,10 +591,12 @@ class WhatsAppVendorConciergeTest extends TestCase
 
         $gateway = $this->createMock(WhatsAppGateway::class);
         $gateway->expects($this->once())
-            ->method('sendTextMessage')
+            ->method('sendButtonMessage')
             ->with(
                 $contact->phone_number,
-                $this->stringContains('What are your operating hours?')
+                $this->stringContains('Operating Hours'),
+                $this->isType('array'),
+                'MyTijaara Onboarding'
             );
 
         $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
@@ -879,5 +881,212 @@ class WhatsAppVendorConciergeTest extends TestCase
         $this->assertEquals('Canonical Shop Test', $store->name);
         $this->assertEquals(0, $store->status);
         $this->assertEquals('commission', $store->store_business_model);
+    }
+
+    /** @test */
+    public function it_enforces_mandatory_store_logo_and_rejects_skip()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        // 1. Text input without media (e.g. attempting to skip)
+        $msgSkip = new WhatsAppMessage([
+            'type' => 'text',
+            'content' => ['text' => 'Skip'],
+            'raw_text' => 'Skip',
+        ]);
+        $extracted = $extractMethod->invoke($service, $msgSkip, 'store_branding', null);
+        $this->assertNull($extracted['logo_media_id']);
+
+        $validation = $validateMethod->invoke($service, 'store_branding', $extracted);
+        $this->assertFalse($validation['valid']);
+        $this->assertNotEmpty($validation['errors']);
+
+        // 2. Valid image media record
+        $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::create([
+            'whatsapp_media_id' => 'media_logo_' . uniqid(),
+            'mime_type' => 'image/png',
+            'file_name' => 'logo.png',
+            'file_path' => 'store_logos/logo.png',
+            'status' => 'downloaded',
+        ]);
+
+        $msgValid = new WhatsAppMessage([
+            'type' => 'image',
+            'content' => ['image' => ['id' => $media->whatsapp_media_id]],
+            'media_id' => $media->id,
+            'raw_text' => '',
+        ]);
+        $extractedValid = $extractMethod->invoke($service, $msgValid, 'store_branding', null);
+        $this->assertEquals($media->id, $extractedValid['logo_media_id']);
+
+        $validationValid = $validateMethod->invoke($service, 'store_branding', $extractedValid);
+        $this->assertTrue($validationValid['valid']);
+    }
+
+    /** @test */
+    public function it_validates_and_extracts_module_and_zone_selection()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        // Get an active module
+        $module = \App\Models\Module::active()->notParcel()->first();
+        if ($module) {
+            $msgMod = new WhatsAppMessage([
+                'type' => 'interactive',
+                'content' => [
+                    'interactive' => [
+                        'button_reply' => ['id' => 'mod_' . $module->id, 'title' => $module->module_name],
+                    ],
+                ],
+                'raw_text' => '',
+            ]);
+            $modData = $extractMethod->invoke($service, $msgMod, 'module_selection', null);
+            $this->assertEquals($module->id, $modData['module_id']);
+            $this->assertEquals($module->module_name, $modData['module_name']);
+
+            $modVal = $validateMethod->invoke($service, 'module_selection', $modData);
+            $this->assertTrue($modVal['valid']);
+        }
+
+        // Get an active zone
+        $zone = \App\Models\Zone::first();
+        if ($zone) {
+            $msgZone = new WhatsAppMessage([
+                'type' => 'interactive',
+                'content' => [
+                    'interactive' => [
+                        'button_reply' => ['id' => 'zone_' . $zone->id, 'title' => $zone->name],
+                    ],
+                ],
+                'raw_text' => '',
+            ]);
+            $zoneData = $extractMethod->invoke($service, $msgZone, 'zone_selection', null);
+            $this->assertEquals($zone->id, $zoneData['zone_id']);
+            $this->assertEquals($zone->name, $zoneData['zone_name']);
+
+            $zoneVal = $validateMethod->invoke($service, 'zone_selection', $zoneData);
+            $this->assertTrue($zoneVal['valid']);
+        }
+    }
+
+    /** @test */
+    public function it_validates_separate_privacy_policy_acceptance()
+    {
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        $reflection = new \ReflectionClass($service);
+        $extractMethod = $reflection->getMethod('extractStepData');
+        $extractMethod->setAccessible(true);
+        $validateMethod = $reflection->getMethod('validateStep');
+        $validateMethod->setAccessible(true);
+
+        // Accept privacy button
+        $msgAccept = new WhatsAppMessage([
+            'type' => 'interactive',
+            'content' => [
+                'interactive' => [
+                    'button_reply' => ['id' => 'accept_privacy', 'title' => '✅ I Accept'],
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+        $dataAccept = $extractMethod->invoke($service, $msgAccept, 'privacy_acceptance', null);
+        $this->assertTrue($dataAccept['privacy_accepted']);
+
+        $valAccept = $validateMethod->invoke($service, 'privacy_acceptance', $dataAccept);
+        $this->assertTrue($valAccept['valid']);
+
+        // Decline privacy
+        $msgDecline = new WhatsAppMessage([
+            'type' => 'interactive',
+            'content' => [
+                'interactive' => [
+                    'button_reply' => ['id' => 'decline_privacy', 'title' => '❌ Decline'],
+                ],
+            ],
+            'raw_text' => '',
+        ]);
+        $dataDecline = $extractMethod->invoke($service, $msgDecline, 'privacy_acceptance', null);
+        $this->assertFalse($dataDecline['privacy_accepted']);
+
+        $valDecline = $validateMethod->invoke($service, 'privacy_acceptance', $dataDecline);
+        $this->assertFalse($valDecline['valid']);
+    }
+
+    /** @test */
+    public function it_handles_duplicate_vendor_phone_resiliently_on_submission()
+    {
+        $phone = '2349032617923';
+
+        // Pre-create an unapproved/pending vendor with the same phone (simulating prior test)
+        $existingVendor = \App\Models\Vendor::firstOrCreate(
+            ['phone' => $phone],
+            [
+                'f_name' => 'Existing',
+                'l_name' => 'Tester',
+                'email' => 'prior_tester_' . uniqid() . '@example.com',
+                'password' => bcrypt('PriorPass@123'),
+                'status' => null,
+            ]
+        );
+
+        $contact = WhatsAppContact::create([
+            'whatsapp_id' => 'test_wa_' . uniqid(),
+            'phone_number' => $phone,
+        ]);
+        $conversation = WhatsAppConversation::create([
+            'contact_id' => $contact->id,
+            'state' => 'onboarding_active',
+            'current_step' => 'review_submit',
+        ]);
+        $session = OnboardingSession::create([
+            'contact_id' => $contact->id,
+            'status' => 'started',
+            'current_step' => 'review_submit',
+            'collected_data' => [
+                'business_name' => 'Resilient Submission Store',
+                'f_name' => 'Updated',
+                'l_name' => 'Vendor',
+                'email' => 'updated_' . uniqid() . '@example.com',
+                'phone' => $phone,
+                'password_hash' => bcrypt('SecurePass@123'),
+                'latitude' => 6.5244,
+                'longitude' => 3.3792,
+                'address' => '50 Broad Street, Lagos',
+                'business_plan' => 'commission-base',
+                'terms_accepted' => true,
+                'privacy_accepted' => true,
+            ],
+            'started_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $conversation->update(['onboarding_session_id' => $session->id]);
+
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->once())
+            ->method('sendTextMessage')
+            ->with($contact->phone_number, $this->stringContains('Application Has Been Submitted'));
+
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+        // Must succeed without throwing 1062 Duplicate entry constraint violation
+        $service->submitApplication($conversation, $contact, $session, $gateway);
+
+        $session->refresh();
+        $this->assertEquals('submitted', $session->status);
+        $this->assertEquals($existingVendor->id, $session->vendor_id);
+
+        $existingVendor->refresh();
+        $this->assertNull($existingVendor->status, 'Vendor status must remain null for pending approval');
+        $this->assertEquals('Updated', $existingVendor->f_name);
     }
 }
