@@ -36,6 +36,10 @@ class RunVendorAiConversation implements ShouldQueue
         try {
             // Refresh conversation
             $this->conversation->refresh();
+            $this->contact->refresh();
+            if ($this->conversation->state !== 'ai_active' || $this->contact->is_blocked) {
+                return;
+            }
 
             // Get vendor and store
             $vendor = $this->contact->vendor;
@@ -70,7 +74,7 @@ class RunVendorAiConversation implements ShouldQueue
             $language = $this->detectLanguage($userText);
 
             // Create context for this turn
-            $context = new VendorAiContext();
+            $context = new VendorAiContext($this->contact->id, $this->conversation->id);
 
             // Create agent
             $agent = new VendorConciergeAgent(
@@ -94,11 +98,7 @@ class RunVendorAiConversation implements ShouldQueue
             }
 
             // Send to AI and get response
-            $response = Ai::message([...$history, new UserMessage($userText)])
-                ->usingProvider($provider)
-                ->usingModel($model)
-                ->withPrompt($agent)
-                ->send();
+            $response = $agent->prompt($userText, provider: $provider, model: $model, timeout: 60);
 
             $replyText = (string) $response->text;
 
@@ -145,9 +145,10 @@ class RunVendorAiConversation implements ShouldQueue
     protected function loadHistory(): array
     {
         return WhatsAppMessage::where('conversation_id', $this->conversation->id)
+            ->when($this->message->id, fn ($q) => $q->where('id', '<', $this->message->id))
             ->whereIn('direction', ['inbound', 'outbound'])
             ->orderBy('created_at', 'desc')
-            ->limit(20)
+            ->limit(config('whatsapp-vendor-concierge.ai.conversation_history_limit', 20))
             ->get()
             ->reverse()
             ->map(function ($msg) {
@@ -169,6 +170,12 @@ class RunVendorAiConversation implements ShouldQueue
     protected function extractMessageText($message): ?string
     {
         $content = $message->content;
+        if (!empty($message->raw_text)) {
+            return $message->raw_text;
+        }
+        if (is_array($content) && is_string($content['text'] ?? null)) {
+            return $content['text'];
+        }
 
         if (is_string($content)) {
             return $content;

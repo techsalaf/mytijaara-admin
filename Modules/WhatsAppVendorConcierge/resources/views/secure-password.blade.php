@@ -429,7 +429,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('whatsapp.onboarding.password.store', ['token' => $token]) }}" id="passwordForm">
+            <form method="POST" action="{{ route('whatsapp.onboarding.password.store', ['token' => $token], false) }}" id="passwordForm">
                 @csrf
 
                 <div class="form-group">

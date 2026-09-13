@@ -13,6 +13,7 @@ class WhatsAppWebhookDebugController extends Controller
      */
     public function testSignature(Request $request): JsonResponse
     {
+        abort_unless(app()->environment(['local', 'testing']), 404);
         $payload = $request->getContent();
         $signatureHeader = $request->header(config('whatsapp-vendor-concierge.webhook.signature_header', 'X-Hub-Signature-256'));
         $appSecret = config('whatsapp-vendor-concierge.api.app_secret');
@@ -35,7 +36,6 @@ class WhatsAppWebhookDebugController extends Controller
         return response()->json([
             'is_valid' => $isValid,
             'header_received' => $signatureHeader,
-            'expected_signature' => $expectedSignature,
             'payload_length_bytes' => strlen($payload),
             'app_secret_configured' => true,
         ]);

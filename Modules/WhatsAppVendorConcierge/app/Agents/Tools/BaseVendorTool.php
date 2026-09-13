@@ -60,4 +60,19 @@ abstract class BaseVendorTool implements Tool
     {
         $this->context->recordTool($name);
     }
+
+    protected function prepareAvailability(bool $active): string
+    {
+        if (!$this->context->contactId || !$this->context->conversationId) {
+            return 'Please request this action in your active WhatsApp conversation.';
+        }
+        try {
+            app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareAvailability(
+                $this->context->contactId, $this->context->conversationId, $this->requireStore()->id, $active
+            );
+            return 'A preview with Confirm and Cancel buttons has been sent. The change has not been applied.';
+        } catch (\Throwable $e) {
+            return 'This store change is unavailable. Please check your dashboard or contact support.';
+        }
+    }
 }

@@ -52,6 +52,12 @@ return [
             'messages_per_second' => 80, // Meta limit
             'burst_allowance' => 1000,
         ],
+        'templates' => [
+            'approved' => env('WHATSAPP_TEMPLATE_VENDOR_APPROVED', 'vendor_application_approved'),
+            'denied' => env('WHATSAPP_TEMPLATE_VENDOR_DENIED', 'vendor_application_denied'),
+            'suspended' => env('WHATSAPP_TEMPLATE_VENDOR_SUSPENDED', 'vendor_store_suspended'),
+            'unsuspended' => env('WHATSAPP_TEMPLATE_VENDOR_UNSUSPENDED', 'vendor_store_reactivated'),
+        ],
     ],
 
     /*
@@ -61,7 +67,9 @@ return [
     */
 
     'media' => [
-        'storage_disk' => 'public', // or 's3'
+        // Meta downloads can contain KYC. Keep the original outside the web root;
+        // selected public branding is copied to its canonical store path separately.
+        'storage_disk' => env('WHATSAPP_MEDIA_DISK', 'local'),
         'storage_path' => 'whatsapp/media',
         'max_file_size' => 100 * 1024 * 1024, // 100MB (Meta limit)
         'allowed_mime_types' => [
@@ -96,11 +104,19 @@ return [
         'steps' => [
             'welcome',
             'business_basics',
-            'category_selection',
+            'module_selection',
             'location',
+            'zone_selection',
             'contact_info',
             'operating_hours',
-            'documents',
+            'delivery_time',
+            'owner_info',
+            'account_password',
+            'store_branding',
+            'business_plan',
+            'terms_acceptance',
+            'privacy_acceptance',
+            'kyc_documents',
             'review_submit',
         ],
         'required_fields' => [

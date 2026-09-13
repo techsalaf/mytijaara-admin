@@ -117,6 +117,13 @@ class VendorOnboardingService
             return;
         }
 
+        // Password creation only happens on the trusted HTTPS page. No chat input,
+        // including a pasted password, participates in validation or event storage.
+        if ($step === 'account_password') {
+            $this->sendStepPrompt($conversation, $contact, $step, $gateway);
+            return;
+        }
+
         $data = $this->extractStepData($message, $step, $contact);
 
         // Validate step data
@@ -197,15 +204,10 @@ class VendorOnboardingService
                     }
                 }
 
-                if (!$modId) {
-                    $firstMod = Module::active()->notParcel()->first();
-                    $modId = $firstMod?->id;
-                }
-
                 $module = $modId ? Module::find($modId) : null;
                 return [
-                    'module_id' => $module?->id ?? ($modId ? (int)$modId : null),
-                    'module_name' => $module?->module_name ?? 'Business Module',
+                    'module_id' => $module?->id,
+                    'module_name' => $module?->module_name,
                 ];
             })(),
             'category_selection' => (function () use ($content, $rawText) {
@@ -569,16 +571,6 @@ class VendorOnboardingService
             ];
         }
 
-        // 4. Fallback for text addresses >= 5 characters when geocoding is unavailable
-        if (mb_strlen($textToParse) >= 5) {
-            $defaultLocation = $this->getDefaultLocation();
-            return [
-                'latitude' => $defaultLocation['lat'],
-                'longitude' => $defaultLocation['lng'],
-                'address' => $textToParse,
-            ];
-        }
-
         return [
             'latitude' => null,
             'longitude' => null,
@@ -645,28 +637,6 @@ class VendorOnboardingService
         }
 
         return null;
-    }
-
-    /**
-     * Get default coordinates fallback.
-     */
-    protected function getDefaultLocation(): array
-    {
-        $defaultSetting = BusinessSetting::where('key', 'default_location')->first()?->value;
-        if ($defaultSetting) {
-            $decoded = json_decode($defaultSetting, true);
-            if (!empty($decoded['lat']) && !empty($decoded['lng'])) {
-                return [
-                    'lat' => (float) $decoded['lat'],
-                    'lng' => (float) $decoded['lng'],
-                ];
-            }
-        }
-
-        return [
-            'lat' => 6.5244,
-            'lng' => 3.3792,
-        ];
     }
 
     /**
@@ -770,7 +740,7 @@ class VendorOnboardingService
                 : (isset($errors['phone']) && in_array('The phone has already been taken.', $errors['phone'])
                     ? "This phone number is already registered to an approved vendor account. Reply *Support* if you need assistance."
                     : "Please enter a valid email address for account notifications (e.g. *yourshop@gmail.com*)."),
-            'account_password' => "🔒 *Security Reminder*\n\nFor your account protection, passwords cannot be sent in WhatsApp messages.\n\nPlease tap the secure link below to set your vendor dashboard password over encrypted HTTPS:\n\n👉 " . ($session ? $this->generateSecurePasswordUrl($session) : url('/')) . "\n\n⏳ *This secure link is single-use and expires in 15 minutes.*",
+            'account_password' => 'Passwords cannot be entered in WhatsApp. Reply Resend Link for a new secure link.',
             'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
             'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
@@ -1098,18 +1068,7 @@ class VendorOnboardingService
      */
     public function generateSecurePasswordUrl(OnboardingSession $session): string
     {
-        $token = bin2hex(random_bytes(32));
-        $tokenHash = hash('sha256', $token);
-        $expiresAt = now()->addMinutes(15);
-
-        $session->updateData([
-            '_pwd_token_hash' => $tokenHash,
-            '_pwd_token_expires_at' => $expiresAt->toIso8601String(),
-        ]);
-
-        \Illuminate\Support\Facades\Cache::put('wa_pwd_token:' . $tokenHash, $session->id, $expiresAt);
-
-        return route('whatsapp.onboarding.password', ['token' => $token]);
+        return app(CredentialTokenService::class)->issue($session);
     }
 
     /**
@@ -1224,6 +1183,22 @@ class VendorOnboardingService
                 return;
             }
 
+            if (empty($data['password_hash']) || empty($data['module_id']) || empty($data['zone_id'])
+                || !isset($data['latitude'], $data['longitude']) || empty($data['logo_media_id'])) {
+                $gateway->sendTextMessage($contact->phone_number, 'Your application is incomplete. Please use Edit to complete every required section before submitting.');
+                return;
+            }
+
+            $module = Module::active()->notParcel()->find($data['module_id']);
+            $zone = Zone::where('id', $data['zone_id'])->where('status', 1)
+                ->whereContains('coordinates', new \MatanYadaev\EloquentSpatial\Objects\Point(
+                    (float) $data['latitude'], (float) $data['longitude'], 4326
+                ))->first();
+            if (!$module || !$zone || !\App\Models\ModuleZone::where('module_id', $module->id)->where('zone_id', $zone->id)->exists()) {
+                $gateway->sendTextMessage($contact->phone_number, 'Your selected module and zone no longer match the shared location. Please edit Location, Zone or Business Module and submit again.');
+                return;
+            }
+
             // Check if vendor already exists with this phone or email
             $existingVendorByPhone = Vendor::where('phone', $phone)->first();
             $existingVendorByEmail = Vendor::where('email', $email)->first();
@@ -1275,35 +1250,6 @@ class VendorOnboardingService
             $contact->linkToApplicant();
             $contact->update(['vendor_id' => $vendor->id]);
 
-            // Determine zone
-            $zone = null;
-            if (!empty($data['latitude']) && !empty($data['longitude'])) {
-                $zone = Zone::whereContains('coordinates',
-                    new \MatanYadaev\EloquentSpatial\Objects\Point(
-                        (float)$data['latitude'],
-                        (float)$data['longitude'],
-                        4326
-                    ))->first();
-            }
-
-            if (!$zone && !empty($data['zone_id'])) {
-                $zone = Zone::find($data['zone_id']);
-            }
-            if (!$zone) {
-                $zone = Zone::where('status', 1)->first() ?? Zone::first();
-            }
-
-            // Determine module
-            $moduleId = $data['module_id'] ?? null;
-            if (!$moduleId && !empty($data['category_id'])) {
-                $category = \App\Models\Category::find($data['category_id']);
-                $moduleId = $category?->module_id;
-            }
-            if (!$moduleId) {
-                $moduleId = config('module.current_module_id') ?? (Module::where('status', 1)->first()?->id ?? 1);
-            }
-            $module = Module::find($moduleId);
-
             // Canonical media placement to store/ and store/cover/
             $targetDisk = Helpers::getDisk();
             $logoName = 'def.png';
@@ -1339,17 +1285,14 @@ class VendorOnboardingService
                 }
             }
 
-            // Handle KYC certificate
+            // KYC remains on WhatsAppMedia's private disk. The core store record
+            // retains the tax number; admin retrieval uses the authorized media ID.
             if (!empty($data['tin_media_id'])) {
                 $tinMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['tin_media_id']);
-                if ($tinMedia && !empty($tinMedia->file_path)) {
-                    $sourceDisk = $tinMedia->storage_disk ?: 'public';
-                    if (\Illuminate\Support\Facades\Storage::disk($sourceDisk)->exists($tinMedia->file_path)) {
-                        $content = \Illuminate\Support\Facades\Storage::disk($sourceDisk)->get($tinMedia->file_path);
-                        $ext = pathinfo($tinMedia->file_path, PATHINFO_EXTENSION) ?: 'png';
-                        $tinCertName = \Carbon\Carbon::now()->toDateString() . '-' . uniqid() . '.' . $ext;
-                        \Illuminate\Support\Facades\Storage::disk($targetDisk)->put('store/' . $tinCertName, $content);
-                    }
+                if (!$tinMedia || $tinMedia->status !== 'processed' || empty($tinMedia->file_path)) {
+                    DB::rollBack();
+                    $gateway->sendTextMessage($contact->phone_number, 'Your KYC document is still being checked. Please wait for confirmation before submitting.');
+                    return;
                 }
             }
 
@@ -1362,20 +1305,18 @@ class VendorOnboardingService
             $store->email = $email;
             $store->logo = $logoName;
             $store->cover_photo = $coverName;
-            $store->latitude = $data['latitude'] ?? '6.5244';
-            $store->longitude = $data['longitude'] ?? '3.3792';
-            $store->address = $data['address'] ?? 'Nigeria';
+            $store->latitude = $data['latitude'];
+            $store->longitude = $data['longitude'];
+            $store->address = $data['address'];
             $store->vendor_id = $vendor->id;
-            $store->zone_id = $zone?->id ?? 1;
-            $store->module_id = $module?->id ?? 1;
+            $store->zone_id = $zone->id;
+            $store->module_id = $module->id;
             $store->status = 0; // 0 = inactive, awaiting admin approval
             $store->store_business_model = $businessModel;
             $store->delivery_time = $data['delivery_time'] ?? '20-40 min';
             $store->tin = $data['tin'] ?? ($data['cac_number'] ?? null);
             $store->tin_expire_date = $data['tin_expire_date'] ?? null;
-            if ($tinCertName) {
-                $store->tin_certificate_image = $tinCertName;
-            }
+            $store->tin_certificate_image = null;
 
             // Structured metadata for Nigerian KYC & onboarding audit
             $metadata = [
@@ -1383,6 +1324,7 @@ class VendorOnboardingService
                 'kyc_type' => $data['kyc_type'] ?? (!empty($data['tin']) ? 'tin' : (!empty($data['cac_number']) ? 'cac' : (!empty($data['nin']) ? 'nin' : 'none'))),
                 'cac_number' => $data['cac_number'] ?? null,
                 'nin' => $data['nin'] ?? null,
+                'kyc_media_id' => $data['tin_media_id'] ?? null,
                 'operating_hours_raw' => $data['operating_hours'] ?? null,
                 'terms_accepted_at' => now()->toIso8601String(),
                 'privacy_accepted_at' => now()->toIso8601String(),

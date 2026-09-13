@@ -9,9 +9,12 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingEvent;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
+use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
+use Modules\WhatsAppVendorConcierge\app\Models\NotificationDelivery;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 
 class SendVendorStatusNotification implements ShouldQueue
@@ -88,7 +91,34 @@ class SendVendorStatusNotification implements ShouldQueue
                 return;
             }
 
-            $gateway->sendTextMessage($contact->phone_number, $message);
+            $type = match ($this->status) {
+                1, '1', 'approved' => self::TYPE_APPROVED,
+                0, '0', 'denied' => self::TYPE_DENIED,
+                default => (string) $this->status,
+            };
+            $version = hash('sha256', implode('|', [$vendor->id, $type, $vendor->updated_at?->getTimestamp(), $this->rejectionNote]));
+            $delivery = NotificationDelivery::firstOrCreate([
+                'store_id' => $store->id, 'notification_type' => $type, 'state_version' => $version,
+            ]);
+            if (!$delivery->wasRecentlyCreated && $delivery->status === 'sent') {
+                return;
+            }
+
+            $lastInbound = WhatsAppMessage::whereHas('conversation', fn ($q) => $q->where('contact_id', $contact->id))
+                ->where('direction', 'inbound')->latest('created_at')->value('created_at');
+            $insideWindow = $lastInbound && $lastInbound->greaterThanOrEqualTo(now()->subHours(24));
+            $result = $insideWindow
+                ? $gateway->sendTextMessage($contact->phone_number, $message)
+                : $gateway->sendTemplateMessage($contact->phone_number, config("whatsapp-vendor-concierge.messaging.templates.{$type}"), [], 'en');
+            if (isset($result['error'])) {
+                $delivery->update(['status' => 'failed', 'metadata' => ['channel' => $insideWindow ? 'text' : 'template']]);
+                throw new \RuntimeException('WhatsApp status notification was rejected by Meta.');
+            }
+            $delivery->update([
+                'status' => 'sent', 'sent_at' => now(),
+                'provider_message_id' => $result['messages'][0]['id'] ?? null,
+                'metadata' => ['channel' => $insideWindow ? 'text' : 'template'],
+            ]);
 
             // Log event if session exists
             $conversation = WhatsAppConversation::where('contact_id', $contact->id)->latest()->first();
@@ -102,6 +132,16 @@ class SendVendorStatusNotification implements ShouldQueue
                         'contact_type' => 'vendor',
                         'vendor_id' => $vendor->id,
                     ]);
+                    $session = $conversation->onboarding_session_id
+                        ? \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::find($conversation->onboarding_session_id)
+                        : \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::where('vendor_id', $vendor->id)->latest()->first();
+                    $session?->update(['status' => 'approved']);
+                } elseif ($type === self::TYPE_DENIED) {
+                    $conversation->update(['state' => 'closed', 'vendor_id' => $vendor->id]);
+                    $session = $conversation->onboarding_session_id
+                        ? \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::find($conversation->onboarding_session_id)
+                        : \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::where('vendor_id', $vendor->id)->latest()->first();
+                    $session?->update(['status' => 'rejected']);
                 }
 
                 if (!empty($conversation->onboarding_session_id)) {
@@ -110,7 +150,7 @@ class SendVendorStatusNotification implements ShouldQueue
                         $contact->id,
                         'status_notification_sent',
                         (string) $this->status,
-                        ['store_id' => $store->id, 'vendor_id' => $vendor->id, 'note' => $this->rejectionNote]
+                        ['store_id' => $store->id, 'vendor_id' => $vendor->id, 'notification_type' => $type]
                     );
                 }
             }
@@ -122,7 +162,7 @@ class SendVendorStatusNotification implements ShouldQueue
             ]);
         } catch (\Throwable $e) {
             Log::error('SendVendorStatusNotification failed', [
-                'error' => $e->getMessage(),
+                'exception' => get_class($e),
                 'store_id' => $this->storeId,
             ]);
             throw $e;

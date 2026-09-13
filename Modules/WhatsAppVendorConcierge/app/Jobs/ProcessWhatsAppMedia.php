@@ -40,6 +40,12 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 return;
             }
 
+            $declaredSize = (int) ($this->media->file_size ?? 0);
+            if ($declaredSize > config('whatsapp-vendor-concierge.media.max_file_size')) {
+                $this->media->markFailed('Media exceeds the configured size limit');
+                return;
+            }
+
             // Get media URL from Meta
             $urlResponse = $gateway->getMediaUrl($this->media->whatsapp_media_id);
 
@@ -75,9 +81,20 @@ class ProcessWhatsAppMedia implements ShouldQueue
                 $this->media->update(['mime_type' => $mimeType]);
             }
 
+            $disk = Storage::disk($this->media->storage_disk);
+            $actualSize = $disk->size($filePath);
+            $actualMime = $disk->mimeType($filePath);
+            if ($actualSize > config('whatsapp-vendor-concierge.media.max_file_size')
+                || !in_array($actualMime, config('whatsapp-vendor-concierge.media.allowed_mime_types'), true)) {
+                $disk->delete($filePath);
+                $this->media->markFailed('Media type or size is not allowed');
+                return;
+            }
+            $this->media->update(['file_size' => $actualSize, 'mime_type' => $actualMime]);
+
             Log::info('WhatsApp media downloaded successfully', [
                 'media_id' => $this->media->id,
-                'file_path' => $filePath,
+                'mime_type' => $actualMime,
             ]);
 
             // If it's a document, queue OCR processing
@@ -90,8 +107,7 @@ class ProcessWhatsAppMedia implements ShouldQueue
         } catch (\Throwable $e) {
             Log::error('ProcessWhatsAppMedia failed', [
                 'media_id' => $this->media->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception' => get_class($e),
             ]);
             $this->media->markFailed($e->getMessage());
             throw $e;

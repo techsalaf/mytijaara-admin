@@ -15,7 +15,11 @@ use Modules\WhatsAppVendorConcierge\app\Http\Controllers\Api\WhatsAppWebhookDebu
 |
 */
 
-Route::prefix('api/v1/whatsapp')->middleware(['api'])->group(function () {
+Route::prefix('api/v1/whatsapp')->middleware([
+    'web',
+    \Modules\WhatsAppVendorConcierge\app\Http\Middleware\AuthorizeWhatsAppOperations::class,
+    'throttle:60,1',
+])->group(function () {
     Route::post('/send', [WhatsAppMessageController::class, 'send'])->name('whatsapp.api.send');
     Route::get('/messages/{conversationId}', [WhatsAppMessageController::class, 'history'])->name('whatsapp.api.messages');
     Route::get('/conversations', [WhatsAppMessageController::class, 'conversations'])->name('whatsapp.api.conversations');

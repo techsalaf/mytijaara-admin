@@ -239,8 +239,7 @@ class WhatsAppGateway
         if (isset($res['error'])) {
             Log::info('Interactive cta_url message returned error; sending text message fallback', [
                 'to' => $to,
-                'url' => $url,
-                'error' => $res['error'],
+                'error_type' => 'cta_rejected',
             ]);
 
             $fallbackText = ($header ? "*{$header}*\n\n" : "")
@@ -396,14 +395,14 @@ class WhatsAppGateway
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
 
             Log::error('WhatsApp message send failed', [
-                'payload' => $payload,
-                'error' => $e->getMessage(),
-                'response' => $errorBody,
+                'type' => $payload['type'] ?? null,
+                'exception' => get_class($e),
+                'status_code' => $e->getCode(),
             ]);
 
             return [
-                'error' => $e->getMessage(),
-                'response' => $errorBody ? json_decode($errorBody, true) : null,
+                'error' => 'WhatsApp delivery failed',
+                'code' => $e->getCode(),
             ];
         }
     }

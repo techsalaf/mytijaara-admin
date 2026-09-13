@@ -11,6 +11,8 @@ class WhatsAppConversation extends Model
 {
     protected $table = 'whatsapp_conversations';
 
+    protected $hidden = ['collected_data'];
+
     protected $fillable = [
         'contact_id',
         'vendor_id',

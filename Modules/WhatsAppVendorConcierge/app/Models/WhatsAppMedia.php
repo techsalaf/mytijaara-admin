@@ -3,6 +3,7 @@
 namespace Modules\WhatsAppVendorConcierge\app\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class WhatsAppMedia extends Model
 {
@@ -89,7 +90,7 @@ class WhatsAppMedia extends Model
      */
     public function getUrl(): ?string
     {
-        if (!$this->file_path) {
+        if (!$this->file_path || $this->storage_disk === 'local') {
             return null;
         }
 

@@ -38,7 +38,7 @@ class OnboardingSessionController extends Controller
     {
         $session = OnboardingSession::with(['contact', 'vendor', 'store'])->findOrFail($id);
 
-        $events = OnboardingEvent::where('session_id', $id)
+        $events = OnboardingEvent::where('onboarding_session_id', $id)
             ->orderBy('created_at', 'asc')
             ->get();
 

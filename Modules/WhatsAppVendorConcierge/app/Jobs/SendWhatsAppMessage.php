@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 
-class SendWhatsAppMessage implements ShouldQueue
+class SendWhatsAppMessage implements ShouldQueue, \Illuminate\Contracts\Queue\ShouldBeEncrypted
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

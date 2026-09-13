@@ -12,6 +12,16 @@ class OnboardingSession extends Model
 {
     protected $table = 'onboarding_sessions';
 
+    public function toArray(): array
+    {
+        $attributes = parent::toArray();
+        if (isset($attributes['collected_data'])) {
+            unset($attributes['collected_data']['password_hash'], $attributes['collected_data']['password'],
+                $attributes['collected_data']['_pwd_token_hash'], $attributes['collected_data']['_pwd_token_expires_at']);
+        }
+        return $attributes;
+    }
+
     protected $fillable = [
         'contact_id',
         'vendor_id',

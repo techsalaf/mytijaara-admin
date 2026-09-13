@@ -36,7 +36,8 @@ class WebhookController extends \App\Http\Controllers\Controller
             'provided_token_length' => $token ? strlen($token) : 0,
         ]);
 
-        if ($mode === 'subscribe' && $token === $expectedToken) {
+        if ($mode === 'subscribe' && is_string($expectedToken) && $expectedToken !== ''
+            && is_string($token) && hash_equals($expectedToken, $token)) {
             Log::info('WhatsApp webhook verified successfully');
             return response($challenge, 200)
                 ->header('Content-Type', 'text/plain');
@@ -80,13 +81,15 @@ class WebhookController extends \App\Http\Controllers\Controller
 
                     // Process each message async
                     foreach ($value['messages'] ?? [] as $message) {
-                        ProcessIncomingWhatsAppMessage::dispatch($message, $value)
+                        $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($message);
+                        ProcessIncomingWhatsAppMessage::dispatch($message, array_intersect_key($value, array_flip(['contacts', 'metadata'])))
+                            ->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
                             ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
                     }
 
                     // Process status updates async
                     foreach ($value['statuses'] ?? [] as $status) {
-                        ProcessIncomingWhatsAppMessage::dispatchStatus($status, $value)
+                        \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppStatus::dispatch($status)
                             ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
                     }
 

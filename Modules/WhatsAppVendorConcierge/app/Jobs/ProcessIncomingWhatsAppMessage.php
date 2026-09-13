@@ -18,7 +18,7 @@ use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 use Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService;
 use Modules\WhatsAppVendorConcierge\app\Services\ConversationManager;
 
-class ProcessIncomingWhatsAppMessage implements ShouldQueue
+class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contracts\Queue\ShouldBeEncrypted
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -43,7 +43,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         $lock = null;
 
         if ($messageId) {
-            $lock = \Illuminate\Support\Facades\Cache::lock('process_wa_msg_' . $messageId, 30);
+            $lock = \Illuminate\Support\Facades\Cache::lock('process_wa_msg_' . $messageId, 150);
             if (!$lock->get()) {
                 Log::info('Duplicate concurrent WhatsApp message locked', ['message_id' => $messageId]);
                 return;
@@ -69,6 +69,12 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
             // Get or create conversation
             $conversation = WhatsAppConversation::getOrCreateActive($contact->id);
 
+            if ($contact->is_blocked) {
+                return;
+            }
+            $this->messageData = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($this->messageData, $conversation);
+            $this->metaValue = array_intersect_key($this->metaValue, array_flip(['contacts', 'metadata']));
+
             // Log the message
             $message = WhatsAppMessage::logInbound($conversation->id, $this->messageData, $this->metaValue);
 
@@ -89,10 +95,11 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         } catch (\Throwable $e) {
             Log::error('ProcessIncomingWhatsAppMessage failed', [
                 'message_id' => $this->messageData['id'] ?? null,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception' => get_class($e),
             ]);
             throw $e;
+        } finally {
+            $lock?->release();
         }
     }
 
@@ -184,6 +191,15 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue
         $state = $conversation->state;
         $type = $message->type;
         $content = $message->content;
+
+        if ($state === 'human_handoff') {
+            return;
+        }
+
+        if ($conversation->current_step === 'account_password') {
+            $onboardingService->sendStepPrompt($conversation, $contact, 'account_password', $gateway);
+            return;
+        }
 
         // Log event if onboarding session exists
         if (!empty($conversation->onboarding_session_id)) {

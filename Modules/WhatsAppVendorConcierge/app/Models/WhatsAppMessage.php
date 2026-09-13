@@ -49,7 +49,9 @@ class WhatsAppMessage extends Model
      */
     public static function logInbound(int $conversationId, array $messageData, array $metaValue): self
     {
-        $message = $messageData;
+        $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact(
+            $messageData, WhatsAppConversation::find($conversationId)
+        );
         $content = [
             'text' => $message['text']['body'] ?? null,
             'interactive' => $message['interactive'] ?? null,
@@ -63,10 +65,15 @@ class WhatsAppMessage extends Model
         ];
 
         $type = $message['type'] ?? 'text';
+        if ($type === 'interactive') {
+            $type = isset($message['interactive']['button_reply']) ? 'interactive_button'
+                : (isset($message['interactive']['list_reply']) ? 'interactive_list' : 'interactive_flow');
+        }
         $mediaId = null;
 
         if (in_array($type, ['image', 'document', 'video', 'audio'])) {
-            $mediaId = $message[$type]['id'] ?? null;
+            // Local foreign key is assigned only after the media row is created.
+            $mediaId = null;
         }
 
         // Idempotency: check if message already exists
@@ -87,7 +94,7 @@ class WhatsAppMessage extends Model
             'metadata' => [
                 'from' => $message['from'] ?? null,
                 'timestamp' => $message['timestamp'] ?? null,
-                'meta_value' => $metaValue,
+                'phone_number_id' => $metaValue['metadata']['phone_number_id'] ?? null,
             ],
             'delivered_at' => now(),
         ]);
@@ -128,8 +135,37 @@ class WhatsAppMessage extends Model
             'sent' => $update['sent_at'] = now(),
             'delivered' => $update['delivered_at'] = now(),
             'read' => $update['read_at'] = now(),
+            default => null,
         };
 
+        $this->update($update);
+    }
+
+    public function applyReceipt(array $receipt): void
+    {
+        $status = $receipt['status'];
+        $at = \Carbon\Carbon::createFromTimestampUTC((int) $receipt['timestamp']);
+        $rank = ['pending' => 0, 'failed' => 0, 'sent' => 1, 'delivered' => 2, 'read' => 3];
+        $metadata = $this->metadata ?? [];
+        $timestamps = $metadata['receipt_timestamps'] ?? [];
+        $previous = $timestamps[$status] ?? null;
+        $timestamp = (int) $receipt['timestamp'];
+        if ($previous !== null && $timestamp >= $previous) {
+            return;
+        }
+        $timestamps[$status] = $timestamp;
+        $update = ['metadata' => array_merge($metadata, ['receipt_timestamps' => $timestamps])];
+        if ($status === 'failed') {
+            $update['error'] = ['codes' => $receipt['error_codes'] ?? []];
+            if (($rank[$this->status] ?? 0) < 2) {
+                $update['status'] = 'failed';
+            }
+        } else {
+            $update[$status . '_at'] = $at;
+            if (($rank[$status] ?? 0) > ($rank[$this->status] ?? 0)) {
+                $update['status'] = $status;
+            }
+        }
         $this->update($update);
     }
 }

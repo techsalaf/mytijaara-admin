@@ -229,6 +229,18 @@ class ConversationManager
      */
     public function handleButtonResponse(WhatsAppConversation $conversation, WhatsAppContact $contact, string $buttonId, WhatsAppGateway $gateway): void
     {
+        if ($conversation->state === 'human_handoff') {
+            return;
+        }
+        if (preg_match('/^action_(confirm|cancel)_([a-f0-9]{48})$/', $buttonId, $matches)) {
+            try {
+                $result = app(PendingActionService::class)->confirm($matches[2], $contact->id, $conversation->id, $matches[1] === 'cancel');
+            } catch (\Throwable $e) {
+                $result = 'This action is unavailable. Please request it again or contact support.';
+            }
+            $gateway->sendTextMessage($contact->phone_number, $result);
+            return;
+        }
         $editMap = [
             'edit_business_basics' => 'business_basics',
             'edit_module' => 'module_selection',
@@ -518,13 +530,7 @@ class ConversationManager
             return;
         }
 
-        $store->update(['active' => $activate]);
-        $statusText = $activate ? '🟢 Open (Active)' : '🔴 Paused (Closed)';
-
-        $gateway->sendTextMessage(
-            $contact->phone_number,
-            "Your store status has been updated to: *{$statusText}*.\n\nCustomers can " . ($activate ? 'now view and order from your shop.' : 'no longer place new orders until you reopen.')
-        );
+        app(PendingActionService::class)->prepareAvailability($contact->id, $conversation->id, $store->id, $activate);
     }
 
     /**
@@ -550,10 +556,10 @@ class ConversationManager
     protected function handleViewOrders(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         // This would call an AI tool to fetch orders
-        RunVendorAiConversation::dispatch($conversation, $contact, (object)[
+        RunVendorAiConversation::dispatch($conversation, $contact, new WhatsAppMessage([
             'content' => ['text' => 'Show me my orders today'],
             'type' => 'text',
-        ])->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
+        ]))->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
     }
 
     /**
@@ -561,10 +567,10 @@ class ConversationManager
      */
     protected function handleViewSales(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        RunVendorAiConversation::dispatch($conversation, $contact, (object)[
+        RunVendorAiConversation::dispatch($conversation, $contact, new WhatsAppMessage([
             'content' => ['text' => 'How much did I sell today?'],
             'type' => 'text',
-        ])->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
+        ]))->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
     }
 
     /**

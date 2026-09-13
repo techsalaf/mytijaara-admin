@@ -9,6 +9,8 @@ namespace Modules\WhatsAppVendorConcierge\app\Agents;
  */
 class VendorAiContext
 {
+    public function __construct(public readonly ?int $contactId = null, public readonly ?int $conversationId = null) {}
+
     private array $vendorProfile     = [];
     private array $products          = [];
     private array $orders            = [];
