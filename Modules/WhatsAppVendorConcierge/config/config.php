@@ -58,6 +58,14 @@ return [
             'suspended' => env('WHATSAPP_TEMPLATE_VENDOR_SUSPENDED', 'vendor_store_suspended'),
             'unsuspended' => env('WHATSAPP_TEMPLATE_VENDOR_UNSUSPENDED', 'vendor_store_reactivated'),
         ],
+        // These must match each template's language in WhatsApp Manager exactly.
+        // A contact's chat locale is not necessarily an approved template locale.
+        'template_locales' => [
+            'approved' => env('WHATSAPP_TEMPLATE_VENDOR_APPROVED_LOCALE', env('WHATSAPP_TEMPLATE_LOCALE', 'en_US')),
+            'denied' => env('WHATSAPP_TEMPLATE_VENDOR_DENIED_LOCALE', env('WHATSAPP_TEMPLATE_LOCALE', 'en_US')),
+            'suspended' => env('WHATSAPP_TEMPLATE_VENDOR_SUSPENDED_LOCALE', env('WHATSAPP_TEMPLATE_LOCALE', 'en_US')),
+            'unsuspended' => env('WHATSAPP_TEMPLATE_VENDOR_UNSUSPENDED_LOCALE', env('WHATSAPP_TEMPLATE_LOCALE', 'en_US')),
+        ],
     ],
 
     /*

@@ -394,15 +394,22 @@ class WhatsAppGateway
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
 
+            $providerError = json_decode((string) $errorBody, true)['error'] ?? [];
+            $safeError = [
+                'code' => $providerError['code'] ?? $e->getCode(),
+                'subcode' => $providerError['error_subcode'] ?? null,
+                'type' => $providerError['type'] ?? null,
+                'message' => $providerError['message'] ?? 'WhatsApp delivery failed',
+            ];
             Log::error('WhatsApp message send failed', [
                 'type' => $payload['type'] ?? null,
                 'exception' => get_class($e),
                 'status_code' => $e->getCode(),
+                'provider_error' => $safeError,
             ]);
 
             return [
-                'error' => 'WhatsApp delivery failed',
-                'code' => $e->getCode(),
+                'error' => $safeError,
             ];
         }
     }

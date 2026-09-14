@@ -180,7 +180,7 @@ class SendVendorStatusNotification implements ShouldQueue
             $channel = $insideWindow ? 'text' : 'template';
 
             $templateName = config("whatsapp-vendor-concierge.messaging.templates.{$type}");
-            $locale = $contact->locale ?? 'en';
+            $locale = config("whatsapp-vendor-concierge.messaging.template_locales.{$type}");
 
             if (!$insideWindow && empty($templateName)) {
                 $delivery->update([
@@ -201,7 +201,7 @@ class SendVendorStatusNotification implements ShouldQueue
                 $delivery->update([
                     'status' => 'failed',
                     'channel' => $channel,
-                    'error_code' => (string) ($result['error']['code'] ?? 'meta_error'),
+                        'error_code' => (string) ($result['error']['code'] ?? 'meta_error'),
                     'metadata' => [
                         'channel' => $channel,
                         'template' => $insideWindow ? null : $templateName,
@@ -280,6 +280,7 @@ class SendVendorStatusNotification implements ShouldQueue
      */
     protected function buildTemplateComponents(string $type, Store $store, $vendor, string $loginUrl): array
     {
+        $supportUrl = url('/vendor/auth/login');
         return match ($type) {
             self::TYPE_APPROVED => [
                 [
@@ -287,6 +288,7 @@ class SendVendorStatusNotification implements ShouldQueue
                     'parameters' => [
                         ['type' => 'text', 'text' => $vendor->f_name ?? 'Partner'],
                         ['type' => 'text', 'text' => $store->name],
+                        ['type' => 'text', 'text' => $loginUrl],
                     ],
                 ],
             ],
@@ -297,14 +299,27 @@ class SendVendorStatusNotification implements ShouldQueue
                         ['type' => 'text', 'text' => $vendor->f_name ?? 'Partner'],
                         ['type' => 'text', 'text' => $store->name],
                         ['type' => 'text', 'text' => $this->rejectionNote ?: 'Please check your application details.'],
+                        ['type' => 'text', 'text' => $supportUrl],
                     ],
                 ],
             ],
-            self::TYPE_SUSPENDED, self::TYPE_UNSUSPENDED => [
+            self::TYPE_SUSPENDED => [
                 [
                     'type' => 'body',
                     'parameters' => [
+                        ['type' => 'text', 'text' => $vendor->f_name ?? 'Partner'],
                         ['type' => 'text', 'text' => $store->name],
+                        ['type' => 'text', 'text' => $supportUrl],
+                    ],
+                ],
+            ],
+            self::TYPE_UNSUSPENDED => [
+                [
+                    'type' => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => $vendor->f_name ?? 'Partner'],
+                        ['type' => 'text', 'text' => $store->name],
+                        ['type' => 'text', 'text' => $loginUrl],
                     ],
                 ],
             ],
