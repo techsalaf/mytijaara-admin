@@ -9,12 +9,18 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification;
+use Modules\WhatsAppVendorConcierge\app\Jobs\RunVendorAiConversation;
+use Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage;
 use Modules\WhatsAppVendorConcierge\app\Listeners\SendWhatsAppStatusNotificationOnDomainEvent;
 use Modules\WhatsAppVendorConcierge\app\Models\NotificationDelivery;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
+use Modules\WhatsAppVendorConcierge\app\Services\AiBudgetService;
+use Modules\WhatsAppVendorConcierge\app\Services\LanguagePreferenceService;
+use Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService;
+use Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService;
 
 class NotificationConcurrencyTest extends HardeningTestCase
 {
@@ -79,6 +85,24 @@ class NotificationConcurrencyTest extends HardeningTestCase
         $gateway->expects($this->never())->method('sendButtonMessage');
         (new SendVendorStatusNotification(301, 'denied', 'Outdated reason'))->handle($gateway);
         $this->assertSame(0, NotificationDelivery::count());
+    }
+
+    public function test_missing_ai_key_sends_a_safe_fallback_without_failing_the_job(): void
+    {
+        Vendor::unguard(); Store::unguard();
+        $vendor = Vendor::create(['id' => 303, 'f_name' => 'Amina', 'status' => 1]);
+        Store::create(['id' => 303, 'name' => 'Amina Store', 'vendor_id' => 303]);
+        $contact = WhatsAppContact::create(['whatsapp_id' => '2348000000303', 'phone_number' => '2348000000303', 'vendor_id' => 303, 'contact_type' => 'vendor']);
+        $conversation = WhatsAppConversation::create(['contact_id' => $contact->id, 'vendor_id' => 303, 'state' => 'ai_active']);
+        $message = new WhatsAppMessage(['type' => 'text', 'raw_text' => 'How are sales today?', 'content' => ['text' => 'How are sales today?']]);
+        config(['whatsapp-vendor-concierge.ai.provider' => 'openai', 'ai.providers.openai.key' => null]);
+
+        (new RunVendorAiConversation($conversation, $contact, $message))->handle(
+            app(AiBudgetService::class), app(LanguagePreferenceService::class), app(NotificationPreferenceService::class), app(SupportCaseService::class)
+        );
+
+        Queue::assertPushed(SendWhatsAppMessage::class, fn ($job) => $job->type === 'text'
+            && str_contains($job->payload['body'], 'temporarily unavailable'));
     }
 
     public function test_decision_state_is_synchronized_when_delivery_fails(): void

@@ -33,7 +33,10 @@ class RunVendorAiConversation implements ShouldQueue
         public WhatsAppConversation $conversation,
         public WhatsAppContact $contact,
         public WhatsAppMessage $message,
-    ) {}
+    ) {
+        $this->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'));
+        $this->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation', 'whatsapp.run_ai_conversation'));
+    }
 
     public function handle(
         AiBudgetService $budgetService,
@@ -158,6 +161,15 @@ class RunVendorAiConversation implements ShouldQueue
                 }
             }
 
+            if (empty(config("ai.providers.{$provider}.key"))) {
+                Log::error('Vendor AI provider is not configured', [
+                    'provider' => $provider,
+                    'conversation_id' => $this->conversation->id,
+                ]);
+                $this->sendReply("The vendor assistant is temporarily unavailable.\n\nReply *MENU* to use the shop options, or *SUPPORT* to reach our team.");
+                return;
+            }
+
             // Send to AI and get response
             $response = $agent->prompt($sanitizedUserText, provider: $provider, model: $model, timeout: 60);
 
@@ -193,14 +205,15 @@ class RunVendorAiConversation implements ShouldQueue
 
             Log::error('RunVendorAiConversation failed', [
                 'conversation_id' => $this->conversation->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception' => get_class($e),
             ]);
 
             // Send error fallback message to vendor
             $this->sendReply("Sorry, I'm having trouble processing that right now. 😓\n\nPlease try again in a moment, or reply *SUPPORT* to connect directly with our support team.");
 
-            throw $e;
+            // The vendor has received a fallback. Retrying would duplicate it and
+            // turn a provider outage into a failed queue backlog.
+            return;
         }
     }
 
@@ -211,7 +224,8 @@ class RunVendorAiConversation implements ShouldQueue
             'text',
             ['body' => $text],
             $this->conversation->id
-        )->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp-outbound'));
+        )->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
+            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message'));
     }
 
     /**

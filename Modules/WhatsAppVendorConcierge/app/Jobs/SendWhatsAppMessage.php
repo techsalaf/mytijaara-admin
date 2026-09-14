@@ -24,7 +24,10 @@ class SendWhatsAppMessage implements ShouldQueue, \Illuminate\Contracts\Queue\Sh
         public string $type,
         public array $payload,
         public ?int $conversationId = null
-    ) {}
+    ) {
+        $this->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'));
+        $this->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message'));
+    }
 
     public function handle(WhatsAppGateway $gateway): void
     {
