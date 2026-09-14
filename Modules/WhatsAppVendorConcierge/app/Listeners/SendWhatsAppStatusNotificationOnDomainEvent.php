@@ -13,13 +13,14 @@ class SendWhatsAppStatusNotificationOnDomainEvent
      */
     public function handle(VendorApplicationStatusChanged $event): void
     {
-        $queue = config('whatsapp-vendor-concierge.queue.jobs.send_whatsapp_message', 'notifications');
+        app(\Modules\WhatsAppVendorConcierge\app\Services\VendorConversationState::class)->synchronize($event->store, $event->status);
+        $queue = config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message');
 
         SendVendorStatusNotification::dispatch(
             $event->store->id,
             $event->status,
             $event->rejectionNote,
             $event->version
-        )->onQueue($queue)->afterCommit();
+        )->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))->onQueue($queue)->afterCommit();
     }
 }

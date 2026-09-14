@@ -35,6 +35,8 @@ class NotificationConcurrencyTest extends HardeningTestCase
             $table->id();
             $table->string('f_name')->nullable();
             $table->string('phone')->nullable();
+            $table->integer('status')->nullable()->default(1);
+            $table->text('rejection_note')->nullable();
             $table->timestamps();
         });
 
@@ -43,6 +45,7 @@ class NotificationConcurrencyTest extends HardeningTestCase
             $table->string('name')->nullable();
             $table->string('slug')->nullable();
             $table->unsignedBigInteger('vendor_id')->nullable();
+            $table->integer('status')->default(1);
             $table->timestamps();
         });
 
@@ -64,6 +67,36 @@ class NotificationConcurrencyTest extends HardeningTestCase
             $table->string('value')->nullable();
             $table->timestamps();
         });
+    }
+
+    public function test_stale_denial_is_not_sent_to_an_approved_vendor(): void
+    {
+        Vendor::unguard(); Store::unguard();
+        Vendor::create(['id' => 301, 'status' => 1]);
+        Store::create(['id' => 301, 'vendor_id' => 301]);
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->never())->method('sendTemplateMessage');
+        $gateway->expects($this->never())->method('sendButtonMessage');
+        (new SendVendorStatusNotification(301, 'denied', 'Outdated reason'))->handle($gateway);
+        $this->assertSame(0, NotificationDelivery::count());
+    }
+
+    public function test_decision_state_is_synchronized_when_delivery_fails(): void
+    {
+        Vendor::unguard(); Store::unguard();
+        Vendor::create(['id' => 302, 'status' => 0]);
+        Store::create(['id' => 302, 'vendor_id' => 302]);
+        $contact = WhatsAppContact::create(['whatsapp_id' => '2348000000302', 'phone_number' => '2348000000302', 'vendor_id' => 302]);
+        $conversation = WhatsAppConversation::create(['contact_id' => $contact->id, 'state' => 'onboarding_completed', 'current_step' => 'review_submit']);
+        config(['whatsapp-vendor-concierge.messaging.templates.denied' => 'test_denied']);
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->method('sendTemplateMessage')->willReturn(['error' => ['code' => 132001]]);
+        try { (new SendVendorStatusNotification(302, 'denied', 'Missing document'))->handle($gateway); }
+        catch (\RuntimeException $e) { $this->assertStringContainsString('rejected by Meta', $e->getMessage()); }
+        $this->assertSame('welcome', $conversation->fresh()->state);
+        $this->assertNull($conversation->fresh()->current_step);
+        $this->assertSame('rejected_applicant', $contact->fresh()->contact_type);
+        $this->assertSame('failed', NotificationDelivery::first()->status);
     }
 
     public function test_domain_event_triggers_status_notification_job(): void

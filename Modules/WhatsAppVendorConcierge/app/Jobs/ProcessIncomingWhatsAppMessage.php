@@ -193,7 +193,32 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         $content = $message->content;
 
         if ($state === 'human_handoff') {
+            $support = app(\Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService::class);
+            if ($case = $support->getActiveCase($contact)) {
+                $support->appendCustomerMessage($case, (string) $message->raw_text);
+            }
             return;
+        }
+
+        // Support must remain available from completed/rejected onboarding and template quick replies.
+        $supportReply = strtolower(trim((string) ($this->messageData['button']['payload']
+            ?? $this->messageData['button']['text']
+            ?? $this->messageData['interactive']['button_reply']['id']
+            ?? $message->raw_text ?? '')));
+        if (in_array($supportReply, ['support', 'human', 'agent', 'help desk', 'talk to support', 'talk_support'], true)) {
+            $conversationManager->initiateHumanHandoff($conversation, $contact, $gateway);
+            return;
+        }
+        $vendor = $contact->vendor_id ? $contact->vendor : null;
+        if ($vendor && $vendor->status !== null && (int) $vendor->status === 0) {
+            $conversationManager->handleRejectedApplicant($conversation, $contact, $gateway);
+            return;
+        }
+        if ($vendor && (int) $vendor->status === 1) {
+            // Old review_submit/current_step pointers must not resubmit an approved application.
+            $conversation->update(['state' => 'ai_active', 'current_step' => null, 'vendor_id' => $vendor->id]);
+            $contact->update(['contact_type' => 'vendor']);
+            $state = 'ai_active';
         }
 
         if ($conversation->current_step === 'account_password') {
@@ -270,7 +295,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         // 4. State-based routing
         $hasActiveOnboarding = $conversation->isOnboarding()
             || (!empty($conversation->onboarding_session_id) && !empty($conversation->current_step))
-            || (!empty($conversation->onboarding_session_id) && in_array($type, ['image', 'document']));
+            || (!empty($conversation->onboarding_session_id) && $state !== 'ai_active' && in_array($type, ['image', 'document']));
 
         if ($hasActiveOnboarding) {
             if ($conversation->state !== 'onboarding_active') {

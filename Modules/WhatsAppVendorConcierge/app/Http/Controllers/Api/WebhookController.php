@@ -90,12 +90,14 @@ class WebhookController extends \App\Http\Controllers\Controller
                     // Process status updates async
                     foreach ($value['statuses'] ?? [] as $status) {
                         \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppStatus::dispatch($status)
+                            ->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
                             ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
                     }
 
                     // Process flow responses async
                     if (isset($value['flow'])) {
                         ProcessIncomingWhatsAppMessage::dispatchFlow($value['flow'], $value)
+                            ->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
                             ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
                     }
                 }

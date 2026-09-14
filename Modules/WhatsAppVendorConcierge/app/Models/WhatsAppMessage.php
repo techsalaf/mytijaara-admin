@@ -90,6 +90,7 @@ class WhatsAppMessage extends Model
         );
         $content = [
             'text' => $message['text']['body'] ?? null,
+            'button' => $message['button'] ?? null,
             'interactive' => $message['interactive'] ?? null,
             'location' => $message['location'] ?? null,
             'image' => $message['image'] ?? null,
@@ -124,7 +125,7 @@ class WhatsAppMessage extends Model
             'direction' => 'inbound',
             'type' => $type,
             'content' => array_filter($content),
-            'raw_text' => $message['text']['body'] ?? ($message['interactive']['button_reply']['title'] ?? ($message['interactive']['list_reply']['title'] ?? ($message['interactive']['nfm_reply']['response_json'] ?? null))),
+            'raw_text' => $message['text']['body'] ?? $message['button']['text'] ?? ($message['interactive']['button_reply']['title'] ?? ($message['interactive']['list_reply']['title'] ?? ($message['interactive']['nfm_reply']['response_json'] ?? null))),
             'media_id' => $mediaId,
             'status' => 'delivered',
             'metadata' => [

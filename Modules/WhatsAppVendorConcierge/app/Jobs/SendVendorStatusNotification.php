@@ -36,7 +36,10 @@ class SendVendorStatusNotification implements ShouldQueue
         public int|string $status,
         public ?string $rejectionNote = null,
         public ?string $version = null
-    ) {}
+    ) {
+        $this->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'));
+        $this->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message'));
+    }
 
     public function handle(WhatsAppGateway $gateway): void
     {
@@ -48,6 +51,20 @@ class SendVendorStatusNotification implements ShouldQueue
             }
 
             $vendor = $store->vendor;
+            $type = match ($this->status) {
+                1, '1', 'approved' => self::TYPE_APPROVED,
+                0, '0', 'denied' => self::TYPE_DENIED,
+                default => (string) $this->status,
+            };
+            $expectedStatus = match ($type) { 'approved' => 1, 'denied' => 0, default => null };
+            if (($expectedStatus !== null && ($vendor->status === null || (int) $vendor->status !== $expectedStatus))
+                || ($type === 'suspended' && (int) $store->status !== 0)
+                || ($type === 'unsuspended' && (int) $store->status !== 1)) {
+                Log::info('Stale WhatsApp status notification discarded', ['store_id' => $store->id, 'type' => $type]);
+                if ($this->version) NotificationDelivery::where('store_id', $store->id)->where('state_version', $this->version)
+                    ->where('status', '!=', 'sent')->update(['status' => 'cancelled', 'error_code' => 'superseded_decision']);
+                return;
+            }
             $contact = WhatsAppContact::where('vendor_id', $vendor->id)->first();
 
             if (!$contact && !empty($vendor->phone)) {
@@ -68,6 +85,7 @@ class SendVendorStatusNotification implements ShouldQueue
                 return;
             }
 
+            app(\Modules\WhatsAppVendorConcierge\app\Services\VendorConversationState::class)->synchronize($store, $type, $contact);
             $prefService = app(\Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService::class);
             $isCritical = in_array((string) $this->status, ['suspended', 'payment_failed']);
             $eligibility = $prefService->canReceiveNotification($contact, 'status_alerts', $isCritical);
@@ -196,7 +214,9 @@ class SendVendorStatusNotification implements ShouldQueue
             $components = $this->buildTemplateComponents($type, $store, $vendor, $loginUrl);
 
             $result = $insideWindow
-                ? $gateway->sendTextMessage($contact->phone_number, $message)
+                ? ($type === self::TYPE_DENIED
+                    ? $gateway->sendButtonMessage($contact->phone_number, $message, [['id' => 'talk_support', 'title' => 'Talk to Support']])
+                    : $gateway->sendTextMessage($contact->phone_number, $message))
                 : $gateway->sendTemplateMessage($contact->phone_number, $templateName, $components, $locale);
 
             if (isset($result['error'])) {
@@ -225,41 +245,6 @@ class SendVendorStatusNotification implements ShouldQueue
                     'locale' => $locale,
                 ],
             ]);
-
-            // Synchronize conversational state
-            $conversation = WhatsAppConversation::where('contact_id', $contact->id)->latest()->first();
-            if ($conversation) {
-                if ($this->status === 1 || $this->status === '1' || $this->status === 'approved' || $this->status === self::TYPE_APPROVED) {
-                    $conversation->update([
-                        'state' => 'ai_active',
-                        'vendor_id' => $vendor->id,
-                    ]);
-                    $contact->update([
-                        'contact_type' => 'vendor',
-                        'vendor_id' => $vendor->id,
-                    ]);
-                    $session = $conversation->onboarding_session_id
-                        ? \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::find($conversation->onboarding_session_id)
-                        : \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::where('vendor_id', $vendor->id)->latest()->first();
-                    $session?->update(['status' => 'approved']);
-                } elseif ($type === self::TYPE_DENIED) {
-                    $conversation->update(['state' => 'closed', 'vendor_id' => $vendor->id]);
-                    $session = $conversation->onboarding_session_id
-                        ? \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::find($conversation->onboarding_session_id)
-                        : \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::where('vendor_id', $vendor->id)->latest()->first();
-                    $session?->update(['status' => 'rejected']);
-                }
-
-                if (!empty($conversation->onboarding_session_id)) {
-                    OnboardingEvent::log(
-                        $conversation->onboarding_session_id,
-                        $contact->id,
-                        'status_notification_sent',
-                        (string) $this->status,
-                        ['store_id' => $store->id, 'vendor_id' => $vendor->id, 'notification_type' => $type]
-                    );
-                }
-            }
 
             Log::info('WhatsApp vendor status notification delivered', [
                 'store_id' => $store->id,

@@ -18,7 +18,7 @@ class VendorApprovalObserver
     public function updated(Vendor $vendor): void
     {
         // Trigger if status changed OR if rejection_note was added/changed on a pending/rejected vendor
-        if (!$vendor->wasChanged('status') && !($vendor->wasChanged('rejection_note') && (int) $vendor->status === 0)) {
+        if (!$vendor->wasChanged('status') || $vendor->status === null) {
             return;
         }
 

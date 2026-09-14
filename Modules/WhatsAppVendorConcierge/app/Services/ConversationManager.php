@@ -27,6 +27,10 @@ class ConversationManager
      */
     public function handleWelcome(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
+        if ($contact->vendor_id && $contact->vendor?->status !== null && (int) $contact->vendor->status === 0) {
+            $this->handleRejectedApplicant($conversation, $contact, $gateway);
+            return;
+        }
         // Check if existing application to resume
         $existingSession = $this->onboardingService->resumeOnboarding($contact, $conversation);
 
@@ -466,9 +470,22 @@ class ConversationManager
      */
     public function initiateHumanHandoff(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
+        $support = app(SupportCaseService::class);
+        if (!$support->getActiveCase($contact)) {
+            $support->createCase($contact, 'WhatsApp support request', 'general', 'medium', null, $conversation);
+        }
         $conversation->update(['state' => 'human_handoff']);
 
         $this->handleHumanHandoff($conversation, $contact, new WhatsAppMessage(), $gateway);
+    }
+
+    public function handleRejectedApplicant(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    {
+        $conversation->update(['state' => 'welcome', 'current_step' => null]);
+        $reason = $contact->vendor?->rejection_note ?: 'Please contact support to review the application details.';
+        $gateway->sendButtonMessage($contact->phone_number,
+            "Your vendor application was not approved.\n\nReason: {$reason}\n\nYou can still chat with us. Tap Talk to Support to request help or discuss corrections.",
+            [['id' => 'talk_support', 'title' => 'Talk to Support']]);
     }
 
     /**

@@ -50,7 +50,7 @@ php artisan module:migrate-status WhatsAppVendorConcierge
 
 ---
 
-## 4. Supervisor Configuration (Queue Workers)
+## 4. Queue workers
 The webhook controller responds to Meta in <200ms and pushes all processing to queue workers. Ensure worker processes are continuously managed via Supervisor.
 
 Create `/etc/supervisor/conf.d/mytijaara-whatsapp-worker.conf`:
@@ -76,6 +76,16 @@ sudo supervisorctl reread
 sudo supervisorctl update
 sudo supervisorctl start mytijaara-whatsapp-worker:*
 ```
+
+### Shared hosting without Supervisor
+
+Use the repository script when the hosting account cannot run Supervisor. Add this exact cron entry in the hosting control panel; it uses a non-blocking lock and starts a fresh worker every minute, so a stopped process cannot leave webhooks queued indefinitely.
+
+```cron
+* * * * * /home/mytijaaracp/dashboard/scripts/whatsapp-worker.sh >/dev/null 2>&1
+```
+
+Do not point this cron at another deployment such as `/home/mytijaaracp/api`. Verify the worker with `php artisan queue:monitor whatsapp.process_incoming,whatsapp.send_message` and by checking that the `jobs` table drains after an inbound webhook.
 
 ---
 
