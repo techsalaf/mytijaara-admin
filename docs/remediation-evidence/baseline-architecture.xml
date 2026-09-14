@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="3" assertions="3" errors="0" failures="3" skipped="0" time="0.447912">
+    <testsuite name="Tests\Architecture\RegistrationSourceContractTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" tests="3" assertions="3" errors="0" failures="3" skipped="0" time="0.447912">
+      <testcase name="test_public_registration_matches_the_reviewed_pre_extraction_workflow" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="10" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.423737">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Architecture\RegistrationSourceContractTest::test_public_registration_matches_the_reviewed_pre_extraction_workflow&#13;
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+             'password.custom' =&gt; translate('The password cannot contain white spaces.'),
+         ]);
+         if ($validator-&gt;fails()) {
+-                 return response()-&gt;json(['errors' =&gt; Helpers::error_processor($validator)]);
+-        }
+-        if($request-&gt;zone_id)
+-        {
+-            $zone = Zone::query()
+-            -&gt;whereContains('coordinates', new Point($request-&gt;latitude, $request-&gt;longitude, POINT_SRID))
+-            -&gt;where('id',$request-&gt;zone_id)
+-            -&gt;first();
+-            if(!$zone){
+-              $validator-&gt;getMessageBag()-&gt;add('zone', translate('coordinates_out_of_zone'));
+-                 return response()-&gt;json(['errors' =&gt; Helpers::error_processor($validator)]);
+-            }
+-        }
+-
+-        $module = Module::find($request['module_id']);
+-        if ($module?-&gt;module_type == 'rental' &amp;&amp; addon_published_status('Rental') &amp;&amp; empty($request['pickup_zone_id'])){
+-            $validator-&gt;getMessageBag()-&gt;add('pickup_zone_id', translate('messages.You_must_select_a_pickup_zone'));
+             return response()-&gt;json(['errors' =&gt; Helpers::error_processor($validator)]);
+         }
+ 
+-        if ($request-&gt;business_plan == 'subscription-base' &amp;&amp; $request-&gt;package_id == null ) {
+-            $validator-&gt;getMessageBag()-&gt;add('package_id', translate('messages.You_must_select_a_package'));
+-             return response()-&gt;json(['errors' =&gt; Helpers::error_processor($validator)]);
+-        }
++        try {
++            $dto = \App\DTOs\VendorApplicationDTO::fromWebRequest($request);
++            $service = app(\App\Services\VendorApplicationService::class);
++            $result = $service-&gt;submit($dto);
++            $store = $result['store'];
+ 
+-        $vendor = new Vendor();
+-        $vendor-&gt;f_name = $request-&gt;f_name;
+-        $vendor-&gt;l_name = $request-&gt;l_name;
+-        $vendor-&gt;email = $request-&gt;email;
+-        $vendor-&gt;phone = $request-&gt;phone;
+-        $vendor-&gt;password = bcrypt($request-&gt;password);
+-        $vendor-&gt;status = null;
+-        $vendor-&gt;save();
+-
+-        $store = new Store;
+-        $store-&gt;name =  $request-&gt;name[array_search('default', $request-&gt;lang)];
+-        $store-&gt;phone = $request-&gt;phone;
+-        $store-&gt;email = $request-&gt;email;
+-        $store-&gt;logo = Helpers::upload('store/', 'png', $request-&gt;file('logo'));
+-        $store-&gt;cover_photo = Helpers::upload('store/cover/', 'png', $request-&gt;file('cover_photo'));
+-        $store-&gt;address = $request-&gt;address[array_search('default', $request-&gt;lang)];
+-        $store-&gt;latitude = $request-&gt;latitude;
+-        $store-&gt;longitude = $request-&gt;longitude;
+-        $store-&gt;vendor_id = $vendor-&gt;id;
+-        $store-&gt;zone_id = $request-&gt;zone_id;
+-        $store-&gt;module_id = $request-&gt;module_id;
+-        $store-&gt;pickup_zone_id = json_encode($request['pickup_zone_id']?? []) ;
+-        $store-&gt;tin = $request-&gt;tin;
+-        $store-&gt;tin_expire_date = $request-&gt;tin_expire_date;
+-        $extension = $request-&gt;has('tin_certificate_image') ? $request-&gt;file('tin_certificate_image')-&gt;getClientOriginalExtension() : 'png';
+-        $store-&gt;tin_certificate_image = Helpers::upload('store/', $extension, $request-&gt;file('tin_certificate_image'));
+-        $store-&gt;delivery_time = $request-&gt;minimum_delivery_time .'-'. $request-&gt;maximum_delivery_time.' '.$request-&gt;delivery_time_type;
+-        $store-&gt;status = 0;
+-        $store-&gt;store_business_model = 'none';
+-        $store-&gt;save();
+-
+-        Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store-&gt;id, data_value: $store-&gt;name);
+-        Helpers::add_or_update_translations(request: $request, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store-&gt;id, data_value: $store-&gt;address);
+-
+-
+-        try{
+-            $admin= Admin::where('role_id', 1)-&gt;first();
+-            if($module?-&gt;module_type != 'rental' &amp;&amp; config('mail.status') &amp;&amp; Helpers::get_mail_status('registration_mail_status_store') == '1' &amp;&amp;  Helpers::getNotificationStatusData('store','store_registration','mail_status') ){
+-                Mail::to($request['email'])-&gt;send(new VendorSelfRegistration('pending', $vendor-&gt;f_name.' '.$vendor-&gt;l_name));
+-            }
+-            elseif($module?-&gt;module_type == 'rental' &amp;&amp; addon_published_status('Rental')&amp;&amp; config('mail.status') &amp;&amp; Helpers::get_mail_status('rental_registration_mail_status_provider') == '1' &amp;&amp;  Helpers::getRentalNotificationStatusData('provider','provider_registration','mail_status') ){
+-                Mail::to($request['email'])-&gt;send(new ProviderSelfRegistration('pending', $vendor-&gt;f_name.' '.$vendor-&gt;l_name));
+-            }
+-
+-            if($module?-&gt;module_type != 'rental' &amp;&amp; config('mail.status') &amp;&amp; Helpers::get_mail_status('store_registration_mail_status_admin') == '1' &amp;&amp;  Helpers::getNotificationStatusData('admin','store_self_registration','mail_status') ){
+-                Mail::to($admin?-&gt;getRawOriginal('email'))-&gt;send(new StoreRegistration('pending', $vendor-&gt;f_name.' '.$vendor-&gt;l_name));
+-            } elseif($module?-&gt;module_type == 'rental' &amp;&amp; addon_published_status('Rental')&amp;&amp; config('mail.status') &amp;&amp; Helpers::get_mail_status('rental_provider_registration_mail_status_admin') == '1' &amp;&amp;  Helpers::getRentalNotificationStatusData('admin','provider_self_registration','mail_status') ){
+-                Mail::to($admin?-&gt;getRawOriginal('email'))-&gt;send(new ProviderRegistration('pending', $vendor-&gt;f_name.' '.$vendor-&gt;l_name));
+-            }
+-
+-        }catch(\Exception $ex){
+-            info($ex-&gt;getMessage());
++            return response()-&gt;json(['redirect_url' =&gt; route('restaurant.secondStep', ['store_id' =&gt; $store-&gt;id, 'business_plan' =&gt; $request-&gt;business_plan])]);
++        } catch (\Illuminate\Validation\ValidationException $e) {
++            return response()-&gt;json(['errors' =&gt; Helpers::error_processor($e-&gt;validator)]);
+         }
+-
+-
+-        if(config('module.'.$store-&gt;module-&gt;module_type)['always_open'])
+-        {
+-            StoreLogic::insert_schedule($store-&gt;id);
+-        }
+-
+-        if (Helpers::subscription_check()) {
+-            if ($request-&gt;business_plan == 'subscription-base' &amp;&amp; $request-&gt;package_id != null ) {
+-
+-                $store-&gt;package_id = $request-&gt;package_id;
+-                $store-&gt;save();
+-
+-            }
+-            elseif($request-&gt;business_plan == 'commission-base' ){
+-                $store-&gt;store_business_model = 'commission';
+-                $store-&gt;save();
+-
+-            }
+-        } else{
+-            $store-&gt;store_business_model = 'commission';
+-            $store-&gt;save();
+-
+-        }
+-
+-    return response()-&gt;json(['redirect_url' =&gt; route('restaurant.secondStep',['store_id' =&gt; $store-&gt;id,'business_plan'=&gt;$request-&gt;business_plan])]);
+-
+     }
+ '
+&#13;
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php:30
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php:12</failure>
+      </testcase>
+      <testcase name="test_store_app_availability_contract_is_unchanged" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="15" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.015413">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Architecture\RegistrationSourceContractTest::test_store_app_availability_contract_is_unchanged&#13;
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+ '    public function active_status(Request $request)
+     {
+         $store = $request-&gt;vendor-&gt;stores[0];
+-        $store-&gt;active = $store-&gt;active?0:1;
+-        $store-&gt;save();
++        $store = app(\App\Services\StoreAvailabilityService::class)-&gt;set($store, $request-&gt;vendor-&gt;id, !$store-&gt;active);
+         return response()-&gt;json(['message' =&gt; $store-&gt;active?translate('messages.store_opened'):translate('messages.store_temporarily_closed')], 200);
+     }
+ 
+ 
+ '
+&#13;
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php:30
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php:17</failure>
+      </testcase>
+      <testcase name="test_vendor_panel_availability_contract_is_unchanged" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="20" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.008762">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Architecture\RegistrationSourceContractTest::test_vendor_panel_availability_contract_is_unchanged&#13;
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+ '    public function active_status(Request $request)
+     {
+         $store = Helpers::get_store_data();
+-        $store-&gt;active = !$store-&gt;active;
+-        $store-&gt;save();
++        $store = app(\App\Services\StoreAvailabilityService::class)-&gt;set($store, $store-&gt;vendor_id, !$store-&gt;active);
+         return response()-&gt;json(['message' =&gt; $store-&gt;active?($store-&gt;module-&gt;module_type == 'rental' ? translate('provider') : translate('store')).' '.translate('messages.opened'):($store-&gt;module-&gt;module_type == 'rental' ? translate('provider') : translate('store')).' '.translate('messages.temporarily_closed')], 200);
+     }
+ '
+&#13;
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php:30
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php:22</failure>
+      </testcase>
+    </testsuite>
+  </testsuite>
+</testsuites>

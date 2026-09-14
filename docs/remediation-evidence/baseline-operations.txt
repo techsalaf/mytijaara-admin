@@ -1,0 +1,124 @@
+PHPUnit Started (PHPUnit 11.5.55 using PHP 8.5.9 (cli) on WINNT)
+Test Runner Triggered Deprecation (Your XML configuration validates against a deprecated schema. Migrate your XML configuration using "--migrate-configuration"!)
+Test Runner Configured
+Bootstrap Finished (C:\xampp\htdocs\mytijaara-admin\vendor/autoload.php)
+Event Facade Sealed
+Test Suite Loaded (7 tests)
+Test Runner Started
+Test Suite Sorted
+Test Runner Execution Started (7 tests)
+Test Suite Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest, 7 tests)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_creates_product_with_canonical_rules)
+[2026-09-14 23:40:27] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_creates_product_with_canonical_rules)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_creates_product_with_canonical_rules)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_creates_product_with_canonical_rules)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_rejects_unauthorized_store)
+[2026-09-14 23:40:32] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_rejects_unauthorized_store)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_rejects_unauthorized_store)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_mutation_service_rejects_unauthorized_store)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_price_with_explicit_confirmation)
+[2026-09-14 23:40:33] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_price_with_explicit_confirmation)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_price_with_explicit_confirmation)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_price_with_explicit_confirmation)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_stock_and_availability)
+[2026-09-14 23:40:43] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_stock_and_availability)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_stock_and_availability)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_pending_action_updates_product_stock_and_availability)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_and_pending_action_accept_and_prepare_order)
+[2026-09-14 23:40:49] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_and_pending_action_accept_and_prepare_order)
+[2026-09-14 23:40:50] testing.INFO: SQLSTATE[HY000]: General error: 1 no such table: notification_messages (Connection: sqlite, Database: :memory:, SQL: select * from "notification_messages" where "module_type" = grocery and "key" = order_confirmation_msg limit 1)  
+[2026-09-14 23:40:50] testing.INFO: SQLSTATE[HY000]: General error: 1 no such table: notification_messages (Connection: sqlite, Database: :memory:, SQL: select * from "notification_messages" where "module_type" = grocery and "key" = order_processing_message limit 1)  
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_and_pending_action_accept_and_prepare_order)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_and_pending_action_accept_and_prepare_order)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_rejects_invalid_transitions)
+[2026-09-14 23:40:52] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_rejects_invalid_transitions)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_rejects_invalid_transitions)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_order_mutation_service_rejects_invalid_transitions)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow)
+[2026-09-14 23:40:54] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow)
+After Last Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDownAfterClass)
+After Last Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::tearDownAfterClass
+Test Suite Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest, 7 tests)
+Test Runner Execution Finished
+Test Runner Finished
+PHPUnit Finished (Shell Exit Code: 0)

@@ -1,0 +1,57 @@
+PHPUnit Started (PHPUnit 11.5.55 using PHP 8.5.9 (cli) on WINNT)
+Test Runner Triggered Deprecation (Your XML configuration validates against a deprecated schema. Migrate your XML configuration using "--migrate-configuration"!)
+Test Runner Configured
+Bootstrap Finished (C:\xampp\htdocs\mytijaara-admin\vendor/autoload.php)
+Event Facade Sealed
+Test Suite Loaded (4 tests)
+Test Runner Started
+Test Suite Sorted
+Test Runner Execution Started (4 tests)
+Test Suite Started (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest, 4 tests)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signed_batched_status_webhook_only_dispatches_receipt_jobs)
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signed_batched_status_webhook_only_dispatches_receipt_jobs)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signed_batched_status_webhook_only_dispatches_receipt_jobs)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signed_batched_status_webhook_only_dispatches_receipt_jobs)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::receipts_are_idempotent_order_independent_and_minimize_errors)
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::receipts_are_idempotent_order_independent_and_minimize_errors)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::receipts_are_idempotent_order_independent_and_minimize_errors)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::receipts_are_idempotent_order_independent_and_minimize_errors)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::newer_same_state_receipts_are_retained_while_older_replays_are_ignored)
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::newer_same_state_receipts_are_retained_while_older_replays_are_ignored)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::newer_same_state_receipts_are_retained_while_older_replays_are_ignored)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::newer_same_state_receipts_are_retained_while_older_replays_are_ignored)
+Test Preparation Started (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signature_and_verification_fail_closed)
+Before Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp)
+Before Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::setUp
+Test Prepared (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signature_and_verification_fail_closed)
+After Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown)
+After Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDown
+Test Passed (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signature_and_verification_fail_closed)
+Test Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signature_and_verification_fail_closed)
+After Last Test Method Called (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDownAfterClass)
+After Last Test Method Finished:
+- Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::tearDownAfterClass
+Test Suite Finished (Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest, 4 tests)
+Test Runner Execution Finished
+Test Runner Finished
+PHPUnit Finished (Shell Exit Code: 0)
