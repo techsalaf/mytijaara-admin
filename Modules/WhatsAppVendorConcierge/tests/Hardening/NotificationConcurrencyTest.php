@@ -184,7 +184,7 @@ class NotificationConcurrencyTest extends HardeningTestCase
             'whatsapp_id' => '2348055553333',
             'phone_number' => '2348055553333',
             'vendor_id' => $vendor->id,
-            'metadata' => ['locale' => 'en'],
+            'metadata' => ['locale' => 'en_US'],
         ]);
 
         $conversation = WhatsAppConversation::create([
@@ -203,7 +203,10 @@ class NotificationConcurrencyTest extends HardeningTestCase
             'created_at' => now()->subHours(25),
         ]);
 
-        config(['whatsapp-vendor-concierge.messaging.templates.approved' => 'vendor_approved_template']);
+        config([
+            'whatsapp-vendor-concierge.messaging.templates.approved' => 'vendor_application_approved',
+            'whatsapp-vendor-concierge.messaging.template_locales.approved' => 'en',
+        ]);
 
         $templateSent = false;
         $gateway = $this->createMock(WhatsAppGateway::class);
@@ -211,8 +214,8 @@ class NotificationConcurrencyTest extends HardeningTestCase
             ->method('sendTemplateMessage')
             ->with(
                 '2348055553333',
-                'vendor_approved_template',
-                $this->anything(),
+                'vendor_application_approved',
+                [['type' => 'body', 'parameters' => [['type' => 'text', 'text' => 'Tunde Electronics']]]],
                 'en'
             )
             ->willReturnCallback(function () use (&$templateSent) {

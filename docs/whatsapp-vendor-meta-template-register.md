@@ -1,12 +1,34 @@
 # WhatsApp Vendor Meta template register
 
-These templates are required for status updates after the vendor's 24-hour service window expires. They are mapped with environment variables; do not change a name after production approval without updating the matching variable and rerunning configuration cache.
+These templates are required for status updates after the vendor's 24-hour service window expires. The registration contracts below were verified by reading the production WABA's Meta template catalogue on 2026-09-14. The earlier three-parameter approval/four-parameter denial table was incorrect.
 
-| Environment variable | Proposed template name | Category | Parameters | Trigger |
-|---|---|---|---|---|
-| `WHATSAPP_TEMPLATE_VENDOR_APPROVED` | `vendor_application_approved` | Utility | `{{1}}` vendor name, `{{2}}` store name, `{{3}}` dashboard URL | Admin approves an application |
-| `WHATSAPP_TEMPLATE_VENDOR_DENIED` | `vendor_application_denied` | Utility | `{{1}}` vendor name, `{{2}}` store name, `{{3}}` safe rejection summary, `{{4}}` support URL | Admin denies an application |
-| `WHATSAPP_TEMPLATE_VENDOR_SUSPENDED` | `vendor_store_suspended` | Utility | `{{1}}` vendor name, `{{2}}` store name, `{{3}}` support URL | Admin suspends a store |
-| `WHATSAPP_TEMPLATE_VENDOR_UNSUSPENDED` | `vendor_store_reactivated` | Utility | `{{1}}` vendor name, `{{2}}` store name, `{{3}}` dashboard URL | Admin reactivates a store |
+| Event | Configured template name | Verified Meta status / language | Sender body parameters |
+|---|---|---|---|
+| Approved | `vendor_application_approved` | APPROVED / `en` | `{{1}}` store name |
+| Denied | `vendor_application_denied` | APPROVED / `en` | `{{1}}` vendor first name, `{{2}}` safe rejection reason |
+| Suspended | `vendor_store_suspended` | Missing from production WABA | Expected: `{{1}}` vendor name, `{{2}}` store name, `{{3}}` support URL |
+| Reactivated | `vendor_store_reactivated` | Missing from production WABA | Expected: `{{1}}` vendor name, `{{2}}` store name, `{{3}}` dashboard URL |
 
-The current code uses text only inside the 24-hour service window and sends the listed body parameters outside it. Set `WHATSAPP_TEMPLATE_LOCALE` (or an event-specific `WHATSAPP_TEMPLATE_VENDOR_*_LOCALE`) to the exact language code shown for the approved template in WhatsApp Manager, commonly `en_US`. A template name and parameter count must match this table exactly; changing either in WhatsApp Manager requires a matching deployment and `php artisan config:cache`.
+The sender uses text inside the 24-hour service window and these body parameters outside it. The approved registration templates have no dynamic header or URL-button parameters. Static footers and quick-reply buttons do not require extra body parameters.
+
+For the verified production registration templates, use:
+
+```dotenv
+WHATSAPP_TEMPLATE_VENDOR_APPROVED=vendor_application_approved
+WHATSAPP_TEMPLATE_VENDOR_DENIED=vendor_application_denied
+WHATSAPP_TEMPLATE_VENDOR_APPROVED_LOCALE=en
+WHATSAPP_TEMPLATE_VENDOR_DENIED_LOCALE=en
+```
+
+Event-specific locale settings override `WHATSAPP_TEMPLATE_LOCALE`. The fallback locale is `en`; every configured locale must match the actual approved translation exactly. `en_US` is a different translation and does not match these registration templates. Deploy the matching sender parameter correction along with the locale correction, refresh Laravel configuration, and restart queue workers.
+
+Run this read-only check after configuration/template changes:
+
+```sh
+php artisan whatsapp:check-templates --event=approved --event=denied
+php artisan whatsapp:check-templates
+```
+
+The command queries Meta without sending messages or changing vendor status. It exits nonzero for missing translations, unapproved templates, mismatched body parameters, or unsupported dynamic components. The full check will fail until the missing suspension/reactivation templates are approved and configured to match their sender contracts. Passing the registration-only check does not establish readiness of all notification types or prove delivery to a vendor.
+
+Do not toggle vendor status or replay historical approval notifications to test configuration. Inspect the current application status and delivery records first; a historical approval may no longer reflect the current decision.

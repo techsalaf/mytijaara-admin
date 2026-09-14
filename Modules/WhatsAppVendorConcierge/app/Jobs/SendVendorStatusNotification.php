@@ -26,6 +26,8 @@ class SendVendorStatusNotification implements ShouldQueue
     public const TYPE_SUSPENDED = 'suspended';
     public const TYPE_UNSUSPENDED = 'unsuspended';
 
+    public const BODY_PARAMETER_COUNTS = ['approved' => 1, 'denied' => 2, 'suspended' => 3, 'unsuspended' => 3];
+
     public int $tries = 3;
     public int $backoff = 10;
 
@@ -286,9 +288,7 @@ class SendVendorStatusNotification implements ShouldQueue
                 [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $vendor->f_name ?? 'Partner'],
                         ['type' => 'text', 'text' => $store->name],
-                        ['type' => 'text', 'text' => $loginUrl],
                     ],
                 ],
             ],
@@ -297,9 +297,7 @@ class SendVendorStatusNotification implements ShouldQueue
                     'type' => 'body',
                     'parameters' => [
                         ['type' => 'text', 'text' => $vendor->f_name ?? 'Partner'],
-                        ['type' => 'text', 'text' => $store->name],
                         ['type' => 'text', 'text' => $this->rejectionNote ?: 'Please check your application details.'],
-                        ['type' => 'text', 'text' => $supportUrl],
                     ],
                 ],
             ],
