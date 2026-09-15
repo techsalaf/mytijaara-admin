@@ -58,7 +58,7 @@ class VendorToolsConfirmationTest extends TestCase
 
         [$vendor, $store] = $this->createStoreWithVendor();
 
-        $category = Category::create([
+        $category = Category::forceCreate([
             'name' => 'Test Category ' . uniqid(),
             'module_id' => $store->module_id,
             'status' => 1,

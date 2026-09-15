@@ -41,7 +41,6 @@ class Category extends Model
      * @var array
      */
     protected $fillable = [
-        'name',
         'parent_id',
         'position',
         'priority',
@@ -154,7 +153,7 @@ class Category extends Model
             }
         }
 
-        return (string) ($value ?? '');
+        return $value;
     }
 
     protected static function booted(): Builder|null
