@@ -1,0 +1,7 @@
+{
+  "app/DTOs/VendorApplicationDTO.php": "fd2e9524445640594895ce68f54bcf277132e8a147ed74be415e7fcd70370492",
+  "app/Services/VendorApplicationService.php": "e4edac2bb8ede5cec7a694c29ec4e17679d44252c0404ea61bb917e44e6cf3cf",
+  "app/Services/ProductMutationService.php": "73ad270770a3e17584bd1682b5b7621f72c2bd52d76d6f2923f6db06738d87d9",
+  "app/Services/OrderMutationService.php": "5399495c562c8ebd1e90a030be79447b2ba87af18b62d36202c1534b26251714",
+  "app/Services/StoreAvailabilityService.php": "b03f2362785a226db4aba02c208016c832ff8b5ef24221c0352ca65aa378cb60"
+}
