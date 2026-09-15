@@ -16,6 +16,7 @@ abstract class HardeningTestCase extends \Tests\TestCase
 {
     protected function setUp(): void
     {
+        \Illuminate\Database\Eloquent\Model::reguard();
         parent::setUp();
         config([
             'database.default' => 'sqlite', 'database.connections.sqlite.database' => ':memory:',
@@ -26,6 +27,7 @@ abstract class HardeningTestCase extends \Tests\TestCase
             'whatsapp-vendor-concierge.api.access_token' => 'test-token',
             'whatsapp-vendor-concierge.api.app_secret' => 'test-secret',
             'whatsapp-vendor-concierge.webhook.verify_token' => 'test-verify',
+            'whatsapp-vendor-concierge.media.storage_disk' => 'local',
         ]);
         DB::purge('sqlite');
         Queue::fake();
@@ -43,6 +45,12 @@ abstract class HardeningTestCase extends \Tests\TestCase
         foreach (glob(base_path('Modules/WhatsAppVendorConcierge/database/migrations/*.php')) as $migration) {
             (require $migration)->up();
         }
+    }
+
+    protected function tearDown(): void
+    {
+        try { parent::tearDown(); }
+        finally { \Illuminate\Database\Eloquent\Model::reguard(); }
     }
 
     protected function application(): array

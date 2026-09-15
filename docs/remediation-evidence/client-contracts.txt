@@ -1,0 +1,55 @@
+Local client endpoint inventory; source comparison only, not installed-app certification.
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:12: static const String baseUrl = 'https://6ammart-admin.6amtech.com';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:15: static const String loginUri = '/api/v1/auth/vendor/login';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:24: static const String updatedOrderStatusUri = '/api/v1/vendor/update-order-status';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:52: static const String itemStockUpdateUri = '/api/v1/vendor/item/stock-update';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:53: static const String addItemUri = '/api/v1/vendor/item/store';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:54: static const String updateItemUri = '/api/v1/vendor/item/update';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:55: static const String deleteItemUri = '/api/v1/vendor/item/delete';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:56: static const String vendorReviewUri = '/api/v1/vendor/item/reviews';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:58: static const String updateItemStatusUri = '/api/v1/vendor/item/status';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:59: static const String updateVendorStatusUri = '/api/v1/vendor/update-active-status';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:60: static const String searchItemListUri = '/api/v1/vendor/item/search';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:81: static const String restaurantRegisterUri = '/api/v1/auth/vendor/register';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:96: static const String updateProductRecommendedUri = '/api/v1/vendor/item/recommended';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:97: static const String updateProductOrganicUri = '/api/v1/vendor/item/organic';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:99: static const String itemDetailsUri = '/api/v1/vendor/item/details';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:101: static const String pendingItemListUri = '/api/v1/vendor/item/pending/item/list';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:102: static const String pendingItemDetailsUri = '/api/v1/vendor/item/requested/item/view';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:119: static const String updateReplyUri = '/api/v1/vendor/item/reply-update';
+C:/xampp/htdocs/mytijaara-store-app/lib/util/app_constants.dart:124: static const String stockLimitItemsUri = '/api/v1/vendor/item/stock-limit-list';
+C:/xampp/htdocs/mytijaara-user-app/lib/features/checkout/widgets/desktop_prescription_preview_dialog.dart:159: filePath.startsWith('http') ? '${AppConstants.baseUrl}/image-proxy?url=${Uri.encodeComponent(filePath)}' : filePath,
+C:/xampp/htdocs/mytijaara-user-app/lib/features/checkout/widgets/upload_prescription_widget.dart:203: file.path.startsWith('http') ? '${AppConstants.baseUrl}/image-proxy?url=${Uri.encodeComponent(file.path)}' : file.path,
+C:/xampp/htdocs/mytijaara-user-app/lib/util/app_constants.dart:18: static const String baseUrl = 'https://6ammart-admin.6amtech.com';
+C:/xampp/htdocs/mytijaara-user-app/lib/util/app_constants.dart:27: static const String searchItemUri = '/api/v1/items/details/';
+C:/xampp/htdocs/mytijaara-user-app/lib/util/app_constants.dart:68: static const String itemDetailsUri = '/api/v1/items/details/';
+C:/xampp/htdocs/mytijaara-user-app/lib/util/app_constants.dart:76: static const String storeDetailsUri = '/api/v1/stores/details/';
+C:/xampp/htdocs/mytijaara-user-app/lib/util/app_constants.dart:105: static const String storeRegisterUri = '/api/v1/auth/vendor/register';
+C:/xampp/htdocs/mytijaara-rider-app/lib/util/app_constants.dart:11: static const String baseUrl = 'https://6ammart-admin.6amtech.com';
+C:/xampp/htdocs/mytijaara-rider-app/lib/util/app_constants.dart:25: static const String updateOrderStatusUri = '/api/v1/delivery-man/update-order-status';
+C:/xampp/htdocs/mytijaara-rider-app/lib/util/app_constants.dart:29: static const String activeStatusUri = '/api/v1/delivery-man/update-active-status';
+C:/xampp/htdocs/mytijaara-user-web/src/api-manage/ApiRoutes.js:33: export const store_details_api = "/api/v1/stores/details";
+C:/xampp/htdocs/mytijaara-user-web/src/api-manage/ApiRoutes.js:163: export const item_details_api = "/api/v1/items/details";
+C:/xampp/htdocs/mytijaara-user-web/src/components/food-details/foodDetail-modal/FoodModalMediaPreview.tsx:19: baseUrl = `https://www.youtube.com/embed/${videoId}`;
+C:/xampp/htdocs/mytijaara-user-web/src/components/product-details/product-details-section/ProductImageView.js:60: baseUrl = `https://www.youtube.com/embed/${videoId}`;
+C:/xampp/htdocs/mytijaara-user-web/src/utils/fetchPageMetaData.js:7: ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/get-page-meta-data?page_name=${pageName}&id=${id}`
+C:/xampp/htdocs/mytijaara-user-web/src/utils/fetchPageMetaData.js:8: : `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/get-page-meta-data?page_name=${pageName}`
+C:/xampp/htdocs/mytijaara-user-web/src/utils/sectionMetaResolver.ts:70: const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/module`;
+C:/xampp/htdocs/mytijaara-user-web/src/utils/serverSidePropsHelper.js:24: `${process.env.NEXT_PUBLIC_BASE_URL}/api/v1/config`,
+
+Backend API differences from starting HEAD:
+diff --git a/app/Http/Controllers/Api/V1/Vendor/VendorController.php b/app/Http/Controllers/Api/V1/Vendor/VendorController.php
+index 16641c40..031c0044 100644
+--- a/app/Http/Controllers/Api/V1/Vendor/VendorController.php
++++ b/app/Http/Controllers/Api/V1/Vendor/VendorController.php
+@@ -186,7 +186,8 @@ class VendorController extends Controller
+     public function active_status(Request $request)
+     {
+         $store = $request->vendor->stores[0];
+-        $store = app(\App\Services\StoreAvailabilityService::class)->set($store, $request->vendor->id, !$store->active);
++        $store->active = $store->active?0:1;
++        $store->save();
+         return response()->json(['message' => $store->active?translate('messages.store_opened'):translate('messages.store_temporarily_closed')], 200);
+     }
+ 
+

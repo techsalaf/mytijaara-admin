@@ -2,21 +2,28 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Modules\WhatsAppVendorConcierge\tests\Hardening\ApplicationFixtureTestCase;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 
-class WhatsAppVendorConciergeTest extends TestCase
+class WhatsAppVendorConciergeTest extends ApplicationFixtureTestCase
 {
-    use DatabaseTransactions;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        \Illuminate\Support\Facades\Schema::create('subscription_packages', function (\Illuminate\Database\Schema\Blueprint $table) {
+            $table->id(); $table->string('package_name'); $table->decimal('price')->default(0);
+            $table->integer('validity')->default(30); $table->boolean('status')->default(true);
+            $table->string('module_type')->default('all'); $table->timestamps();
+        });
+        $module = \App\Models\Module::create(['module_name' => 'Grocery', 'module_type' => 'grocery', 'status' => 1]);
+        $zone = \App\Models\Zone::create(['name' => 'Lagos', 'status' => 1]);
+        \Illuminate\Support\Facades\DB::table('module_zone')->insert(['module_id' => $module->id, 'zone_id' => $zone->id]);
 
         \Illuminate\Support\Facades\URL::forceRootUrl('http://localhost');
 
@@ -252,6 +259,11 @@ class WhatsAppVendorConciergeTest extends TestCase
     /** @test */
     public function it_resolves_location_from_text_address()
     {
+        \Illuminate\Support\Facades\DB::table('business_settings')->insert(['key' => 'map_api_key_server', 'value' => 'fake-maps-key']);
+        \Illuminate\Support\Facades\Http::fake(['maps.googleapis.com/*' => \Illuminate\Support\Facades\Http::response([
+            'status' => 'OK', 'results' => [['geometry' => ['location' => ['lat' => 6.52, 'lng' => 3.37]],
+                'formatted_address' => '9A, Wing 1, Abiodun Fasakin Street, Lagos']],
+        ])]);
         $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
 
         $msg = new WhatsAppMessage([
@@ -276,10 +288,7 @@ class WhatsAppVendorConciergeTest extends TestCase
     /** @test */
     public function it_matches_category_from_text_input()
     {
-        $category = \App\Models\Category::firstOrCreate(
-            ['name' => 'Demo category', 'parent_id' => 0],
-            ['status' => 1, 'position' => 0]
-        );
+        $category = \App\Models\Category::forceCreate(['name' => 'Demo category', 'parent_id' => 0, 'status' => 1, 'position' => 0]);
 
         $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
 
@@ -857,6 +866,7 @@ class WhatsAppVendorConciergeTest extends TestCase
         ]);
 
         $conversation->update(['onboarding_session_id' => $session->id]);
+        $this->completeSubmissionFixture($session);
 
         $gateway = $this->createMock(WhatsAppGateway::class);
         $gateway->expects($this->once())
@@ -912,7 +922,6 @@ class WhatsAppVendorConciergeTest extends TestCase
         $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::create([
             'whatsapp_media_id' => 'media_logo_' . uniqid(),
             'mime_type' => 'image/png',
-            'file_name' => 'logo.png',
             'file_path' => 'store_logos/logo.png',
             'status' => 'downloaded',
         ]);
@@ -942,6 +951,7 @@ class WhatsAppVendorConciergeTest extends TestCase
 
         // Get an active module
         $module = \App\Models\Module::active()->notParcel()->first();
+        $this->assertNotNull($module);
         if ($module) {
             $msgMod = new WhatsAppMessage([
                 'type' => 'interactive',
@@ -962,6 +972,7 @@ class WhatsAppVendorConciergeTest extends TestCase
 
         // Get an active zone
         $zone = \App\Models\Zone::first();
+        $this->assertNotNull($zone);
         if ($zone) {
             $msgZone = new WhatsAppMessage([
                 'type' => 'interactive',
@@ -1073,6 +1084,7 @@ class WhatsAppVendorConciergeTest extends TestCase
         ]);
 
         $conversation->update(['onboarding_session_id' => $session->id]);
+        $this->completeSubmissionFixture($session);
 
         $gateway = $this->createMock(WhatsAppGateway::class);
         $gateway->expects($this->once())
@@ -1206,8 +1218,8 @@ class WhatsAppVendorConciergeTest extends TestCase
                 $contact->phone_number,
                 $this->stringContains('business detail'),
                 $this->callback(function ($sections) {
-                    // Business category sub-list has 3 items
-                    return count($sections[0]['rows']) === 3;
+                    // Business identity includes the optional cover photo.
+                    return count($sections[0]['rows']) === 4;
                 }),
                 'Edit Field'
             );
@@ -1252,8 +1264,10 @@ class WhatsAppVendorConciergeTest extends TestCase
         $service->sendStepPrompt($conversation, $contact, 'account_password', $gateway);
 
         $session->refresh();
-        $this->assertNotEmpty($session->collected_data['_pwd_token_hash']);
-        $this->assertNotEmpty($session->collected_data['_pwd_token_expires_at']);
+        $token = \Modules\WhatsAppVendorConcierge\app\Models\CredentialToken::where('onboarding_session_id', $session->id)->firstOrFail();
+        $this->assertNotEmpty($token->token_hash);
+        $this->assertTrue($token->expires_at->isFuture());
+        $this->assertArrayNotHasKey('_pwd_token_hash', $session->collected_data);
     }
 
     /** @test */
@@ -1360,5 +1374,24 @@ class WhatsAppVendorConciergeTest extends TestCase
         $reuseResponse = $this->get('/whatsapp/onboarding/password/' . $token);
         $reuseResponse->assertStatus(200);
         $reuseResponse->assertSee('Link Expired or Used');
+    }
+
+    private function completeSubmissionFixture(OnboardingSession $session): void
+    {
+        $module = \App\Models\Module::create(['module_name' => 'Grocery', 'module_type' => 'grocery', 'status' => 1]);
+        $zone = \App\Models\Zone::create(['name' => 'Lagos', 'status' => 1]);
+        \Illuminate\Support\Facades\DB::table('module_zone')->insert(['module_id' => $module->id, 'zone_id' => $zone->id]);
+        $image = \Illuminate\Http\UploadedFile::fake()->image('logo.png', 512, 512);
+        $path = 'whatsapp/logos/test.png';
+        \Illuminate\Support\Facades\Storage::disk('local')->put($path, file_get_contents($image->getRealPath()));
+        $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::create([
+            'whatsapp_media_id' => 'logo-'.$session->id, 'mime_type' => 'image/png', 'status' => 'processed',
+            'file_path' => $path, 'storage_disk' => 'local',
+            'metadata' => ['contact_id' => $session->contact_id, 'purpose' => 'logo'],
+        ]);
+        $session->update(['collected_data' => array_merge($session->collected_data, [
+            'module_id' => $module->id, 'zone_id' => $zone->id, 'logo_media_id' => $media->id,
+            'privacy_accepted' => true, 'delivery_time' => '20-40 min',
+        ])]);
     }
 }

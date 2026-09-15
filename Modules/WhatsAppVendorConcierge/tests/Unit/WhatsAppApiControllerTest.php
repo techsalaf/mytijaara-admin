@@ -2,23 +2,28 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Unit;
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Queue;
 use Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
-use Tests\TestCase;
+use Modules\WhatsAppVendorConcierge\tests\Hardening\HardeningTestCase;
 
-class WhatsAppApiControllerTest extends TestCase
+class WhatsAppApiControllerTest extends HardeningTestCase
 {
-    use DatabaseTransactions;
 
     protected function setUp(): void
     {
         parent::setUp();
         \Illuminate\Support\Facades\URL::forceRootUrl('http://localhost');
+        $admin = new \App\Models\Admin();
+        $admin->forceFill(['id' => 1, 'role_id' => 1, 'is_logged_in' => true,
+            'login_remember_token' => 'test-admin-session']);
+        $role = new \App\Models\AdminRole();
+        $role->forceFill(['id' => 1, 'modules' => '["store","contact_messages"]']);
+        $admin->setRelation('role', $role);
+        $this->actingAs($admin, 'admin')->withSession(['login_remember_token' => 'test-admin-session']);
     }
 
     /** @test */

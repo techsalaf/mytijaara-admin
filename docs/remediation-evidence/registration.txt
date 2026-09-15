@@ -1,0 +1,31 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+[2026-09-14 23:45:17] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+[2026-09-14 23:45:24] testing.INFO: array (
+  0 => 'line___3256',
+  1 => 'Undefined array key 0',
+)  
+[2026-09-14 23:45:24] testing.INFO: array (
+  0 => 'line___3256',
+  1 => 'Undefined array key 0',
+)  
+[2026-09-14 23:45:24] testing.INFO: Vendor registration mail notification failed: SQLSTATE[HY000]: General error: 1 no such table: admins (Connection: sqlite, Database: :memory:, SQL: select * from "admins" where "role_id" = 1 limit 1)  
+[2026-09-14 23:45:25] testing.INFO: Vendor registration mail notification failed: SQLSTATE[HY000]: General error: 1 no such table: admins (Connection: sqlite, Database: :memory:, SQL: select * from "admins" where "role_id" = 1 limit 1)  
+[2026-09-14 23:45:26] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)  
+.....                                                               5 / 5 (100%)
+
+Time: 00:15.155, Memory: 72.00 MB
+
+OK, but there were issues!
+Tests: 5, Assertions: 20, PHPUnit Deprecations: 1.

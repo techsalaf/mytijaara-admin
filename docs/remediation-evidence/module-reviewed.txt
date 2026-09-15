@@ -1,0 +1,1759 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+...........EE...........................................EE.....  63 / 115 ( 54%)
+..EEEEEEEFEEFEEEEE.EE.EEEE.EEEEE.EEE.....EEE.E.EEEEE            115 / 115 (100%)
+
+Time: 05:18.734, Memory: 104.00 MB
+
+There were 41 errors:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_process_stuck_sessions_dry_run_and_execution
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: whatsapp_notification_deliveries.notification_type (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_notification_deliveries" ("store_id", "channel", "status", "claimed_at", "idempotency_key", "updated_at", "created_at") values (1, whatsapp, processing, 2026-09-14 23:51:19, idem_stuck_6aa88d27789a9, 2026-09-15 00:11:19, 2026-09-15 00:11:19))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:69
+
+Caused by
+PDOException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: whatsapp_notification_deliveries.notification_type
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:584
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:69
+
+2) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_cleanup_media_dry_run_and_execution
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: whatsapp_media.whatsapp_media_id (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_media" ("file_path", "file_size", "mime_type", "status", "storage_disk", "cleanup_at", "updated_at", "created_at") values (whatsapp/temp/6aa88d2a39822.jpg, 100, image/jpeg, downloaded, local, 2026-09-15 00:01:22, 2026-09-15 00:11:22, 2026-09-15 00:11:22))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:146
+
+Caused by
+PDOException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: whatsapp_media.whatsapp_media_id
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:584
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:146
+
+3) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_approved
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Approval, Test, approval_6aa88db51351a@test.com, 2348026144528, $2y$04$XOSGNX1.hfKru1K7sLVnj.Ahrn24Z/3VOvdg9wERq4hn1vCyM5f/K, 0, 2026-09-15 00:13:41, 2026-09-15 00:13:41))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:25
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:25
+
+4) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_denied
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Denial, Test, denial_6aa88db630aa6@test.com, 2348045657007, $2y$04$sTG4RHZgsUuyvsNfcRLkleVba8q9znZHNlaSUYC6pzzqYEq8cGIi6, 0, 2026-09-15 00:13:42, 2026-09-15 00:13:42))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:78
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:78
+
+5) Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest::it_dispatches_support_email_and_alerts_vendor_on_handoff
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "display_name", "updated_at", "created_at") values (wa_6aa88dbf8a9e2, 2348058470188, Support Vendor, 2026-09-15 00:13:51, 2026-09-15 00:13:51))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest.php:24
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest.php:24
+
+6) Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest::it_sends_approval_notification_to_vendor_whatsapp
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Ahmad, Ibrahim, ahmad_6aa88dc0cc237@test.com, 2348091172352, $2y$04$Pv3hco/eEsL63JO2V7seCOnGsLINQAyngSr8jsgKne9arXnQy7T3u, 1, 2026-09-15 00:13:52, 2026-09-15 00:13:52))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:22
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:22
+
+7) Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest::it_sends_denial_notification_with_rejection_note
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Fatima, Aliyu, fatima_6aa88dc3a86b9@test.com, 2348080949043, $2y$04$JxfQ0Hx76cPLhcQ6atbUoeEkgPRVxgiAKv3CoH9/695665UQr6rn2, 0, 2026-09-15 00:13:55, 2026-09-15 00:13:55))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:78
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:78
+
+8) Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest::it_sends_suspension_and_unsuspension_notifications
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Sani, Bello, sani_6aa88dc62e25b@test.com, 2348087582051, $2y$04$kATTOcW/QHel1hhsy5Eg6u2qEFScO4N9WpvbyPNySenc83ayW5Ptq, 1, 2026-09-15 00:13:58, 2026-09-15 00:13:58))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:132
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:132
+
+9) Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest::create_product_requires_confirmation_when_writes_guarded
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Tool, Tester, tool_6aa88dc7358c1@test.com, 2348080689066, $2y$04$P6g2OzUOrb/eAIoprLIdAOqBFdeT3M7yQf0KfNMBsvNaBhQCq5AJi, 1, 2026-09-15 00:13:59, 2026-09-15 00:13:59))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:25
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:59
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:25
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:59
+
+10) Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest::update_product_requires_confirmation_before_mutating
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Tool, Tester, tool_6aa88dc8857f5@test.com, 2348066395142, $2y$04$GDkZVhT08HmaAaeD5Wk4nu/x9huSpHR9nhy2Wy5CTw6WxPBhqpD7W, 1, 2026-09-15 00:14:00, 2026-09-15 00:14:00))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:25
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:106
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:25
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:106
+
+11) Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest::pause_and_resume_shop_require_confirmation
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: insert into "vendors" ("f_name", "l_name", "email", "phone", "password", "status", "updated_at", "created_at") values (Tool, Tester, tool_6aa88dc969380@test.com, 2348022892841, $2y$04$I.Gv.pkFzqn9uEP4B8GclO5ZCVyKuGEOjxX4BsA0jLRWbHhcJDNb., 1, 2026-09-15 00:14:01, 2026-09-15 00:14:01))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:25
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:150
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:25
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:150
+
+12) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_lists_conversations_and_history
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "display_name", "updated_at", "created_at") values (wa_6aa88dceb0908, 2348099007307, API Test User, 2026-09-15 00:14:06, 2026-09-15 00:14:06))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:48
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:48
+
+13) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_returns_onboarding_analytics
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (wa_6aa88dd009139, 2348065687141, 2026-09-15 00:14:08, 2026-09-15 00:14:08))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:80
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:80
+
+14) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest::it_creates_and_queries_flows
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_flows (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_flows" ("flow_id", "name", "version", "status", "screens", "published_at", "updated_at", "created_at") values (flow_6aa88dd343c20, vendor_onboarding, 2.1, published, [{"id":"SCREEN_1","title":"Business Details"},{"id":"SCREEN_2","title":"Category"}], 2026-09-15 00:14:11, 2026-09-15 00:14:11, 2026-09-15 00:14:11))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest.php:17
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_flows
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest.php:17
+
+15) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_creates_contact_and_normalizes_phone
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: select exists(select * from "whatsapp_contacts" where "whatsapp_id" = test_wa_6aa88dd4217a9) as "exists")
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3878
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact.php:82
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:37
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3878
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact.php:82
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:37
+
+16) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_finds_or_creates_active_conversation
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "display_name", "updated_at", "created_at") values (test_wa_6aa88dd4ec6c7, 2348010258692, Test Vendor 2, 2026-09-15 00:14:12, 2026-09-15 00:14:12))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:48
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:48
+
+17) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_logs_inbound_message_with_idempotency
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88dd73761e, 2348099361925, 2026-09-15 00:14:15, 2026-09-15 00:14:15))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:67
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:67
+
+18) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_tracks_onboarding_session_progress
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88dd81407a, 2348000938369, 2026-09-15 00:14:16, 2026-09-15 00:14:16))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:99
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:99
+
+19) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_transitions_conversation_state_from_new_on_welcome
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88dda2727c, 2348056071099, 2026-09-15 00:14:18, 2026-09-15 00:14:18))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:161
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:161
+
+20) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_button_reply_and_starts_onboarding
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88ddaedefc, 2348030560748, 2026-09-15 00:14:18, 2026-09-15 00:14:18))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:181
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:181
+
+21) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_resolves_location_from_google_maps_url
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where "key" = map_api_key_server limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:606
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:575
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:246
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:265
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:245
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: business_settings
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:606
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:575
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:246
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:265
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:245
+
+22) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_resolves_location_from_text_address
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where "key" = map_api_key_server limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:634
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:585
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:246
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:265
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:269
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: business_settings
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:634
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:585
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:246
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:265
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:269
+
+23) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_matches_category_from_text_input
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select * from "categories" where ("name" = Demo category and "parent_id" = 0) limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:279
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: categories
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:279
+
+24) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_extracts_contact_info_with_phone_number
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88de207d49, +2348012345678, 2026-09-15 00:14:26, 2026-09-15 00:14:26))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:305
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:305
+
+25) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_synchronizes_session_current_step_on_advance
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88def9b628, 2348089909041, 2026-09-15 00:14:39, 2026-09-15 00:14:39))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:346
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:346
+
+26) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_can_serialize_process_whatsapp_media_job
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_media" ("whatsapp_media_id", "mime_type", "status", "updated_at", "created_at") values (media_test_6aa88df358fd2, image/jpeg, pending_download, 2026-09-15 00:14:43, 2026-09-15 00:14:43))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:384
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:384
+
+27) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_resumes_onboarding_and_sets_active_state
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88df6b3021, 2348009505035, 2026-09-15 00:14:46, 2026-09-15 00:14:46))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:409
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:409
+
+28) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_extracts_document_from_image_upload
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media (Connection: sqlite, Database: :memory:, SQL: select * from "whatsapp_media" where ("whatsapp_media_id" = wamid_media_6aa88dfa2eb76) limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:516
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:489
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:491
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:460
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:516
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:489
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:491
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:460
+
+29) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_extracts_document_from_pdf_document_upload
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media (Connection: sqlite, Database: :memory:, SQL: select * from "whatsapp_media" where ("whatsapp_media_id" = wamid_doc_6aa88dfc4bae8) limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:516
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:489
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:491
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:491
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:516
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:489
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:491
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:491
+
+30) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_builds_complete_review_summary_including_hours_and_category_and_documents
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e0217c0b, 2348046974483, 2026-09-15 00:14:58, 2026-09-15 00:14:58))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:534
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:534
+
+31) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_edit_section_from_list_and_sets_target_step
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e05f41f9, 2348039984051, 2026-09-15 00:15:02, 2026-09-15 00:15:02))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:570
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:570
+
+32) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_returns_to_review_submit_after_editing_section_when_in_review
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e096d97d, 2348008659435, 2026-09-15 00:15:05, 2026-09-15 00:15:05))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:618
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:618
+
+33) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_submits_application_with_null_vendor_status_for_pending_approval
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_sub_6aa88e16dcfcb, 2348008349792, 2026-09-15 00:15:18, 2026-09-15 00:15:18))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:827
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:827
+
+34) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_enforces_mandatory_store_logo_and_rejects_skip
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_media" ("whatsapp_media_id", "mime_type", "file_name", "file_path", "status", "updated_at", "created_at") values (media_logo_6aa88e18962e8, image/png, logo.png, store_logos/logo.png, downloaded, 2026-09-15 00:15:20, 2026-09-15 00:15:20))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:912
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_media
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:912
+
+35) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_validates_and_extracts_module_and_zone_selection
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: modules (Connection: sqlite, Database: :memory:, SQL: select * from "modules" where "status" = 1 and "module_type" != parcel limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:944
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: modules
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:944
+
+36) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_duplicate_vendor_phone_resiliently_on_submission
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: vendors (Connection: sqlite, Database: :memory:, SQL: select * from "vendors" where ("phone" = 2349032617923) limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1033
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: vendors
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1033
+
+37) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_displays_categorized_edit_sections_within_row_limits
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e1e2455e, 2348015698014, 2026-09-15 00:15:26, 2026-09-15 00:15:26))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1153
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1153
+
+38) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_routes_category_selection_to_sublist_with_few_rows
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e24d1645, 2348055831611, 2026-09-15 00:15:32, 2026-09-15 00:15:32))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1192
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1192
+
+39) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_generates_secure_password_token_and_sends_cta_url
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e26948da, 2348012296776, 2026-09-15 00:15:34, 2026-09-15 00:15:34))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1222
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1222
+
+40) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_rejects_plaintext_passwords_sent_in_whatsapp_chat
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e27858dd, 2348026751148, 2026-09-15 00:15:35, 2026-09-15 00:15:35))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1262
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1262
+
+41) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_renders_and_submits_secure_password_over_https
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_contacts" ("whatsapp_id", "phone_number", "updated_at", "created_at") values (test_wa_6aa88e2894be9, 2348056105185, 2026-09-15 00:15:36, 2026-09-15 00:15:36))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1306
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: whatsapp_contacts
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:578
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1306
+
+--
+
+There were 2 failures:
+
+1) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_dispatches_message_via_api
+Expected response status code [202] but received 401.
+Failed asserting that 401 is identical to 202.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:36
+
+2) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_tests_webhook_signature_calculation
+Expected response status code [200] but received 401.
+Failed asserting that 401 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:121
+
+ERRORS!
+Tests: 115, Assertions: 339, Errors: 41, Failures: 2, PHPUnit Deprecations: 53.

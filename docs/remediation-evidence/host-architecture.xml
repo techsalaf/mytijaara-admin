@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="6" assertions="3" errors="3" failures="0" skipped="0" time="0.044183">
+    <testsuite name="Tests\Architecture\HostWithoutConciergeTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" tests="3" assertions="0" errors="3" failures="0" skipped="0" time="0.000000">
+      <testcase name="test_host_boots_and_registers_client_routes_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="53" class="Tests\Architecture\HostWithoutConciergeTest" classname="Tests.Architecture.HostWithoutConciergeTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\Exception">Tests\Architecture\HostWithoutConciergeTest::test_host_boots_and_registers_client_routes_without_module_classes&#13;
+PHPUnit\Framework\Exception: [2026-09-14 23:47:08] testing.INFO: array (
+  0 =&gt; 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 =&gt; 838,
+  2 =&gt; 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)</error>
+      </testcase>
+      <testcase name="test_public_registration_validation_does_not_load_module_classes_or_tables" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="65" class="Tests\Architecture\HostWithoutConciergeTest" classname="Tests.Architecture.HostWithoutConciergeTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\Exception">Tests\Architecture\HostWithoutConciergeTest::test_public_registration_validation_does_not_load_module_classes_or_tables&#13;
+PHPUnit\Framework\Exception: [2026-09-14 23:47:19] testing.INFO: array (
+  0 =&gt; 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 =&gt; 838,
+  2 =&gt; 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)</error>
+      </testcase>
+      <testcase name="test_existing_host_controllers_can_be_resolved_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="72" class="Tests\Architecture\HostWithoutConciergeTest" classname="Tests.Architecture.HostWithoutConciergeTest" assertions="0" time="0.000000">
+        <error type="PHPUnit\Framework\Exception">Tests\Architecture\HostWithoutConciergeTest::test_existing_host_controllers_can_be_resolved_without_module_classes&#13;
+PHPUnit\Framework\Exception: [2026-09-14 23:47:25] testing.INFO: array (
+  0 =&gt; 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 =&gt; 838,
+  2 =&gt; 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="Tests\Architecture\RegistrationSourceContractTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" tests="3" assertions="3" errors="0" failures="0" skipped="0" time="0.044183">
+      <testcase name="test_public_registration_matches_the_reviewed_pre_extraction_workflow" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="10" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.037739"/>
+      <testcase name="test_store_app_availability_contract_is_unchanged" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="15" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.003801"/>
+      <testcase name="test_vendor_panel_availability_contract_is_unchanged" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="20" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.002643"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

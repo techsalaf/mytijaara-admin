@@ -19,6 +19,7 @@ class UpdateOrderStatusTool extends BaseVendorTool
             'order_id' => $schema->number()->description('Order ID (required)')->required(),
             'status' => $schema->string()->description('Target status: "confirmed", "processing", "handover", "delivered", "canceled"')->required(),
             'reason' => $schema->string()->description('Cancellation reason if rejecting/cancelling order')->required()->nullable(),
+            'otp' => $schema->string()->description('Delivery verification code provided by the vendor; never guess a code')->required()->nullable(),
         ];
     }
 
@@ -36,8 +37,8 @@ class UpdateOrderStatusTool extends BaseVendorTool
             $status = 'canceled';
         }
 
-        $reason = $request['reason'] ?? ($status === 'canceled' ? 'Rejected by vendor via WhatsApp' : null);
+        $reason = $request['reason'] ?? null;
 
-        return $this->prepareOrderStatus($orderId, $status, $reason);
+        return $this->prepareOrderStatus($orderId, $status, $reason, $request['otp'] ?? null);
     }
 }

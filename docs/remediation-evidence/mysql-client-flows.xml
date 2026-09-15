@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Architecture\MySqlHostRegistrationTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" tests="2" assertions="22" errors="0" failures="0" skipped="0" time="26.698373">
+    <testcase name="test_vendor_api_registration_preserves_response_and_translations_without_module" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="102" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="6" time="10.312257"/>
+    <testcase name="test_vendor_login_and_mobile_and_web_availability_work_without_module" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="120" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="16" time="16.386116"/>
+  </testsuite>
+</testsuites>

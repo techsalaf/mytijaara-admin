@@ -6,9 +6,9 @@ use App\Models\Category;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\Store;
-use App\Services\OrderMutationService;
-use App\Services\ProductMutationService;
-use App\Services\StoreAvailabilityService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductMutationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\StoreAvailabilityService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage;
@@ -56,7 +56,7 @@ class PendingActionService
         return $this->createAndDispatchAction($contact, $conversation, 'product_price_update', $payload, $preview);
     }
 
-    public function prepareProductStock(int $contactId, int $conversationId, int $itemId, int $newStock): PendingAction
+    public function prepareProductStock(int $contactId, int $conversationId, int $itemId, int $newStock, ?array $variationStocks = null): PendingAction
     {
         $contact = WhatsAppContact::findOrFail($contactId);
         $conversation = WhatsAppConversation::findOrFail($conversationId);
@@ -70,8 +70,11 @@ class PendingActionService
             'store_id' => $store->id,
             'new_stock' => $newStock,
             'previous_stock' => (int) $item->stock,
+            'variation_stocks' => $variationStocks,
+            'previous_variations_hash' => hash('sha256', $item->variations ?: '[]'),
         ];
         $preview = "Update stock for *{$item->name}* from {$item->stock} to *{$newStock}* units?";
+        foreach ($variationStocks ?? [] as $type => $stock) $preview .= "\n• {$type}: {$stock}";
 
         return $this->createAndDispatchAction($contact, $conversation, 'product_stock_update', $payload, $preview);
     }
@@ -115,7 +118,7 @@ class PendingActionService
         return $this->createAndDispatchAction($contact, $conversation, 'product_create', $payload, $preview);
     }
 
-    public function prepareOrderStatus(int $contactId, int $conversationId, int $orderId, string $targetStatus, ?string $reason = null): PendingAction
+    public function prepareOrderStatus(int $contactId, int $conversationId, int $orderId, string $targetStatus, ?string $reason = null, ?string $otp = null): PendingAction
     {
         $contact = WhatsAppContact::findOrFail($contactId);
         $conversation = WhatsAppConversation::findOrFail($conversationId);
@@ -130,6 +133,7 @@ class PendingActionService
             'target_status' => $targetStatus,
             'previous_status' => $order->order_status,
             'reason' => $reason,
+            'otp' => $otp,
         ];
 
         $statusLabels = [
@@ -223,6 +227,7 @@ class PendingActionService
     protected function executeProductPriceUpdate(PendingAction $action, WhatsAppContact $contact): string
     {
         $item = Item::whereKey($action->payload['item_id'])->lockForUpdate()->firstOrFail();
+        if ((float) $item->price !== (float) $action->payload['previous_price']) return $this->cancelChangedAction($action);
         $updated = $this->productMutationService->updatePrice($item, $contact->vendor_id, (float) $action->payload['new_price']);
 
         $action->update([
@@ -232,13 +237,17 @@ class PendingActionService
             'result_metadata' => ['item_id' => $updated->id, 'new_price' => $updated->price],
         ]);
 
-        return "Price for *{$updated->name}* updated to ₦" . number_format($updated->price, 2) . ".";
+        return $updated->relationLoaded('conciergeReview')
+            ? "The price change for *{$updated->name}* was submitted for admin approval."
+            : "Price for *{$updated->name}* updated to ₦" . number_format($updated->price, 2) . ".";
     }
 
     protected function executeProductStockUpdate(PendingAction $action, WhatsAppContact $contact): string
     {
         $item = Item::whereKey($action->payload['item_id'])->lockForUpdate()->firstOrFail();
-        $updated = $this->productMutationService->updateStock($item, $contact->vendor_id, (int) $action->payload['new_stock']);
+        if ((int) $item->stock !== (int) $action->payload['previous_stock']) return $this->cancelChangedAction($action);
+        if (isset($action->payload['previous_variations_hash']) && !hash_equals($action->payload['previous_variations_hash'], hash('sha256', $item->variations ?: '[]'))) return $this->cancelChangedAction($action);
+        $updated = $this->productMutationService->updateStock($item, $contact->vendor_id, (int) $action->payload['new_stock'], $action->payload['variation_stocks'] ?? null);
 
         $action->update([
             'status' => 'executed',
@@ -253,6 +262,7 @@ class PendingActionService
     protected function executeProductAvailabilityToggle(PendingAction $action, WhatsAppContact $contact): string
     {
         $item = Item::whereKey($action->payload['item_id'])->lockForUpdate()->firstOrFail();
+        if ((int) $item->status !== (int) $action->payload['previous_status']) return $this->cancelChangedAction($action);
         $updated = $this->productMutationService->toggleAvailability($item, $contact->vendor_id, (bool) $action->payload['active']);
 
         $action->update([
@@ -278,17 +288,20 @@ class PendingActionService
             'result_metadata' => ['item_id' => $item->id],
         ]);
 
-        return "✅ Product *{$item->name}* (₦" . number_format($item->price, 2) . ") was successfully added to your shop catalog.";
+        return $item->relationLoaded('conciergeReview')
+            ? "Product *{$item->name}* was submitted for admin approval."
+            : "✅ Product *{$item->name}* (₦" . number_format($item->price, 2) . ") was successfully added to your shop catalog.";
     }
 
     protected function executeOrderStatusUpdate(PendingAction $action, WhatsAppContact $contact): string
     {
         $order = Order::whereKey($action->payload['order_id'])->lockForUpdate()->firstOrFail();
+        if ($order->order_status !== $action->payload['previous_status']) return $this->cancelChangedAction($action);
         $updated = $this->orderMutationService->transitionStatus(
             $order,
             $contact->vendor_id,
             $action->payload['target_status'],
-            ['reason' => $action->payload['reason'] ?? null]
+            ['reason' => $action->payload['reason'] ?? null, 'otp' => $action->payload['otp'] ?? null]
         );
 
         $action->update([
@@ -307,6 +320,12 @@ class PendingActionService
         ];
 
         return $statusMessages[$updated->order_status] ?? "Order #{$updated->id} status updated to {$updated->order_status}.";
+    }
+
+    private function cancelChangedAction(PendingAction $action): string
+    {
+        $action->update(['status' => 'cancelled', 'cancelled_at' => now(), 'result_metadata' => ['code' => 'state_changed']]);
+        return 'This item or order changed after your preview. Please request a new preview.';
     }
 
     private function createAndDispatchAction(

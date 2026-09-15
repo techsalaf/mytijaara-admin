@@ -4,17 +4,15 @@ namespace Modules\WhatsAppVendorConcierge\tests\Unit;
 
 use App\Models\Store;
 use App\Models\Vendor;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Queue;
-use Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage;
+use Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
-use Tests\TestCase;
+use Modules\WhatsAppVendorConcierge\tests\Hardening\ApplicationFixtureTestCase;
 
-class AdminApprovalNotificationTest extends TestCase
+class AdminApprovalNotificationTest extends ApplicationFixtureTestCase
 {
-    use DatabaseTransactions;
 
     /** @test */
     public function it_dispatches_whatsapp_message_when_vendor_is_approved()
@@ -28,9 +26,11 @@ class AdminApprovalNotificationTest extends TestCase
             'email' => 'approval_' . uniqid() . '@test.com',
             'phone' => $phone,
             'password' => bcrypt('password123'),
-            'status' => 0,
+            'status' => null,
         ]);
 
+        $store = Store::forceCreate(['name' => 'Applicant shop', 'phone' => $phone,
+            'vendor_id' => $vendor->id, 'status' => 0]);
         $contact = WhatsAppContact::create([
             'whatsapp_id' => 'wa_' . uniqid(),
             'phone_number' => $phone,
@@ -57,10 +57,9 @@ class AdminApprovalNotificationTest extends TestCase
         $vendor->status = 1;
         $vendor->save();
 
-        Queue::assertPushed(SendWhatsAppMessage::class, function ($job) use ($phone) {
-            return $job->to === $phone
-                && str_contains($job->payload['body'], 'approved');
-        });
+        Queue::assertPushed(SendVendorStatusNotification::class, fn ($job) =>
+            $job->storeId === $store->id && $job->status === 'approved');
+        Queue::assertPushed(SendVendorStatusNotification::class, 1);
 
         $conversation->refresh();
         $this->assertEquals('ai_active', $conversation->state);
@@ -81,9 +80,11 @@ class AdminApprovalNotificationTest extends TestCase
             'email' => 'denial_' . uniqid() . '@test.com',
             'phone' => $phone,
             'password' => bcrypt('password123'),
-            'status' => 0,
+            'status' => null,
         ]);
 
+        $store = Store::forceCreate(['name' => 'Applicant shop', 'phone' => $phone,
+            'vendor_id' => $vendor->id, 'status' => 0]);
         $contact = WhatsAppContact::create([
             'whatsapp_id' => 'wa_' . uniqid(),
             'phone_number' => $phone,
@@ -102,12 +103,12 @@ class AdminApprovalNotificationTest extends TestCase
         $vendor->rejection_note = 'Invalid CAC document provided.';
         $vendor->save();
 
-        Queue::assertPushed(SendWhatsAppMessage::class, function ($job) use ($phone) {
-            return $job->to === $phone
-                && str_contains($job->payload['body'], 'Invalid CAC document provided.');
-        });
+        Queue::assertPushed(SendVendorStatusNotification::class, fn ($job) =>
+            $job->storeId === $store->id && $job->status === 'denied'
+                && $job->rejectionNote === 'Invalid CAC document provided.');
+        Queue::assertPushed(SendVendorStatusNotification::class, 1);
 
         $conversation->refresh();
-        $this->assertEquals('closed', $conversation->state);
+        $this->assertEquals('welcome', $conversation->state);
     }
 }

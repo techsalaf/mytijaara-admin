@@ -49,6 +49,8 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
         session(['six_captcha' => 'fixture']);
         Storage::fake('public');
         Mail::fake();
+        \Illuminate\Support\Facades\Http::preventStrayRequests();
+        \Illuminate\Support\Facades\Http::fake(['api.pwnedpasswords.com/*' => \Illuminate\Support\Facades\Http::response('', 200)]);
     }
 
     protected function tearDown(): void
@@ -97,11 +99,94 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
         $this->assertSame(0, Vendor::count());
     }
 
+    public function test_vendor_api_registration_preserves_response_and_translations_without_module(): void
+    {
+        $request = $this->registration(['business_plan' => 'commission', 'translations' => json_encode([
+            ['locale' => 'en', 'key' => 'name', 'value' => 'API Store'],
+            ['locale' => 'en', 'key' => 'address', 'value' => 'API Address'],
+            ['locale' => 'fr', 'key' => 'name', 'value' => 'Magasin API'],
+            ['locale' => 'fr', 'key' => 'address', 'value' => 'Adresse API'],
+        ])]);
+        $response = $this->app->make(\App\Http\Controllers\Api\V1\Auth\VendorLoginController::class)->register($request);
+        $this->assertSame(200, $response->getStatusCode());
+        $body = $response->getData(true);
+        $this->assertSame(['store_id', 'type', 'message'], array_keys($body));
+        $this->assertSame('commission', $body['type']);
+        $this->assertNull(Vendor::firstOrFail()->status);
+        $this->assertSame('API Store', Store::firstOrFail()->name);
+        $this->assertDatabaseHas('translations', ['locale' => 'fr', 'key' => 'name', 'value' => 'Magasin API']);
+    }
+
+    public function test_vendor_login_and_mobile_and_web_availability_work_without_module(): void
+    {
+        $this->app->make(\App\Http\Controllers\VendorController::class)->store($this->registration());
+        $vendor = Vendor::firstOrFail();
+        $vendor->status = 1;
+        $vendor->save();
+        $store = Store::firstOrFail();
+        $store->status = 1;
+        $store->save();
+        $login = $this->app->make(\App\Http\Controllers\Api\V1\Auth\VendorLoginController::class)->login(new Request([
+            'vendor_type' => 'owner', 'email' => 'vendor@example.test', 'password' => 'Fixture-Only!123',
+        ]));
+        $this->assertSame(200, $login->getStatusCode());
+        $this->assertSame(['token', 'zone_wise_topic', 'module_type'], array_keys($login->getData(true)));
+        $this->assertSame('grocery', $login->getData(true)['module_type']);
+        $this->assertSame($vendor->fresh()->auth_token, $login->getData(true)['token']);
+        $api = $this->app->make(\App\Http\Controllers\Api\V1\Vendor\VendorController::class);
+        foreach ([false, true] as $expected) {
+            $response = $api->active_status(new Request(['vendor' => $vendor->fresh()]));
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame(['message'], array_keys($response->getData(true)));
+            $this->assertSame($expected, (bool) $store->fresh()->active);
+        }
+        $web = $this->app->make(\App\Http\Controllers\Vendor\BusinessSettingsController::class);
+        foreach ([false, true] as $expected) {
+            $this->actingAs($vendor->fresh(), 'vendor');
+            $response = $web->active_status(new Request());
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame(['message'], array_keys($response->getData(true)));
+            $this->assertSame($expected, (bool) $store->fresh()->active);
+        }
+    }
+
     public function test_subscription_requires_package_before_persistence(): void
     {
         $response = $this->app->make(\App\Http\Controllers\VendorController::class)->store($this->registration(['business_plan' => 'subscription-base']));
         $this->assertSame('package_id', $response->getData(true)['errors'][0]['code']);
         $this->assertSame(0, Vendor::count());
+    }
+
+    public function test_subscription_selection_stays_unactivated(): void
+    {
+        $response = $this->app->make(\App\Http\Controllers\VendorController::class)->store($this->registration(['business_plan' => 'subscription-base', 'package_id' => 7]));
+        $this->assertArrayHasKey('redirect_url', $response->getData(true));
+        $this->assertSame('none', Store::first()->store_business_model);
+        $this->assertSame(7, (int) Store::first()->package_id);
+        $this->assertSame(0, (int) Store::first()->status);
+    }
+
+    public function test_registration_email_preferences_are_honoured(): void
+    {
+        config(['mail.status' => true]);
+        DB::table('admins')->insert(['role_id' => 1, 'email' => 'admin@example.test']);
+        DB::table('business_settings')->insert([
+            ['key' => 'registration_mail_status_store', 'value' => '1'],
+            ['key' => 'store_registration_mail_status_admin', 'value' => '1'],
+        ]);
+        foreach ([['inactive', 'inactive', 0], ['active', 'inactive', 1], ['active', 'active', 2]] as $index => [$vendor, $admin, $count]) {
+            Mail::fake();
+            DB::table('notification_settings')->delete();
+            DB::table('notification_settings')->insert([
+                ['type' => 'store', 'key' => 'store_registration', 'mail_status' => $vendor],
+                ['type' => 'admin', 'key' => 'store_self_registration', 'mail_status' => $admin],
+            ]);
+            $response = $this->app->make(\App\Http\Controllers\VendorController::class)->store($this->registration([
+                'phone' => '+234800000001'.$index, 'email' => 'vendor'.$index.'@example.test',
+            ]));
+            $this->assertArrayHasKey('redirect_url', $response->getData(true));
+            Mail::assertSentCount($count);
+        }
     }
 
     // The parent validation test creates its own SQLite fixture; this class already has a schema.

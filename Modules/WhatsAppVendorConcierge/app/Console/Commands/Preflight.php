@@ -2,9 +2,9 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Console\Commands;
 
-use App\Services\OrderMutationService;
-use App\Services\ProductMutationService;
-use App\Services\VendorApplicationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductMutationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\VendorApplicationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 
@@ -50,8 +50,8 @@ class Preflight extends Command
         $checks['All hardening database tables migrated'] = collect($requiredTables)
             ->every(fn ($table) => Schema::hasTable($table));
 
-        // 6. Core service bindings
-        $checks['Core canonical services resolvable'] = app()->bound(VendorApplicationService::class)
+        // 6. Module compatibility adapter bindings
+        $checks['Module compatibility adapters resolvable'] = app()->bound(VendorApplicationService::class)
             || class_exists(VendorApplicationService::class)
             && class_exists(ProductMutationService::class)
             && class_exists(OrderMutationService::class);
@@ -90,7 +90,7 @@ class Preflight extends Command
             return self::FAILURE;
         }
 
-        $this->info("\nRelease gate check PASSED. System is production-ready.");
+        $this->info("\nPreflight checks passed. Production readiness also requires the documented integration and deployment gates.");
         return self::SUCCESS;
     }
 }

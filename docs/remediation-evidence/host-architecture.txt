@@ -1,0 +1,34 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+EEE...                                                              6 / 6 (100%)
+
+Time: 00:55.585, Memory: 22.00 MB
+
+There were 3 errors:
+
+1) Tests\Architecture\HostWithoutConciergeTest::test_host_boots_and_registers_client_routes_without_module_classes
+PHPUnit\Framework\Exception: [2026-09-14 23:47:08] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)
+
+2) Tests\Architecture\HostWithoutConciergeTest::test_public_registration_validation_does_not_load_module_classes_or_tables
+PHPUnit\Framework\Exception: [2026-09-14 23:47:19] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)
+
+3) Tests\Architecture\HostWithoutConciergeTest::test_existing_host_controllers_can_be_resolved_without_module_classes
+PHPUnit\Framework\Exception: [2026-09-14 23:47:25] testing.INFO: array (
+  0 => 'C:\\xampp\\htdocs\\mytijaara-admin\\vendor\\laravel\\framework\\src\\Illuminate\\Database\\Connection.php',
+  1 => 838,
+  2 => 'SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where ("key" = mail_config) limit 1)',
+)
+
+ERRORS!
+Tests: 6, Assertions: 3, Errors: 3, PHPUnit Deprecations: 1.

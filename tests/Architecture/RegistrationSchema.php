@@ -14,6 +14,8 @@ final class RegistrationSchema {
             $table->string('phone')->unique();
             $table->string('email')->unique();
             $table->string('password')->nullable();
+            $table->string('auth_token', 191)->nullable();
+            $table->text('rejection_note')->nullable();
             $table->tinyInteger('status')->nullable();
             $table->timestamps();
         });
@@ -30,6 +32,7 @@ final class RegistrationSchema {
             $table->string('longitude')->nullable();
             $table->text('address')->nullable();
             $table->tinyInteger('status')->default(0);
+            $table->boolean('active')->default(true);
             $table->unsignedBigInteger('vendor_id');
             $table->unsignedBigInteger('zone_id')->nullable();
             $table->unsignedBigInteger('module_id')->nullable();

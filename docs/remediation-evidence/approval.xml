@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Architecture\ApprovalIsolationTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" tests="8" assertions="18" errors="4" failures="0" skipped="0" time="81.821395">
+    <testcase name="test_host_boots_and_registers_client_routes_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="55" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="6" time="7.703872"/>
+    <testcase name="test_public_registration_validation_does_not_load_module_classes_or_tables" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="67" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="2" time="6.374281"/>
+    <testcase name="test_existing_host_controllers_can_be_resolved_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="77" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="6" time="18.980206"/>
+    <testcase name="test_approval_keeps_model_observers_and_emits_only_one_domain_event" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="40" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="0" time="18.861812">
+      <error type="Illuminate\Database\QueryException">Tests\Architecture\ApprovalIsolationTest::test_approval_keeps_model_observers_and_emits_only_one_domain_event&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where "key" = check_daily_subscription_validity_check limit 1)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\app\CentralLogics\Helpers.php:2646
+C:\xampp\htdocs\mytijaara-admin\app\Models\Store.php:666
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:492
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:319
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:299
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Testing\Fakes\EventFake.php:328
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasEvents.php:224
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:733
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:470
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:469
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:901
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:568
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:615
+C:\xampp\htdocs\mytijaara-admin\app\Services\VendorApplicationDecisionService.php:28
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\ManagesTransactions.php:35
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:491
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\app\Services\VendorApplicationDecisionService.php:27
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php:46</error>
+    </testcase>
+    <testcase name="test_rejection_is_consistent_repeat_safe_and_does_not_activate_subscription" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="54" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="0" time="8.183510">
+      <error type="Illuminate\Database\QueryException">Tests\Architecture\ApprovalIsolationTest::test_rejection_is_consistent_repeat_safe_and_does_not_activate_subscription&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where "key" = check_daily_subscription_validity_check limit 1)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\app\CentralLogics\Helpers.php:2646
+C:\xampp\htdocs\mytijaara-admin\app\Models\Store.php:666
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:492
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:319
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:299
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Testing\Fakes\EventFake.php:328
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasEvents.php:224
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:733
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:470
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:469
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:901
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:568
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:615
+C:\xampp\htdocs\mytijaara-admin\app\Services\VendorApplicationDecisionService.php:28
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\ManagesTransactions.php:35
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:491
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\app\Services\VendorApplicationDecisionService.php:27
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php:59</error>
+    </testcase>
+    <testcase name="test_missing_rejection_reason_cannot_mutate_state" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="67" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="0" time="6.903829">
+      <error type="Illuminate\Database\QueryException">Tests\Architecture\ApprovalIsolationTest::test_missing_rejection_reason_cannot_mutate_state&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: storages (Connection: sqlite, Database: :memory:, SQL: select * from "storages" where "storages"."data_id" in (1) and "storages"."data_type" = App\Models\Vendor)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Relations\Relation.php:212
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Relations\Relation.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:950
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:919
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:885
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:568
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php:70</error>
+    </testcase>
+    <testcase name="test_subscription_activates_on_approval_only" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="73" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="0" time="7.406015">
+      <error type="Illuminate\Database\QueryException">Tests\Architecture\ApprovalIsolationTest::test_subscription_activates_on_approval_only&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: business_settings (Connection: sqlite, Database: :memory:, SQL: select * from "business_settings" where "key" = check_daily_subscription_validity_check limit 1)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\app\CentralLogics\Helpers.php:2646
+C:\xampp\htdocs\mytijaara-admin\app\Models\Store.php:666
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:492
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:319
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Events\Dispatcher.php:299
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasEvents.php:224
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:733
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:470
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:469
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:901
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:568
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:615
+C:\xampp\htdocs\mytijaara-admin\app\Services\VendorApplicationDecisionService.php:28
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\ManagesTransactions.php:35
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:491
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\app\Services\VendorApplicationDecisionService.php:27
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php:76</error>
+    </testcase>
+    <testcase name="test_legacy_get_application_route_is_not_a_decision_handler" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="81" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="4" time="7.407871"/>
+  </testsuite>
+</testsuites>

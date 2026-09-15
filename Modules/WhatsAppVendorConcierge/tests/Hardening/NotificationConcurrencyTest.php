@@ -87,6 +87,22 @@ class NotificationConcurrencyTest extends HardeningTestCase
         $this->assertSame(0, NotificationDelivery::count());
     }
 
+    public function test_same_second_decisions_have_distinct_versions_and_superseded_jobs_are_skipped(): void
+    {
+        $vendor = Vendor::forceCreate(['id' => 302, 'status' => 1]);
+        $store = Store::forceCreate(['id' => 302, 'vendor_id' => $vendor->id]);
+        $first = new VendorApplicationStatusChanged($store, $vendor, 'approved');
+        $second = new VendorApplicationStatusChanged($store, $vendor, 'approved');
+        $this->assertNotSame($first->version, $second->version);
+        WhatsAppContact::create(['whatsapp_id' => '2348000000302', 'phone_number' => '2348000000302',
+            'vendor_id' => $vendor->id, 'metadata' => ['vendor_status_version' => $second->version]]);
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->never())->method('sendTextMessage');
+        $gateway->expects($this->never())->method('sendTemplateMessage');
+        (new SendVendorStatusNotification($store->id, 'approved', null, $first->version))->handle($gateway);
+        $this->assertSame(0, NotificationDelivery::count());
+    }
+
     public function test_missing_ai_key_sends_a_safe_fallback_without_failing_the_job(): void
     {
         Vendor::unguard(); Store::unguard();

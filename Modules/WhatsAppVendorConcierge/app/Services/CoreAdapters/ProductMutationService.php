@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters;
 
 use App\CentralLogics\Helpers;
 use App\Models\Category;
@@ -20,7 +20,6 @@ class ProductMutationService
     public function createProduct(Store $store, int $vendorId, array $data): Item
     {
         $this->authorizeStoreOwnership($store, $vendorId);
-        $this->checkSubscriptionItemLimit($store);
 
         $validator = validator($data, [
             'name' => 'required|string|max:191',
@@ -31,6 +30,7 @@ class ProductMutationService
             'discount_type' => 'nullable|in:percent,amount',
             'description' => 'nullable|string',
             'image' => 'nullable|string',
+            'media_id' => 'nullable|integer|min:1',
             'veg' => 'nullable|boolean',
         ]);
 
@@ -39,6 +39,11 @@ class ProductMutationService
         }
 
         $validated = $validator->validated();
+        if (!empty($validated['image']) && $validated['image'] !== 'def.png') {
+            if (!ctype_digit($validated['image'])) throw ValidationException::withMessages(['image' => ['Use an image uploaded in your WhatsApp conversation.']]);
+            $validated['media_id'] = (int) $validated['image'];
+        }
+        $this->validateDiscount((float) $validated['price'], (float) ($validated['discount'] ?? 0), $validated['discount_type'] ?? 'percent');
 
         // Validate category belongs to store module
         $category = Category::where('id', $validated['category_id'])
@@ -54,7 +59,9 @@ class ProductMutationService
             ]);
         }
 
-        return DB::transaction(function () use ($store, $validated, $category) {
+        return DB::transaction(function () use ($store, $vendorId, $validated, $category) {
+            $store = Store::whereKey($store->id)->where('vendor_id', $vendorId)->lockForUpdate()->firstOrFail();
+            $this->checkSubscriptionItemLimit($store);
             $item = new Item();
             $item->name = $validated['name'];
             $item->price = $validated['price'];
@@ -62,11 +69,12 @@ class ProductMutationService
             $item->category_ids = json_encode([['id' => (string) $category->id, 'position' => 1]]);
             $item->store_id = $store->id;
             $item->module_id = $store->module_id;
-            $item->stock = $validated['stock'] ?? 10;
+            $item->stock = $validated['stock'] ?? 0;
             $item->discount = $validated['discount'] ?? 0;
             $item->discount_type = $validated['discount_type'] ?? 'percent';
             $item->description = $validated['description'] ?? null;
-            $item->image = $validated['image'] ?? 'def.png';
+            $item->image = !empty($validated['media_id'])
+                ? app(ProductMedia::class)->publish($validated['media_id'], $vendorId) : 'def.png';
             $item->veg = !empty($validated['veg']) ? 1 : 0;
             $item->status = 1;
             $item->variations = json_encode([]);
@@ -98,7 +106,11 @@ class ProductMutationService
                 ]);
             }
 
-            return $item->fresh(['translations']);
+            $review = app(ProductReview::class)->stage($item, 'Add_new_product');
+            if ($review) { $item->is_approved = 0; $item->save(); }
+            $result = $item->fresh(['translations']);
+            if ($review) $result->setRelation('conciergeReview', $review);
+            return $result;
         });
     }
 
@@ -117,9 +129,14 @@ class ProductMutationService
             ]);
         }
 
-        return DB::transaction(function () use ($item, $newPrice) {
+        return DB::transaction(function () use ($item, $vendorId, $newPrice) {
             $locked = Item::whereKey($item->id)->lockForUpdate()->firstOrFail();
+            $this->authorizeItemOwnership($locked, $vendorId);
+            $this->validateDiscount($newPrice, (float) $locked->discount, $locked->discount_type);
             $locked->price = $newPrice;
+            if ($review = app(ProductReview::class)->stage($locked, 'Update_product_price')) {
+                return $locked->fresh()->setRelation('conciergeReview', $review);
+            }
             $locked->save();
 
             return $locked;
@@ -131,7 +148,7 @@ class ProductMutationService
      *
      * @throws ValidationException
      */
-    public function updateStock(Item $item, int $vendorId, int $newStock): Item
+    public function updateStock(Item $item, int $vendorId, int $newStock, ?array $variationStocks = null): Item
     {
         $this->authorizeItemOwnership($item, $vendorId);
 
@@ -141,8 +158,23 @@ class ProductMutationService
             ]);
         }
 
-        return DB::transaction(function () use ($item, $newStock) {
+        return DB::transaction(function () use ($item, $vendorId, $newStock, $variationStocks) {
             $locked = Item::whereKey($item->id)->lockForUpdate()->firstOrFail();
+            $this->authorizeItemOwnership($locked, $vendorId);
+            $variations = json_decode($locked->variations ?: '[]', true);
+            if ($variations) {
+                if ($variationStocks === null || count($variationStocks) !== count($variations)) {
+                    throw ValidationException::withMessages(['stock' => ['Specify stock for every variation; changing only the total would corrupt inventory.']]);
+                }
+                foreach ($variations as &$variation) {
+                    $stock = $variationStocks[$variation['type']] ?? null;
+                    if (!is_int($stock) || $stock < 0) throw ValidationException::withMessages(['stock' => ['Each variation requires a non-negative integer stock.']]);
+                    $variation['stock'] = $stock;
+                }
+                unset($variation);
+                if (array_sum(array_column($variations, 'stock')) !== $newStock) throw ValidationException::withMessages(['stock' => ['Variation stock must equal the total.']]);
+                $locked->variations = json_encode($variations, JSON_THROW_ON_ERROR);
+            }
             $locked->stock = $newStock;
             $locked->save();
 
@@ -157,8 +189,13 @@ class ProductMutationService
     {
         $this->authorizeItemOwnership($item, $vendorId);
 
-        return DB::transaction(function () use ($item, $active) {
+        return DB::transaction(function () use ($item, $vendorId, $active) {
             $locked = Item::whereKey($item->id)->lockForUpdate()->firstOrFail();
+            $this->authorizeItemOwnership($locked, $vendorId);
+            if (($active ?? !$locked->status) && !$locked->status) {
+                $store = Store::whereKey($locked->store_id)->lockForUpdate()->firstOrFail();
+                $this->checkSubscriptionItemLimit($store);
+            }
             $locked->status = $active !== null ? ($active ? 1 : 0) : ($locked->status ? 0 : 1);
             $locked->save();
 
@@ -205,27 +242,18 @@ class ProductMutationService
             }
         }
 
-        return DB::transaction(function () use ($item, $validated) {
+        return DB::transaction(function () use ($item, $vendorId, $validated) {
             $locked = Item::whereKey($item->id)->lockForUpdate()->firstOrFail();
+            $this->authorizeItemOwnership($locked, $vendorId);
 
             if (isset($validated['name'])) {
                 $locked->name = $validated['name'];
-                Translation::updateOrCreate([
-                    'translationable_type' => Item::class,
-                    'translationable_id' => $locked->id,
-                    'locale' => 'en',
-                    'key' => 'name',
-                ], ['value' => $validated['name']]);
+
             }
 
             if (isset($validated['description'])) {
                 $locked->description = $validated['description'];
-                Translation::updateOrCreate([
-                    'translationable_type' => Item::class,
-                    'translationable_id' => $locked->id,
-                    'locale' => 'en',
-                    'key' => 'description',
-                ], ['value' => $validated['description']]);
+
             }
 
             if (isset($validated['category_id'])) {
@@ -243,7 +271,18 @@ class ProductMutationService
                 $locked->image = $validated['image'];
             }
 
+            $this->validateDiscount((float) $locked->price, (float) $locked->discount, $locked->discount_type);
+            if ($review = app(ProductReview::class)->stage($locked, 'Update_anything_in_product_details')) {
+                return $locked->fresh(['translations'])->setRelation('conciergeReview', $review);
+            }
             $locked->save();
+            foreach (['name', 'description'] as $field) {
+                if (isset($validated[$field])) Translation::updateOrCreate([
+                    'translationable_type' => Item::class,
+                    'translationable_id' => $locked->id,
+                    'locale' => 'en', 'key' => $field,
+                ], ['value' => $validated[$field]]);
+            }
 
             return $locked->fresh(['translations']);
         });
@@ -266,19 +305,24 @@ class ProductMutationService
 
     private function checkSubscriptionItemLimit(Store $store): void
     {
-        if (in_array($store->store_business_model, ['subscription', 'unsubscribed'])) {
-            $subscription = $store->store_sub ?? null;
-            if ($subscription && $subscription->package) {
-                $maxItems = $subscription->package->max_item ?? 0;
-                if ($maxItems > 0) {
-                    $currentCount = Item::withoutGlobalScopes()->where('store_id', $store->id)->count();
-                    if ($currentCount >= $maxItems) {
-                        throw ValidationException::withMessages([
-                            'subscription' => ['You have reached the maximum product limit allowed in your subscription package.'],
-                        ]);
-                    }
-                }
+        if ($store->getRawOriginal('item_section') !== null && !$store->item_section) {
+            throw ValidationException::withMessages(['subscription' => ['Product management is disabled for this store.']]);
+        }
+        if ($store->store_business_model === 'unsubscribed') {
+            throw ValidationException::withMessages(['subscription' => ['An active subscription is required.']]);
+        }
+        if ($store->store_business_model === 'subscription') {
+            $subscription = $store->store_sub;
+            if (!$subscription) throw ValidationException::withMessages(['subscription' => ['An active subscription is required.']]);
+            if ($subscription->max_product !== 'unlimited' && Item::withoutGlobalScopes()->where('store_id', $store->id)->where('status', 1)->count() >= (int) $subscription->max_product) {
+                throw ValidationException::withMessages(['subscription' => ['The subscription product limit has been reached.']]);
             }
         }
+    }
+
+    private function validateDiscount(float $price, float $discount, string $type): void
+    {
+        $amount = $type === 'percent' ? $price * $discount / 100 : $discount;
+        if ($amount > 0 && $amount >= $price) throw ValidationException::withMessages(['discount' => ['Discount must be less than the product price.']]);
     }
 }

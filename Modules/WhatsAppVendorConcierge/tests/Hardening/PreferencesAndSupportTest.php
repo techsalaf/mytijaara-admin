@@ -24,9 +24,9 @@ use Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService;
 use Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService;
 use Tests\TestCase;
 
-class PreferencesAndSupportTest extends TestCase
+class PreferencesAndSupportTest extends ApplicationFixtureTestCase
 {
-    use DatabaseTransactions;
+
 
     protected function setUp(): void
     {

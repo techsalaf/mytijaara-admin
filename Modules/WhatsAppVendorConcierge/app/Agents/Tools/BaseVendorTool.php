@@ -91,14 +91,14 @@ abstract class BaseVendorTool implements Tool
         }
     }
 
-    protected function prepareProductStock(int $itemId, int $newStock): string
+    protected function prepareProductStock(int $itemId, int $newStock, ?array $variationStocks = null): string
     {
         if (!$this->context->contactId || !$this->context->conversationId) {
             return 'Please request this action in your active WhatsApp conversation.';
         }
         try {
             $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareProductStock(
-                $this->context->contactId, $this->context->conversationId, $itemId, $newStock
+                $this->context->contactId, $this->context->conversationId, $itemId, $newStock, $variationStocks
             );
             return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to apply the stock change.";
         } catch (\Throwable $e) {
@@ -136,14 +136,14 @@ abstract class BaseVendorTool implements Tool
         }
     }
 
-    protected function prepareOrderStatus(int $orderId, string $status, ?string $reason = null): string
+    protected function prepareOrderStatus(int $orderId, string $status, ?string $reason = null, ?string $otp = null): string
     {
         if (!$this->context->contactId || !$this->context->conversationId) {
             return 'Please request this action in your active WhatsApp conversation.';
         }
         try {
             $action = app(\Modules\WhatsAppVendorConcierge\app\Services\PendingActionService::class)->prepareOrderStatus(
-                $this->context->contactId, $this->context->conversationId, $orderId, $status, $reason
+                $this->context->contactId, $this->context->conversationId, $orderId, $status, $reason, $otp
             );
             return "A confirmation preview for *{$action->preview}* has been sent. Tap Confirm to update order status.";
         } catch (\Throwable $e) {

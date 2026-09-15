@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters;
 
 use App\CentralLogics\Helpers;
 use App\CentralLogics\OrderLogic;
@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 class OrderMutationService
 {
     /**
-     * Transition an order to a target status with full core validation and side effects.
+     * Maintained port of Vendor/OrderController::status, with API pickup/OTP guards.
      *
      * @throws ValidationException
      */
@@ -37,6 +37,26 @@ class OrderMutationService
                 ->firstOrFail();
 
             $store = $locked->store ?? Store::findOrFail($locked->store_id);
+            $this->authorizeOrderOwnership($locked, $vendorId);
+            if ($locked->order_status === $targetStatus) {
+                return $locked; // Never repeat financial or inventory side effects.
+            }
+            if ($locked->picked_up !== null || in_array($locked->order_status, ['canceled', 'failed', 'refunded'])) {
+                throw ValidationException::withMessages(['order_status' => ['This order can no longer be changed by the store.']]);
+            }
+            if ($locked->order_type === 'pos') {
+                throw ValidationException::withMessages(['order_status' => ['POS orders use the POS workflow.']]);
+            }
+            if ($targetStatus === 'canceled' && !config('canceled_by_store')) {
+                throw ValidationException::withMessages(['order_status' => ['Store cancellation is disabled.']]);
+            }
+            if ($targetStatus === 'confirmed' && !$store->sub_self_delivery && config('order_confirmation_model') === 'deliveryman' && $locked->order_type !== 'take_away') {
+                throw ValidationException::withMessages(['order_status' => ['This order must be confirmed by the delivery agent.']]);
+            }
+            if ($targetStatus === 'delivered' && config('order_delivery_verification') &&
+                (!isset($extra['otp']) || !hash_equals((string) $locked->otp, (string) $extra['otp']))) {
+                throw ValidationException::withMessages(['otp' => ['A matching delivery verification code is required.']]);
+            }
 
             // Invariant 1: Cannot change status after delivered
             if ($locked->delivered !== null || $locked->order_status === 'delivered') {
@@ -86,19 +106,25 @@ class OrderMutationService
                 $locked->canceled_by = 'store';
                 $locked->canceled = now();
 
-                if ((int) $locked->is_guest === 0 && class_exists(OrderLogic::class) && method_exists(OrderLogic::class, 'refund_before_delivered')) {
+                Helpers::increment_order_count($store);
+                if ((int) $locked->is_guest === 0) {
                     OrderLogic::refund_before_delivered($locked);
                 }
 
                 // Restore stock if module tracks stock
                 $moduleType = $locked->module?->module_type;
-                if ($moduleType && config("module.{$moduleType}.stock") && class_exists(ProductLogic::class) && method_exists(ProductLogic::class, 'update_stock')) {
+                $hasStock = $moduleType && config("module.{$moduleType}.stock");
+                $hasFlashDiscount = $locked->flash_admin_discount_amount > 0 && $locked->flash_store_discount_amount > 0;
+                if ($hasStock || $hasFlashDiscount) {
                     foreach ($locked->details as $detail) {
                         $item = $detail->campaign ?? $detail->item;
-                        if ($item) {
+                        if ($hasStock && $item) {
                             $variant = json_decode($detail->variation, true);
                             $variantType = !empty($variant) ? $variant[0]['type'] : null;
                             ProductLogic::update_stock($item, -$detail->quantity, $variantType)?->save();
+                        }
+                        if ($hasFlashDiscount && $detail->item) {
+                            ProductLogic::update_flash_stock($detail->item, $detail->quantity, true)?->save();
                         }
                     }
                 }
@@ -106,19 +132,35 @@ class OrderMutationService
 
             // Handle DELIVERED side-effects
             if ($targetStatus === 'delivered') {
-                $locked->payment_status = 'paid';
-                $locked->delivered = now();
-
-                if ($locked->transaction === null && class_exists(OrderLogic::class) && method_exists(OrderLogic::class, 'create_transaction')) {
+                if ($locked->transaction === null) {
                     $unpaidPayment = OrderPayment::where('payment_status', 'unpaid')->where('order_id', $locked->id)->first()?->payment_method;
                     $method = ($locked->payment_method === 'cash_on_delivery' || $unpaidPayment === 'cash_on_delivery') ? 'store' : 'admin';
-                    OrderLogic::create_transaction($locked, $method, null);
+                    if (!OrderLogic::create_transaction($locked, $method, null)) {
+                        throw new \RuntimeException('Order accounting transaction could not be created.');
+                    }
+                    if ($locked->delivery_man_id) {
+                        Helpers::deliverymanLoyaltyPointHistory(deliveryManId: $locked->delivery_man_id, amount: $locked->order_amount, transactionType: 'earn_on_order_completion', pointConversionType: 'credit', reference: $locked->id);
+                    }
                 }
+
+                OrderLogic::update_unpaid_order_payment(order_id: $locked->id, payment_method: $locked->payment_method);
+                $locked->payment_status = 'paid';
+                $locked->delivered = now();
+                foreach ($locked->details as $detail) {
+                    $detail->item?->increment('order_count');
+                }
+                $locked->delivery_man?->increment('order_count');
 
                 $store->increment('order_count');
                 if ((int) $locked->is_guest === 0 && $locked->customer) {
                     $locked->customer->increment('order_count');
                 }
+            }
+
+            if (in_array($targetStatus, ['canceled', 'delivered']) && $locked->delivery_man) {
+                $rider = $locked->delivery_man;
+                $rider->current_orders = max(0, $rider->current_orders - 1);
+                $rider->save();
             }
 
             // Handle CONFIRMED
@@ -140,10 +182,13 @@ class OrderMutationService
             $locked->order_status = $targetStatus;
             $locked->save();
 
-            // Notify customer / platform
-            if (class_exists(Helpers::class) && method_exists(Helpers::class, 'send_order_notification')) {
-                @Helpers::send_order_notification($locked);
-            }
+            // Do not announce a state before the enclosing confirmation commits.
+            DB::afterCommit(function () use ($locked): void {
+                try { Helpers::send_order_notification($locked); }
+                catch (\Throwable $error) {
+                    \Illuminate\Support\Facades\Log::error('Order notification failed after commit', ['order_id' => $locked->id, 'exception' => $error::class]);
+                }
+            });
 
             return $locked->fresh(['details', 'store', 'customer']);
         });

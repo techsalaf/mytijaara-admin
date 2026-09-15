@@ -85,6 +85,12 @@ class SendVendorStatusNotification implements ShouldQueue
                 return;
             }
 
+            $latestVersion = $contact->metadata['vendor_status_version'] ?? null;
+            if ($this->version && $latestVersion && !hash_equals($latestVersion, $this->version)) {
+                Log::info('Superseded vendor status event discarded', ['store_id' => $store->id]);
+                return;
+            }
+
             app(\Modules\WhatsAppVendorConcierge\app\Services\VendorConversationState::class)->synchronize($store, $type, $contact);
             $prefService = app(\Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService::class);
             $isCritical = in_array((string) $this->status, ['suspended', 'payment_failed']);

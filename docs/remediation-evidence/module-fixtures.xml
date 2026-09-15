@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="120" assertions="480" errors="9" failures="12" skipped="0" time="216.422883">
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" tests="8" assertions="63" errors="0" failures="0" skipped="0" time="23.712315">
+      <testcase name="tokens_are_hashed_regenerated_and_atomically_single_use" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="17" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="11" time="8.805968"/>
+      <testcase name="expired_invalid_revoked_and_abandoned_tokens_are_rejected" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="38" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="6" time="1.434372"/>
+      <testcase name="url_uses_configured_https_origin_despite_request_host" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="55" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="2" time="0.833368"/>
+      <testcase name="password_validation_and_successful_https_continuation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="67" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="11" time="1.584693"/>
+      <testcase name="failed_password_attempts_are_atomically_limited_and_revoke_the_link" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="83" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="8" time="0.894285"/>
+      <testcase name="redaction_removes_password_from_message_raw_text_metadata_and_serialized_job" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="103" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="3" time="3.566682"/>
+      <testcase name="credential_routes_enforce_throttling" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="116" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="21" time="5.199954"/>
+      <testcase name="csrf_remains_enabled_for_password_posts" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php" line="126" class="Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.CredentialSecurityTest" assertions="1" time="1.392993"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\DocumentSecurityTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\DocumentSecurityTest.php" tests="2" assertions="8" errors="0" failures="0" skipped="0" time="2.935298">
+      <testcase name="missing_or_pending_media_can_never_be_marked_processed" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\DocumentSecurityTest.php" line="13" class="Modules\WhatsAppVendorConcierge\tests\Hardening\DocumentSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.DocumentSecurityTest" assertions="3" time="0.791742"/>
+      <testcase name="real_decodable_bytes_are_only_structurally_validated_pending_human_review" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\DocumentSecurityTest.php" line="30" class="Modules\WhatsAppVendorConcierge\tests\Hardening\DocumentSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.DocumentSecurityTest" assertions="5" time="2.143555"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php" tests="3" assertions="17" errors="0" failures="0" skipped="0" time="8.387317">
+      <testcase name="test_preflight_command_passes" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php" line="23" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MaintenanceCommandsTest" assertions="1" time="2.946770"/>
+      <testcase name="test_process_stuck_sessions_dry_run_and_execution" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php" line="29" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MaintenanceCommandsTest" assertions="11" time="2.716391"/>
+      <testcase name="test_cleanup_media_dry_run_and_execution" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php" line="133" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MaintenanceCommandsTest" assertions="5" time="2.724156"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest.php" tests="4" assertions="11" errors="0" failures="0" skipped="0" time="11.815512">
+      <testcase name="valid_logo_passes_policy_while_distorted_ratio_fails" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest.php" line="15" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MediaSecurityPolicyTest" assertions="4" time="3.264622"/>
+      <testcase name="cover_photo_requires_landscape_aspect_ratio" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest.php" line="43" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MediaSecurityPolicyTest" assertions="3" time="4.597514"/>
+      <testcase name="mismatched_extension_and_mime_type_is_rejected" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest.php" line="70" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MediaSecurityPolicyTest" assertions="2" time="2.615239"/>
+      <testcase name="kyc_access_requires_admin_authorization" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest.php" line="87" class="Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.MediaSecurityPolicyTest" assertions="2" time="1.338136"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" tests="6" assertions="25" errors="0" failures="0" skipped="0" time="11.869632">
+      <testcase name="test_stale_denial_is_not_sent_to_an_approved_vendor" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" line="78" class="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.NotificationConcurrencyTest" assertions="2" time="2.016939"/>
+      <testcase name="test_missing_ai_key_sends_a_safe_fallback_without_failing_the_job" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" line="90" class="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.NotificationConcurrencyTest" assertions="1" time="0.888333"/>
+      <testcase name="test_decision_state_is_synchronized_when_delivery_fails" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" line="108" class="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.NotificationConcurrencyTest" assertions="5" time="1.606860"/>
+      <testcase name="test_domain_event_triggers_status_notification_job" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" line="126" class="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.NotificationConcurrencyTest" assertions="1" time="1.864348"/>
+      <testcase name="test_concurrent_workers_prevent_duplicate_notification_delivery" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" line="148" class="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.NotificationConcurrencyTest" assertions="8" time="1.715024"/>
+      <testcase name="test_outside_24h_window_dispatches_template_with_components" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php" line="223" class="Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.NotificationConcurrencyTest" assertions="8" time="3.778127"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\OnboardingFlowTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OnboardingFlowTest.php" tests="1" assertions="5" errors="0" failures="0" skipped="0" time="1.484047">
+      <testcase name="test_onboarding_has_explicit_subscription_and_rental_pickup_steps" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OnboardingFlowTest.php" line="9" class="Modules\WhatsAppVendorConcierge\tests\Hardening\OnboardingFlowTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.OnboardingFlowTest" assertions="5" time="1.484047"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php" tests="5" assertions="19" errors="0" failures="0" skipped="0" time="12.787712">
+      <testcase name="every_operations_route_rejects_anonymous_access" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php" line="23" class="Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.OperationsAuthorizationTest" assertions="8" time="5.916632"/>
+      <testcase name="unrelated_admin_role_cannot_read_or_send" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php" line="34" class="Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.OperationsAuthorizationTest" assertions="3" time="3.302262"/>
+      <testcase name="authorized_admin_can_read_events_by_canonical_foreign_key_and_queue_messages" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php" line="43" class="Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.OperationsAuthorizationTest" assertions="4" time="1.649821"/>
+      <testcase name="expired_admin_session_is_rejected" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php" line="58" class="Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.OperationsAuthorizationTest" assertions="1" time="1.155475"/>
+      <testcase name="debug_does_not_sign_payloads_and_is_absent_in_production" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php" line="65" class="Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.OperationsAuthorizationTest" assertions="3" time="0.763522"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" tests="6" assertions="53" errors="0" failures="0" skipped="0" time="6.065822">
+      <testcase name="test_notification_preference_defaults_and_commands" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" line="38" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreferencesAndSupportTest" assertions="12" time="1.157471"/>
+      <testcase name="test_notification_quiet_hours_and_category_opt_out" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" line="76" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreferencesAndSupportTest" assertions="5" time="1.419896"/>
+      <testcase name="test_language_preference_and_commands" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" line="104" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreferencesAndSupportTest" assertions="9" time="1.157331"/>
+      <testcase name="test_ai_budget_rate_limits_and_circuit_breaker" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" line="137" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreferencesAndSupportTest" assertions="5" time="0.734452"/>
+      <testcase name="test_prompt_sanitization_and_history_truncation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" line="178" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreferencesAndSupportTest" assertions="9" time="0.737822"/>
+      <testcase name="test_support_case_lifecycle" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest.php" line="200" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreferencesAndSupportTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreferencesAndSupportTest" assertions="13" time="0.858850"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="1.441226">
+      <testcase name="test_strict_preflight_passes_for_a_complete_test_configuration" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest.php" line="9" class="Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.PreflightTest" assertions="1" time="1.441226"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php" tests="4" assertions="16" errors="0" failures="0" skipped="0" time="4.179406">
+      <testcase name="signed_batched_status_webhook_only_dispatches_receipt_jobs" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php" line="15" class="Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.ReceiptSecurityTest" assertions="4" time="0.826680"/>
+      <testcase name="receipts_are_idempotent_order_independent_and_minimize_errors" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php" line="29" class="Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.ReceiptSecurityTest" assertions="6" time="1.340449"/>
+      <testcase name="newer_same_state_receipts_are_retained_while_older_replays_are_ignored" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php" line="51" class="Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.ReceiptSecurityTest" assertions="2" time="1.037235"/>
+      <testcase name="signature_and_verification_fail_closed" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php" line="68" class="Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.ReceiptSecurityTest" assertions="4" time="0.975042"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest.php" tests="3" assertions="16" errors="0" failures="0" skipped="0" time="3.111457">
+      <testcase name="test_payment_link_generation_and_pending_transition" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest.php" line="158" class="Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.SubscriptionLifecycleTest" assertions="4" time="0.664843"/>
+      <testcase name="test_successful_payment_callback_activates_subscription_and_notifies_vendor" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest.php" line="192" class="Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.SubscriptionLifecycleTest" assertions="8" time="0.894552"/>
+      <testcase name="test_expired_link_detection_and_regeneration" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest.php" line="276" class="Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.SubscriptionLifecycleTest" assertions="4" time="1.552063"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorApplicationParityTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorApplicationParityTest.php" tests="2" assertions="17" errors="0" failures="0" skipped="0" time="5.046792">
+      <testcase name="test_web_and_whatsapp_dto_produce_identical_canonical_outcomes" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorApplicationParityTest.php" line="20" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorApplicationParityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorApplicationParityTest" assertions="16" time="1.008571"/>
+      <testcase name="test_duplicate_phone_or_email_fails_cleanly" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorApplicationParityTest.php" line="123" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorApplicationParityTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorApplicationParityTest" assertions="1" time="4.038221"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php" tests="4" assertions="23" errors="0" failures="0" skipped="0" time="7.762247">
+      <testcase name="test_vendor_readiness_score_calculation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php" line="194" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorCommandCentreTest" assertions="6" time="0.932186"/>
+      <testcase name="test_vendor_wallet_read_masks_pii" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php" line="228" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorCommandCentreTest" assertions="7" time="3.202741"/>
+      <testcase name="test_vendor_subscription_read_service" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php" line="259" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorCommandCentreTest" assertions="3" time="2.664626"/>
+      <testcase name="test_vendor_analytics_service_canonical_accounting" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php" line="271" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorCommandCentreTest" assertions="7" time="0.962694"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" tests="12" assertions="41" errors="0" failures="1" skipped="0" time="31.697618">
+      <testcase name="test_product_mutation_service_creates_product_with_canonical_rules" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="30" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="7" time="2.357406"/>
+      <testcase name="test_product_mutation_service_rejects_unauthorized_store" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="57" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="1" time="1.444263"/>
+      <testcase name="test_price_change_cannot_make_discount_exceed_price" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="70" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="1" time="1.165008"/>
+      <testcase name="test_variant_stock_is_explicit_and_preserves_prices_and_addons" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="77" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="4" time="2.485355"/>
+      <testcase name="test_stale_price_preview_cannot_overwrite_a_newer_change" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="91" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="2" time="2.263500"/>
+      <testcase name="test_order_cancellation_respects_host_setting" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="102" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="1" time="3.740686"/>
+      <testcase name="test_product_moderation_stages_creation_and_price_without_publishing_changes" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="110" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="1" time="4.016295">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_product_moderation_stages_creation_and_price_without_publishing_changes&#13;
+Failed asserting that 1 matches expected 0.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php:125</failure>
+      </testcase>
+      <testcase name="test_pending_action_updates_product_price_with_explicit_confirmation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="133" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="8" time="4.222812"/>
+      <testcase name="test_pending_action_updates_product_stock_and_availability" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="174" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="2" time="2.007554"/>
+      <testcase name="test_order_mutation_service_and_pending_action_accept_and_prepare_order" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="209" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="6" time="1.771135"/>
+      <testcase name="test_order_mutation_service_rejects_invalid_transitions" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="250" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="1" time="4.178392"/>
+      <testcase name="test_photo_to_product_workflow" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php" line="267" class="Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest" classname="Modules.WhatsAppVendorConcierge.tests.Hardening.VendorOperationsTest" assertions="7" time="2.045214"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php" tests="2" assertions="1" errors="1" failures="1" skipped="0" time="2.337240">
+      <testcase name="it_dispatches_whatsapp_message_when_vendor_is_approved" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php" line="18" class="Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.AdminApprovalNotificationTest" assertions="1" time="1.599584">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_approved&#13;
+The expected [Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage] job was not pushed.
+Failed asserting that false is true.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Testing\Fakes\QueueFake.php:121
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:58</failure>
+      </testcase>
+      <testcase name="it_dispatches_whatsapp_message_when_vendor_is_denied" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php" line="71" class="Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.AdminApprovalNotificationTest" assertions="0" time="0.737656">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_denied&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such column: rejection_note (Connection: sqlite, Database: :memory:, SQL: update "vendors" set "rejection_note" = Invalid CAC document provided., "updated_at" = 2026-09-15 05:34:58 where "id" = 1)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:597
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:549
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4234
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1266
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1316
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1233
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:101</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" tests="7" assertions="12" errors="0" failures="0" skipped="0" time="7.309409">
+      <testcase name="test_sender_matches_actual_approved_and_denied_template_parameter_order" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="26" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="2" time="1.295708"/>
+      <testcase name="test_audit_passes_exact_approved_contract_without_sending_messages" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="52" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="3" time="0.931770"/>
+      <testcase name="test_audit_fails_wrong_locale_and_lists_the_available_locale" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="60" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="2" time="0.686249"/>
+      <testcase name="test_audit_fails_missing_templates" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="68" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="1" time="0.933731"/>
+      <testcase name="test_audit_fails_unapproved_templates" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="74" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="1" time="1.951469"/>
+      <testcase name="test_audit_fails_wrong_parameter_count" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="80" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="1" time="0.716957"/>
+      <testcase name="test_audit_does_not_print_provider_credentials_or_raw_errors" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php" line="86" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApprovedTemplateContractTest" assertions="2" time="0.793526"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest.php" tests="1" assertions="5" errors="0" failures="0" skipped="0" time="0.714988">
+      <testcase name="it_dispatches_support_email_and_alerts_vendor_on_handoff" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest.php" line="18" class="Modules\WhatsAppVendorConcierge\tests\Unit\HumanSupportEscalationTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.HumanSupportEscalationTest" assertions="5" time="0.714988"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php" tests="3" assertions="5" errors="0" failures="3" skipped="0" time="5.007621">
+      <testcase name="it_sends_approval_notification_to_vendor_whatsapp" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php" line="17" class="Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.VendorStatusNotificationJobTest" assertions="3" time="1.494229">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest::it_sends_approval_notification_to_vendor_whatsapp&#13;
+Expectation failed for method name is "sendTextMessage" when invoked 1 time.
+Method was expected to be called 1 time, actually called 0 times.</failure>
+      </testcase>
+      <testcase name="it_sends_denial_notification_with_rejection_note" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php" line="73" class="Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.VendorStatusNotificationJobTest" assertions="1" time="1.893423">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest::it_sends_denial_notification_with_rejection_note&#13;
+Expectation failed for method name is "sendTextMessage" when invoked 1 time.
+Method was expected to be called 1 time, actually called 0 times.</failure>
+      </testcase>
+      <testcase name="it_sends_suspension_and_unsuspension_notifications" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php" line="127" class="Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.VendorStatusNotificationJobTest" assertions="1" time="1.619969">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest::it_sends_suspension_and_unsuspension_notifications&#13;
+Failed asserting that actual size 0 matches expected size 2.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorStatusNotificationJobTest.php:173</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php" tests="3" assertions="3" errors="0" failures="3" skipped="0" time="6.787405">
+      <testcase name="create_product_requires_confirmation_when_writes_guarded" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php" line="53" class="Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.VendorToolsConfirmationTest" assertions="1" time="1.532373">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest::create_product_requires_confirmation_when_writes_guarded&#13;
+Failed asserting that 'Please request this action in your active WhatsApp conversation.' [ASCII](length: 64) contains "Confirm New Product Listing" [ASCII](length: 27).
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:77</failure>
+      </testcase>
+      <testcase name="update_product_requires_confirmation_before_mutating" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php" line="100" class="Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.VendorToolsConfirmationTest" assertions="1" time="3.688924">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest::update_product_requires_confirmation_before_mutating&#13;
+Failed asserting that 'Please request this action in your active WhatsApp conversation.' [ASCII](length: 64) contains "Confirm Product Update" [ASCII](length: 22).
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:125</failure>
+      </testcase>
+      <testcase name="pause_and_resume_shop_require_confirmation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php" line="146" class="Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.VendorToolsConfirmationTest" assertions="1" time="1.566107">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest::pause_and_resume_shop_require_confirmation&#13;
+Failed asserting that 'Please request this action in your active WhatsApp conversation.' [ASCII](length: 64) contains "Confirm Shop Pause" [ASCII](length: 18).
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\VendorToolsConfirmationTest.php:156</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php" tests="4" assertions="19" errors="0" failures="0" skipped="0" time="4.130962">
+      <testcase name="it_dispatches_message_via_api" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php" line="30" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppApiControllerTest" assertions="3" time="0.722816"/>
+      <testcase name="it_lists_conversations_and_history" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php" line="51" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppApiControllerTest" assertions="4" time="1.450382"/>
+      <testcase name="it_returns_onboarding_analytics" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php" line="83" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppApiControllerTest" assertions="10" time="0.640206"/>
+      <testcase name="it_tests_webhook_signature_calculation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php" line="115" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppApiControllerTest" assertions="2" time="1.317558"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest.php" tests="1" assertions="9" errors="0" failures="0" skipped="0" time="0.925002">
+      <testcase name="it_creates_and_queries_flows" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest.php" line="12" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppFlowTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppFlowTest" assertions="9" time="0.925002"/>
+    </testsuite>
+    <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" tests="38" assertions="111" errors="8" failures="4" skipped="0" time="56.913857">
+      <testcase name="it_creates_contact_and_normalizes_phone" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="31" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="4" time="1.282265"/>
+      <testcase name="it_finds_or_creates_active_conversation" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="44" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="4" time="0.671902"/>
+      <testcase name="it_logs_inbound_message_with_idempotency" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="63" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="6" time="1.500589"/>
+      <testcase name="it_tracks_onboarding_session_progress" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="95" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="4" time="0.664243"/>
+      <testcase name="it_validates_webhook_signature" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="125" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="0.694650"/>
+      <testcase name="it_transitions_conversation_state_from_new_on_welcome" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="157" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="0.806352"/>
+      <testcase name="it_handles_button_reply_and_starts_onboarding" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="177" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="2.092577">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_button_reply_and_starts_onboarding&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select "id", "name" from "categories" where "status" = 1 and "parent_id" = 0 order by "name" asc limit 10)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1243
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:964
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:149
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:298
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:189</error>
+      </testcase>
+      <testcase name="it_resolves_location_from_whatsapp_location_message" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="198" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="0.837894"/>
+      <testcase name="it_resolves_location_from_google_maps_url" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="227" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="0.788209"/>
+      <testcase name="it_resolves_location_from_text_address" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="251" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="1" time="0.772941">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_resolves_location_from_text_address&#13;
+Failed asserting that null is not null.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:269</failure>
+      </testcase>
+      <testcase name="it_matches_category_from_text_input" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="275" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="0.770040">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_matches_category_from_text_input&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select * from "categories" where ("name" = Demo category and "parent_id" = 0) limit 1)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:708
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:277</error>
+      </testcase>
+      <testcase name="it_extracts_contact_info_with_phone_number" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="301" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="1.055355"/>
+      <testcase name="it_validates_operating_hours_as_string" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="327" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="0.722571"/>
+      <testcase name="it_synchronizes_session_current_step_on_advance" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="342" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="0.916403">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_synchronizes_session_current_step_on_advance&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select "id", "name" from "categories" where "status" = 1 and "parent_id" = 0 order by "name" asc limit 10)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1243
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:964
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:889
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:370</error>
+      </testcase>
+      <testcase name="it_can_serialize_process_whatsapp_media_job" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="380" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="5" time="0.792262"/>
+      <testcase name="it_resumes_onboarding_and_sets_active_state" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="405" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="2.045570">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_resumes_onboarding_and_sets_active_state&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select "id", "name" from "categories" where "status" = 1 and "parent_id" = 0 order by "name" asc limit 10)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1243
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:964
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:422
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:429</error>
+      </testcase>
+      <testcase name="it_extracts_document_from_image_upload" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="438" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="5.498489"/>
+      <testcase name="it_extracts_document_from_pdf_document_upload" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="468" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="7.229878"/>
+      <testcase name="it_allows_skipping_document_upload" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="500" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="2.571633"/>
+      <testcase name="it_builds_complete_review_summary_including_hours_and_category_and_documents" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="528" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="7" time="2.655059"/>
+      <testcase name="it_handles_edit_section_from_list_and_sets_target_step" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="566" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="2.814605">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_edit_section_from_list_and_sets_target_step&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select "id", "name" from "categories" where "status" = 1 and "parent_id" = 0 order by "name" asc limit 10)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1243
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:964
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:736
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:364
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:603</error>
+      </testcase>
+      <testcase name="it_returns_to_review_submit_after_editing_section_when_in_review" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="614" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="1.693930">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_returns_to_review_submit_after_editing_section_when_in_review&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: categories (Connection: sqlite, Database: :memory:, SQL: select "id", "name" from "categories" where "status" = 1 and "parent_id" = 0 order by "name" asc limit 10)
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1243
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:964
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:849
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:171
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:664</error>
+      </testcase>
+      <testcase name="it_extracts_and_validates_owner_info" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="675" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="1.696146"/>
+      <testcase name="it_validates_strong_account_password_and_scrubs_plaintext" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="702" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="1.117541"/>
+      <testcase name="it_extracts_business_plan_selection" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="719" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="2" time="1.055479"/>
+      <testcase name="it_extracts_kyc_documents_and_supports_skip" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="754" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="1.393728"/>
+      <testcase name="it_validates_terms_and_conditions_acceptance" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="782" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="4" time="0.701427"/>
+      <testcase name="it_submits_application_with_null_vendor_status_for_pending_approval" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="823" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="0.770679">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_submits_application_with_null_vendor_status_for_pending_approval&#13;
+Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::sendTextMessage('2348019429205', '❌ Sorry, there was an error s...pport.', null): array was not expected to be called more than once.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1398
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:865</failure>
+      </testcase>
+      <testcase name="it_enforces_mandatory_store_logo_and_rejects_skip" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="887" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="0.809692">
+        <error type="Illuminate\Database\QueryException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_enforces_mandatory_store_logo_and_rejects_skip&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 table whatsapp_media has no column named file_name (Connection: sqlite, Database: :memory:, SQL: insert into "whatsapp_media" ("whatsapp_media_id", "mime_type", "file_name", "file_path", "status", "updated_at", "created_at") values (media_logo_6aa8d949e2499, image/png, logo.png, store_logos/logo.png, downloaded, 2026-09-15 05:36:09, 2026-09-15 05:36:09))
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4170
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1219
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\helpers.php:393
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:1218
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Traits\ForwardsCalls.php:23
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2544
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:2560
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:910</error>
+      </testcase>
+      <testcase name="it_validates_and_extracts_module_and_zone_selection" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="932" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="0" time="1.420979"/>
+      <testcase name="it_validates_separate_privacy_policy_acceptance" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="983" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="4" time="1.178124"/>
+      <testcase name="it_handles_duplicate_vendor_phone_resiliently_on_submission" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1026" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="1.262014">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_duplicate_vendor_phone_resiliently_on_submission&#13;
+Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::sendTextMessage('2349032617923', '❌ Sorry, there was an error s...pport.', null): array was not expected to be called more than once.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1398
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1082</failure>
+      </testcase>
+      <testcase name="it_enforces_max_10_rows_in_send_list_message" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1094" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="5" time="1.391530"/>
+      <testcase name="it_displays_categorized_edit_sections_within_row_limits" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1149" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="5" time="1.090582"/>
+      <testcase name="it_routes_category_selection_to_sublist_with_few_rows" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1188" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="0.944686">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_routes_category_selection_to_sublist_with_few_rows&#13;
+Expectation failed for method name is "sendListMessage" when invoked 1 time
+Parameter 2 for invocation Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::sendListMessage('2348029251394', 'Which business detail would y...pdate?', [...], 'Edit Field', 'Select an option above to edit', 'Select'): array does not match expected value.
+Failed asserting that Array &amp;0 [
+    0 =&gt; Array &amp;1 [
+        'title' =&gt; 'Select Field',
+        'rows' =&gt; Array &amp;2 [
+            0 =&gt; Array &amp;3 [
+                'id' =&gt; 'edit_business_basics',
+                'title' =&gt; '🏪 Shop Name',
+                'description' =&gt; 'Update store / business name',
+            ],
+            1 =&gt; Array &amp;4 [
+                'id' =&gt; 'edit_module',
+                'title' =&gt; '📦 Business Module',
+                'description' =&gt; 'Grocery, Food, Pharmacy, etc.',
+            ],
+            2 =&gt; Array &amp;5 [
+                'id' =&gt; 'edit_branding',
+                'title' =&gt; '🖼️ Store Logo',
+                'description' =&gt; 'Upload 1:1 store logo',
+            ],
+            3 =&gt; Array &amp;6 [
+                'id' =&gt; 'edit_cover',
+                'title' =&gt; '🏞️ Cover Photo',
+                'description' =&gt; 'Upload or skip optional store cover',
+            ],
+        ],
+    ],
+] is accepted by specified callback.
+&#13;
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:699
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:359
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1214</failure>
+      </testcase>
+      <testcase name="it_generates_secure_password_token_and_sends_cta_url" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1218" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="4" time="1.200559">
+        <error type="ErrorException">Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_generates_secure_password_token_and_sends_cta_url&#13;
+ErrorException: Undefined array key "_pwd_token_hash"
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Bootstrap\HandleExceptions.php:262
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1253</error>
+      </testcase>
+      <testcase name="it_rejects_plaintext_passwords_sent_in_whatsapp_chat" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1258" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="3" time="1.049106"/>
+      <testcase name="it_renders_and_submits_secure_password_over_https" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php" line="1302" class="Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.WhatsAppVendorConciergeTest" assertions="12" time="0.954166"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

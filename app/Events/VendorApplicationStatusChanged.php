@@ -21,13 +21,8 @@ class VendorApplicationStatusChanged
         public ?string $rejectionNote = null,
         ?string $version = null
     ) {
-        $timestamp = $vendor->updated_at?->getTimestamp() ?? time();
-        $this->version = $version ?? hash('sha256', implode('|', [
-            $vendor->id,
-            $store->id,
-            $status,
-            $timestamp,
-            (string) $rejectionNote,
-        ]));
+        // An event identifies one transition, including repeated status cycles in
+        // the same database timestamp second. Retries serialize this same ID.
+        $this->version = $version ?? (string) \Illuminate\Support\Str::uuid();
     }
 }

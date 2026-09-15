@@ -207,7 +207,8 @@ class BusinessSettingsController extends Controller
     public function active_status(Request $request)
     {
         $store = Helpers::get_store_data();
-        $store = app(\App\Services\StoreAvailabilityService::class)->set($store, $store->vendor_id, !$store->active);
+        $store->active = !$store->active;
+        $store->save();
         return response()->json(['message' => $store->active?($store->module->module_type == 'rental' ? translate('provider') : translate('store')).' '.translate('messages.opened'):($store->module->module_type == 'rental' ? translate('provider') : translate('store')).' '.translate('messages.temporarily_closed')], 200);
     }
 

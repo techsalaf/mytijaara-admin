@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters;
 
 use App\Models\Store;
 use Illuminate\Support\Facades\DB;

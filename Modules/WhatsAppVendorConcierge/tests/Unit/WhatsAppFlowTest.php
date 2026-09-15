@@ -2,13 +2,11 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Unit;
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppFlow;
-use Tests\TestCase;
+use Modules\WhatsAppVendorConcierge\tests\Hardening\HardeningTestCase;
 
-class WhatsAppFlowTest extends TestCase
+class WhatsAppFlowTest extends HardeningTestCase
 {
-    use DatabaseTransactions;
 
     /** @test */
     public function it_creates_and_queries_flows()

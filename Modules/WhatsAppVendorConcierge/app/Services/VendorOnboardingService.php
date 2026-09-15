@@ -1264,6 +1264,7 @@ class VendorOnboardingService
         ?OnboardingSession $session,
         \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
     ): void {
+        $persisted = false;
         try {
             $data = $session?->collected_data ?? [];
 
@@ -1283,11 +1284,10 @@ class VendorOnboardingService
             }
 
             $module = Module::active()->notParcel()->find($data['module_id']);
-            $zone = Zone::where('id', $data['zone_id'])->where('status', 1)
-                ->whereContains('coordinates', new \MatanYadaev\EloquentSpatial\Objects\Point(
-                    (float) $data['latitude'], (float) $data['longitude'], 4326
-                ))->first();
-            if (!$module || !$zone || !\App\Models\ModuleZone::where('module_id', $module->id)->where('zone_id', $zone->id)->exists()) {
+            $zone = Zone::where('id', $data['zone_id'])->where('status', 1)->first();
+            $insideZone = $zone && app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ZoneEligibility::class)
+                ->contains((int) $zone->id, (float) $data['latitude'], (float) $data['longitude']);
+            if (!$module || !$insideZone || !\App\Models\ModuleZone::where('module_id', $module->id)->where('zone_id', $zone->id)->exists()) {
                 $gateway->sendTextMessage($contact->phone_number, 'Your selected module and zone no longer match the shared location. Please edit Location, Zone or Business Module and submit again.');
                 return;
             }
@@ -1327,12 +1327,14 @@ class VendorOnboardingService
 
             $dto = \Modules\WhatsAppVendorConcierge\app\DTOs\VendorApplicationDTO::fromWhatsAppSession($session, $contact);
             $appService = app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\VendorApplicationService::class);
+            [$vendor, $store, $paymentUrl] = DB::transaction(function () use ($dto, $appService, $contact, $conversation, $session, $data, $subscriptionPackage) {
+            $lockedSession = OnboardingSession::lockForUpdate()->findOrFail($session->id);
+            if ($lockedSession->status === 'submitted' && $lockedSession->store_id && $lockedSession->vendor_id) {
+                return [Vendor::findOrFail($lockedSession->vendor_id), Store::findOrFail($lockedSession->store_id), null];
+            }
             $result = $appService->submit($dto);
             $vendor = $result['vendor'];
             $store = $result['store'];
-
-            $fName = $data['f_name'] ?? ($data['business_name'] ?? 'Vendor');
-            $lName = $data['l_name'] ?? 'Owner';
 
             // Link contact to vendor
             $contact->update(['vendor_id' => $vendor->id]);
@@ -1342,10 +1344,10 @@ class VendorOnboardingService
                     'vendor_id' => $vendor->id,
                     'store_id' => $store->id,
                     'status' => 'submitted',
-                    'state' => 'onboarding_completed',
                     'completed_at' => now(),
                 ]);
             }
+            $conversation->update(['state' => 'onboarding_completed', 'current_step' => null, 'vendor_id' => $vendor->id]);
 
             // Insert operating hours if specified
             $this->insertStoreSchedule($store, $data['operating_hours'] ?? null);
@@ -1355,6 +1357,13 @@ class VendorOnboardingService
                 $paymentLifecycle = app(\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class);
                 $paymentUrl = $paymentLifecycle->issuePaymentLink($session, 7);
             }
+            OnboardingEvent::log($session->id, $contact->id, 'application_submitted', 'review_submit',
+                ['vendor_id' => $vendor->id, 'store_id' => $store->id]);
+            return [$vendor, $store, $paymentUrl];
+            });
+            $persisted = true;
+            $fName = $data['f_name'] ?? ($data['business_name'] ?? 'Vendor');
+            $lName = $data['l_name'] ?? 'Owner';
 
             // Send confirmation to vendor
             $confirmation =
@@ -1378,16 +1387,12 @@ class VendorOnboardingService
                 );
             }
 
-            OnboardingEvent::log(
-                $session?->id ?? 0,
-                $contact->id,
-                'application_submitted',
-                'review_submit',
-                ['vendor_id' => $vendor->id, 'store_id' => $store->id]
-            );
         } catch (\Throwable $e) {
-            if (DB::transactionLevel() > 0) {
-                DB::rollBack();
+            if ($persisted) {
+                Log::error('Application confirmation delivery failed after submission', [
+                    'contact_id' => $contact->id, 'exception' => $e::class,
+                ]);
+                return;
             }
             Log::error('Application submission failed', [
                 'contact_id' => $contact->id,

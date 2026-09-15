@@ -2,7 +2,6 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Unit;
 
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Mail;
 use Modules\WhatsAppVendorConcierge\app\Mail\VendorSupportEscalationMail;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
@@ -10,11 +9,10 @@ use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
 use Modules\WhatsAppVendorConcierge\app\Services\ConversationManager;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
-use Tests\TestCase;
+use Modules\WhatsAppVendorConcierge\tests\Hardening\HardeningTestCase;
 
-class HumanSupportEscalationTest extends TestCase
+class HumanSupportEscalationTest extends HardeningTestCase
 {
-    use DatabaseTransactions;
 
     /** @test */
     public function it_dispatches_support_email_and_alerts_vendor_on_handoff()

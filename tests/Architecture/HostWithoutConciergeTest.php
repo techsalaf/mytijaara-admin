@@ -66,7 +66,7 @@ class HostWithoutConciergeTest extends \Tests\TestCase
 
     public function test_public_registration_validation_does_not_load_module_classes_or_tables(): void
     {
-        \Illuminate\Support\Facades\Schema::create('business_settings', function ($table) {
+        if (!\Illuminate\Support\Facades\Schema::hasTable('business_settings')) \Illuminate\Support\Facades\Schema::create('business_settings', function ($table) {
             $table->id(); $table->string('key'); $table->text('value')->nullable();
         });
         $response = $this->app->make(\App\Http\Controllers\VendorController::class)->store(new Request());

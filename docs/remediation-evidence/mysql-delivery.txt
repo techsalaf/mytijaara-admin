@@ -1,0 +1,23 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+E                                                                   1 / 1 (100%)
+
+Time: 04:05.326, Memory: 62.00 MB
+
+There was 1 error:
+
+1) Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest::test_verified_delivery_creates_accounting_and_counts_once
+RuntimeException: Order accounting transaction could not be created.
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService.php:139
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\ManagesTransactions.php:35
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:491
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService.php:33
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest.php:82
+
+ERRORS!
+Tests: 1, Assertions: 1, Errors: 1, PHPUnit Deprecations: 1.

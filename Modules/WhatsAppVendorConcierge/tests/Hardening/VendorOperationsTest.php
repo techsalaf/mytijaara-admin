@@ -9,9 +9,9 @@ use App\Models\Order;
 use App\Models\Store;
 use App\Models\Vendor;
 use App\Models\Zone;
-use App\Services\OrderMutationService;
-use App\Services\ProductMutationService;
-use App\Services\StoreAvailabilityService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductMutationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\StoreAvailabilityService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -25,229 +25,8 @@ use Modules\WhatsAppVendorConcierge\app\Services\MediaPolicyService;
 use Modules\WhatsAppVendorConcierge\app\Services\PendingActionService;
 use Modules\WhatsAppVendorConcierge\app\Services\PhotoToProductService;
 
-class VendorOperationsTest extends HardeningTestCase
+class VendorOperationsTest extends OperationsFixtureTestCase
 {
-    protected Vendor $vendor;
-    protected Store $store;
-    protected Zone $zone;
-    protected Module $module;
-    protected Category $category;
-    protected WhatsAppContact $contact;
-    protected WhatsAppConversation $conversation;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Storage::fake('public');
-
-        Schema::create('cache', function (Blueprint $table) {
-            $table->string('key')->primary();
-            $table->mediumText('value');
-            $table->integer('expiration');
-        });
-
-        // Drop minimal mock tables and create realistic ones
-        Schema::dropIfExists('stores');
-        Schema::dropIfExists('vendors');
-
-        Schema::create('vendors', function (Blueprint $table) {
-            $table->id();
-            $table->string('f_name')->nullable();
-            $table->string('l_name')->nullable();
-            $table->string('phone')->unique();
-            $table->string('email')->unique();
-            $table->string('password')->nullable();
-            $table->tinyInteger('status')->default(1);
-            $table->timestamps();
-        });
-
-        Schema::create('stores', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->nullable();
-            $table->string('phone');
-            $table->string('email')->nullable();
-            $table->string('logo')->default('def.png');
-            $table->string('cover_photo')->default('def.png');
-            $table->string('latitude')->nullable();
-            $table->string('longitude')->nullable();
-            $table->text('address')->nullable();
-            $table->tinyInteger('status')->default(1);
-            $table->boolean('active')->default(true);
-            $table->unsignedBigInteger('vendor_id');
-            $table->unsignedBigInteger('zone_id')->nullable();
-            $table->unsignedBigInteger('module_id')->nullable();
-            $table->string('store_business_model')->default('commission');
-            $table->string('delivery_time')->default('30-40 min');
-            $table->boolean('sub_self_delivery')->default(false);
-            $table->integer('order_count')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('zones', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->tinyInteger('status')->default(1);
-            $table->timestamps();
-        });
-
-        Schema::create('modules', function (Blueprint $table) {
-            $table->id();
-            $table->string('module_name');
-            $table->string('module_type')->default('grocery');
-            $table->string('slug')->nullable();
-            $table->tinyInteger('status')->default(1);
-            $table->timestamps();
-        });
-
-        Schema::create('categories', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->nullable();
-            $table->string('image')->default('def.png');
-            $table->integer('parent_id')->default(0);
-            $table->integer('position')->default(0);
-            $table->tinyInteger('status')->default(1);
-            $table->unsignedBigInteger('module_id')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('items', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->nullable();
-            $table->text('description')->nullable();
-            $table->string('image')->nullable();
-            $table->unsignedBigInteger('category_id')->nullable();
-            $table->string('category_ids')->nullable();
-            $table->text('variations')->nullable();
-            $table->text('add_ons')->nullable();
-            $table->text('attributes')->nullable();
-            $table->text('choice_options')->nullable();
-            $table->double('price', 24, 2)->default(0);
-            $table->double('tax', 24, 2)->default(0);
-            $table->string('tax_type', 20)->default('percent');
-            $table->double('discount', 24, 2)->default(0);
-            $table->string('discount_type', 20)->default('percent');
-            $table->time('available_time_starts')->default('00:00:00');
-            $table->time('available_time_ends')->default('23:59:59');
-            $table->boolean('veg')->default(0);
-            $table->boolean('status')->default(1);
-            $table->unsignedBigInteger('store_id');
-            $table->unsignedBigInteger('module_id');
-            $table->integer('stock')->default(0);
-            $table->integer('order_count')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('orders', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->double('order_amount', 24, 2)->default(0);
-            $table->string('order_status')->default('pending');
-            $table->string('payment_status')->default('unpaid');
-            $table->string('payment_method')->default('cash_on_delivery');
-            $table->string('order_type')->default('delivery');
-            $table->unsignedBigInteger('store_id');
-            $table->unsignedBigInteger('module_id')->nullable();
-            $table->timestamp('confirmed')->nullable();
-            $table->timestamp('processing')->nullable();
-            $table->timestamp('handover')->nullable();
-            $table->timestamp('delivered')->nullable();
-            $table->timestamp('canceled')->nullable();
-            $table->string('cancellation_reason')->nullable();
-            $table->string('canceled_by')->nullable();
-            $table->integer('processing_time')->nullable();
-            $table->boolean('is_guest')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('order_references', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('order_id');
-            $table->timestamps();
-        });
-
-        Schema::create('notification_settings', function (Blueprint $table) {
-            $table->id();
-            $table->string('type');
-            $table->string('key');
-            $table->boolean('push_notification_status')->default(0);
-            $table->timestamps();
-        });
-
-        Schema::create('order_details', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('order_id');
-            $table->unsignedBigInteger('item_id')->nullable();
-            $table->double('price', 24, 2)->default(0);
-            $table->integer('quantity')->default(1);
-            $table->timestamps();
-        });
-
-        Schema::create('translations', function (Blueprint $table) {
-            $table->id();
-            $table->string('translationable_type');
-            $table->unsignedBigInteger('translationable_id');
-            $table->string('locale');
-            $table->string('key');
-            $table->text('value')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('storages', function (Blueprint $table) {
-            $table->id();
-            $table->string('data_type');
-            $table->string('data_id');
-            $table->string('key')->nullable();
-            $table->string('value')->nullable();
-            $table->timestamps();
-        });
-
-        // Seed basic operational fixtures
-        $this->vendor = Vendor::create([
-            'f_name' => 'Alabi',
-            'l_name' => 'Fasola',
-            'phone' => '+2348077771111',
-            'email' => 'alabi@example.com',
-            'status' => 1,
-        ]);
-
-        $this->zone = Zone::create(['name' => 'Ibadan Zone', 'status' => 1]);
-        $this->module = Module::create(['module_name' => 'Grocery', 'module_type' => 'grocery', 'status' => 1]);
-
-        $this->store = Store::create([
-            'name' => 'Fasola Provisions Ibadan',
-            'phone' => '+2348077771111',
-            'email' => 'alabi@example.com',
-            'vendor_id' => $this->vendor->id,
-            'zone_id' => $this->zone->id,
-            'module_id' => $this->module->id,
-            'status' => 1,
-            'active' => 1,
-        ]);
-
-        $this->category = Category::create([
-            'name' => 'Grains & Staples',
-            'module_id' => $this->module->id,
-            'status' => 1,
-        ]);
-
-        $this->contact = WhatsAppContact::create([
-            'whatsapp_id' => '2348077771111',
-            'phone_number' => '+2348077771111',
-            'display_name' => 'Alabi Fasola',
-            'vendor_id' => $this->vendor->id,
-            'contact_type' => 'vendor',
-        ]);
-
-        $this->conversation = WhatsAppConversation::create([
-            'contact_id' => $this->contact->id,
-            'vendor_id' => $this->vendor->id,
-            'state' => 'ai_active',
-        ]);
-    }
-
     public function test_product_mutation_service_creates_product_with_canonical_rules(): void
     {
         $service = app(ProductMutationService::class);
@@ -286,6 +65,110 @@ class VendorOperationsTest extends HardeningTestCase
             'price' => 500,
             'category_id' => $this->category->id,
         ]);
+    }
+
+    public function test_price_change_cannot_make_discount_exceed_price(): void
+    {
+        $item = Item::forceCreate(['name' => 'Test item', 'price' => 100, 'discount' => 80, 'discount_type' => 'amount', 'store_id' => $this->store->id, 'module_id' => $this->module->id]);
+        try { app(ProductMutationService::class)->updatePrice($item, $this->vendor->id, 50); $this->fail('Expected discount validation'); }
+        catch (ValidationException) { $this->assertEquals(100, $item->fresh()->price); }
+    }
+
+    public function test_variant_stock_is_explicit_and_preserves_prices_and_addons(): void
+    {
+        $item = Item::forceCreate(['name' => 'Variants', 'price' => 100, 'stock' => 5,
+            'variations' => json_encode([['type' => 'small', 'price' => 100, 'stock' => 2], ['type' => 'large', 'price' => 150, 'stock' => 3]]),
+            'add_ons' => '[7]', 'store_id' => $this->store->id, 'module_id' => $this->module->id]);
+        $service = app(ProductMutationService::class);
+        try { $service->updateStock($item, $this->vendor->id, 10); $this->fail('Expected variation validation'); }
+        catch (ValidationException) { $this->assertEquals(5, $item->fresh()->stock); }
+        $updated = $service->updateStock($item, $this->vendor->id, 10, ['small' => 4, 'large' => 6]);
+        $this->assertSame(10, array_sum(array_column(json_decode($updated->variations, true), 'stock')));
+        $this->assertSame([100, 150], array_column(json_decode($updated->variations, true), 'price'));
+        $this->assertSame('[7]', $updated->add_ons);
+    }
+
+    public function test_stale_price_preview_cannot_overwrite_a_newer_change(): void
+    {
+        $item = Item::forceCreate(['name' => 'Test item', 'price' => 100, 'store_id' => $this->store->id, 'module_id' => $this->module->id]);
+        $actions = app(PendingActionService::class);
+        $action = $actions->prepareProductPrice($this->contact->id, $this->conversation->id, $item->id, 120);
+        $item->update(['price' => 150]);
+        $actions->confirm($action->action_token, $this->contact->id, $this->conversation->id);
+        $this->assertSame('cancelled', $action->fresh()->status);
+        $this->assertEquals(150, $item->fresh()->price);
+    }
+
+    public function test_order_cancellation_respects_host_setting(): void
+    {
+        config(['canceled_by_store' => false]);
+        $order = Order::forceCreate(['order_status' => 'pending', 'store_id' => $this->store->id, 'module_id' => $this->module->id]);
+        try { app(OrderMutationService::class)->transitionStatus($order, $this->vendor->id, 'canceled', ['reason' => 'Unavailable']); $this->fail('Expected cancellation restriction'); }
+        catch (ValidationException) { $this->assertSame('pending', $order->fresh()->order_status); }
+    }
+
+    public function test_product_moderation_stages_creation_and_price_without_publishing_changes(): void
+    {
+        config(['product_approval_conf' => ['value' => '1']]);
+        Schema::create('ecommerce_item_details', function (Blueprint $t) {
+            $t->id(); $t->integer('item_id')->nullable(); $t->integer('temp_product_id')->nullable(); $t->integer('brand_id')->nullable();
+        });
+        Schema::create('taxables', function (Blueprint $t) {
+            $t->id(); $t->string('taxable_type'); $t->integer('taxable_id');
+            $t->integer('system_tax_setup_id'); $t->integer('tax_id'); $t->timestamps();
+        });
+        foreach (['item_tag' => 'tag_id', 'item_nutrition' => 'nutrition_id', 'allergy_item' => 'allergy_id', 'item_generic_names' => 'generic_name_id'] as $table => $foreign) {
+            Schema::create($table, function (Blueprint $t) use ($foreign) {
+                $t->unsignedBigInteger('item_id'); $t->unsignedBigInteger($foreign);
+            });
+        }
+        Schema::table('items', function (Blueprint $t) { $t->boolean('is_approved')->default(true); $t->text('images')->nullable(); });
+        $definition = DB::table('sqlite_master')->where('name', 'items')->value('sql');
+        DB::statement(str_replace('"items"', '"temp_products"', $definition));
+        Schema::table('temp_products', function (Blueprint $t) {
+            $t->integer('item_id'); $t->boolean('is_rejected')->default(false);
+            foreach (['tag_ids', 'nutrition_ids', 'allergy_ids', 'generic_ids'] as $field) $t->text($field)->nullable();
+        });
+        DB::table('business_settings')->insert([
+            ['key' => 'product_approval', 'value' => '1'],
+            ['key' => 'product_approval_datas', 'value' => json_encode(['Add_new_product' => 1, 'Update_product_price' => 1])],
+        ]);
+        $service = app(ProductMutationService::class);
+        $item = $service->createProduct($this->store, $this->vendor->id, ['name' => 'Review me', 'price' => 100, 'category_id' => $this->category->id]);
+        $this->assertEquals(0, $item->is_approved);
+        $this->assertTrue($item->relationLoaded('conciergeReview'));
+        $draft = $item->getRelation('conciergeReview');
+        $draft->name = 'Another pending name';
+        $draft->tag_ids = '[17]';
+        $draft->save();
+        $result = $service->updatePrice($item, $this->vendor->id, 150);
+        $this->assertTrue($result->relationLoaded('conciergeReview'));
+        $this->assertEquals(100, $item->fresh()->price);
+        $this->assertDatabaseHas('temp_products', ['item_id' => $item->id, 'price' => 150]);
+        $this->assertDatabaseHas('temp_products', ['item_id' => $item->id, 'name' => 'Another pending name', 'tag_ids' => '[17]']);
+        $this->assertDatabaseHas('translations', ['translationable_type' => \App\Models\TempProduct::class,
+            'translationable_id' => $draft->id, 'locale' => 'en', 'key' => 'name', 'value' => 'Review me']);
+
+        $existing = Item::forceCreate(['name' => 'Existing product', 'price' => 100, 'store_id' => $this->store->id,
+            'module_id' => $this->module->id, 'image' => 'existing.png',
+            'images' => [['img' => 'gallery.png', 'storage' => 'public']]]);
+        Storage::disk('public')->put('product/existing.png', 'existing image bytes');
+        Storage::disk('public')->put('product/gallery.png', 'gallery image bytes');
+        DB::table('item_tag')->insert(['item_id' => $existing->id, 'tag_id' => 71]);
+        DB::table('ecommerce_item_details')->insert(['item_id' => $existing->id, 'brand_id' => 12]);
+        DB::table('taxables')->insert(['taxable_type' => Item::class, 'taxable_id' => $existing->id, 'system_tax_setup_id' => 1, 'tax_id' => 9]);
+        \App\Models\Translation::create(['translationable_type' => Item::class, 'translationable_id' => $existing->id,
+            'locale' => 'fr', 'key' => 'name', 'value' => 'Produit existant']);
+        $staged = $service->updatePrice($existing, $this->vendor->id, 125)->getRelation('conciergeReview');
+        $this->assertSame('[71]', $staged->tag_ids);
+        $this->assertDatabaseHas('ecommerce_item_details', ['temp_product_id' => $staged->id, 'item_id' => null, 'brand_id' => 12]);
+        $this->assertDatabaseHas('taxables', ['taxable_type' => \App\Models\TempProduct::class, 'taxable_id' => $staged->id, 'tax_id' => 9]);
+        $this->assertDatabaseHas('translations', ['translationable_type' => \App\Models\TempProduct::class,
+            'translationable_id' => $staged->id, 'locale' => 'fr', 'value' => 'Produit existant']);
+        $this->assertNotSame('existing.png', $staged->image);
+        $this->assertNotSame('gallery.png', $staged->images[0]['img']);
+        Storage::disk('public')->assertExists(['product/existing.png', 'product/gallery.png',
+            'product/'.$staged->image, 'product/'.$staged->images[0]['img']]);
     }
 
     public function test_pending_action_updates_product_price_with_explicit_confirmation(): void
@@ -441,6 +324,11 @@ class VendorOperationsTest extends HardeningTestCase
             'file_path' => 'products/sample_product.jpg',
             'status' => 'downloaded',
         ]);
+        \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage::create([
+            'conversation_id' => $this->conversation->id, 'media_id' => $media->id,
+            'direction' => 'inbound', 'type' => 'image', 'content' => ['image' => ['id' => 'media_prod_123']],
+            'whatsapp_message_id' => 'photo-product-inbound',
+        ]);
 
         $photoService = app(PhotoToProductService::class);
 
@@ -482,5 +370,18 @@ class VendorOperationsTest extends HardeningTestCase
             'price' => 3500.00,
             'store_id' => $this->store->id,
         ]);
+        $item = Item::where('name', 'Yam Tubers (Medium)')->firstOrFail();
+        $this->assertSame(basename($item->image), $item->image);
+        $this->assertNotSame($media->file_path, $item->image);
+        Storage::disk(\App\CentralLogics\Helpers::getDisk())->assertExists('product/'.$item->image);
+        Storage::disk('public')->assertExists($media->file_path);
+    }
+
+    public function test_product_media_cannot_be_claimed_without_an_owned_inbound_message(): void
+    {
+        $media = WhatsAppMedia::create(['whatsapp_media_id' => 'another-vendor-image', 'mime_type' => 'image/png',
+            'status' => 'processed', 'file_path' => 'private/another-vendor.png', 'storage_disk' => 'local']);
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductMedia::class)->owned($media->id, $this->vendor->id);
     }
 }

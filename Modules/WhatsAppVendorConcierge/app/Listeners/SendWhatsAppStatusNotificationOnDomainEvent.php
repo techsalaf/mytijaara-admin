@@ -28,6 +28,12 @@ class SendWhatsAppStatusNotificationOnDomainEvent
 
     private function dispatchNotification(VendorApplicationStatusChanged $event): void
     {
+        $contact = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact::where('vendor_id', $event->vendor->id)->first();
+        if ($contact) {
+            $metadata = $contact->metadata ?? [];
+            $metadata['vendor_status_version'] = $event->version;
+            $contact->update(['metadata' => $metadata]);
+        }
         app(\Modules\WhatsAppVendorConcierge\app\Services\VendorConversationState::class)->synchronize($event->store, $event->status);
         $queue = config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message');
 

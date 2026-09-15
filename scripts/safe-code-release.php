@@ -48,6 +48,7 @@ function runCodeRelease(array $argv): void
         $entries = [];
         $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($incoming, FilesystemIterator::SKIP_DOTS));
         foreach ($files as $file) {
+            if ($file->isDir() && !$file->isLink()) continue;
             if (!$file->isFile() || $file->isLink()) throw new RuntimeException('Only regular package files are allowed');
             $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($incoming)+1));
             $destination = releasePath($target, $relative);

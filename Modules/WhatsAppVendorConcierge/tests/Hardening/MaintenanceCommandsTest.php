@@ -16,9 +16,9 @@ use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia;
 use Tests\TestCase;
 
-class MaintenanceCommandsTest extends TestCase
+class MaintenanceCommandsTest extends ApplicationFixtureTestCase
 {
-    use DatabaseTransactions;
+
 
     public function test_preflight_command_passes(): void
     {
@@ -68,14 +68,13 @@ class MaintenanceCommandsTest extends TestCase
         // 2. Abandoned notification lease
         $delivery = NotificationDelivery::create([
             'store_id' => $store->id,
-            'vendor_id' => $vendor->id,
-            'event_type' => 'status_update',
-            'recipient_phone' => '2348099887766',
+            'notification_type' => 'approved',
+            'state_version' => 'stuck-version',
             'channel' => 'whatsapp',
             'status' => 'processing',
             'claimed_at' => Carbon::now()->subMinutes(20),
             'idempotency_key' => 'idem_stuck_' . uniqid(),
-            'lease_expires_at' => Carbon::now()->subMinutes(15),
+            'claim_expires_at' => Carbon::now()->subMinutes(15),
         ]);
 
         // 3. Stale credential token
@@ -144,12 +143,11 @@ class MaintenanceCommandsTest extends TestCase
         Storage::disk('local')->put($filePath, 'fake-media-content');
 
         $media = WhatsAppMedia::create([
-            'contact_id' => $contact->id,
-            'media_id' => 'media_' . uniqid(),
+            'whatsapp_media_id' => 'media_' . uniqid(),
             'file_path' => $filePath,
             'file_size' => 100,
             'mime_type' => 'image/jpeg',
-            'purpose' => 'temporary',
+            'metadata' => ['contact_id' => $contact->id, 'purpose' => 'temporary'],
             'status' => 'downloaded',
             'storage_disk' => 'local',
             'cleanup_at' => Carbon::now()->subMinutes(10),

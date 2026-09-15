@@ -985,6 +985,11 @@ class VendorController extends Controller
 
     public function status(Store $store, Request $request)
     {
+        $request->validate(['status' => 'required|in:0,1']);
+        if ((int) $store->status === (int) $request->status) {
+            Toastr::success(translate('messages.store_status_updated'));
+            return back();
+        }
         $store->status = $request->status;
         $store->save();
         $vendor = $store->vendor;
@@ -1040,7 +1045,7 @@ class VendorController extends Controller
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
-        // GEMINI-MYTJ START: Dispatch canonical domain event for vendor application status change
+        // Optional integrations observe a completed host status transition.
         try {
             if ($store && $store->vendor) {
                 event(new \App\Events\VendorApplicationStatusChanged(
@@ -1052,7 +1057,6 @@ class VendorController extends Controller
         } catch (\Throwable $ex) {
             info('Vendor application status event dispatch failed: ' . $ex->getMessage());
         }
-        // GEMINI-MYTJ END: Dispatch canonical domain event for vendor application status change
 
         Toastr::success(translate('messages.store_status_updated'));
 

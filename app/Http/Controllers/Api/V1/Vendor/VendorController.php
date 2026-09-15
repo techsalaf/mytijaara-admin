@@ -186,7 +186,8 @@ class VendorController extends Controller
     public function active_status(Request $request)
     {
         $store = $request->vendor->stores[0];
-        $store = app(\App\Services\StoreAvailabilityService::class)->set($store, $request->vendor->id, !$store->active);
+        $store->active = $store->active?0:1;
+        $store->save();
         return response()->json(['message' => $store->active?translate('messages.store_opened'):translate('messages.store_temporarily_closed')], 200);
     }
 

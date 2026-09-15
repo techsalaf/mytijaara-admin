@@ -4,16 +4,14 @@ namespace Modules\WhatsAppVendorConcierge\tests\Unit;
 
 use App\Models\Store;
 use App\Models\Vendor;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
-use Tests\TestCase;
+use Modules\WhatsAppVendorConcierge\tests\Hardening\ApplicationFixtureTestCase;
 
-class VendorStatusNotificationJobTest extends TestCase
+class VendorStatusNotificationJobTest extends ApplicationFixtureTestCase
 {
-    use DatabaseTransactions;
 
     /** @test */
     public function it_sends_approval_notification_to_vendor_whatsapp()
@@ -51,6 +49,13 @@ class VendorStatusNotificationJobTest extends TestCase
             'state' => 'onboarding_completed',
         ]);
 
+        $activeConversation = WhatsAppConversation::where('contact_id', WhatsAppContact::where('vendor_id', $vendor->id)->value('id'))->firstOrCreate([
+            'contact_id' => WhatsAppContact::where('vendor_id', $vendor->id)->value('id'),
+        ]);
+        \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage::create([
+            'conversation_id' => $activeConversation->id, 'direction' => 'inbound',
+            'type' => 'text', 'content' => ['text' => 'Hi'], 'whatsapp_message_id' => 'inbound-'.$vendor->id,
+        ]);
         $gateway = $this->createMock(WhatsAppGateway::class);
         $gateway->expects($this->once())
             ->method('sendTextMessage')
@@ -59,7 +64,7 @@ class VendorStatusNotificationJobTest extends TestCase
                 $this->callback(function ($msg) {
                     return str_contains($msg, 'approved') && str_contains($msg, 'Ahmad Supermart');
                 })
-            );
+            )->willReturn(['messages' => [['id' => 'approved-message']]]);
 
         $job = new SendVendorStatusNotification($store->id, SendVendorStatusNotification::TYPE_APPROVED);
         $job->handle($gateway);
@@ -107,15 +112,23 @@ class VendorStatusNotificationJobTest extends TestCase
             'state' => 'onboarding_completed',
         ]);
 
+        $activeConversation = WhatsAppConversation::where('contact_id', WhatsAppContact::where('vendor_id', $vendor->id)->value('id'))->firstOrCreate([
+            'contact_id' => WhatsAppContact::where('vendor_id', $vendor->id)->value('id'),
+        ]);
+        \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage::create([
+            'conversation_id' => $activeConversation->id, 'direction' => 'inbound',
+            'type' => 'text', 'content' => ['text' => 'Hi'], 'whatsapp_message_id' => 'inbound-'.$vendor->id,
+        ]);
         $gateway = $this->createMock(WhatsAppGateway::class);
         $gateway->expects($this->once())
-            ->method('sendTextMessage')
+            ->method('sendButtonMessage')
             ->with(
                 $phone,
                 $this->callback(function ($msg) {
                     return str_contains($msg, 'could not be approved') && str_contains($msg, 'CAC certificate image is blurry');
-                })
-            );
+                }),
+                [['id' => 'talk_support', 'title' => 'Talk to Support']]
+            )->willReturn(['messages' => [['id' => 'denied-message']]]);
 
         $job = new SendVendorStatusNotification(
             $store->id,
@@ -156,6 +169,13 @@ class VendorStatusNotificationJobTest extends TestCase
         ]);
 
         $messagesSent = [];
+        $activeConversation = WhatsAppConversation::where('contact_id', WhatsAppContact::where('vendor_id', $vendor->id)->value('id'))->firstOrCreate([
+            'contact_id' => WhatsAppContact::where('vendor_id', $vendor->id)->value('id'),
+        ]);
+        \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage::create([
+            'conversation_id' => $activeConversation->id, 'direction' => 'inbound',
+            'type' => 'text', 'content' => ['text' => 'Hi'], 'whatsapp_message_id' => 'inbound-'.$vendor->id,
+        ]);
         $gateway = $this->createMock(WhatsAppGateway::class);
         $gateway->expects($this->exactly(2))
             ->method('sendTextMessage')
@@ -165,10 +185,12 @@ class VendorStatusNotificationJobTest extends TestCase
             });
 
         // Suspension
+        $store->update(['status' => 0]);
         $suspendJob = new SendVendorStatusNotification($store->id, SendVendorStatusNotification::TYPE_SUSPENDED);
         $suspendJob->handle($gateway);
 
         // Reactivation
+        $store->update(['status' => 1]);
         $unsuspendJob = new SendVendorStatusNotification($store->id, SendVendorStatusNotification::TYPE_UNSUSPENDED);
         $unsuspendJob->handle($gateway);
 

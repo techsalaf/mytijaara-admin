@@ -22,7 +22,11 @@ class UpdateProductTool extends BaseVendorTool
             'price' => $schema->number()->description('New price in Naira')->required()->nullable(),
             'category_id' => $schema->number()->description('New category ID')->required()->nullable(),
             'description' => $schema->string()->description('New description')->required()->nullable(),
-            'stock' => $schema->number()->description('New stock quantity')->required()->nullable(),
+            'stock' => $schema->integer()->description('New total stock quantity')->required()->nullable(),
+            'variation_stocks' => $schema->array()->items($schema->object([
+                'type' => $schema->string()->description('Exact existing variation type')->required(),
+                'stock' => $schema->integer()->description('New stock for this variation')->required(),
+            ]))->description('For products with variations, supply every variation; quantities must sum to total stock')->required()->nullable(),
             'discount' => $schema->number()->description('New discount amount')->required()->nullable(),
             'discount_type' => $schema->string()->description('Discount type: "percent" or "amount"')->required()->nullable(),
             'status' => $schema->boolean()->description('Activate (true) or deactivate (false)')->required()->nullable(),
@@ -41,7 +45,15 @@ class UpdateProductTool extends BaseVendorTool
         }
 
         if (isset($request['stock']) && $request['stock'] !== null) {
-            return $this->prepareProductStock($productId, (int) $request['stock']);
+            $stocks = null;
+            if (isset($request['variation_stocks'])) {
+                $rows = $request['variation_stocks'];
+                $validator = validator(['rows' => $rows], ['rows' => 'array', 'rows.*.type' => 'required|string|distinct', 'rows.*.stock' => 'required|integer|min:0']);
+                if ($validator->fails()) return 'Provide each existing variation once with a non-negative stock quantity.';
+                $stocks = [];
+                foreach ($rows as $row) $stocks[$row['type']] = (int) $row['stock'];
+            }
+            return $this->prepareProductStock($productId, (int) $request['stock'], $stocks);
         }
 
         if (isset($request['status']) && $request['status'] !== null) {

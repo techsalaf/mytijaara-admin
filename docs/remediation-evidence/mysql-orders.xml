@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest.php" tests="1" assertions="9" errors="0" failures="0" skipped="0" time="121.252178">
+    <testcase name="test_paid_cancellation_restores_variant_stock_and_refunds_wallet_once" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest.php" line="46" class="Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest" classname="Modules.WhatsAppVendorConcierge.tests.Integration.MySqlOrderParityTest" assertions="9" time="121.252178"/>
+  </testsuite>
+</testsuites>

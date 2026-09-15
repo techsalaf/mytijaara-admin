@@ -1,0 +1,44 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+.............................................................E.  63 / 122 ( 51%)
+................................................F...F......     122 / 122 (100%)
+
+Time: 06:58.145, Memory: 120.00 MB
+
+There was 1 error:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow
+Symfony\Component\HttpKernel\Exception\HttpException: This image was not received from your vendor account.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1440
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:67
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:104
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductMedia.php:20
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\PhotoToProductService.php:30
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php:303
+
+--
+
+There were 2 failures:
+
+1) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_submits_application_with_null_vendor_status_for_pending_approval
+Expectation failed for method name is "sendTextMessage" when invoked 1 time
+Parameter 1 for invocation Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::sendTextMessage('2348039621178', '❌ Sorry, there was an error s...pport.', null): array does not match expected value.
+Failed asserting that '❌ Sorry, there was an error submitting your application. Please try again or contact support.' [Encoding ignored](length: 95) contains "application has been submitted" [Encoding ignored](length: 30).
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1397
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:877
+
+2) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_handles_duplicate_vendor_phone_resiliently_on_submission
+Expectation failed for method name is "sendTextMessage" when invoked 1 time
+Parameter 1 for invocation Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::sendTextMessage('2349032617923', '❌ Sorry, there was an error s...pport.', null): array does not match expected value.
+Failed asserting that '❌ Sorry, there was an error submitting your application. Please try again or contact support.' [Encoding ignored](length: 95) contains "application has been submitted" [Encoding ignored](length: 30).
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService.php:1397
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest.php:1096
+
+ERRORS!
+Tests: 122, Assertions: 556, Errors: 1, Failures: 2, PHPUnit Deprecations: 50.

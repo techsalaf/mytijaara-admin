@@ -9,6 +9,7 @@ final class CodeReleaseTest extends TestCase
         require_once __DIR__.'/../../scripts/safe-code-release.php';
         $root = sys_get_temp_dir().'/code-release-'.bin2hex(random_bytes(6));
         foreach (['target', 'incoming', 'journal'] as $dir) mkdir($root.'/'.$dir, 0755, true);
+        mkdir($root.'/incoming/bootstrap/cache', 0755, true);
         file_put_contents($root.'/target/artisan', 'old');
         file_put_contents($root.'/target/.env', 'preserve');
         file_put_contents($root.'/incoming/artisan', 'new');

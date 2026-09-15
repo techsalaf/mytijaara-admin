@@ -26,6 +26,8 @@ class PhotoToProductService
         WhatsAppMedia $media,
         ?array $aiInference = null
     ): array {
+        abort_unless((int) $conversation->contact_id === (int) $contact->id && $contact->vendor_id, 403);
+        app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductMedia::class)->owned($media->id, $contact->vendor_id);
         // Validate media through MediaPolicyService
         $validation = $this->mediaPolicyService->validateProductImage($media);
         if (!$validation['valid']) {
@@ -43,7 +45,7 @@ class PhotoToProductService
             'category_id' => $aiInference['category_id'] ?? null,
             'category_name' => $aiInference['category_name'] ?? null,
             'price' => null,
-            'stock' => 10,
+            'stock' => 0,
             'is_ai_draft' => !empty($aiInference),
             'confirmed_by_vendor' => false,
             'step' => 'awaiting_details',
@@ -68,7 +70,7 @@ class PhotoToProductService
         $prompt .= "• Name: (e.g. Fresh Mangoes)\n";
         $prompt .= "• Price in ₦: (e.g. ₦1,500)\n";
         $prompt .= "• Category: (from your shop categories)\n";
-        $prompt .= "• Stock: (default 10 units)\n\n";
+        $prompt .= "• Stock: (default 0 units)\n\n";
         $prompt .= "Reply with: *Name*, *Price*, and *Category*.";
 
         return [
@@ -147,9 +149,9 @@ class PhotoToProductService
             'name' => $draft['name'],
             'price' => (float) $draft['price'],
             'category_id' => (int) $draft['category_id'],
-            'stock' => (int) ($draft['stock'] ?? 10),
+            'stock' => (int) ($draft['stock'] ?? 0),
             'description' => $draft['description'] ?? null,
-            'image' => $draft['image_path'] ?? 'def.png',
+            'media_id' => $draft['media_id'],
         ];
 
         return $this->pendingActionService->prepareProductCreate(
