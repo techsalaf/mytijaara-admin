@@ -1,0 +1,47 @@
+name: Host and concierge isolation
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches: [main, 'refactor/whatsapp-core-isolation']
+jobs:
+  isolation:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      CACHE_STORE: array
+      LOG_CHANNEL: single
+      ISOLATION_MYSQL: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, fileinfo, pdo_mysql, pdo_sqlite, zip, gd, curl
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Enforce core and adapter boundaries
+        env:
+          COMPARE_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'bf5ca49f' }}
+        run: php scripts/check-core-boundary.php "$COMPARE_BASE"
+      - name: Host absent-module, source contract and MySQL tests
+        run: vendor/bin/phpunit tests/Architecture --log-junit host-results.xml
+      - name: Concierge regression tests
+        run: vendor/bin/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit concierge-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: isolation-results
+          path: '*-results.xml'

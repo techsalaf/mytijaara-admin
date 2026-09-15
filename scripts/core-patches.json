@@ -1,0 +1,100 @@
+{
+  "baseline": "bf5ca49f",
+  "baseline_limit": "First repository import, not a verified licensed vendor release",
+  "owner": "MyTijaara backend maintainers",
+  "patches": {
+    "app/Http/Controllers/Admin/VendorController.php": {
+      "purpose": "Authoritative route decisions and generic application/status event integration",
+      "upstream_behavior": "Same admin success redirect and mail preference checks; intentional POST/idempotency safety correction",
+      "reason_in_core": "Existing admin routes own approval; no optional-module hook can safely replace their business transaction",
+      "tests": [
+        "HostWithoutConciergeTest",
+        "NotificationConcurrencyTest",
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Review status and updateVendorApplication methods against new vendor release; reapply only generic decision hooks",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorApplicationDecisionService.php": {
+      "purpose": "Atomic vendor/store decisions, subscription activation on approval, repeat suppression, normal model events",
+      "upstream_behavior": "Preserves host ownership of application state; corrects inconsistent denial/subscription effects",
+      "reason_in_core": "Host approval must work independently of every optional channel",
+      "tests": [
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Reconcile vendor/store/subscription columns and new host observers before retaining service",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Events/VendorApplicationStatusChanged.php": {
+      "purpose": "Channel-neutral optional integration event",
+      "upstream_behavior": "Adds notification metadata without changing API serialization",
+      "reason_in_core": "Host can emit the event without any registered listener",
+      "tests": [
+        "ApprovalIsolationTest",
+        "NotificationConcurrencyTest"
+      ],
+      "upgrade": "Prefer equivalent upstream domain event if supplied",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "routes/admin.php": {
+      "purpose": "POST-only application decisions with legacy GET redirect",
+      "upstream_behavior": "Intentional security correction: GET no longer changes application state",
+      "reason_in_core": "Must protect host decisions with or without optional modules",
+      "tests": [
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Preserve route name/path and POST/CSRF; verify vendor route changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/admin-views/vendor/pending_requests.blade.php": {
+      "purpose": "CSRF-protected POST approval and denial controls; no channel badge query",
+      "upstream_behavior": "Same admin decisions and confirmation prompts",
+      "reason_in_core": "Existing host form must match the safe route",
+      "tests": [
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Reapply only POST form/CSRF changes to new vendor template",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/admin-views/vendor/deny_requests.blade.php": {
+      "purpose": "CSRF-protected POST approval form",
+      "upstream_behavior": "Same approval action",
+      "reason_in_core": "Existing host form must match the safe route",
+      "tests": [
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Reapply only POST form/CSRF changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/admin-views/vendor/view/partials/_header.blade.php": {
+      "purpose": "CSRF-protected POST approval and denial controls",
+      "upstream_behavior": "Same application decisions",
+      "reason_in_core": "Existing host form must match the safe route",
+      "tests": [
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Reapply only POST form/CSRF changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/lang/en/messages.php": {
+      "purpose": "Generic decision confirmation and success labels",
+      "upstream_behavior": "Additional translation keys only",
+      "reason_in_core": "Host templates need labels while module is absent",
+      "tests": [
+        "ApprovalIsolationTest"
+      ],
+      "upgrade": "Reuse upstream equivalents when available",
+      "owner": "MyTijaara backend maintainers"
+    }
+  },
+  "separate_addon_changes": [
+    "config/system-addons.php"
+  ],
+  "protected_write_owners": [
+    "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/VendorApplicationService.php",
+    "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/ProductMutationService.php",
+    "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/OrderMutationService.php",
+    "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/StoreAvailabilityService.php",
+    "Modules/WhatsAppVendorConcierge/app/Services/SubscriptionLifecycleService.php"
+  ]
+}

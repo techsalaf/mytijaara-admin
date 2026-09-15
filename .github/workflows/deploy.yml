@@ -32,6 +32,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  isolation:
+    uses: ./.github/workflows/whatsapp-isolation.yml
+
   test:
     name: Gate Tests
     runs-on: ubuntu-latest
@@ -59,7 +62,7 @@ jobs:
       - name: Validate Syntax
         run: |
           find app -name "*.php" -print0 | xargs -0 -n1 -P4 php -l
-          find modules -name "*.php" -print0 2>/dev/null | xargs -0 -n1 -P4 php -l
+          find Modules -name "*.php" -print0 2>/dev/null | xargs -0 -n1 -P4 php -l
           find config -name "*.php" -print0 | xargs -0 -n1 -P4 php -l
 
       - name: Setup Node
@@ -84,7 +87,7 @@ jobs:
 
   deploy:
     name: Deploy to Namecheap
-    needs: test
+    needs: [test, isolation]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'deploy')
     environment:
@@ -151,9 +154,12 @@ jobs:
           cat > .rsync-exclude <<'EOF'
           .git/
           .github/
-          .env
-          .env.backup
-          .env.example
+          .env*
+          .agents/
+          .codex/
+          docs/
+          bootstrap/cache/*
+          config/system-addons.php
           .phpunit.result.cache
           node_modules/
           storage/
@@ -208,42 +214,36 @@ jobs:
 
           chmod 600 ~/.ssh/config
 
-          echo "→ Syncing changed files to $DEPLOY_PATH"
-          rsync -az --itemize-changes \
-              --exclude-from=.rsync-exclude \
+          RELEASE_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          RELEASE_ROOT="$(dirname "$DEPLOY_PATH")/.mytijaara-releases/$RELEASE_ID"
+          INCOMING="$RELEASE_ROOT/incoming"
+          JOURNAL="$RELEASE_ROOT/journal"
+          ssh mytijaara-deploy "mkdir -p '$INCOMING' '$JOURNAL'"
+          rsync -az --exclude-from=.rsync-exclude \
               -e "ssh -p $SSH_PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-              ./ mytijaara-deploy:"$DEPLOY_PATH"/
+              ./ mytijaara-deploy:"$INCOMING"/
 
-          echo "→ Ensuring Laravel runtime directories"
-          ssh mytijaara-deploy "
-              cd '$DEPLOY_PATH'
-              mkdir -p storage/app/public storage/framework/cache/data \
-              storage/framework/sessions storage/framework/views storage/logs
-              chmod -R ug+rwX storage bootstrap/cache
-              [ -e public/storage ] || ln -s ../storage/app/public public/storage
-          "
+          # Preparation verifies every obsolete file and backs up each affected
+          # code file before maintenance or live writes. Runtime paths are denied.
+          ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' prepare '$DEPLOY_PATH' '$JOURNAL' '$INCOMING'"
+          ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan down --retry=60"
+          rollback_code() {
+              ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' rollback '$DEPLOY_PATH' '$JOURNAL'" || true
+              echo "Deployment failed; code recovery attempted. Maintenance remains enabled. Inspect the journal and schema before artisan up."
+          }
+          trap rollback_code ERR
+          ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' apply '$DEPLOY_PATH' '$JOURNAL'"
 
           if [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ]; then
-            echo "→ Database migrations changed or forced; running migrate --force"
             ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan migrate --force && php artisan module:migrate --all --force"
-          else
-            echo "→ No database migrations changed; skipping migrations"
           fi
-
           if [ "$RUN_SEED" = "true" ]; then
-            echo "→ Manual seed requested; running db:seed --force"
             ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan db:seed --force"
           fi
+          ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan optimize:clear && php artisan queue:restart && php artisan up"
+          trap - ERR
+          echo "Deploy complete. Recoverable code journal: $JOURNAL"
 
-          echo "→ Verifying deployment responds and refreshing queue workers"
-          ssh mytijaara-deploy "
-              cd '$DEPLOY_PATH'
-              php artisan --version
-              php artisan optimize:clear
-              php artisan queue:restart
-          "
-
-          echo "✓ Deploy complete: $DEPLOY_PATH"
 
       - name: Notify Success
         if: success()
