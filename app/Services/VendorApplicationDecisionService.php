@@ -11,6 +11,14 @@ use Illuminate\Validation\ValidationException;
 
 class VendorApplicationDecisionService
 {
+    private static array $deciding = [];
+
+    /** Optional integrations can defer to the explicit application decision event. */
+    public static function isDeciding(int $vendorId): bool
+    {
+        return isset(self::$deciding[$vendorId]);
+    }
+
     public function decide(int $storeId, int $status, ?string $reason = null): ?Store
     {
         if (!in_array($status, [0, 1], true) || ($status === 0 && trim($reason ?? '') === '')) {
@@ -23,8 +31,14 @@ class VendorApplicationDecisionService
 
             $vendor->status = $status;
             $vendor->rejection_note = $status === 0 ? trim($reason) : null;
-            // Publish one domain event after both records are saved; suppress the fallback observer.
-            $vendor->saveQuietly();
+            // Preserve all ordinary model observers. Optional status observers may
+            // defer to the complete decision event rather than the intermediate save.
+            self::$deciding[$vendor->id] = true;
+            try {
+                $vendor->save();
+            } finally {
+                unset(self::$deciding[$vendor->id]);
+            }
             $store->setRelation('vendor', $vendor);
             $store->status = $status;
             if ($status === 1 && ($subscription = $store->store_sub_update_application)) {

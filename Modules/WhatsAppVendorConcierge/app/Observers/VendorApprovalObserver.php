@@ -17,6 +17,18 @@ class VendorApprovalObserver
      */
     public function updated(Vendor $vendor): void
     {
+        try {
+            $this->handleUpdated($vendor);
+        } catch (\Throwable $exception) {
+            Log::error('Optional vendor observer failed', ['vendor_id' => $vendor->id, 'exception' => $exception::class]);
+        }
+    }
+
+    private function handleUpdated(Vendor $vendor): void
+    {
+        if (\App\Services\VendorApplicationDecisionService::isDeciding($vendor->id)) {
+            return;
+        }
         // Trigger if status changed OR if rejection_note was added/changed on a pending/rejected vendor
         if (!$vendor->wasChanged('status') || $vendor->status === null) {
             return;
