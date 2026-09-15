@@ -1325,8 +1325,8 @@ class VendorOnboardingService
                 }
             }
 
-            $dto = \App\DTOs\VendorApplicationDTO::fromWhatsAppSession($session, $contact);
-            $appService = app(\App\Services\VendorApplicationService::class);
+            $dto = \Modules\WhatsAppVendorConcierge\app\DTOs\VendorApplicationDTO::fromWhatsAppSession($session, $contact);
+            $appService = app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\VendorApplicationService::class);
             $result = $appService->submit($dto);
             $vendor = $result['vendor'];
             $store = $result['store'];
@@ -1446,48 +1446,8 @@ class VendorOnboardingService
      */
     public function approveApplication(int $storeId): bool
     {
-        try {
-            $store = Store::findOrFail($storeId);
-            $vendor = $store->vendor;
-
-            DB::beginTransaction();
-
-            $vendor->update(['status' => 1]);
-            $store->update(['status' => 1]);
-
-            // Activate subscription if applicable
-            if ($store->store_sub_update_application) {
-                $addDays = $store->store_sub_update_application->is_trial
-                    ? (int) (BusinessSetting::where('key', 'subscription_free_trial_days')->first()?->value ?? 1)
-                    : $store->store_sub_update_application->validity;
-
-                $store->store_sub_update_application->update([
-                    'expiry_date' => now()->addDays($addDays)->format('Y-m-d'),
-                    'status' => 1,
-                ]);
-                $store->store_business_model = 'subscription';
-            }
-
-            $store->save();
-            DB::commit();
-
-            // Send approval email
-            if (config('mail.status') && Helpers::get_mail_status('approve_mail_status_store') == '1') {
-                Mail::to($vendor->getRawOriginal('email'))->send(new VendorSelfRegistration('approved', $vendor->f_name . ' ' . $vendor->l_name));
-            }
-
-            // Dispatch real-time WhatsApp status notification
-            \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::dispatch(
-                $storeId,
-                \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::TYPE_APPROVED
-            )->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_whatsapp_message', 'notifications'));
-
-            return true;
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Approval failed', ['store_id' => $storeId, 'error' => $e->getMessage()]);
-            return false;
-        }
+        return app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ApplicationDecisionAdapter::class)
+            ->decide($storeId, 1);
     }
 
     /**
@@ -1495,37 +1455,8 @@ class VendorOnboardingService
      */
     public function rejectApplication(int $storeId, string $reason): bool
     {
-        try {
-            $store = Store::findOrFail($storeId);
-            $vendor = $store->vendor;
-
-            DB::beginTransaction();
-
-            $vendor->update([
-                'status' => 0,
-                'rejection_note' => $reason,
-            ]);
-
-            DB::commit();
-
-            // Send rejection email
-            if (config('mail.status') && Helpers::get_mail_status('deny_mail_status_store') == '1') {
-                Mail::to($vendor->getRawOriginal('email'))->send(new VendorSelfRegistration('denied', $vendor->f_name . ' ' . $vendor->l_name));
-            }
-
-            // Dispatch real-time WhatsApp status notification
-            \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::dispatch(
-                $storeId,
-                \Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification::TYPE_DENIED,
-                $reason
-            )->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_whatsapp_message', 'notifications'));
-
-            return true;
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Rejection failed', ['store_id' => $storeId, 'error' => $e->getMessage()]);
-            return false;
-        }
+        return app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ApplicationDecisionAdapter::class)
+            ->decide($storeId, 0, $reason);
     }
 
     /**

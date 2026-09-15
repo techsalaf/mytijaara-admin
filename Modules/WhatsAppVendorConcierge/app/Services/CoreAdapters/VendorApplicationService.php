@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters;
 
 use App\CentralLogics\Helpers;
 use App\CentralLogics\StoreLogic;
-use App\DTOs\VendorApplicationDTO;
+use Modules\WhatsAppVendorConcierge\app\DTOs\VendorApplicationDTO;
 use App\Mail\ProviderRegistration;
 use App\Mail\ProviderSelfRegistration;
 use App\Mail\StoreRegistration;
@@ -30,12 +30,13 @@ use Modules\WhatsAppVendorConcierge\app\Services\MediaPolicyService;
 class VendorApplicationService
 {
     public function __construct(
-        protected MediaPolicyService $mediaPolicy
+        protected MediaPolicyService $mediaPolicy,
+        protected ZoneEligibility $zoneEligibility
     ) {}
 
     /**
-     * Submit a vendor application with canonical validation, persistence, and parity.
-     * Used by both Web VendorController and WhatsApp VendorOnboardingService.
+     * Module-owned port of VendorController::store, with secure module media input.
+     * Ordinary web registration does not call this adapter.
      *
      * @return array{vendor: Vendor, store: Store}
      * @throws ValidationException
@@ -121,8 +122,8 @@ class VendorApplicationService
             // Store translations
             $dummyRequest = new Request([
                 'lang' => $dto->lang,
-                'name' => array_fill(0, count($dto->lang), $dto->business_name),
-                'address' => array_fill(0, count($dto->lang), $dto->address),
+                'name' => $dto->metadata['names'] ?? array_fill(0, count($dto->lang), $dto->business_name),
+                'address' => $dto->metadata['addresses'] ?? array_fill(0, count($dto->lang), $dto->address),
             ]);
             Helpers::add_or_update_translations(request: $dummyRequest, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);
             Helpers::add_or_update_translations(request: $dummyRequest, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store->id, data_value: $store->address);
@@ -167,18 +168,8 @@ class VendorApplicationService
             $zone = Zone::find($dto->zone_id);
             if (!$zone) {
                 $messages['zone_id'] = translate('messages.zone_not_found');
-            } elseif (config('database.default') !== 'sqlite' && class_exists(Point::class) && defined('POINT_SRID')) {
-                try {
-                    $inZone = Zone::query()
-                        ->whereContains('coordinates', new Point($dto->latitude, $dto->longitude, POINT_SRID))
-                        ->where('id', $dto->zone_id)
-                        ->exists();
-                    if (!$inZone) {
-                        $messages['latitude'] = translate('messages.coordinates_out_of_zone');
-                    }
-                } catch (\Throwable $e) {
-                    Log::warning('Spatial coordinate check skipped: ' . $e->getMessage());
-                }
+            } elseif (!$this->zoneEligibility->contains($dto->zone_id, $dto->latitude, $dto->longitude)) {
+                $messages['zone'] = translate('messages.coordinates_out_of_zone');
             }
         } else {
             $messages['zone_id'] = translate('messages.zone_is_required');
@@ -277,15 +268,15 @@ class VendorApplicationService
             $admin = Admin::where('role_id', 1)->first();
             $fullName = $vendor->f_name . ' ' . $vendor->l_name;
 
-            if ($module?->module_type !== 'rental' && config('mail.status') && Helpers::get_mail_status('registration_mail_status_store') == '1') {
+            if ($module?->module_type !== 'rental' && config('mail.status') && Helpers::get_mail_status('registration_mail_status_store') == '1' && Helpers::getNotificationStatusData('store', 'store_registration', 'mail_status')) {
                 Mail::to($vendor->email)->send(new VendorSelfRegistration('pending', $fullName));
-            } elseif ($module?->module_type === 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_registration_mail_status_provider') == '1') {
+            } elseif ($module?->module_type === 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_registration_mail_status_provider') == '1' && Helpers::getRentalNotificationStatusData('provider', 'provider_registration', 'mail_status')) {
                 Mail::to($vendor->email)->send(new ProviderSelfRegistration('pending', $fullName));
             }
 
-            if ($module?->module_type !== 'rental' && config('mail.status') && Helpers::get_mail_status('store_registration_mail_status_admin') == '1') {
+            if ($module?->module_type !== 'rental' && config('mail.status') && Helpers::get_mail_status('store_registration_mail_status_admin') == '1' && Helpers::getNotificationStatusData('admin', 'store_self_registration', 'mail_status')) {
                 Mail::to($admin?->getRawOriginal('email'))->send(new StoreRegistration('pending', $fullName));
-            } elseif ($module?->module_type === 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_provider_registration_mail_status_admin') == '1') {
+            } elseif ($module?->module_type === 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_provider_registration_mail_status_admin') == '1' && Helpers::getRentalNotificationStatusData('admin', 'provider_self_registration', 'mail_status')) {
                 Mail::to($admin?->getRawOriginal('email'))->send(new ProviderRegistration('pending', $fullName));
             }
         } catch (\Throwable $ex) {

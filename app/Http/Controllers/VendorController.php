@@ -109,19 +109,111 @@ class VendorController extends Controller
             'password.custom' => translate('The password cannot contain white spaces.'),
         ]);
         if ($validator->fails()) {
+                 return response()->json(['errors' => Helpers::error_processor($validator)]);
+        }
+        if($request->zone_id)
+        {
+            $zone = Zone::query()
+            ->whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))
+            ->where('id',$request->zone_id)
+            ->first();
+            if(!$zone){
+              $validator->getMessageBag()->add('zone', translate('coordinates_out_of_zone'));
+                 return response()->json(['errors' => Helpers::error_processor($validator)]);
+            }
+        }
+
+        $module = Module::find($request['module_id']);
+        if ($module?->module_type == 'rental' && addon_published_status('Rental') && empty($request['pickup_zone_id'])){
+            $validator->getMessageBag()->add('pickup_zone_id', translate('messages.You_must_select_a_pickup_zone'));
             return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
 
-        try {
-            $dto = \App\DTOs\VendorApplicationDTO::fromWebRequest($request);
-            $service = app(\App\Services\VendorApplicationService::class);
-            $result = $service->submit($dto);
-            $store = $result['store'];
-
-            return response()->json(['redirect_url' => route('restaurant.secondStep', ['store_id' => $store->id, 'business_plan' => $request->business_plan])]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['errors' => Helpers::error_processor($e->validator)]);
+        if ($request->business_plan == 'subscription-base' && $request->package_id == null ) {
+            $validator->getMessageBag()->add('package_id', translate('messages.You_must_select_a_package'));
+             return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
+
+        $vendor = new Vendor();
+        $vendor->f_name = $request->f_name;
+        $vendor->l_name = $request->l_name;
+        $vendor->email = $request->email;
+        $vendor->phone = $request->phone;
+        $vendor->password = bcrypt($request->password);
+        $vendor->status = null;
+        $vendor->save();
+
+        $store = new Store;
+        $store->name =  $request->name[array_search('default', $request->lang)];
+        $store->phone = $request->phone;
+        $store->email = $request->email;
+        $store->logo = Helpers::upload('store/', 'png', $request->file('logo'));
+        $store->cover_photo = Helpers::upload('store/cover/', 'png', $request->file('cover_photo'));
+        $store->address = $request->address[array_search('default', $request->lang)];
+        $store->latitude = $request->latitude;
+        $store->longitude = $request->longitude;
+        $store->vendor_id = $vendor->id;
+        $store->zone_id = $request->zone_id;
+        $store->module_id = $request->module_id;
+        $store->pickup_zone_id = json_encode($request['pickup_zone_id']?? []) ;
+        $store->tin = $request->tin;
+        $store->tin_expire_date = $request->tin_expire_date;
+        $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
+        $store->tin_certificate_image = Helpers::upload('store/', $extension, $request->file('tin_certificate_image'));
+        $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
+        $store->status = 0;
+        $store->store_business_model = 'none';
+        $store->save();
+
+        Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);
+        Helpers::add_or_update_translations(request: $request, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store->id, data_value: $store->address);
+
+
+        try{
+            $admin= Admin::where('role_id', 1)->first();
+            if($module?->module_type != 'rental' && config('mail.status') && Helpers::get_mail_status('registration_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_registration','mail_status') ){
+                Mail::to($request['email'])->send(new VendorSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+            }
+            elseif($module?->module_type == 'rental' && addon_published_status('Rental')&& config('mail.status') && Helpers::get_mail_status('rental_registration_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_registration','mail_status') ){
+                Mail::to($request['email'])->send(new ProviderSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+            }
+
+            if($module?->module_type != 'rental' && config('mail.status') && Helpers::get_mail_status('store_registration_mail_status_admin') == '1' &&  Helpers::getNotificationStatusData('admin','store_self_registration','mail_status') ){
+                Mail::to($admin?->getRawOriginal('email'))->send(new StoreRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+            } elseif($module?->module_type == 'rental' && addon_published_status('Rental')&& config('mail.status') && Helpers::get_mail_status('rental_provider_registration_mail_status_admin') == '1' &&  Helpers::getRentalNotificationStatusData('admin','provider_self_registration','mail_status') ){
+                Mail::to($admin?->getRawOriginal('email'))->send(new ProviderRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+            }
+
+        }catch(\Exception $ex){
+            info($ex->getMessage());
+        }
+
+
+        if(config('module.'.$store->module->module_type)['always_open'])
+        {
+            StoreLogic::insert_schedule($store->id);
+        }
+
+        if (Helpers::subscription_check()) {
+            if ($request->business_plan == 'subscription-base' && $request->package_id != null ) {
+
+                $store->package_id = $request->package_id;
+                $store->save();
+
+            }
+            elseif($request->business_plan == 'commission-base' ){
+                $store->store_business_model = 'commission';
+                $store->save();
+
+            }
+        } else{
+            $store->store_business_model = 'commission';
+            $store->save();
+
+        }
+
+    return response()->json(['redirect_url' => route('restaurant.secondStep',['store_id' => $store->id,'business_plan'=>$request->business_plan])]);
+
     }
 
     public function get_all_modules(Request $request){

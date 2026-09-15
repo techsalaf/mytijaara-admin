@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs;
+namespace Modules\WhatsAppVendorConcierge\app\DTOs;
 
 use Illuminate\Http\UploadedFile;
 
@@ -87,6 +87,7 @@ class VendorApplicationDTO
             privacy_accepted: true,
             source: 'web',
             lang: is_array($lang) ? $lang : ['default'],
+            metadata: ['names' => $names, 'addresses' => $addresses],
         );
     }
 

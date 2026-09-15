@@ -2,12 +2,12 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Hardening;
 
-use App\DTOs\VendorApplicationDTO;
+use Modules\WhatsAppVendorConcierge\app\DTOs\VendorApplicationDTO;
 use App\Models\Module;
 use App\Models\Store;
 use App\Models\Vendor;
 use App\Models\Zone;
-use App\Services\VendorApplicationService;
+use Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\VendorApplicationService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -20,6 +20,11 @@ class VendorApplicationParityTest extends HardeningTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // SQLite cannot execute the spatial predicate. Spatial behavior has its
+        // own integration gate; this fixture covers mapping/persistence only.
+        $this->app->instance(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ZoneEligibility::class,
+            \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ZoneEligibility::class)
+                ->shouldReceive('contains')->andReturn(true)->getMock());
         Storage::fake('public');
         Storage::fake('local');
 
