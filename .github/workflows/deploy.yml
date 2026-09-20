@@ -226,22 +226,11 @@ jobs:
           # Preparation verifies every obsolete file and backs up each affected
           # code file before maintenance or live writes. Runtime paths are denied.
           ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' prepare '$DEPLOY_PATH' '$JOURNAL' '$INCOMING'"
-          ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan down --retry=60"
-          rollback_code() {
-              ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' rollback '$DEPLOY_PATH' '$JOURNAL'" || true
-              echo "Deployment failed; code recovery attempted. Maintenance remains enabled. Inspect the journal and schema before artisan up."
-          }
-          trap rollback_code ERR
-          ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' apply '$DEPLOY_PATH' '$JOURNAL'"
-
+          RUN_MIGRATE="false"
           if [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ]; then
-            ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan migrate --force && php artisan module:migrate --all --force"
+            RUN_MIGRATE="true"
           fi
-          if [ "$RUN_SEED" = "true" ]; then
-            ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan db:seed --force"
-          fi
-          ssh mytijaara-deploy "cd '$DEPLOY_PATH' && php artisan optimize:clear && php artisan queue:restart && php artisan up"
-          trap - ERR
+          ssh mytijaara-deploy "bash '$INCOMING/scripts/apply-code-release.sh' '$DEPLOY_PATH' '$JOURNAL' '$INCOMING' '$RUN_MIGRATE' '$RUN_SEED'"
           echo "Deploy complete. Recoverable code journal: $JOURNAL"
 
 

@@ -34,7 +34,14 @@ foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator('Modules/W
     $path = str_replace('\\', '/', $file->getPathname());
     if (!$file->isFile() || $file->getExtension() !== 'php') continue;
     $source = file_get_contents($path);
-    if (preg_match('/\b(?:Store|Item|Order)::(?:create|insert|update|upsert|destroy)\s*\(|new\s+(?:Store|Item|Order)\b|\$(?:store|item|order)->(?:save|update|delete|increment|decrement)\s*\(/', $source)
+    $directWrite = preg_match('/\b(?:Store|Item|Order)::(?:create|insert|update|upsert|destroy)\s*\(|new\s+(?:Store|Item|Order)\b|\$(?:store|item|order)->(?:save|update|delete|increment|decrement)\s*\(/', $source);
+    // Include literal query-builder chains and aliases imported for core models.
+    $models = ['Store', 'Item', 'Order'];
+    preg_match_all('/use\s+App\\\\Models\\\\(?:Store|Item|Order)\s+as\s+(\w+)\s*;/', $source, $aliases);
+    $models = array_merge($models, $aliases[1]);
+    $modelNames = implode('|', array_map(fn ($name) => preg_quote($name, '/'), $models));
+    $chainWrite = preg_match('/(?:\b(?:'.$modelNames.')::|DB::table\(\s*[\'"](?:stores|items|orders)[\'"]\s*\))[^;]*?(?:->|::)(?:save|update|insert|upsert|delete|increment|decrement|create|destroy)\s*\(/s', $source);
+    if (($directWrite || $chainWrite)
         && !in_array($path, $manifest['protected_write_owners'], true)) {
         $failures[] = "Protected write outside reviewed adapter: $path";
     }

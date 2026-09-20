@@ -189,6 +189,42 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
         }
     }
 
+    public function test_published_rental_registration_requires_pickup_and_honours_provider_mail_preferences(): void
+    {
+        require __DIR__.'/fixtures/PublishedRental.php';
+        DB::table('modules')->where('id', 1)->update(['module_type' => 'rental']);
+        config(['module.rental.always_open' => false, 'mail.status' => true]);
+        DB::table('admins')->insert(['role_id' => 1, 'email' => 'admin@example.test']);
+        DB::table('business_settings')->insert([
+            ['key' => 'rental_registration_mail_status_provider', 'value' => '1'],
+            ['key' => 'rental_provider_registration_mail_status_admin', 'value' => '1'],
+        ]);
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('notification_settings', 'module_type')) {
+            \Illuminate\Support\Facades\Schema::table('notification_settings', fn ($t) => $t->string('module_type')->nullable());
+        }
+        $controller = app(\App\Http\Controllers\VendorController::class);
+        $response = $controller->store($this->registration());
+        $this->assertArrayHasKey('errors', $response->getData(true));
+        $this->assertSame(0, Vendor::count());
+        foreach (['inactive' => 0, 'active' => 2] as $preference => $mailCount) {
+            Mail::fake();
+            DB::table('notification_settings')->delete();
+            DB::table('notification_settings')->insert([
+                ['type' => 'provider', 'module_type' => 'rental', 'key' => 'provider_registration', 'mail_status' => $preference],
+                ['type' => 'admin', 'module_type' => 'rental', 'key' => 'provider_self_registration', 'mail_status' => $preference],
+            ]);
+            $response = $controller->store($this->registration(['pickup_zone_id' => ['1'],
+                'phone' => '+234800000002'.$mailCount, 'email' => 'rental'.$mailCount.'@example.test']));
+            $this->assertArrayHasKey('redirect_url', $response->getData(true));
+            $store = Store::latest('id')->firstOrFail();
+            $this->assertSame(['1'], json_decode($store->getRawOriginal('pickup_zone_id'), true));
+            $this->assertSame('commission', $store->store_business_model);
+            Mail::assertSentCount($mailCount);
+        }
+        Mail::assertSent(\Modules\Rental\Emails\ProviderSelfRegistration::class);
+        Mail::assertSent(\Modules\Rental\Emails\ProviderRegistration::class);
+    }
+
     // The parent validation test creates its own SQLite fixture; this class already has a schema.
     public function test_public_registration_validation_does_not_load_module_classes_or_tables(): void
     {

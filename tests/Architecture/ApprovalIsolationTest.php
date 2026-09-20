@@ -91,4 +91,30 @@ final class ApprovalIsolationTest extends HostWithoutConciergeTest
         $this->assertNotNull($legacy);
         $this->assertSame('Closure', $legacy->getActionName());
     }
+
+    public function test_decision_route_uses_csrf_and_rejects_a_missing_session_token(): void
+    {
+        $route = $this->app['router']->getRoutes()->getByName('admin.store.application');
+        $this->assertContains(\App\Http\Middleware\VerifyCsrfToken::class,
+            $this->app['router']->gatherRouteMiddleware($route));
+        $middleware = new class($this->app, $this->app['encrypter']) extends \App\Http\Middleware\VerifyCsrfToken {
+            protected function runningUnitTests() { return false; }
+        };
+        $request = \Illuminate\Http\Request::create(route('admin.store.application', ['id' => 1, 'status' => 0]), 'POST');
+        $request->setLaravelSession($this->app['session']->driver());
+        $request->session()->put('_token', 'fixture-csrf-token');
+        try {
+            $middleware->handle($request, function () { $this->fail('Missing CSRF token reached the decision'); });
+            $this->fail('Missing CSRF token was accepted');
+        } catch (\Illuminate\Session\TokenMismatchException) {
+            $this->assertNull(Vendor::find(1)->status);
+        }
+        $request->request->set('_token', 'fixture-csrf-token');
+        $response = $middleware->handle($request, function () {
+            app(VendorApplicationDecisionService::class)->decide(1, 0, 'Missing documents');
+            return response('accepted');
+        });
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(0, (int) Vendor::find(1)->status);
+    }
 }

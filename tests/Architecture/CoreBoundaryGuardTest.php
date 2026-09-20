@@ -35,6 +35,13 @@ final class CoreBoundaryGuardTest extends TestCase
             unlink($root.'/app/Unapproved.php');
             file_put_contents($root.'/Modules/WhatsAppVendorConcierge/app/Bypass.php', '<?php $item->save();');
             $this->assertStringContainsString('Protected write outside reviewed adapter', $this->guard($root)->getErrorOutput());
+            foreach ([
+                "<?php DB::table('orders')->where('id', 1)->update(['order_status' => 'delivered']);",
+                "<?php use App\\Models\\Item as Product; Product::whereKey(1)->delete();",
+            ] as $source) {
+                file_put_contents($root.'/Modules/WhatsAppVendorConcierge/app/Bypass.php', $source);
+                $this->assertStringContainsString('Protected write outside reviewed adapter', $this->guard($root)->getErrorOutput());
+            }
         } finally {
             if (!str_starts_with($root, sys_get_temp_dir().'/core-boundary-')) throw new \LogicException('Unexpected fixture');
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST) as $file) {
