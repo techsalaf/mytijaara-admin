@@ -469,7 +469,7 @@
     <div id="customer_list_offcanvas" class="custom-offcanvas d-flex flex-column justify-content-between"
         style="--offcanvas-width: 500px">
             <div>
-                <form id="filterForm" action="{{ route('admin.customer.list') }}" method="GET">
+                <form id="filterForm" action="{{ route('admin.users.customer.list') }}" method="GET">
                 <div class="custom-offcanvas-header bg-light d-flex justify-content-between align-items-center">
                     <div class="px-3 py-3 d-flex justify-content-between w-100">
                         <div class="d-flex flex-wrap align-items-center gap-2">
@@ -562,7 +562,7 @@
                 </div>
             </div>
             <div  class="align-items-center bg-white bottom-0 d-flex gap-3 justify-content-center offcanvas-footer p-3 position-sticky">
-                <a href="{{ route('admin.customer.list') }}"
+                <a href="{{ route('admin.users.customer.list') }}"
                     class="btn w-100 btn--reset offcanvas-close">{{ translate('Reset') }}</a>
                 <button type="submit" id="apply_filter" class="btn w-100 btn--primary">{{ translate('Apply') }}</button>
             </form>

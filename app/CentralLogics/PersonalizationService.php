@@ -54,6 +54,30 @@ class PersonalizationService
         }
     }
 
+    public static function recordServiceAction(int $userId, int $serviceId, string $signal): void
+    {
+        $svc = self::service();
+        if (!$svc) return;
+
+        try {
+            $svc::recordServiceAction($userId, $serviceId, $signal);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    public static function recordVehicleAction(int $userId, int $vehicleId, string $signal, ?int $moduleId): void
+    {
+        $svc = self::service();
+        if (!$svc) return;
+
+        try {
+            $svc::recordVehicleAction($userId, $vehicleId, $signal, $moduleId);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
     // --- Apply methods (modify queries) ---
 
     public static function applyItemPersonalization($query, ?int $userId, $filter = null)

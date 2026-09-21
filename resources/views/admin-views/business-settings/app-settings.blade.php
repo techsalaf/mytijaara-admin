@@ -44,6 +44,11 @@
             'app_minimum_version_ios_rider',
             'app_url_ios_rider',
 
+            'app_minimum_version_android_serviceman',
+            'app_url_android_serviceman',
+            'app_minimum_version_ios_serviceman',
+            'app_url_ios_serviceman',
+
 
             'language',
         ];
@@ -66,6 +71,10 @@
         $app_url_android_rider = $businessSettings->get('app_url_android_rider');
         $app_minimum_version_ios_rider = $businessSettings->get('app_minimum_version_ios_rider');
         $app_url_ios_rider = $businessSettings->get('app_url_ios_rider');
+        $app_minimum_version_android_serviceman = $businessSettings->get('app_minimum_version_android_serviceman');
+        $app_url_android_serviceman = $businessSettings->get('app_url_android_serviceman');
+        $app_minimum_version_ios_serviceman = $businessSettings->get('app_minimum_version_ios_serviceman');
+        $app_url_ios_serviceman = $businessSettings->get('app_url_ios_serviceman');
         $language = $businessSettings->get('language');
 
         $appSettings = \App\Models\DataSetting::withoutGlobalScope('translate')
@@ -580,6 +589,96 @@
                                             </label>
                                             <input id="app_url_ios_rider" type="url" placeholder="{{translate('messages.Download_Url')}}" class="form-control h--45px" name="app_url_ios_rider"
                                             value="{{ $app_url_ios_rider ?? '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="btn--container justify-content-end mt-20">
+                                <button type="reset" class="btn btn--reset">{{translate('messages.reset')}}</button>
+                                <button type="submit"  class="btn btn--primary call-demo">{{translate('messages.save')}}</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+        @endif
+
+        @if(addon_published_status('Service'))
+                <form action="{{route('admin.business-settings.app-settings-update')}}" method="post"
+                enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="type" value="serviceman_app" >
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h5 class="card-title text-dark mb-0">
+                                    <span>{{ translate('Serviceman_App_Version_Control') }}</span>
+                                </h5>
+                                <p class="mb-0 fs-12">
+                                    {{ translate('Here you setup your Serviceman app version & app download URL') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <h5 class="card-title mb-3">
+                                        <img src="{{asset('/public/assets/admin/img/andriod.png')}}" class="mr-2" alt="">
+                                        {{ translate('For android') }}
+                                    </h5>
+                                    <div class="__bg-F8F9FC-card">
+                                        <div class="form-group">
+                                            <label for="app_minimum_version_android_serviceman" class="form-label text-capitalize">{{translate('Minimum_Serviceman_App_Version')}} ({{translate('messages.android')}})
+                                                <span class="input-label-secondary text--title" data-toggle="tooltip"
+                                                data-placement="right"
+                                                data-original-title="{{ translate('The_minimum_serviceman_app_version_required_for_the_app_functionality.') }}">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                            </label>
+                                            <input type="number" id="app_minimum_version_android_serviceman" placeholder="{{translate('messages.app_minimum_version')}}" class="form-control h--45px" name="app_minimum_version_android_serviceman"
+                                                step="0.001"   min="0" value="{{ $app_minimum_version_android_serviceman ?? '' }}">
+                                        </div>
+                                        <div class="form-group mb-md-0">
+                                            <label for="app_url_android_serviceman"  class="form-label text-capitalize">
+                                                {{translate('Download_URL_for_Serviceman_App')}} ({{translate('messages.android')}})
+                                                <span class="input-label-secondary text--title" data-toggle="tooltip"
+                                                data-placement="right"
+                                                data-original-title="{{ translate('Users_will_download_the_latest_serviceman_app_version_using_this_URL.') }}">
+                                                    <i class="tio-info-outined"></i>
+                                                </span>
+                                            </label>
+                                            <input type="url" id="app_url_android_serviceman" placeholder="{{translate('messages.Download_Url')}}" class="form-control h--45px" name="app_url_android_serviceman"
+                                            value="{{ $app_url_android_serviceman ?? '' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="card-title mb-3">
+                                        <img src="{{asset('/public/assets/admin/img/ios.png')}}" class="mr-2" alt="">
+                                        {{ translate('For iOS') }}
+                                    </h5>
+                                    <div class="__bg-F8F9FC-card">
+                                        <div class="form-group">
+                                            <label  for="app_minimum_version_ios_serviceman" class="form-label text-capitalize">{{translate('Minimum_Serviceman_App_Version')}} ({{translate('messages.ios')}})
+                                                <span class="input-label-secondary text--title" data-toggle="tooltip"
+                                                data-placement="right"
+                                                data-original-title="{{ translate('The_minimum_serviceman_app_version_required_for_the_app_functionality.') }}">
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                            </label>
+                                            <input id="app_minimum_version_ios_serviceman" type="number" placeholder="{{translate('messages.app_minimum_version')}}" class="form-control h--45px" name="app_minimum_version_ios_serviceman"
+                                            step="0.001"  min="0" value="{{ $app_minimum_version_ios_serviceman ?? '' }}">
+                                        </div>
+                                        <div class="form-group mb-md-0">
+                                            <label for="app_url_ios_serviceman" class="form-label text-capitalize">
+                                                {{translate('Download_URL_for_Serviceman_App')}} ({{translate('messages.ios')}})
+                                                <span class="input-label-secondary text--title" data-toggle="tooltip"
+                                                data-placement="right"
+                                                data-original-title="{{ translate('Users_will_download_the_latest_serviceman_app_version_using_this_URL.') }}">
+                                                    <i class="tio-info-outined"></i>
+                                                </span>
+                                            </label>
+                                            <input id="app_url_ios_serviceman" type="url" placeholder="{{translate('messages.Download_Url')}}" class="form-control h--45px" name="app_url_ios_serviceman"
+                                            value="{{ $app_url_ios_serviceman ?? '' }}">
                                         </div>
                                     </div>
                                 </div>

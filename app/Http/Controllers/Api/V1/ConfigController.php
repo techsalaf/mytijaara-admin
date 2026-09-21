@@ -53,7 +53,7 @@ class ConfigController extends Controller
             'currency_code','cash_on_delivery','digital_payment','default_location','business_name','logo','address','phone','email_address','country','currency_symbol_position','app_minimum_version_android',
             'app_url_android','app_minimum_version_ios','app_url_ios','app_url_android_store','app_minimum_version_ios_store','app_url_ios_store','app_minimum_version_ios_deliveryman','app_url_ios_deliveryman',
             'app_minimum_version_android_deliveryman','app_minimum_version_android_store','app_url_android_deliveryman','app_minimum_version_android_rider','app_url_android_rider','app_minimum_version_ios_rider',
-            'app_url_ios_rider','schedule_order','order_delivery_verification','show_dm_earning','canceled_by_deliveryman','canceled_by_store','timeformat','toggle_veg_non_veg','toggle_dm_registration',
+            'app_url_ios_rider','app_minimum_version_android_serviceman','app_url_android_serviceman','app_minimum_version_ios_serviceman','app_url_ios_serviceman','schedule_order','order_delivery_verification','show_dm_earning','canceled_by_deliveryman','canceled_by_store','timeformat','toggle_veg_non_veg','toggle_dm_registration',
             'toggle_store_registration','schedule_order_slot_duration','parcel_per_km_shipping_charge','parcel_minimum_shipping_charge','footer_text','loyalty_point_exchange_rate','loyalty_point_item_purchase_point',
             'loyalty_point_status','loyalty_point_minimum_point','wallet_status','dm_tips_status','ref_earning_status','ref_earning_exchange_rate','refund_active_status','refund','cancelation',
             'shipping_policy','prescription_order_status','icon','cookies_text','home_delivery_status','takeaway_status','additional_charge','additional_charge_status','additional_charge_name',
@@ -61,7 +61,7 @@ class ConfigController extends Controller
             'parcel_cancellation_status','parcel_cancellation_basic_setup','parcel_return_time_fee','openai_config','dm_loyality_point_status','dm_loyality_point_per_order',
             'dm_loyality_point_conversion_rate','dm_min_loyality_point_to_convert','dm_referal_status','dm_referal_amount','dm_referal_bonus','pro_member_status',
             'repeat_order_option','monthly_order_reminder','monthly_order_reminder_days_before','monthly_order_reminder_before_unit',
-            'customer_personalization_status','ai_chat_status',
+            'customer_personalization_status','ai_chat_status','verified_seller_badge',
 
         ];
 
@@ -246,9 +246,15 @@ class ConfigController extends Controller
             'app_minimum_version_ios_deliveryman' => (float)(isset($settings['app_minimum_version_ios_deliveryman']) ? $settings['app_minimum_version_ios_deliveryman'] : 0),
             'app_url_ios_deliveryman' => (isset($settings['app_url_ios_deliveryman']) ? $settings['app_url_ios_deliveryman'] : null),
 
+            'app_minimum_version_android_serviceman' => (float)(isset($settings['app_minimum_version_android_serviceman']) ? $settings['app_minimum_version_android_serviceman'] : 0),
+            'app_url_android_serviceman' => (isset($settings['app_url_android_serviceman']) ? $settings['app_url_android_serviceman'] : null),
+            'app_minimum_version_ios_serviceman' => (float)(isset($settings['app_minimum_version_ios_serviceman']) ? $settings['app_minimum_version_ios_serviceman'] : 0),
+            'app_url_ios_serviceman' => (isset($settings['app_url_ios_serviceman']) ? $settings['app_url_ios_serviceman'] : null),
+
             'prescription_order_status' => isset($settings['prescription_order_status']) ? (bool)$settings['prescription_order_status'] : false,
             'schedule_order' => (bool)$settings['schedule_order'],
             'order_delivery_verification' => (bool)$settings['order_delivery_verification'],
+            'verified_store_status' => (bool)($settings['verified_seller_badge'] ?? false),
             'cash_on_delivery' => (bool)($cod['status'] == 1 ? true : false),
             'digital_payment' => (bool)($digital_payment['status'] == 1 ? true : false),
             'digital_payment_info' => $digital_payment_infos,
@@ -515,6 +521,63 @@ class ConfigController extends Controller
                 'reels_upload_limit_unlimited' => (int) (Helpers::get_business_settings('reels_upload_limit_unlimited') ?? 1),
                 'reels_upload_limit' => (int) (Helpers::get_business_settings('reels_upload_limit') ?? 0),
                 'reels_upload_limit_type' => (string) (Helpers::get_business_settings('reels_upload_limit_type') ?? 'week'),
+            ];
+        }
+
+        if (addon_published_status('Service')) {
+            $serviceSettings = DataSetting::where('type', SERVICE_BUSINESS_SETTINGS)->pluck('value', 'key');
+            $biddingSystem = (bool) ($serviceSettings['service_bidding_system'] ?? 0);
+            $scheduleBooking = (bool) ($serviceSettings['service_schedule_booking'] ?? 0);
+            $timeRestrictionStatus = (bool) ($serviceSettings['service_schedule_time_restriction_status'] ?? 0);
+
+            $canCancelBooking = (bool) ($serviceSettings['service_provider_can_cancel_booking'] ?? 0);
+            $serviceGallery = (bool) ($serviceSettings['service_gallery'] ?? 0);
+            $serviceApproval = (bool) ($serviceSettings['service_approval'] ?? 0);
+            $approvalRaw = $serviceSettings['service_approval_datas'] ?? null;
+            $approvalDatas = is_array($approvalRaw) ? $approvalRaw : (json_decode((string) $approvalRaw, true) ?: []);
+
+            $serviceTaxSetup = \Modules\TaxModule\Entities\SystemTaxSetup::where('tax_payer', 'service_provider')->where('is_active', 1)->first();
+            $serviceTaxPercentage = CalculateTaxService::getTaxPercentage('service_provider');
+
+            $data['service_module'] = [
+                'instant_booking' => (bool) ($serviceSettings['service_instant_booking'] ?? 0),
+                'repeat_booking' => (bool) ($serviceSettings['service_repeat_booking'] ?? 0),
+                'rebooking_option' => (bool) ($serviceSettings['service_rebooking_option'] ?? 0),
+                'schedule_booking' => $scheduleBooking,
+                'schedule_time_restriction_status' => $scheduleBooking && $timeRestrictionStatus,
+                'schedule_time_restriction_value' => ($scheduleBooking && $timeRestrictionStatus)
+                    ? (int) ($serviceSettings['service_schedule_time_restriction_value'] ?? 0)
+                    : null,
+                'schedule_time_restriction_unit' => (string) ($serviceSettings['service_schedule_time_restriction_unit'] ?? 'hours'),
+                'bidding_system' => $biddingSystem,
+                'see_other_providers_offers' => $biddingSystem && (bool) ($serviceSettings['service_see_other_providers_offers'] ?? 0),
+                'post_validation_days' => (int) ($serviceSettings['service_post_validation_days'] ?? 0),
+                'otp_for_complete_service' => (bool) ($serviceSettings['service_otp_for_complete_service'] ?? 0),
+                'complete_photo_evidence' => (bool) ($serviceSettings['service_complete_photo_evidence'] ?? 0),
+                'provider_can_cancel_booking' => $canCancelBooking,
+                'provider_can_edit_booking' => (bool) ($serviceSettings['service_provider_can_edit_booking'] ?? 0),
+                'provider_can_reply_review' => (bool) ($serviceSettings['service_provider_can_reply_review'] ?? 0),
+                'provider_category_status' => (bool) ($serviceSettings['service_provider_category_status'] ?? 0),
+                'provider_self_registration' => (bool) ($settings['toggle_store_registration'] ?? 0),
+                'review_section' => (bool) ($serviceSettings['service_review_section'] ?? 0),
+                'provider_verified_badge' => (bool) ($serviceSettings['service_provider_verified_badge'] ?? 0),
+                'at_provider_place' => (bool) ($serviceSettings['service_at_provider_place'] ?? 0),
+                'service_gallery' => $serviceGallery,
+                'access_all_services' => $serviceGallery && (bool) ($serviceSettings['service_access_all_services'] ?? 0),
+                'serviceman_cancel_booking_req' => $canCancelBooking && (bool) ($serviceSettings['service_serviceman_cancel_booking_req'] ?? 0),
+                'approval' => $serviceApproval,
+                'approval_criteria' => $serviceApproval ? [
+                    'add_new_service' => (bool) data_get($approvalDatas, 'Add_new_service', 0),
+                    'update_service_price' => (bool) data_get($approvalDatas, 'Update_service_price', 0),
+                    'update_service_variation' => (bool) data_get($approvalDatas, 'Update_service_variation', 0),
+                    'update_anything_in_service_details' => (bool) data_get($approvalDatas, 'Update_anything_in_service_details', 0),
+                ] : null,
+                'tax' => [
+                    'tax_type' => $serviceTaxSetup?->tax_type ?? null,
+                    'tax_status' => $serviceTaxSetup && ! $serviceTaxSetup->is_included ? 'excluded' : 'included',
+                    'tax_include_status' => (int) ($serviceTaxSetup?->is_included ?? 0),
+                    'tax_percentage' => (float) ($serviceTaxPercentage['totalTaxPercent'] ?? 0),
+                ],
             ];
         }
 
@@ -1166,7 +1229,7 @@ class ConfigController extends Controller
 
         ];
 
-        $faqs = FAQ::get();
+        $faqs = FAQ::whereNull('faqable_id')->get();
 
         $faqSection = [
             'faq_section_status' => (int)((isset($settings['faq_section_status'])) ? $settings['faq_section_status'] : 0),

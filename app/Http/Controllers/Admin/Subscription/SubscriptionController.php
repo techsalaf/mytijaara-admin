@@ -26,6 +26,8 @@ use App\Exports\SubscriptionSubscriberListExport;
 use App\Models\SubscriptionBillingAndRefundHistory;
 use Modules\Rental\Emails\ProviderSubscriptionCancel;
 use Modules\Rental\Emails\ProviderSubscriptionPlanUpdate;
+use Modules\Service\Emails\ProviderSubscriptionCancel as ServiceProviderSubscriptionCancel;
+use Modules\Service\Emails\ProviderSubscriptionPlanUpdate as ServiceProviderSubscriptionPlanUpdate;
 use App\Contracts\Repositories\TranslationRepositoryInterface;
 use Illuminate\Validation\Rule;
 
@@ -37,19 +39,28 @@ class SubscriptionController extends Controller
     )
     {
     }
+
+    private function resolveModuleType(Request $request)
+    {
+        $module = $request->module;
+        if ($module == 1 || $module === 'rental') {
+            return addon_published_status('Rental') ? 'rental' : 'all';
+        }
+        if ($module === 'service') {
+            return addon_published_status('Service') ? 'service' : 'all';
+        }
+
+        return 'all';
+    }
     public function index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $filter = $request['statistics'];
+        $module_type = $this->resolveModuleType($request);
 
         $packages=  SubscriptionPackage::withcount('currentSubscribers')
-            ->when($request?->module == 1, function($query){
-                $query->where('module_type', 'rental');
-            })
-            ->when($request?->module != 1, function($query){
-                $query->where('module_type', 'all');
-            })
-            ->when(isset($key), function($q) use($key){
+            ->where('module_type', $module_type)
+            ->when($request['search'], function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('package_name', 'like', "%{$value}%");
@@ -59,12 +70,8 @@ class SubscriptionController extends Controller
             ->latest()->paginate(config('default_pagination'));
 
         $package_sell_count= SubscriptionPackage::
-        when($request?->module != 1, function($query){
-            $query->where('module_type', 'all');
-        } )
-            ->when($request?->module == 1, function($query){
-                $query->where('module_type', 'rental');
-            } )-> withSum([
+        where('module_type', $module_type)
+            -> withSum([
                 'transactions' => function ($query) use ($filter) {
                     $query->where('is_trial',0)
                         ->when(isset($filter) && $filter == 'this_year', function ($query) {
@@ -136,7 +143,7 @@ class SubscriptionController extends Controller
         $this->translationRepo->addByModel(request: $request, model: $package, modelPath: 'App\Models\SubscriptionPackage', attribute: 'package_name');
         $this->translationRepo->addByModel(request: $request, model: $package, modelPath: 'App\Models\SubscriptionPackage', attribute: 'text');
         Toastr::success(translate('messages.Package_successfully_Added'));
-        return redirect()->route('admin.business-settings.subscriptionackage.index',[ 'module' => $package->module_type== 'rental' ? 1 : 'all' ]);
+        return redirect()->route('admin.business-settings.subscriptionackage.index',[ 'module' => $package->module_type ]);
     }
 
     public function statusChange(SubscriptionPackage $subscriptionackage){
@@ -149,7 +156,7 @@ class SubscriptionController extends Controller
 
     public function show(SubscriptionPackage $subscriptionackage)
     {
-        $packages= SubscriptionPackage::where('status',1)->where('module_type', $subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ? 'rental' : 'all' )->get();
+        $packages= SubscriptionPackage::where('status',1)->where('module_type', Helpers::subscriptionPackageType($subscriptionackage) )->get();
         $over_view_data= $this->packageOverview($subscriptionackage);
         return view('admin-views.subscription.package.package-details', compact('subscriptionackage','over_view_data','packages'));
     }
@@ -238,6 +245,30 @@ class SubscriptionController extends Controller
 
                         if(config('mail.status') && Helpers::get_mail_status('rental_subscription_plan_upadte_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_plan_update','mail_status' ,$subscriber?->store?->id)){
                             Mail::to($subscriber?->store?->getRawOriginal('email'))->send(new ProviderSubscriptionPlanUpdate($subscriber?->store?->name));
+                        }
+
+                } elseif($subscriber?->store?->module->module_type == 'service' && addon_published_status('Service')){
+
+                    if( Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_plan_update','push_notification_status',$subscriber?->store?->id)  &&  $subscriber?->store?->vendor?->firebase_token){
+                        $data = [
+                            'title' => translate('subscription_plan_updated'),
+                            'description' => translate('Your_subscription_plan_has_been_updated'),
+                            'order_id' => '',
+                            'image' => '',
+                            'type' => 'subscription',
+                            'order_status' => '',
+                        ];
+                        Helpers::send_push_notif_to_device($subscriber?->store?->vendor?->firebase_token, $data);
+                        DB::table('user_notifications')->insert([
+                            'data' => json_encode($data),
+                            'vendor_id' => $subscriber?->store?->vendor_id,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+
+                        if(config('mail.status') && Helpers::get_mail_status('service_subscription_plan_upadte_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_plan_update','mail_status' ,$subscriber?->store?->id)){
+                            Mail::to($subscriber?->store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionPlanUpdate($subscriber?->store?->name));
                         }
 
                 } else{
@@ -339,9 +370,9 @@ class SubscriptionController extends Controller
         $from =$request['start_date'] ?? Carbon::now()->format('Y-m-d');
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $transactions= SubscriptionTransaction::where('package_id',$id)
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('id', 'like', "%{$value}%");
@@ -431,15 +462,35 @@ class SubscriptionController extends Controller
 
 
     public function subscriberList(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
+        $module = $request->module;
+        $moduleFilter = 'order';
+        if (($module == 1 || $module === 'rental') && addon_published_status('Rental')) {
+            $moduleFilter = 'rental';
+        } elseif ($module === 'service' && addon_published_status('Service')) {
+            $moduleFilter = 'service';
+        }
+        $applyModuleType = function ($query) use ($moduleFilter) {
+            $query->whereHas('module', function ($q) use ($moduleFilter) {
+                if ($moduleFilter === 'rental') {
+                    $q->where('module_type', 'rental');
+                } elseif ($moduleFilter === 'service') {
+                    $q->where('module_type', 'service');
+                } else {
+                    $q->whereNotIn('module_type', ['rental', 'service']);
+                }
+            });
+        };
+
         $subscribers= Store::has('store_sub_update_application')->whereHas('vendor',function($query){
             $query->where('status', 1);
         })
+        ->when(true, $applyModuleType)
         ->whereIn('store_business_model' ,['subscription','unsubscribed'])->with([
             'store_sub_update_application.package'
         ])->withCount('store_all_sub_trans')
 
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('name', 'like', "%{$value}%");
@@ -481,12 +532,13 @@ class SubscriptionController extends Controller
         $data=[];
         $subscription_deadline_warning_days = (int) BusinessSetting::where('key','subscription_deadline_warning_days')->first()?->value ?? 7;
 
-        $totalSubscribersData= StoreSubscription::whereHas('store',function ($query)use($request){
+        $totalSubscribersData= StoreSubscription::whereHas('store',function ($query)use($request, $applyModuleType){
             $query->whereIn('store_business_model' ,['subscription','unsubscribed'])
             ->when(isset($request->zone_id) && is_numeric($request->zone_id), function ($query) use ($request) {
                 return $query->where('zone_id', $request->zone_id);
 
-            });
+            })
+            ->when(true, $applyModuleType);
         })
         ->whereHas('store.vendor',function($query){
             $query->where('status', 1);
@@ -505,6 +557,7 @@ class SubscriptionController extends Controller
 
             $total_inactive_subscription = Store::has('store_sub_update_application')
             ->whereIn('store_business_model' ,['unsubscribed'])
+            ->when(true, $applyModuleType)
             ->when(is_numeric($request->zone_id), function ($query) use ($request) {
                 return $query->where('zone_id', $request->zone_id);
                 })
@@ -518,6 +571,9 @@ class SubscriptionController extends Controller
 
             $totals= SubscriptionTransaction::whereHas('store.vendor',function($query){
                 $query->where('status', 1);
+            })->whereHas('store', function ($q) use ($applyModuleType) {
+                $q->whereIn('store_business_model', ['subscription', 'unsubscribed'])
+                    ->when(true, $applyModuleType);
             })->where('is_trial',0)
             ->when(isset($request->zone_id) && is_numeric($request->zone_id), function ($query) use ($request) {
                 return $query->whereHas('store', function ($q) use ($request) {
@@ -543,9 +599,11 @@ class SubscriptionController extends Controller
         ->first();
         if($store->module_type == 'rental') {
             $store->loadCount('vehicles as items_count' );
+        } elseif($store->module_type == 'service') {
+            $store->loadCount('services as items_count' );
         }
 
-        $packages = SubscriptionPackage::where('status',1)->where('module_type', $store?->module?->module_type == 'rental' && addon_published_status('Rental') ? 'rental' : 'all' )->latest()->get();
+        $packages = SubscriptionPackage::where('status',1)->where('module_type', Helpers::subscriptionPackageType($store) )->latest()->get();
         $admin_commission=BusinessSetting::where('key', 'admin_commission')->first()?->value ;
         $business_name=BusinessSetting::where('key', 'business_name')->first()?->value ;
         try {
@@ -587,6 +645,27 @@ class SubscriptionController extends Controller
                 if (config('mail.status') && Helpers::get_mail_status('rental_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_cancel','mail_status' ,$store?->id)) {
                     Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionCancel($store->name));
                 }
+            } elseif($store?->module?->module_type == 'service' && addon_published_status('Service')){
+                if( Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
+                    $data = [
+                        'title' => translate('subscription_canceled'),
+                        'description' => translate('Your_subscription_has_been_canceled'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'subscription',
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $store?->vendor_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+                if (config('mail.status') && Helpers::get_mail_status('service_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','mail_status' ,$store?->id)) {
+                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionCancel($store->name));
+                }
             } else{
                 if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
                     $data = [
@@ -625,6 +704,7 @@ class SubscriptionController extends Controller
         }
 
         $store->store_business_model = 'commission';
+        $store->item_section = 1;
         $store->save();
 
         StoreSubscription::where(['store_id' => $id])->update([
@@ -667,7 +747,7 @@ class SubscriptionController extends Controller
             'store_id' => 'required',
             'payment_gateway' => 'required'
         ]);
-        $store= Store::Where('id',$request->store_id)->first(['id','vendor_id']);
+        $store= Store::Where('id',$request->store_id)->first(['id','vendor_id','module_id']);
         $package = SubscriptionPackage::withoutGlobalScope('translate')->find($request->package_id);
 
 
@@ -675,7 +755,7 @@ class SubscriptionController extends Controller
                             'transaction_type'=>'pending_bill', 'is_success' =>0])?->sum('amount')?? 0;
 
         if(!in_array($request->payment_gateway,['wallet','manual_payment_by_admin'])){
-            $url= route('admin.business-settings.subscriptionackage.subscriberDetail',$store->id);
+            $url= route('admin.business-settings.subscriptionackage.subscriberDetail', ['id' => $store->id, 'module' => $store->module_id]);
             return redirect()->away(Helpers::subscriptionPayment(store_id:$store->id,package_id:$package->id,payment_gateway:$request->payment_gateway,payment_platform:'web',url:$url,pending_bill:$pending_bill,type: $request?->type));
         }
 
@@ -718,9 +798,9 @@ class SubscriptionController extends Controller
         ])
         ->first();
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $transactions= SubscriptionTransaction::where('store_id',$id)
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('id', 'like', "%{$value}%");
@@ -791,16 +871,11 @@ class SubscriptionController extends Controller
 
     public function packageExport(Request $request){
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $packages=  SubscriptionPackage::withcount('currentSubscribers')
-        ->when($request?->module == 1, function($query){
-            $query->where('module_type', 'rental');
-        })
-        ->when($request?->module != 1, function($query){
-            $query->where('module_type', 'all');
-        })
-        ->when(isset($key), function($q) use($key){
+        ->where('module_type', $this->resolveModuleType($request))
+        ->when($request['search'], function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('package_name', 'like', "%{$value}%");
@@ -830,9 +905,9 @@ class SubscriptionController extends Controller
         $from =$request['start_date'] ?? Carbon::now()->format('Y-m-d');
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $transactions= SubscriptionTransaction::where('package_id',$id)
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('id', 'like', "%{$value}%");
@@ -878,16 +953,35 @@ class SubscriptionController extends Controller
         return Excel::download(new SubscriptionTransactionsExport($data), 'SubscriptionTransactionsExport.csv');
     }
     public function subscriberListExport(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
+        $module = $request->module;
+        $moduleFilter = 'order';
+        if (($module == 1 || $module === 'rental') && addon_published_status('Rental')) {
+            $moduleFilter = 'rental';
+        } elseif ($module === 'service' && addon_published_status('Service')) {
+            $moduleFilter = 'service';
+        }
+        $applyModuleType = function ($query) use ($moduleFilter) {
+            $query->whereHas('module', function ($q) use ($moduleFilter) {
+                if ($moduleFilter === 'rental') {
+                    $q->where('module_type', 'rental');
+                } elseif ($moduleFilter === 'service') {
+                    $q->where('module_type', 'service');
+                } else {
+                    $q->whereNotIn('module_type', ['rental', 'service']);
+                }
+            });
+        };
 
         $subscribers= Store::whereHas('vendor',function($query){
             $query->where('status', 1);
         })
+        ->when(true, $applyModuleType)
         ->whereIn('store_business_model' ,['subscription','unsubscribed'])->with([
             'store_sub_update_application.package'
         ])->withCount('store_all_sub_trans')
 
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('name', 'like', "%{$value}%");
@@ -951,9 +1045,9 @@ class SubscriptionController extends Controller
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
         $store= Store::where('id',$id)->first();
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $transactions= SubscriptionTransaction::where('store_id',$store->id)
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('id', 'like', "%{$value}%");

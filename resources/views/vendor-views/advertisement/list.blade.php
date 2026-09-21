@@ -45,7 +45,7 @@ active
             </div>
             <hr>
             <div class="max-w-471 mx-auto fs-12 py-4">
-                {{ translate('By') }} <strong>{{ translate('Creating Advertisement') }}</strong> {{ translate('you can showcase your items or store to a wider audience through targeted ad campaigns.') }}
+                {{ translate('By') }} <strong>{{ translate('Creating Advertisement') }}</strong> {{ translate('you can showcase your') }} {{ strtolower(\App\CentralLogics\Helpers::moduleItemLabel()) }}s {{ translate('or') }} {{ strtolower(\App\CentralLogics\Helpers::moduleStoreLabel()) }} {{ translate('to a wider audience through targeted ad campaigns.') }}
             </div>
         </div>
     </div>

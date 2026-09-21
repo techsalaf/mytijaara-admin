@@ -39,7 +39,7 @@ active
         <div class="js-nav-scroller hs-nav-scroller-horizontal mb-4">
             <ul class="nav nav-tabs border-0 nav--tabs nav--pills">
                 <li class="nav-item">
-                    <a href="{{ route('admin.business-settings.subscriptionackage.subscriberDetail',$id) }}" class="nav-link ">{{ translate('Subscription_Details') }} </a>
+                    <a href="{{ route('admin.business-settings.subscriptionackage.subscriberDetail', ['id' => $id, 'module' => $store->module_id]) }}" class="nav-link ">{{ translate('Subscription_Details') }} </a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link active">{{ translate('Transactions') }}</a>

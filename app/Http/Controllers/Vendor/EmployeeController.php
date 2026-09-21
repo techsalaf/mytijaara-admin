@@ -52,9 +52,9 @@ class EmployeeController extends Controller
 
     function list(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $em = VendorEmployee::where('store_id', Helpers::get_store_id())->with(['role'])
-        ->when(isset($key) , function($query) use($key) {
+        ->when($request['search'] , function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('f_name', 'like', "%{$value}%");
@@ -134,7 +134,7 @@ class EmployeeController extends Controller
     }
 
     // public function search(Request $request){
-    //     $key = explode(' ', $request['search']);
+    //     $key = explode(' ', $request['search'] ?? '');
     //     $employees=VendorEmployee::where('store_id', Helpers::get_store_id())->
     //     where(function ($q) use ($key) {
     //         foreach ($key as $value) {
@@ -152,10 +152,10 @@ class EmployeeController extends Controller
 
     public function list_export(Request $request){
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $em=VendorEmployee::where('store_id', Helpers::get_store_id())->with(['role'])
 
-        ->when(isset($key) , function($query) use($key) {
+        ->when($request['search'] , function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('f_name', 'like', "%{$value}%");

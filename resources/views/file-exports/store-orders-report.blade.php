@@ -98,7 +98,7 @@
                 <td>{{ translate($order->payment_status) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['coupon_discount_amount']  + $order['ref_bonus_amount'] +  $order['store_discount_amount'] + ($order->orderProDiscount?->amount_saved ?? 0)) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['total_tax_amount']) }}</td>
-                <td>{{ \App\CentralLogics\Helpers::number_format_short($order['delivery_charge']) }}</td>
+                <td>{{ \App\CentralLogics\Helpers::number_format_short(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}</td>
             </tr>
         @endforeach
         </tbody>

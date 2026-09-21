@@ -107,107 +107,11 @@
                 </form>
             </div>
         </div>
-        @php
-            $from = $from . ' 00:00:00';
-            $to = $to  . ' 23:59:59';
-            $total = \App\Models\Order::where('order_type', '!=', 'parcel')->when(isset($zone), function ($query) use ($zone) {
-                return $query->where('zone_id', $zone->id);
-            })
-            ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-                ->when(request('module_id'), function ($query) {
-                    return $query->module(request('module_id'));
-                })
-                ->when(isset($store), function ($query) use ($store) {
-                    return $query->where('store_id', $store->id);
-                })
-                ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                    return $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
-                })
-                ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                    return $query->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                    return $query->whereYear('created_at', date('Y') - 1);
-                })
-                ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                    return $query->whereBetween('created_at', [
-                        now()
-                            ->startOfWeek()
-                            ->format('Y-m-d H:i:s'),
-                        now()
-                            ->endOfWeek()
-                            ->format('Y-m-d H:i:s'),
-                    ]);
-                })
-                ->Notpos()
-                ->count();
-            if ($total == 0) {
-                $total = 0.01;
-            }
-        @endphp
         <div class="mb-20">
             <div class="row g-3">
                 <div class="col-lg-8">
                     <div class="row g-2">
                         <div class="col-sm-6">
-                            @php
-                                $delivered = \App\Models\Order::where('order_type', '!=', 'parcel')->when(isset($zone), function ($query) use ($zone) {
-                                    return $query->where('zone_id', $zone->id);
-                                })
-                                ->when(isset($key), function ($query) use ($key) {
-                                        return $query->where(function ($q) use ($key) {
-                                                foreach ($key as $value) {
-                                                    $q->orWhere('id', 'like', "%{$value}%");
-                                                }
-                                            });
-                                    })
-                                    ->when(request('module_id'), function ($query) {
-                                        return $query->module(request('module_id'));
-                                    })
-                                    ->whereIn('order_status', ['delivered','refund_requested','refund_request_canceled'])
-                                    ->when(isset($store), function ($query) use ($store) {
-                                        return $query->where('store_id', $store->id);
-                                    })
-                                    ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                                        return $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                                        return $query->whereYear('created_at', now()->format('Y'));
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                                    })
-                                    ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                                        return $query->whereYear('created_at', date('Y') - 1);
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                                        return $query->whereBetween('created_at', [
-                                            now()
-                                                ->startOfWeek()
-                                                ->format('Y-m-d H:i:s'),
-                                            now()
-                                                ->endOfWeek()
-                                                ->format('Y-m-d H:i:s'),
-                                        ]);
-                                    })
-                                    ->Notpos()
-                                    ->sum('order_amount');
-                            @endphp
                             <a class="__card-3 h-100" href="#">
                                 <img src="{{ asset('/public/assets/admin/img/report/new/trx1.png') }}" class="icon"
                                     alt="report/new">
@@ -222,53 +126,6 @@
                             </a>
                         </div>
                         <div class="col-sm-6">
-                            @php
-                                $canceled = \App\Models\Order::where('order_type', '!=', 'parcel')->when(isset($zone), function ($query) use ($zone) {
-                                    return $query->where('zone_id', $zone->id);
-                                })
-                                ->when(isset($key), function ($query) use ($key) {
-                                        return $query->where(function ($q) use ($key) {
-                                                foreach ($key as $value) {
-                                                    $q->orWhere('id', 'like', "%{$value}%");
-                                                }
-                                            });
-                                    })
-                                    ->when(request('module_id'), function ($query) {
-                                        return $query->module(request('module_id'));
-                                    })
-                                    ->where(['order_status' => 'refunded'])
-                                    ->when(isset($store), function ($query) use ($store) {
-                                        return $query->where('store_id', $store->id);
-                                    })
-                                    ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                                        return $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                                        return $query->whereYear('created_at', now()->format('Y'));
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                                    })
-                                    ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                                        return $query->whereYear('created_at', date('Y') - 1);
-                                    })
-                                    ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                                        return $query->whereBetween('created_at', [
-                                            now()
-                                                ->startOfWeek()
-                                                ->format('Y-m-d H:i:s'),
-                                            now()
-                                                ->endOfWeek()
-                                                ->format('Y-m-d H:i:s'),
-                                        ]);
-                                    })
-                                    ->Notpos()
-                                    // ->sum(DB::raw('order_amount - original_delivery_charge'));
-                                    ->sum(DB::raw('order_amount - delivery_charge - dm_tips'));
-                            @endphp
                             <a class="__card-3 h-100" href="#">
                                 <img src="{{ asset('/public/assets/admin/img/report/new/trx3.png') }}" class="icon"
                                     alt="report/new">
@@ -416,6 +273,7 @@
                                 <th class="border-0">{{ translate('messages.discounted_amount') }}</th>
                                 <th class="border-0">{{ translate('messages.vat/tax') }}</th>
                                 <th class="border-0">{{ translate('messages.delivery_charge') }}</th>
+                                <th class="border-0">{{ translate('messages.delivery_type') }}</th>
                                 <th class="border-0">{{ translate('messages.order_amount') }}</th>
                                 <th class="border-0">{{ translate('messages.admin_discount') }}</th>
                                 <th class="border-0">{{ translate('messages.store_discount') }}</th>
@@ -476,10 +334,20 @@
                                     {{-- pro_discount --}}
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->pro_discount ?? 0) }}</td>
                                     {{-- discounted_amount --}}
-                                    <td class="white-space-nowrap">  {{ \App\CentralLogics\Helpers::format_currency($ot->order['coupon_discount_amount'] + $ot->order['store_discount_amount']+$ot->order['flash_store_discount_amount']+$ot->order['flash_admin_discount_amount'] + $ot->order['ref_bonus_amount'] + $ot->order['extra_discount_amount'] + ($ot->pro_discount ?? 0)) }}</td>
+                                    <td class="white-space-nowrap">  {{ \App\CentralLogics\Helpers::format_currency($ot->order['coupon_discount_amount'] + $ot->order['store_discount_amount']+$ot->order['flash_store_discount_amount']+$ot->order['flash_admin_discount_amount'] + $ot->order['ref_bonus_amount'] + $ot->order['extra_discount_amount'] + ($ot->pro_discount ?? 0) + ($ot->order?->delivery_type === 'slightly_delay' ? ($ot->order?->delivery_type_charge ?? 0) : 0)) }}</td>
 
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->tax) }}</td>
-                                    <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_charge) }}</td>
+                                    <td class="white-space-nowrap">
+                                        @php($pro_delivery_reduction = (float) ($ot->pro_delivery_discount ?? 0))
+                                        {{ \App\CentralLogics\Helpers::format_currency($ot->delivery_charge + $pro_delivery_reduction) }}
+                                        @if ($pro_delivery_reduction > 0)
+                                            <small class="d-block text-muted">{{ translate('messages.Pro_Discount') }} - {{ \App\CentralLogics\Helpers::format_currency($pro_delivery_reduction) }}</small>
+                                        @endif
+                                    </td>
+                                    <td class="white-space-nowrap text-capitalize">
+                                        {{ \App\CentralLogics\Helpers::format_currency($ot->order?->delivery_type_charge ?? 0) }}
+                                        <small class="d-block text-muted">{{ translate('messages.'.($ot->order?->delivery_type ?? 'standard')) }}</small>
+                                    </td>
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order_amount) }}</td>
 
                                     {{-- admin_discount --}}
@@ -489,13 +357,13 @@
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->discount_amount_by_store+$ot->order['flash_store_discount_amount']) }}</td>
 
                                     {{-- admin_commission --}}
-                                    <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->admin_commission + $ot->admin_expense) - $ot->delivery_fee_comission -$ot->additional_charge - $ot->order['flash_admin_discount_amount'] ) }}</td>
+                                    <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\OrderLogic::admin_item_commission($ot)) }}</td>
 
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->additional_charge)) }}</td>
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->extra_packaging_amount)) }}</td>
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_fee_comission) }}</td>
                                     {{-- admin_net_income --}}
-                                    <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->admin_commission - $ot->order['flash_admin_discount_amount'])) }}</td>
+                                    <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\OrderLogic::admin_net_income($ot)) }}</td>
 
                                     {{-- store_net_income --}}
                                     <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->store_amount - ($ot?->order?->order_type == 'parcel' ? 0: $ot->tax)) }}</td>

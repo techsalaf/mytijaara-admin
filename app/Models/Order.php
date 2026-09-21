@@ -52,6 +52,7 @@ class Order extends Model
         'edited' => 'boolean',
         'adjusment' => 'float',
         'is_hidden' => 'boolean',
+        'is_pos' => 'boolean',
     ];
 
     protected $appends = ['module_type','order_attachment_full_url','order_proof_full_url'];

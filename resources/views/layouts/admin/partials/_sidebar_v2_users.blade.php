@@ -20,17 +20,20 @@
     elseif ($is('admin/users/delivery-man*')) $active_section = 'delivery';
     elseif ($is('admin/users/rider*')) $active_section = 'riders';
     elseif ($is('admin/users/custom-role*') || $is('admin/users/employee*')) $active_section = 'staff';
+    elseif ($is('admin/users/serviceman*')) $active_section = 'serviceman';
 @endphp
 
 <aside id="v2-shell" class="v2-shell" data-workspace="users" data-active-section="{{ $active_section }}">
     <div id="v2-rail" class="v2-rail" role="navigation" aria-label="Sections">
         <div class="v2-rail-scope d-none">USERS</div>
         <div class="v2-rail-btns">
+            @if(Helpers::module_permission_check('user_overview'))
             <button class="v2-rail-btn {{ $active_section==='overview' ? 'is-active' : '' }}" data-section="overview" data-label="{{ translate('User Overview') }}" aria-label="{{ translate('User Overview') }}">
                 <i data-lucide="gauge"></i>
                 <span class="v2-pin-dot"></span>
             </button>
-            @if(Helpers::module_permission_check('customer_management'))
+            @endif
+            @if(Helpers::module_permission_check('customer_management') || Helpers::module_permission_check('customer_wallet') || Helpers::module_permission_check('customer_loyalty_point') || Helpers::module_permission_check('cashback'))
                 <button class="v2-rail-btn {{ $active_section==='customers' ? 'is-active' : '' }}" data-section="customers" data-label="{{ translate('messages.customers') }}" aria-label="{{ translate('messages.customers') }}">
                     <i data-lucide="user-round"></i>
                     <span class="v2-pin-dot"></span>
@@ -42,15 +45,21 @@
                     <span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if(addon_published_status('RideShare') && (Helpers::module_permission_check('rider') || Helpers::module_permission_check('ride_vehicle')))
+            @if(addon_published_status('RideShare') && (Helpers::module_permission_check('rider') || Helpers::module_permission_check('rider_level') || Helpers::module_permission_check('rider_review') || Helpers::module_permission_check('ride_vehicle')))
                 <button class="v2-rail-btn {{ $active_section==='riders' ? 'is-active' : '' }}" data-section="riders" data-label="{{ translate('messages.rider') }}" aria-label="{{ translate('messages.rider') }}">
                     <i data-lucide="user-round-cog"></i>
                     <span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if(Helpers::module_permission_check('employee_role') || Helpers::module_permission_check('employee'))
+            @if(Helpers::module_permission_check('employee') || Helpers::module_permission_check('employee'))
                 <button class="v2-rail-btn {{ $active_section==='staff' ? 'is-active' : '' }}" data-section="staff" data-label="{{ translate('messages.employee') }}" aria-label="{{ translate('messages.employee') }}">
                     <i data-lucide="users"></i>
+                    <span class="v2-pin-dot"></span>
+                </button>
+            @endif
+            @if(addon_published_status('Service') && Helpers::module_permission_check('service_provider'))
+                <button class="v2-rail-btn {{ $active_section==='serviceman' ? 'is-active' : '' }}" data-section="serviceman" data-label="{{ translate('messages.Service Man') }}" aria-label="{{ translate('messages.Service Man') }}">
+                    <i data-lucide="wrench"></i>
                     <span class="v2-pin-dot"></span>
                 </button>
             @endif
@@ -64,6 +73,7 @@
 
     <aside id="v2-panel" class="v2-panel" aria-label="{{ translate('Section navigation') }}">
         {{-- Overview panel --}}
+        @if(Helpers::module_permission_check('user_overview'))
         <div class="v2-panel-content" data-panel="overview" @if($active_section!=='overview') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('User Overview') }}</span></div>
@@ -82,8 +92,10 @@
             </div>
         </div>
 
+        @endif
+
         {{-- Customers panel --}}
-        @if(Helpers::module_permission_check('customer_management'))
+        @if(Helpers::module_permission_check('customer_management') || Helpers::module_permission_check('customer_wallet') || Helpers::module_permission_check('customer_loyalty_point') || Helpers::module_permission_check('cashback'))
         <div class="v2-panel-content" data-panel="customers" @if($active_section!=='customers') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('messages.customer_management') }}</span></div>
@@ -92,6 +104,7 @@
             <div class="v2-panel-body">
                 @include('layouts.admin.partials._v2_pinned_card', ['key' => 'users::customers'])
 
+                @if(Helpers::module_permission_check('customer_management') || Helpers::module_permission_check('customer_management'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="cu-acc"><span>{{ translate('Customer accounts') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -103,13 +116,18 @@
                             <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('messages.subscribed_mail_list') }}</span>
                             <button type="button" class="v2-pin" data-pin="cu-sub" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @if(Helpers::module_permission_check('customer_management'))
                         <a class="v2-nav-item {{ $is('admin/users/contact/contact-list*') ? 'is-active' : '' }}" href="{{ route('admin.users.contact.contact-list') }}" data-id="cu-cont">
                             <span class="v2-dot v2-dot--amber"></span><span class="v2-label">{{ translate('messages.contact_messages') }}</span>
                             <button type="button" class="v2-pin" data-pin="cu-cont" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
                     </div>
                 </div>
 
+                @endif
+
+                @if(Helpers::module_permission_check('customer_wallet'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="cu-wal"><span>{{ translate('messages.customer_wallet') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -128,6 +146,9 @@
                     </div>
                 </div>
 
+                @endif
+
+                @if(Helpers::module_permission_check('customer_loyalty_point'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="cu-loy"><span>{{ translate('messages.customer_loyalty_point') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -137,6 +158,8 @@
                         </a>
                     </div>
                 </div>
+
+                @endif
 
                 @if(Helpers::module_permission_check('cashback'))
                 <div class="v2-group">
@@ -183,10 +206,12 @@
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('messages.reviews') }}</span>
                             <button type="button" class="v2-pin" data-pin="dm-rev" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @if(Helpers::module_permission_check('deliveryman'))
                         <a class="v2-nav-item {{ $is('admin/users/delivery-man/vehicle*') ? 'is-active' : '' }}" href="{{ route('admin.users.delivery-man.vehicle.list') }}" data-id="dm-veh">
                             <span class="v2-dot v2-dot--gray"></span><span class="v2-label">{{ translate('messages.vehicles_category') }}</span>
                             <button type="button" class="v2-pin" data-pin="dm-veh" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -194,7 +219,7 @@
         @endif
 
         {{-- Riders panel --}}
-        @if(addon_published_status('RideShare') && (Helpers::module_permission_check('rider') || Helpers::module_permission_check('ride_vehicle')))
+        @if(addon_published_status('RideShare') && (Helpers::module_permission_check('rider') || Helpers::module_permission_check('rider_level') || Helpers::module_permission_check('rider_review') || Helpers::module_permission_check('ride_vehicle')))
         <div class="v2-panel-content" data-panel="riders" @if($active_section!=='riders') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('messages.rider') }} {{ translate('management') }}</span></div>
@@ -220,6 +245,14 @@
                             @if($pending_rd > 0)<span class="v2-count">{{ $pending_rd }}</span>@endif
                             <button type="button" class="v2-pin" data-pin="rd-new" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                    </div>
+                </div>
+                @endif
+
+                @if(Helpers::module_permission_check('rider_level'))
+                <div class="v2-group">
+                    <button type="button" class="v2-group-header" data-group-toggle="rd-lvl-grp"><span>{{ translate('messages.rider_level') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
+                    <div class="v2-group-items">
                         <a class="v2-nav-item {{ ($is('admin/users/rider/level') || $is('admin/users/rider/level/edit*')) ? 'is-active' : '' }}" href="{{ route('admin.users.rider.level.index') }}" data-id="rd-lvl">
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('messages.rider_level') }}</span>
                             <button type="button" class="v2-pin" data-pin="rd-lvl" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
@@ -228,6 +261,14 @@
                             <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('messages.add_rider_level') }}</span>
                             <button type="button" class="v2-pin" data-pin="rd-lvl-add" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                    </div>
+                </div>
+                @endif
+
+                @if(Helpers::module_permission_check('rider_review'))
+                <div class="v2-group">
+                    <button type="button" class="v2-group-header" data-group-toggle="rd-rev-grp"><span>{{ translate('messages.reviews') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
+                    <div class="v2-group-items">
                         <a class="v2-nav-item {{ $is('admin/users/rider/reviews*') ? 'is-active' : '' }}" href="{{ route('admin.users.rider.reviews.list') }}" data-id="rd-rev">
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('messages.reviews') }}</span>
                             <button type="button" class="v2-pin" data-pin="rd-rev" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
@@ -264,7 +305,7 @@
         @endif
 
         {{-- Staff panel --}}
-        @if(Helpers::module_permission_check('employee_role') || Helpers::module_permission_check('employee'))
+        @if(Helpers::module_permission_check('employee') || Helpers::module_permission_check('employee'))
         <div class="v2-panel-content" data-panel="staff" @if($active_section!=='staff') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('messages.employee') }} {{ translate('management') }}</span></div>
@@ -273,7 +314,7 @@
             <div class="v2-panel-body">
                 @include('layouts.admin.partials._v2_pinned_card', ['key' => 'users::staff'])
 
-                @if(Helpers::module_permission_check('employee_role'))
+                @if(Helpers::module_permission_check('employee'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="tm-roles"><span>{{ translate('messages.employee_Role') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -300,6 +341,32 @@
                     </div>
                 </div>
                 @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- Service Man panel --}}
+        @if(addon_published_status('Service') && Helpers::module_permission_check('service_provider'))
+        <div class="v2-panel-content" data-panel="serviceman" @if($active_section!=='serviceman') hidden @endif>
+            <div class="v2-panel-header">
+                <div class="v2-panel-title"><span class="name">{{ translate('messages.Service Man Management') }}</span></div>
+                <div class="v2-panel-subtitle">{{ translate('Manage servicemen, onboarding, and assignments') }}</div>
+            </div>
+            <div class="v2-panel-body">
+                @include('layouts.admin.partials._v2_pinned_card', ['key' => 'users::serviceman'])
+                <div class="v2-group">
+                    <button type="button" class="v2-group-header" data-group-toggle="sm-manage"><span>{{ translate('messages.Service Man') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
+                    <div class="v2-group-items">
+                        <a class="v2-nav-item {{ $is('admin/users/serviceman') ? 'is-active' : '' }}" href="{{ route('admin.users.serviceman.list') }}" data-id="sm-list">
+                            <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('messages.Service Man List') }}</span>
+                            <button type="button" class="v2-pin" data-pin="sm-list" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                        </a>
+                        <a class="v2-nav-item {{ $is('admin/users/serviceman/create*') ? 'is-active' : '' }}" href="{{ route('admin.users.serviceman.create') }}" data-id="sm-add">
+                            <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('messages.Add Service Man') }}</span>
+                            <button type="button" class="v2-pin" data-pin="sm-add" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         @endif

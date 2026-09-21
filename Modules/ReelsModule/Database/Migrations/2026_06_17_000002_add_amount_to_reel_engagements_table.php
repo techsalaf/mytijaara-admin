@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('reel_engagements', function (Blueprint $table) {
             if (!Schema::hasColumn('reel_engagements', 'amount')) {
-                $table->decimal('amount', 12, 4)->nullable()->after('type');
+                $table->decimal('amount', 12, 4)->nullable();
             }
         });
     }

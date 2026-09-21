@@ -171,7 +171,7 @@
                                                 @elseif($order->customer)
                                                 <div>
                                                     <a title="{{$order->customer['f_name'].' '.$order->customer['l_name']}}" class="text-body text-capitalize"
-                                                    href="{{route('admin.customer.view',[$order['user_id']])}}">
+                                                    href="{{route('admin.users.customer.view',[$order['user_id']])}}">
                                                         <div>
                                                             {{$order->customer['f_name'].' '.$order->customer['l_name']}}
                                                         </div>

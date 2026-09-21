@@ -31,16 +31,16 @@ class CouponRepository implements CouponRepositoryInterface
         return $this->coupon->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->coupon->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->coupon->with($relations)->where($filters)
-            ->when(isset($key), function($q) use($key){
+            ->when($searchValue, function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('title', 'like', "%{$value}%")
@@ -78,9 +78,9 @@ class CouponRepository implements CouponRepositoryInterface
 
     public function getExportList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->coupon->with('module')->where('created_by','admin')->where('module_id', Config::get('module.current_module_id'))
-            ->when(isset($key), function($q) use($key){
+            ->when($request['search'], function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('title', 'like', "%{$value}%")

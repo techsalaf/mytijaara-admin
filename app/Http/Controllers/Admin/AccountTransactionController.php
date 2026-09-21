@@ -27,9 +27,9 @@ class AccountTransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $account_transaction = AccountTransaction::
-        when(isset($key), function ($query) use ($key) {
+        when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('ref', 'like', "%{$value}%");
@@ -202,9 +202,9 @@ class AccountTransactionController extends Controller
     }
 
     public function export_account_transaction(Request $request){
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $account_transaction = AccountTransaction::
-        when(isset($key), function ($query) use ($key) {
+        when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('ref', 'like', "%{$value}%");
@@ -227,7 +227,7 @@ class AccountTransactionController extends Controller
     }
 
     public function search_account_transaction(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $account_transaction = AccountTransaction::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('ref', 'like', "%{$value}%");

@@ -127,7 +127,7 @@
 
                                     <a class="text-body"
                                         title="{{$order->customer['f_name'] . ' ' . $order->customer['l_name']}}"
-                                        href="{{route('admin.customer.view', [$order['user_id']])}}">
+                                        href="{{route('admin.users.customer.view', [$order['user_id']])}}">
                                         <strong>
                                             <div> {{$order->customer['f_name'] . ' ' . $order->customer['l_name']}}</div>
                                         </strong>

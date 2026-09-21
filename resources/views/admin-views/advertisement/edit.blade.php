@@ -20,6 +20,9 @@ active
 @endpush
 
 @section('content')
+@php
+    $isProviderContext = in_array(config('module.current_module_type'), ['rental', 'service'], true);
+@endphp
 <div class="content container-fluid">
 
 
@@ -142,9 +145,9 @@ active
 
 
 
-                        <label class="form-label" for="exampleFormControlSelect1">{{ translate('messages.Select_Store') }} </label>
+                        <label class="form-label" for="exampleFormControlSelect1">{{ $isProviderContext ? translate('Select_Provider') : translate('messages.Select_Store') }} </label>
                         <div class="mb-20">
-                            <select name="store_id" id="store_id"  data-placeholder="{{ translate('messages.select_store') }}"
+                            <select name="store_id" id="store_id"  data-placeholder="{{ $isProviderContext ? translate('select_provider') : translate('messages.select_store') }}"
                             class="js-data-example-ajax form-control">
                             @if (isset($advertisement->store))
                             <option value="{{ $advertisement->store_id }}" selected="selected">
@@ -172,7 +175,7 @@ active
                             <label class="form-label">{{ translate('Advertisement_Type') }}</label>
                             <select class="js-select form-control w-100 promotion_type" name="advertisement_type">
                                 <option value="video_promotion" {{ $advertisement?->add_type == 'video_promotion' ? 'selected' : '' }}>{{ translate('Video_Promotion') }}</option>
-                                <option value="store_promotion" {{ $advertisement?->add_type == 'store_promotion' ? 'selected' : '' }} >{{ translate('store_promotion') }}</option>
+                                <option value="store_promotion" {{ $advertisement?->add_type == 'store_promotion' ? 'selected' : '' }} >{{ $isProviderContext ? translate('provider') . ' ' . translate('promotion') : translate('store_promotion') }}</option>
                             </select>
                         </div>
                         <div class="mb-20">
@@ -612,7 +615,8 @@ active
                                 return {
                                     q: params.term, // search term
                                     page: params.page,
-                                    module_id:{{ config('module')['current_module_id'] }}
+                                    module_id:{{ config('module')['current_module_id'] }},
+                                    include_addon_providers: 1 // module-scoped page; surfaces rental/service providers when in those modules
                                 };
                             },
                             processResults: function(data) {

@@ -9,6 +9,7 @@
     $is = function($pat) use ($req) { return \Illuminate\Support\Str::is($pat, $req); };
 
     $admin_user = auth('admin')->user();
+    $can_order = Helpers::module_permission_check('dispatch');
     $modules = \App\Models\Module::whereNotIn('module_type', ['rental', 'ride-share'])
         ->when($admin_user?->zone_id, function ($q) use ($admin_user) {
             $q->whereHas('zones', function ($qq) use ($admin_user) { $qq->where('zone_id', $admin_user->zone_id); });
@@ -43,12 +44,14 @@
                 <i data-lucide="layout-dashboard"></i>
                 <span class="v2-pin-dot"></span>
             </button>
-            @foreach($modules as $m)
-                <button class="v2-rail-btn {{ $active_section === 'm-'.$m->id ? 'is-active' : '' }}" data-section="m-{{ $m->id }}" data-label="{{ $m->module_name }}" aria-label="{{ $m->module_name }}">
-                    <i data-lucide="{{ $module_icon_map[$m->module_type] ?? 'route' }}"></i>
-                    <span class="v2-pin-dot"></span>
-                </button>
-            @endforeach
+            @if($can_order)
+                @foreach($modules as $m)
+                    <button class="v2-rail-btn {{ $active_section === 'm-'.$m->id ? 'is-active' : '' }}" data-section="m-{{ $m->id }}" data-label="{{ $m->module_name }}" aria-label="{{ $m->module_name }}">
+                        <i data-lucide="{{ $module_icon_map[$m->module_type] ?? 'route' }}"></i>
+                        <span class="v2-pin-dot"></span>
+                    </button>
+                @endforeach
+            @endif
         </div>
         <div class="v2-rail-bottom">
             <button class="v2-rail-btn v2-rail-profile" id="v2-rail-profile" aria-haspopup="menu" aria-expanded="false" aria-label="{{ $admin_user->f_name ?? 'Admin' }}">
@@ -76,6 +79,7 @@
                 </div>
             </div>
         </div>
+        @if($can_order)
         @foreach($modules as $m)
             @php
                 $is_parcel_m = $m->module_type === 'parcel';
@@ -120,6 +124,7 @@
                 </div>
             </div>
         @endforeach
+        @endif
     </aside>
 </aside>
 

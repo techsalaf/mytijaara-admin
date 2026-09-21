@@ -936,13 +936,13 @@ class ItemController extends Controller
     public function reviews(Request $request)
     {
         $id = $request['vendor']->stores[0]->id;
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $reviews = Review::with(['customer', 'item'])
         ->whereHas('item', function($query)use($id){
             return $query->where('store_id', $id);
         })
-        ->when(isset($key), function ($query) use ($key,$request) {
+        ->when($request['search'], function ($query) use ($key,$request) {
             $query->where(function($query) use($key,$request) {
 
                 $query->whereHas('item', function ($query) use ($key) {
@@ -1266,7 +1266,7 @@ class ItemController extends Controller
             });
         })
         ->where('store_id',$request['vendor']->stores[0]->id)
-        ->when(isset($key), function($q) use($key){
+        ->when($request['name'], function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->where('name', 'like', "%{$value}%");

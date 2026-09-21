@@ -469,9 +469,10 @@
                                                             <div>
                                                                 <strong class="line--limit-1 card-text font-medium">
                                                                     {{ $detail->item['name'] }}</strong>
+                                                                <?php $unitPrice = $detail['price']; ?>
                                                                 <h6 class="card-text font-regular">
                                                                     {{ $detail['quantity'] }} x
-                                                                    {{ \App\CentralLogics\Helpers::format_currency($detail['price']) }}
+                                                                    {{ \App\CentralLogics\Helpers::format_currency($unitPrice) }}
                                                                 </h6>
                                                                 @if ($order->store && $order->store->module->module_type == 'food')
                                                                     @if (isset($detail['variation']) ? json_decode($detail['variation'], true) : [])
@@ -558,8 +559,11 @@
                                                 @endif
                                                 <td class="text-right">
                                                     <div>
-                                                        <?php $amount = $detail['price'] * $detail['quantity']; ?>
-                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($amount) }}
+                                                        <?php
+                                                            $amount = $detail['price'] * $detail['quantity'];
+                                                            $lineTotal = $unitPrice * $detail['quantity'];
+                                                        ?>
+                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($lineTotal) }}
                                                         </h5>
                                                     </div>
                                                 </td>
@@ -598,9 +602,10 @@
                                                                 <strong
                                                                     class="line--limit-1">{{ Str::limit($detail->campaign['name'], 20, '...') }}</strong>
 
+                                                                <?php $unitPrice = $detail['price']; ?>
                                                                 <h6>
                                                                     {{ $detail['quantity'] }} x
-                                                                    {{ \App\CentralLogics\Helpers::format_currency($detail['price']) }}
+                                                                    {{ \App\CentralLogics\Helpers::format_currency($unitPrice) }}
                                                                 </h6>
                                                                 @if ($order->store && $order->store->module->module_type == 'food')
                                                                     @if (isset($detail['variation']) ? json_decode($detail['variation'], true) : [])
@@ -681,8 +686,11 @@
                                                 @endif
                                                 <td class="text-right">
                                                     <div>
-                                                        <?php $amount = $detail['price'] * $detail['quantity']; ?>
-                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($amount) }}
+                                                        <?php
+                                                            $amount = $detail['price'] * $detail['quantity'];
+                                                            $lineTotal = $unitPrice * $detail['quantity'];
+                                                        ?>
+                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($lineTotal) }}
                                                         </h5>
                                                     </div>
                                                 </td>
@@ -741,7 +749,7 @@
 
 
                                     <dt class="col-6 color-8a8a8a fs-12">{{ translate('messages.coupon_discount') }}
-                                        @if ($order->orderProDiscount && $order->orderProDiscount->benefit_type === 'coupon')
+                                        @if ($order['coupon_discount_amount'] > 0 && $order->orderProDiscount && $order->orderProDiscount->benefit_type === 'coupon')
                                             <i class="tio-info-outined" data-toggle="tooltip"
                                                title="{{ translate('Pro Customer coupon applied.') }}"></i>
                                         @endif
@@ -802,10 +810,11 @@
                                              @endif
                                                  :</dt>
                                          <dd class="col-6 text-dark fs-14">
-                                             + {{ \App\CentralLogics\Helpers::format_currency($order['delivery_charge']) }}
+                                             + {{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}
 
                                          </dd>
-                                         @include('partials.delivery-type-row', ['order' => $order, 'layout' => 'dl'])
+                                         @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'dl', 'dtClass' => 'color-8a8a8a fs-12', 'ddClass' => 'text-dark fs-14'])
+                                         @include('partials.delivery-type-row', ['order' => $order, 'layout' => 'dl', 'dtClass' => 'color-8a8a8a fs-12', 'ddClass' => 'text-dark fs-14'])
                                     <dt class="col-6 color-8a8a8a fs-12">{{ translate('messages.delivery_man_tips') }}</dt>
                                     <dd class="col-6 text-dark fs-14">
                                         + {{ \App\CentralLogics\Helpers::format_currency($order['dm_tips']) }}</dd>
@@ -1924,7 +1933,7 @@
                                             @elseif($order->customer)
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="customer-namekey">{{translate('Name')}}</span>:
-                                                    <span class="text-dark"> <a class="text-dark text text-capitalize" href="{{route('admin.customer.view',[$order['user_id']])}}"> {{$order->customer['f_name'].' '.$order->customer['l_name']}}  </a>  </span>
+                                                    <span class="text-dark"> <a class="text-dark text text-capitalize" href="{{route('admin.users.customer.view',[$order['user_id']])}}"> {{$order->customer['f_name'].' '.$order->customer['l_name']}}  </a>  </span>
                                                 </div>
 
                                                 <div class="d-flex align-items-center gap-2">

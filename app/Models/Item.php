@@ -109,37 +109,41 @@ class Item extends Model
 
     public function scopeActive($query , $zone_ids = null ,$module_id = null)
     {
+        $module_id = $module_id && is_numeric($module_id) ? $module_id : null;
+        $current_module_data = config('module.current_module_data');
+        $zone_module_id = $module_id ?? ($current_module_data['id'] ?? null);
+
         return $query
         ->where('status', 1)->where('is_approved', 1)
-            ->whereHas('store', function ($query) use ($zone_ids) {
+            ->when($module_id, function ($query) use ($module_id) {
+                $query->where('module_id', $module_id);
+            })
+            ->whereHas('store', function ($query) use ($zone_ids, $zone_module_id) {
                 $query->where('status', 1)
                     ->where(function ($query) {
                         $query->where('store_business_model', 'commission')
                             ->orWhereHas('store_sub', function ($query) {
-                                $query->where(function ($query) {
-                                    $query->where('max_order', 'unlimited')->orWhere('max_order', '>', 0);
+                                $query->where('max_order', 'unlimited')->orWhere('max_order', '>', 0);
+                            });
+                    })
+                    ->when($zone_ids && is_array($zone_ids), function ($query) use ($zone_ids, $zone_module_id) {
+                        $query->whereIn('zone_id', $zone_ids)
+                            ->whereHas('zone.modules', function ($query) use ($zone_module_id) {
+                                $query->when($zone_module_id, function ($query) use ($zone_module_id) {
+                                    $query->where('modules.id', $zone_module_id);
                                 });
                             });
-                    })->when($zone_ids && is_array($zone_ids) , function ($query) use ($zone_ids) {
-                        $query->whereIn('zone_id', $zone_ids);
-                    }) ;
+                    });
             })
-            ->whereHas('module', function ($query) use ($module_id){
-                $query->where('status', 1)->when($module_id && is_numeric($module_id), function ($query) use ($module_id) {
-                    $query->where('id', $module_id);
-                });
+            ->whereHas('module', function ($query) {
+                $query->where('status', 1);
             })
             ->whereHas('category', function ($q) {
-                $q->where(function ($q) {
-                    $q->where([
-                            ['parent_id', '=', 0],
-                            ['status', '=', 1],
-                        ])
-                    ->orWhere(function ($q) {
-                        $q->where('parent_id', '!=', 0)
-                            ->whereHas('parent', fn ($p) => $p->where('status', 1));
+                $q->where('status', 1)
+                    ->where(function ($q) {
+                        $q->where('parent_id', 0)
+                            ->orWhereHas('parent', fn ($p) => $p->where('status', 1));
                     });
-                });
             });
     }
     public function scopePopular($query)
@@ -310,6 +314,14 @@ class Item extends Model
                 return $query->where('locale', app()->getLocale());
             }]);
         });
+
+        static::saved(function () {
+            Helpers::deleteCacheData('store_cat_items_');
+        });
+
+        static::deleted(function () {
+            Helpers::deleteCacheData('store_cat_items_');
+        });
     }
 
 
@@ -368,7 +380,7 @@ class Item extends Model
                     } elseif ($item == 'new_arrivals') {
                         $q->reorder()->latest();
                     } elseif ($item == 'top_rated') {
-                        $q->reorder()->orderBy('avg_rating', 'desc');
+                        $q->where('avg_rating', '>', 0)->reorder()->orderBy('avg_rating', 'desc');
                     } elseif ($item == 'veg') {
                         $q->where('veg', 1);
                     } elseif ($item == 'non_veg') {

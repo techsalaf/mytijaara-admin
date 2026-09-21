@@ -22,7 +22,7 @@ class AdvertisementController extends Controller
      */
     public function index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $adds=Advertisement::where('is_updated',0)
         ->when(is_numeric(config('module')['current_module_id']), function($query){
             $query->where('module_id', config('module')['current_module_id']);
@@ -72,7 +72,7 @@ class AdvertisementController extends Controller
 
     public function requestList(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $adds=Advertisement::
         when(is_numeric(config('module')['current_module_id']), function($query){

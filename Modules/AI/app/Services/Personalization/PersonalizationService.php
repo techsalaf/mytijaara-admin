@@ -56,6 +56,74 @@ class PersonalizationService
     }
 
     /**
+     * Record a service action. Service = the module's "item" (stored as
+     * preference_type 'item'); provider = store; category = shared categories.
+     */
+    public static function recordServiceAction(int $userId, int $serviceId, string $signal): void
+    {
+        if (!self::userExists($userId)) return;
+
+        $service = DB::table('services')
+            ->where('id', $serviceId)
+            ->select('category_id', 'sub_category_id', 'store_id', 'module_id')
+            ->first();
+
+        if (!$service) return;
+
+        $weight = self::WEIGHTS[$signal] ?? 0;
+        if ($weight <= 0) return;
+
+        self::upsertScore($userId, 'item', $serviceId, $service->module_id, $weight);
+
+        if ($service->category_id) {
+            self::upsertScore($userId, 'category', $service->category_id, $service->module_id, $weight);
+        }
+
+        if ($service->sub_category_id) {
+            self::upsertScore($userId, 'category', $service->sub_category_id, $service->module_id, $weight);
+        }
+
+        if ($service->store_id) {
+            self::upsertScore($userId, 'store', $service->store_id, $service->module_id, $weight);
+        }
+
+        self::markSummaryDirty($userId, $service->module_id);
+    }
+
+    /**
+     * Record a rental vehicle action. Vehicle = "item"; provider = store (via
+     * provider_id); category = vehicle_categories. Vehicles have no module_id
+     * column, so the rental module id is passed in.
+     */
+    public static function recordVehicleAction(int $userId, int $vehicleId, string $signal, ?int $moduleId): void
+    {
+        if (!self::userExists($userId)) return;
+        if (!$moduleId) return;
+
+        $vehicle = DB::table('vehicles')
+            ->where('id', $vehicleId)
+            ->select('category_id', 'provider_id')
+            ->first();
+
+        if (!$vehicle) return;
+
+        $weight = self::WEIGHTS[$signal] ?? 0;
+        if ($weight <= 0) return;
+
+        self::upsertScore($userId, 'item', $vehicleId, $moduleId, $weight);
+
+        if ($vehicle->category_id) {
+            self::upsertScore($userId, 'category', $vehicle->category_id, $moduleId, $weight);
+        }
+
+        if ($vehicle->provider_id) {
+            self::upsertScore($userId, 'store', $vehicle->provider_id, $moduleId, $weight);
+        }
+
+        self::markSummaryDirty($userId, $moduleId);
+    }
+
+    /**
      * Record a store-based action (view, wishlist).
      */
     public static function recordStoreAction(int $userId, int $storeId, string $signal): void
@@ -156,6 +224,10 @@ class PersonalizationService
      */
     public static function rebuildSummary(int $userId, ?int $moduleId): void
     {
+        // Which table keyword/AI resolution reads (columns are shared).
+        $mt = self::moduleType($moduleId);
+        $primaryTable = $mt === 'service' ? 'service' : ($mt === 'rental' ? 'vehicle' : 'item');
+
         $topItems = CustomerPreference::where('user_id', $userId)
             ->where('preference_type', 'item')
             ->where('module_id', $moduleId)
@@ -182,13 +254,13 @@ class PersonalizationService
 
 
         if (\Modules\AI\app\Core\AiModule::isOpenAiConfigured()) {
-            $aiKeywords = self::getAiKeywords($userId, $topItems, $topCategories, $topStores, $moduleId);
+            $aiKeywords = self::getAiKeywords($userId, $topItems, $topCategories, $topStores, $moduleId, $primaryTable);
         } else {
             $aiKeywords = [];
         }
 
         // Resolve keywords to actual IDs (heavy queries run here in job, not at API time)
-        $resolvedIds = self::resolveKeywordsToIds($aiKeywords, $topItems, $topCategories, $topStores, $moduleId);
+        $resolvedIds = self::resolveKeywordsToIds($aiKeywords, $topItems, $topCategories, $topStores, $moduleId, $primaryTable);
 
         CustomerPreferenceSummary::updateOrCreate(
             ['user_id' => $userId, 'module_id' => $moduleId],
@@ -197,7 +269,7 @@ class PersonalizationService
                 'top_categories' => $topCategories,
                 'top_stores' => $topStores,
                 'ai_keywords' => $aiKeywords,
-                'keyword_item_ids' => $resolvedIds['items'],
+                'keyword_item_ids' => $resolvedIds['primary'],
                 'keyword_category_ids' => $resolvedIds['categories'],
                 'keyword_store_ids' => $resolvedIds['stores'],
                 'update_count' => 0,
@@ -207,50 +279,98 @@ class PersonalizationService
     }
 
     /**
+     * Resolve a module id to its module_type string ('food','service',...).
+     */
+    private static function moduleType(?int $moduleId): string
+    {
+        if (!$moduleId) return 'general';
+        $module = DB::table('modules')->where('id', $moduleId)->first();
+        return $module->module_type ?? 'general';
+    }
+
+    /**
      * Resolve AI keywords to actual item/category/store IDs.
      * This runs ONCE in the queued job — heavy LIKE + JOIN queries happen here, not at API time.
      */
-    private static function resolveKeywordsToIds(array $keywords, array $excludeItemIds, array $excludeCategoryIds, array $excludeStoreIds, ?int $moduleId): array
+    private static function resolveKeywordsToIds(array $keywords, array $excludeItemIds, array $excludeCategoryIds, array $excludeStoreIds, ?int $moduleId, string $primaryType = 'item'): array
     {
         $itemIds = [];
         $categoryIds = [];
         $storeIds = [];
 
         if (empty($keywords)) {
-            return ['items' => [], 'categories' => [], 'stores' => []];
+            return ['primary' => [], 'categories' => [], 'stores' => []];
         }
 
         foreach ($keywords as $keyword) {
             if (!is_string($keyword) || empty(trim($keyword))) continue;
             $kw = trim($keyword);
 
-            // Match items by: name, tags, translations
-            $matchedItems = Item::where('module_id', $moduleId)
-                ->where('status', 1)
-                ->where(function ($q) use ($kw) {
-                    $q->where('name', 'LIKE', "%{$kw}%")
-                      ->orWhereHas('tags', fn($t) => $t->where('tag', 'LIKE', "%{$kw}%"))
-                      ->orWhereHas('translations', fn($t) => $t->where('key', 'name')->where('value', 'LIKE', "%{$kw}%"));
-                })
-                ->whereNotIn('id', $excludeItemIds)
-                ->whereNotIn('id', $itemIds)
-                ->limit(5)
-                ->pluck('id')
-                ->toArray();
+            // Primary entity by name + tags (table varies by module).
+            if ($primaryType === 'service') {
+                $matchedItems = DB::table('services')
+                    ->where('module_id', $moduleId)
+                    ->where('status', 1)
+                    ->where(function ($q) use ($kw) {
+                        $q->where('name', 'LIKE', "%{$kw}%")
+                          ->orWhere('tags', 'LIKE', "%{$kw}%");
+                    })
+                    ->whereNotIn('id', $excludeItemIds)
+                    ->whereNotIn('id', $itemIds)
+                    ->limit(5)
+                    ->pluck('id')
+                    ->toArray();
+            } elseif ($primaryType === 'vehicle') {
+                $matchedItems = DB::table('vehicles')
+                    ->where('status', 1)
+                    ->where(function ($q) use ($kw) {
+                        $q->where('name', 'LIKE', "%{$kw}%")
+                          ->orWhere('tag', 'LIKE', "%{$kw}%");
+                    })
+                    ->whereNotIn('id', $excludeItemIds)
+                    ->whereNotIn('id', $itemIds)
+                    ->limit(5)
+                    ->pluck('id')
+                    ->toArray();
+            } else {
+                $matchedItems = Item::where('module_id', $moduleId)
+                    ->where('status', 1)
+                    ->where(function ($q) use ($kw) {
+                        $q->where('name', 'LIKE', "%{$kw}%")
+                          ->orWhereHas('tags', fn($t) => $t->where('tag', 'LIKE', "%{$kw}%"))
+                          ->orWhereHas('translations', fn($t) => $t->where('key', 'name')->where('value', 'LIKE', "%{$kw}%"));
+                    })
+                    ->whereNotIn('id', $excludeItemIds)
+                    ->whereNotIn('id', $itemIds)
+                    ->limit(5)
+                    ->pluck('id')
+                    ->toArray();
+            }
 
             $itemIds = array_merge($itemIds, $matchedItems);
 
-            // Match categories by: name, translations
-            $matchedCategories = Category::where('status', 1)
-                ->where(function ($q) use ($kw) {
-                    $q->where('name', 'LIKE', "%{$kw}%")
-                      ->orWhereHas('translations', fn($t) => $t->where('key', 'name')->where('value', 'LIKE', "%{$kw}%"));
-                })
-                ->whereNotIn('id', $excludeCategoryIds)
-                ->whereNotIn('id', $categoryIds)
-                ->limit(3)
-                ->pluck('id')
-                ->toArray();
+            // Categories: rental → flat vehicle_categories; else shared categories.
+            if ($primaryType === 'vehicle') {
+                $matchedCategories = DB::table('vehicle_categories')
+                    ->where('status', 1)
+                    ->where('name', 'LIKE', "%{$kw}%")
+                    ->whereNotIn('id', $excludeCategoryIds)
+                    ->whereNotIn('id', $categoryIds)
+                    ->limit(3)
+                    ->pluck('id')
+                    ->toArray();
+            } else {
+                $matchedCategories = Category::where('status', 1)
+                    ->where(function ($q) use ($kw) {
+                        $q->where('name', 'LIKE', "%{$kw}%")
+                          ->orWhereHas('translations', fn($t) => $t->where('key', 'name')->where('value', 'LIKE', "%{$kw}%"));
+                    })
+                    ->whereNotIn('id', $excludeCategoryIds)
+                    ->whereNotIn('id', $categoryIds)
+                    ->limit(3)
+                    ->pluck('id')
+                    ->toArray();
+            }
 
             $categoryIds = array_merge($categoryIds, $matchedCategories);
 
@@ -280,16 +400,80 @@ class PersonalizationService
         }
 
         return [
-            'items' => array_slice(array_unique($itemIds), 0, 30),
+            'primary' => array_slice(array_unique($itemIds), 0, 30),
             'categories' => array_slice(array_unique($categoryIds), 0, 15),
             'stores' => array_slice(array_unique($storeIds), 0, 15),
         ];
     }
 
     /**
+     * Build the "top products" context block for a Service-module user from
+     * the `services` table (analogous to the item context in getAiKeywords).
+     */
+    private static function buildServiceContext(array $topServiceIds): string
+    {
+        $services = DB::table('services')
+            ->leftJoin('categories', 'services.category_id', '=', 'categories.id')
+            ->whereIn('services.id', array_slice($topServiceIds, 0, 15))
+            ->select('services.name', 'services.base_price', 'services.avg_rating', 'services.tags', 'categories.name as category_name')
+            ->get();
+
+        if ($services->isEmpty()) return '';
+
+        $lines = $services->map(function ($s) {
+            $cat = $s->category_name ?? 'Unknown';
+            $rating = $s->avg_rating ? round($s->avg_rating, 1) : 'N/A';
+            $tags = '';
+            if ($s->tags) {
+                $decoded = json_decode($s->tags, true);
+                if (is_array($decoded)) $tags = implode(', ', array_filter($decoded, 'is_string'));
+            }
+            $line = "- {$s->name} | Price: {$s->base_price} | Category: {$cat} | Rating: {$rating}/5";
+            if ($tags) $line .= " | Tags: {$tags}";
+            return $line;
+        })->implode("\n");
+
+        $prices = $services->pluck('base_price')->filter(fn($p) => $p !== null && $p > 0);
+        $avgPrice = $prices->isNotEmpty() ? round($prices->avg(), 2) : 0;
+        $minPrice = $prices->min() ?? 0;
+        $maxPrice = $prices->max() ?? 0;
+
+        return "CUSTOMER'S TOP SERVICES (by interaction score):\n{$lines}\nPrice range: {$minPrice} - {$maxPrice} (Avg: {$avgPrice})";
+    }
+
+    /**
+     * Build the "top products" context block for a Rental-module user from the
+     * `vehicles` table (category via the dedicated `vehicle_categories`).
+     */
+    private static function buildVehicleContext(array $topVehicleIds): string
+    {
+        $vehicles = DB::table('vehicles')
+            ->leftJoin('vehicle_categories', 'vehicles.category_id', '=', 'vehicle_categories.id')
+            ->leftJoin('vehicle_brands', 'vehicles.brand_id', '=', 'vehicle_brands.id')
+            ->whereIn('vehicles.id', array_slice($topVehicleIds, 0, 15))
+            ->select('vehicles.name', 'vehicles.hourly_price', 'vehicles.distance_price', 'vehicles.avg_rating',
+                     'vehicles.type', 'vehicles.fuel_type', 'vehicle_categories.name as category_name', 'vehicle_brands.name as brand_name')
+            ->get();
+
+        if ($vehicles->isEmpty()) return '';
+
+        $lines = $vehicles->map(function ($v) {
+            $cat = $v->category_name ?? 'Unknown';
+            $rating = $v->avg_rating ? round($v->avg_rating, 1) : 'N/A';
+            $price = ($v->hourly_price > 0 ? $v->hourly_price.'/hr' : '') . ($v->distance_price > 0 ? ' '.$v->distance_price.'/km' : '');
+            $extra = collect([$v->brand_name, $v->type, $v->fuel_type])->filter()->implode(', ');
+            $line = "- {$v->name} | Price: ".trim($price ?: 'N/A')." | Category: {$cat} | Rating: {$rating}/5";
+            if ($extra) $line .= " | {$extra}";
+            return $line;
+        })->implode("\n");
+
+        return "CUSTOMER'S TOP VEHICLES (by interaction score):\n{$lines}";
+    }
+
+    /**
      * Use OpenAI to analyze full user behavior and suggest search keywords.
      */
-    public static function getAiKeywords(int $userId, array $topItemIds, array $topCategoryIds, array $topStoreIds, ?int $moduleId): array
+    public static function getAiKeywords(int $userId, array $topItemIds, array $topCategoryIds, array $topStoreIds, ?int $moduleId, string $primaryType = 'item'): array
     {
         if (empty($topItemIds) && empty($topCategoryIds)) return [];
 
@@ -298,7 +482,13 @@ class PersonalizationService
             if (!$user) return [];
 
             $itemContext = '';
-            if (!empty($topItemIds)) {
+            if (!empty($topItemIds) && $primaryType === 'service') {
+                $itemContext = self::buildServiceContext($topItemIds);
+            }
+            if (!empty($topItemIds) && $primaryType === 'vehicle') {
+                $itemContext = self::buildVehicleContext($topItemIds);
+            }
+            if (!empty($topItemIds) && !in_array($primaryType, ['service', 'vehicle'], true)) {
                 $items = Item::whereIn('id', array_slice($topItemIds, 0, 15))
                     ->with(['category:id,name', 'tags:id,tag'])
                     ->select('id', 'name', 'price', 'category_id', 'avg_rating', 'veg', 'organic', 'is_halal')
@@ -332,8 +522,9 @@ class PersonalizationService
 
             $categoryContext = '';
             if (!empty($topCategoryIds)) {
-                $categoryNames = Category::whereIn('id', array_slice($topCategoryIds, 0, 10))
-                    ->pluck('name')->toArray();
+                $categoryNames = $primaryType === 'vehicle'
+                    ? DB::table('vehicle_categories')->whereIn('id', array_slice($topCategoryIds, 0, 10))->pluck('name')->toArray()
+                    : Category::whereIn('id', array_slice($topCategoryIds, 0, 10))->pluck('name')->toArray();
                 if (!empty($categoryNames)) {
                     $categoryContext = "\nTOP PREFERRED CATEGORIES (ranked): " . implode(', ', $categoryNames);
                 }
@@ -422,6 +613,22 @@ DOMAIN RULES:
 - Brand ecosystem: if Apple product → suggest Apple accessories; if Nike → suggest Nike gear
 - Price tier consistency: budget buyer → budget alternatives; premium → premium suggestions
 - Store type: electronics stores, fashion outlets, brand stores, general retail",
+
+                'service' => "MODULE: On-Demand Services
+DOMAIN RULES:
+- Pair by service journey: cleaning → pest control, sanitization; AC repair → AC installation, gas refill; salon → spa, grooming; plumbing → electrical, carpentry
+- Respect the customer's category history and the provider specialties they book
+- Match the service tier / price band the customer books (budget / standard / premium)
+- Suggest complementary and recurring follow-up services commonly booked together
+- Provider type: specialist pros, multi-service agencies, verified/rated providers",
+
+                'rental' => "MODULE: Vehicle Rental
+DOMAIN RULES:
+- Keywords must match vehicle NAMES / models / types (e.g. \"sedan\", \"suv\", \"scooter\", \"hatchback\", \"minivan\", \"luxury\", \"electric\")
+- Respect the customer's vehicle category + brand history and their booked price band (hourly / per-km)
+- Match seating and use-case patterns (family SUV vs solo scooter vs group van)
+- Provider type: rental agencies, fleet operators, verified providers the customer rents from
+- category_keywords should map to vehicle categories (car / bike / suv / luxury / commercial)",
 
                 default => "MODULE: General Marketplace
 DOMAIN RULES:
@@ -515,14 +722,26 @@ Return ONLY this JSON, nothing else:
     }
 
     /**
-     * Apply personalization to item listing queries.
+     * Apply personalization to item listing queries. Reused across modules —
+     * only the table and provider column vary (see $map).
      */
     public static function applyItemPersonalization($query, ?int $userId, $filter = null)
     {
         if (!$userId) return $query;
 
-        $moduleId = config('module.current_module_data') ? config('module.current_module_data')['id'] : null;
+        $moduleData = config('module.current_module_data');
+        $moduleId = is_array($moduleData) ? ($moduleData['id'] ?? null) : null;
         if (!$moduleId) return $query;
+
+        $moduleType = (is_array($moduleData) ? ($moduleData['module_type'] ?? null) : null)
+            ?? config('module.current_module_type');
+        $map = [
+            'service' => ['table' => 'services', 'store' => 'store_id'],
+            'rental'  => ['table' => 'vehicles', 'store' => 'provider_id'],
+        ];
+        $cfg = $map[$moduleType] ?? ['table' => 'items', 'store' => 'store_id'];
+        $table = $cfg['table'];
+        $storeCol = $cfg['store'];
 
         $summary = CustomerPreferenceSummary::where('user_id', $userId)
             ->where('module_id', $moduleId)
@@ -554,11 +773,11 @@ Return ONLY this JSON, nothing else:
             $cases = [];
             foreach (array_slice($itemIds, 0, 20) as $i => $id) {
                 $score = 50 - ($i * 2);
-                $cases[] = "WHEN items.id = " . intval($id) . " THEN {$score}";
+                $cases[] = "WHEN {$table}.id = " . intval($id) . " THEN {$score}";
             }
             foreach (array_slice($kwItemIds, 0, 30) as $id) {
                 if (!in_array($id, $itemIds)) {
-                    $cases[] = "WHEN items.id = " . intval($id) . " THEN 20";
+                    $cases[] = "WHEN {$table}.id = " . intval($id) . " THEN 20";
                 }
             }
             $scoreParts[] = "(CASE " . implode(' ', $cases) . " ELSE 0 END)";
@@ -569,11 +788,11 @@ Return ONLY this JSON, nothing else:
             $cases = [];
             foreach (array_slice($categoryIds, 0, 20) as $i => $id) {
                 $score = 30 - ($i * 1);
-                $cases[] = "WHEN items.category_id = " . intval($id) . " THEN {$score}";
+                $cases[] = "WHEN {$table}.category_id = " . intval($id) . " THEN {$score}";
             }
             foreach (array_slice($kwCategoryIds, 0, 15) as $id) {
                 if (!in_array($id, $categoryIds)) {
-                    $cases[] = "WHEN items.category_id = " . intval($id) . " THEN 15";
+                    $cases[] = "WHEN {$table}.category_id = " . intval($id) . " THEN 15";
                 }
             }
             $scoreParts[] = "(CASE " . implode(' ', $cases) . " ELSE 0 END)";
@@ -584,11 +803,11 @@ Return ONLY this JSON, nothing else:
             $cases = [];
             foreach (array_slice($storeIds, 0, 20) as $i => $id) {
                 $score = 15 - ($i * 0.5);
-                $cases[] = "WHEN items.store_id = " . intval($id) . " THEN {$score}";
+                $cases[] = "WHEN {$table}.{$storeCol} = " . intval($id) . " THEN {$score}";
             }
             foreach (array_slice($kwStoreIds, 0, 15) as $id) {
                 if (!in_array($id, $storeIds)) {
-                    $cases[] = "WHEN items.store_id = " . intval($id) . " THEN 8";
+                    $cases[] = "WHEN {$table}.{$storeCol} = " . intval($id) . " THEN 8";
                 }
             }
             $scoreParts[] = "(CASE " . implode(' ', $cases) . " ELSE 0 END)";
@@ -673,8 +892,12 @@ Return ONLY this JSON, nothing else:
     {
         if (!$userId) return $query;
 
-        $moduleId = config('module.current_module_data') ? config('module.current_module_data')['id'] : null;
+        $moduleData = config('module.current_module_data');
+        $moduleId = is_array($moduleData) ? ($moduleData['id'] ?? null) : null;
         if (!$moduleId) return $query;
+
+        $moduleType = (is_array($moduleData) ? ($moduleData['module_type'] ?? null) : null)
+            ?? config('module.current_module_type');
 
         $categoryIds = [];
         $kwCategoryIds = [];
@@ -702,6 +925,25 @@ Return ONLY this JSON, nothing else:
 
         $allCategoryIds = array_unique(array_merge($categoryIds, $kwCategoryIds));
         if (empty($allCategoryIds)) return $query;
+
+        // Rental: flat vehicle_categories (no parent), rank ids directly.
+        if ($moduleType === 'rental') {
+            $ranked = [];
+            foreach (array_merge(array_slice($categoryIds, 0, 20), array_slice($kwCategoryIds, 0, 15)) as $id) {
+                $id = (int) $id;
+                if ($id > 0 && !in_array($id, $ranked, true)) {
+                    $ranked[] = $id;
+                }
+            }
+            $cases = [];
+            foreach ($ranked as $i => $id) {
+                $score = 30 - $i;
+                if ($score < 1) break;
+                $cases[] = "WHEN vehicle_categories.id = " . intval($id) . " THEN {$score}";
+            }
+            if (empty($cases)) return $query;
+            return $query->orderByRaw("(CASE " . implode(' ', $cases) . " ELSE 0 END) DESC");
+        }
 
         // The category-listing endpoint filters `position = 0` (parents
         // only), but item/keyword preferences usually accumulate against the

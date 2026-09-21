@@ -275,6 +275,9 @@ class LoginController extends Controller
             if(Helpers::get_store_data()?->module_type == 'rental' && addon_published_status('Rental')){
                 return redirect()->route('vendor.providerDashboard')->withCookies($forgetCookies);
             }
+            if(Helpers::get_store_data()?->module_type == 'service' && addon_published_status('Service')){
+                return redirect()->route('vendor.service.dashboard')->withCookies($forgetCookies);
+            }
             return redirect()->route('vendor.dashboard')->withCookies($forgetCookies);
         }
         RateLimiter::hit($key, $decayMinutes * 60);

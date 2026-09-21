@@ -2,6 +2,9 @@
 
 @section('title', translate('messages.coupons'))
 
+@php($isServiceModule = \Illuminate\Support\Facades\Config::get('module.current_module_type') == 'service')
+@php($isRentalModule = \Illuminate\Support\Facades\Config::get('module.current_module_type') == 'rental')
+
 @section('content')
     <div class="content container-fluid">
         <!-- Page Header -->
@@ -86,17 +89,19 @@
                                             </option>
                                             <option value="store_wise"
                                                 {{ old('coupon_type') == 'store_wise' ? 'selected' : '' }}>
-                                                {{ translate('messages.store_wise') }}</option>
+                                                {{ $isServiceModule ? translate('Provider wise') : translate('messages.store_wise') }}</option>
                                             <option value="zone_wise"
                                                 {{ old('coupon_type') == 'zone_wise' ? 'selected' : '' }}>
                                                 {{ translate('messages.zone_wise') }}</option>
-                                            <option value="free_delivery"
-                                                {{ old('coupon_type') == 'free_delivery' ? 'selected' : '' }}>
-                                                {{ translate('messages.free_delivery') }}
-                                            </option>
+                                            @if (!$isServiceModule && !$isRentalModule)
+                                                <option value="free_delivery"
+                                                    {{ old('coupon_type') == 'free_delivery' ? 'selected' : '' }}>
+                                                    {{ translate('messages.free_delivery') }}
+                                                </option>
+                                            @endif
                                             <option value="first_order"
                                                 {{ old('coupon_type') == 'first_order' ? 'selected' : '' }}>
-                                                {{ translate('messages.first_order') }}</option>
+                                                {{ $isServiceModule ? translate('First booking') : translate('messages.first_order') }}</option>
                                             @if (\App\CentralLogics\Helpers::get_business_settings('pro_member_status') == 1)
                                                 <option value="pro_customer"
                                                     {{ old('coupon_type') == 'pro_customer' ? 'selected' : '' }}>
@@ -111,12 +116,12 @@
                                 <div class="col-md-4 col-lg-3 col-sm-6" id="store_wise">
                                     <div class="form-group error-wrapper">
                                         <label class="input-label"
-                                            for="exampleFormControlSelect1">{{ translate('messages.store') }}<span
+                                            for="exampleFormControlSelect1">{{ $isServiceModule ? translate('Provider') : translate('messages.store') }}<span
                                                 class="input-label-secondary"></span></label>
                                         <select name="store_ids[]" id="store_id" class="js-data-example-ajax form-control"
-                                            data-placeholder="{{ translate('messages.select_store') }}"
-                                            title="{{ translate('messages.select_store') }}">
-                                            <option disabled selected>---{{ translate('messages.select_store') }}---
+                                            data-placeholder="{{ $isServiceModule ? translate('Select Provider') : translate('messages.select_store') }}"
+                                            title="{{ $isServiceModule ? translate('Select Provider') : translate('messages.select_store') }}">
+                                            <option disabled selected>---{{ $isServiceModule ? translate('Select Provider') : translate('messages.select_store') }}---
                                             </option>
                                             @if (old('store_ids'))
                                                 @foreach (\App\Models\Store::whereIn('id', old('store_ids'))->get(['id', 'name']) as $store)
@@ -187,7 +192,7 @@
                                             max="100">
                                     </div>
                                 </div>
-                                <div class="col-md-4 col-lg-3 col-sm-6">
+                                <div class="col-md-4 col-lg-3 col-sm-6" id="start_date_wrap">
                                     <div class="form-group error-wrapper">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.start_date') }}</label>
@@ -195,7 +200,7 @@
                                             class="form-control" id="date_from" required>
                                     </div>
                                 </div>
-                                <div class="col-md-4 col-lg-3 col-sm-6">
+                                <div class="col-md-4 col-lg-3 col-sm-6" id="expire_date_wrap">
                                     <div class="form-group error-wrapper">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.expire_date') }}</label>
@@ -225,7 +230,7 @@
                                             for="exampleFormControlInput1">{{ translate('messages.min_purchase') }}
                                             ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
                                         <input type="number" step="0.01" id="min_purchase"
-                                            value="{{ old('min_purchase') ?? 0 }}" name="min_purchase" min="0"
+                                            value="{{ old('min_purchase') }}" name="min_purchase" min="1"
                                             max="999999999999.99" class="form-control" placeholder="100">
                                     </div>
                                 </div>
@@ -236,7 +241,7 @@
                                             for="exampleFormControlInput1">{{ translate('messages.discount') }}
                                             <span class="input-label-secondary text--title" data-toggle="tooltip"
                                                 data-placement="right"
-                                                data-original-title="{{ translate('Currently_you_need_to_manage_discount_with_the_Store.') }}">
+                                                data-original-title="{{ $isServiceModule ? translate('Currently you need to manage discount with the Provider.') : translate('Currently_you_need_to_manage_discount_with_the_Store.') }}">
                                                 <i class="tio-info-outined"></i>
                                             </span>
                                         </label>
@@ -250,9 +255,11 @@
                                         <label class="input-label"
                                             for="max_discount">{{ translate('messages.max_discount') }}
                                             ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
-                                        <input type="number" step="0.01" min="0"
+                                        <input type="number" step="0.01"
+                                            min="{{ old('discount_type') == 'percent' ? '0.01' : '0' }}"
                                             value="{{ old('max_discount') ?? 0 }}" max="999999999999.99"
-                                            name="max_discount" id="max_discount" class="form-control" readonly>
+                                            name="max_discount" id="max_discount" class="form-control"
+                                            {{ old('discount_type') == 'percent' ? 'required' : 'readonly' }}>
                                     </div>
                                 </div>
 
@@ -369,7 +376,7 @@
                                         </td>
                                         <td>{{ $coupon['code'] }}</td>
 
-                                        <td>{{ translate('messages.' . $coupon->coupon_type) }}</td>
+                                        <td>{{ $isServiceModule && $coupon->coupon_type == 'store_wise' ? translate('Provider wise') : ($isServiceModule && $coupon->coupon_type == 'first_order' ? translate('First booking') : translate('messages.' . $coupon->coupon_type)) }}</td>
                                         <td>{{ $coupon->total_uses }}</td>
                                         <td>{{ \App\CentralLogics\Helpers::format_currency($coupon['min_purchase']) }}
                                         </td>
@@ -379,8 +386,8 @@
                                         <td>{{ translate($coupon['discount_type']) }}
                                             {{ $coupon['discount_type'] == 'amount' ? \App\CentralLogics\Helpers::currency_symbol() : ($coupon['discount_type'] == 'percent' ? '%' : '') }}
                                         </td>
-                                        <td>{{ \App\CentralLogics\Helpers::date_format($coupon['start_date']) }}</td>
-                                        <td>{{ \App\CentralLogics\Helpers::date_format($coupon['expire_date']) }}</td>
+                                        <td>{{ $coupon['start_date'] ? \App\CentralLogics\Helpers::date_format($coupon['start_date']) : translate('messages.N/A') }}</td>
+                                        <td>{{ $coupon['expire_date'] ? \App\CentralLogics\Helpers::date_format($coupon['expire_date']) : translate('messages.N/A') }}</td>
                                         <td>
                                             <label class="toggle-switch toggle-switch-sm"
                                                 for="couponCheckbox{{ $coupon->id }}">
@@ -487,7 +494,8 @@
                         return {
                             q: params.term, // search term
                             page: params.page,
-                            module_id: module_id
+                            module_id: module_id,
+                            include_addon_providers: 1
                         };
                     },
                     processResults: function(data) {

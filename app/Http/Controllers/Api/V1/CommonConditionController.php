@@ -18,7 +18,7 @@ class CommonConditionController extends Controller
             Helpers::setZoneIds($request);
             $common_condition_default_status = Helpers::get_business_settings('common_condition_default_status') ?? 1;
             $common_condition_sort_by_general = Helpers::getPriorityList(name: 'common_condition_sort_by_general', type: 'general');
-            $key = explode(' ', $search);
+            $key = explode(' ', $search ?? '');
             $zone_id = $request->header('zoneId');
             $type = $request->query('type', 'all');
 

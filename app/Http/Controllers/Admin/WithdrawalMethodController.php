@@ -22,7 +22,7 @@ class WithdrawalMethodController extends Controller
         $search = $request->search;
         $withdrawal_methods = $this->withdrawal_method
             ->when($request->has('search'), function ($query) use ($request) {
-                $keys = explode(' ', $request['search']);
+                $keys = explode(' ', $request['search'] ?? '');
                 return $query->where(function ($query) use ($keys) {
                     foreach ($keys as $key) {
                         $query->where('method_name', 'LIKE', '%' . $key . '%');

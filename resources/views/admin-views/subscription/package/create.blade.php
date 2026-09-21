@@ -15,7 +15,7 @@ active
                     <div class="d-flex align-items-start">
                         <img src="{{asset('/public/assets/admin/img/create-package-icon.png')}}" width="24" alt="img">
                         <div class="w-0 flex-grow pl-2">
-                            <h1 class="page-header-title">{{translate('Subscription Package')}}  <small class="ml-2"> {{ $module == 'rental' ? '('.translate('messages.Rental_Module') .')' : ''}} </small> </h1>
+                            <h1 class="page-header-title">{{translate('Subscription Package')}}  <small class="ml-2"> {{ $module == 'rental' ? '('.translate('messages.Rental_Module') .')' : ($module == 'service' ? '('.translate('messages.Service_Module').')' : '')}} </small> </h1>
                             <div class="page-header-text">{{ translate('Create_Subscriptions_Packages_for_Subscription_Business_Model') }}</div>
                         </div>
                     </div>
@@ -93,13 +93,13 @@ active
                         <div class="col-lg-4 col-sm-6">
                             <div class="form-group">
                                 <label class="input-label">{{ translate('Package_Price') }} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
-                                <input type="number" name="package_price" value="{{ old('package_price') }}" required  min="0.01" step="0.01" max="999999999" class="form-control" placeholder="{{ translate('Ex: 300') }}">
+                                <input type="number" inputmode="decimal" name="package_price" value="{{ old('package_price') }}" required min="0.01" step="0.01" max="999999999" class="form-control no-spinner" placeholder="{{ translate('Ex: 300') }}">
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6">
                             <div class="form-group">
                                 <label class="input-label">{{ translate('Package_Validity') }} {{ translate('Days') }}</label>
-                                <input type="number"   min="1" max="999999999"  value="{{ old('package_validity') }}"  required name="package_validity"  class="form-control" placeholder="{{ translate('Ex: 365') }}">
+                                <input type="number" inputmode="numeric"  min="1" step="1" max="999999999"  value="{{ old('package_validity') }}"  required name="package_validity"  class="form-control no-spinner" placeholder="{{ translate('Ex: 365') }}">
                             </div>
                         </div>
 
@@ -194,7 +194,7 @@ active
                                     {{ translate('Set_limit') }}
                                 </div>
                             </h5>
-                            <div class="fz-12px">{{ $module == 'rental' ?  translate('Set_maximum_trips_&_vehicle_limit_for_this_package')  : translate('Set_maximum_order_&_product_limit_for_this_package') }}</div>
+                            <div class="fz-12px">{{ $module == 'rental' ?  translate('Set_maximum_trips_&_vehicle_limit_for_this_package')  : ($module == 'service' ? translate('Set_maximum_booking_&_service_limit_for_this_package') : translate('Set_maximum_order_&_product_limit_for_this_package')) }}</div>
                         </div>
                     </div>
                 </div>
@@ -204,7 +204,7 @@ active
                             <div class="card-body">
                                 <div class="limit-item-card">
                                     <div class="form-group mb-0">
-                                        <label class="form-label text-capitalize">{{  $module == 'rental' ? translate('Maximum_Trip_Limit') : translate('Maximum_Order Limit') }}</label>
+                                        <label class="form-label text-capitalize">{{  $module == 'rental' ? translate('Maximum_Trip_Limit') : ($module == 'service' ? translate('Maximum_Booking_Limit') : translate('Maximum_Order Limit')) }}</label>
                                         <div class="d-flex flex-wrap items-center gap-2">
                                             <div class="resturant-type-group p-0">
                                                 <label class="form-check form--check mr-2 mr-md-4">
@@ -232,7 +232,7 @@ active
                             <div class="card-body">
                                 <div class="limit-item-card">
                                     <div class="form-group mb-0">
-                                        <label class="form-label text-capitalize">{{ $module == 'rental' ? translate('Maximum_Vehicle_Limit') : translate('Maximum_Item_Limit') }}</label>
+                                        <label class="form-label text-capitalize">{{ $module == 'rental' ? translate('Maximum_Vehicle_Limit') : ($module == 'service' ? translate('Maximum_Service_Limit') : translate('Maximum_Item_Limit')) }}</label>
                                         <div class="d-flex flex-wrap items-center gap-2">
                                             <div class="resturant-type-group p-0">
                                                 <label class="form-check form--check mr-2 mr-md-4">
@@ -347,6 +347,13 @@ active
     $(document).on("click", ".btn--reset", function () {
         $('.custom-limit-box').hide();
         $('.max_required').removeAttr('required');
+    });
+
+    // Package validity accepts whole days only — block decimal/exponent characters
+    $(document).on('keydown', 'input[name="package_validity"]', function (event) {
+        if (['.', 'e', 'E', '+', '-'].includes(event.key)) {
+            event.preventDefault();
+        }
     });
 
 </script>

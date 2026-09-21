@@ -17,6 +17,8 @@
     $is_ecommerce = $current_module_type === 'ecommerce';
     $is_grocery   = $current_module_type === 'grocery';
     $is_parcel    = $current_module_type === 'parcel';
+    $can_parcel   = Helpers::module_permission_check('parcel');
+    $can_sales_gate = $is_parcel ? $can_parcel : Helpers::module_permission_check('order');
 
     $reels_enabled = addon_published_status('ReelsModule')
         && Helpers::module_permission_check('reels')
@@ -86,13 +88,13 @@
                 <i data-lucide="gauge"></i>
                 <span class="v2-pin-dot"></span>
             </button>
-            @if(Helpers::module_permission_check('order') || Helpers::module_permission_check('pos'))
+            @if($can_sales_gate || Helpers::module_permission_check('pos'))
                 <button class="v2-rail-btn {{ $active_section==='sales' ? 'is-active' : '' }}" data-section="sales" data-label="{{ translate('Sales') }}" aria-label="{{ translate('Sales') }}">
                     <i data-lucide="shopping-bag"></i>
                     <span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if(Helpers::module_permission_check('category') || Helpers::module_permission_check('attribute') || Helpers::module_permission_check('unit') || Helpers::module_permission_check('item') || Helpers::module_permission_check('addon') || Helpers::module_permission_check('brand') || Helpers::module_permission_check('common_condition') || ($is_parcel && Helpers::module_permission_check('parcel')))
+            @if(Helpers::module_permission_check('category') || Helpers::module_permission_check('category') || Helpers::module_permission_check('category') || Helpers::module_permission_check('item') || Helpers::module_permission_check('addon') || Helpers::module_permission_check('category') || Helpers::module_permission_check('category') || ($is_parcel && Helpers::module_permission_check('parcel')))
                 <button class="v2-rail-btn {{ $active_section==='catalog' ? 'is-active' : '' }}" data-section="catalog" data-label="{{ translate('Catalog') }}" aria-label="{{ translate('Catalog') }}">
                     <i data-lucide="package"></i>
                     <span class="v2-pin-dot"></span>
@@ -104,13 +106,13 @@
                     <span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if($is_parcel && Helpers::module_permission_check('order'))
+            @if($is_parcel && $can_parcel)
                 <button class="v2-rail-btn {{ $active_section==='parcel_settings' ? 'is-active' : '' }}" data-section="parcel_settings" data-label="{{ translate('delivery_Settings') }}" aria-label="{{ translate('delivery_Settings') }}">
                     <i data-lucide="truck"></i>
                     <span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if(Helpers::module_permission_check('campaign') || Helpers::module_permission_check('banner') || Helpers::module_permission_check('coupon') || Helpers::module_permission_check('notification') || Helpers::module_permission_check('advertisement'))
+            @if(Helpers::module_permission_check('campaign') || Helpers::module_permission_check('banner') || Helpers::module_permission_check('coupon') || Helpers::module_permission_check('notification') || Helpers::module_permission_check('coupon'))
                 <button class="v2-rail-btn {{ $active_section==='marketing' ? 'is-active' : '' }}" data-section="marketing" data-label="{{ translate('Marketing') }}" aria-label="{{ translate('Marketing') }}">
                     <i data-lucide="megaphone"></i>
                     <span class="v2-pin-dot"></span>
@@ -149,7 +151,7 @@
         </div>
 
         {{-- Sales panel --}}
-        @if(Helpers::module_permission_check('order') || Helpers::module_permission_check('pos'))
+        @if($can_sales_gate || Helpers::module_permission_check('pos'))
         <div class="v2-panel-content" data-panel="sales" @if($active_section!=='sales') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title">
@@ -177,7 +179,7 @@
                 </div>
                 @endif
 
-                @if(Helpers::module_permission_check('order'))
+                @if($can_sales_gate)
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="sl-orders">
                         <span>{{ translate('messages.orders') }}</span>
@@ -264,13 +266,13 @@
                     </div>
                 </div>
                 @endif {{-- /if(!$is_parcel) wrapping Refunds group --}}
-                @endif {{-- /if(Helpers::module_permission_check('order')) wrapping Orders + parcel-dispatch + Refunds --}}
+                @endif {{-- /if($can_sales_gate) wrapping Orders + parcel-dispatch + Refunds --}}
             </div>
         </div>
         @endif {{-- /if(Sales panel gate) --}}
 
         {{-- Delivery Settings panel (parcel only) --}}
-        @if($is_parcel && Helpers::module_permission_check('order'))
+        @if($is_parcel && $can_parcel)
         <div class="v2-panel-content" data-panel="parcel_settings" @if($active_section!=='parcel_settings') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title">
@@ -300,7 +302,7 @@
         @endif
 
         {{-- Catalog panel --}}
-        @if(Helpers::module_permission_check('category') || Helpers::module_permission_check('attribute') || Helpers::module_permission_check('unit') || Helpers::module_permission_check('item') || Helpers::module_permission_check('addon') || Helpers::module_permission_check('brand') || Helpers::module_permission_check('common_condition') || ($is_parcel && Helpers::module_permission_check('parcel')))
+        @if(Helpers::module_permission_check('category') || Helpers::module_permission_check('category') || Helpers::module_permission_check('category') || Helpers::module_permission_check('item') || Helpers::module_permission_check('addon') || Helpers::module_permission_check('category') || Helpers::module_permission_check('category') || ($is_parcel && Helpers::module_permission_check('parcel')))
         <div class="v2-panel-content" data-panel="catalog" @if($active_section!=='catalog') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title">
@@ -329,7 +331,7 @@
                 @endif
 
                 @if(!$is_parcel)
-                @if(Helpers::module_permission_check('category') || (!$is_food && Helpers::module_permission_check('attribute')) || (!$is_food && Helpers::module_permission_check('unit')) || (($is_ecommerce || $is_grocery) && Helpers::module_permission_check('brand')) || ($is_pharmacy && Helpers::module_permission_check('common_condition')))
+                @if(Helpers::module_permission_check('category') || (!$is_food && Helpers::module_permission_check('category')) || (!$is_food && Helpers::module_permission_check('category')) || (($is_ecommerce || $is_grocery) && Helpers::module_permission_check('category')) || ($is_pharmacy && Helpers::module_permission_check('category')))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="cat-setup">
                         <span>{{ translate('Setup') }}</span>
@@ -358,7 +360,7 @@
                             </div>
                         @endif
 
-                        @if(!$is_food && Helpers::module_permission_check('attribute'))
+                        @if(!$is_food && Helpers::module_permission_check('category'))
                             <a class="v2-nav-item {{ $is('admin/attribute*') ? 'is-active' : '' }}" href="{{ route('admin.attribute.add-new') }}" data-id="cat-attr">
                                 <span class="v2-dot v2-dot--violet"></span>
                                 <span class="v2-label">{{ translate('messages.attributes') }}</span>
@@ -374,7 +376,7 @@
                             </a>
                         @endif
 
-                        @if(!$is_food && Helpers::module_permission_check('unit'))
+                        @if(!$is_food && Helpers::module_permission_check('category'))
                             <a class="v2-nav-item {{ $is('admin/unit*') ? 'is-active' : '' }}" href="{{ route('admin.unit.index') }}" data-id="cat-units">
                                 <span class="v2-dot v2-dot--amber"></span>
                                 <span class="v2-label">{{ translate('messages.units') }}</span>
@@ -382,7 +384,7 @@
                             </a>
                         @endif
 
-                        @if(($is_ecommerce || $is_grocery) && Helpers::module_permission_check('brand'))
+                        @if(($is_ecommerce || $is_grocery) && Helpers::module_permission_check('category'))
                             <a class="v2-nav-item {{ $is('admin/brand*') ? 'is-active' : '' }}" href="{{ route('admin.brand.add') }}" data-id="cat-brand">
                                 <span class="v2-dot v2-dot--rose"></span>
                                 <span class="v2-label">{{ translate('messages.Brands') }}</span>
@@ -390,7 +392,7 @@
                             </a>
                         @endif
 
-                        @if($is_pharmacy && Helpers::module_permission_check('common_condition'))
+                        @if($is_pharmacy && Helpers::module_permission_check('category'))
                             <a class="v2-nav-item {{ $is('admin/common-condition*') ? 'is-active' : '' }}" href="{{ route('admin.common-condition.add') }}" data-id="cat-cc">
                                 <span class="v2-dot v2-dot--amber"></span>
                                 <span class="v2-label">{{ translate('messages.Common_Conditions') }}</span>
@@ -442,7 +444,7 @@
                             <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('messages.list') }}</span>
                             <button type="button" class="v2-pin" data-pin="is-list" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
-                        @if(!$is_food)
+                        @if(!$is_food && Helpers::module_permission_check('report'))
                         <a class="v2-nav-item {{ $is('admin/report/stock-report*') ? 'is-active' : '' }}" href="{{ route('admin.report.stock-report') }}" data-id="is-low">
                             <span class="v2-dot v2-dot--rose"></span><span class="v2-label">{{ translate('messages.Low_Stock_List') }}</span>
                             <button type="button" class="v2-pin" data-pin="is-low" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
@@ -516,6 +518,7 @@
                     </div>
                 </div>
 
+                @if(Helpers::module_permission_check('store_bulk'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="v-bulk">
                         <span>{{ translate('Bulk') }}</span>
@@ -530,12 +533,13 @@
                         </a>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
         @endif
 
         {{-- Marketing panel --}}
-        @if(Helpers::module_permission_check('campaign') || Helpers::module_permission_check('banner') || Helpers::module_permission_check('coupon') || Helpers::module_permission_check('notification') || Helpers::module_permission_check('advertisement'))
+        @if(Helpers::module_permission_check('campaign') || Helpers::module_permission_check('banner') || Helpers::module_permission_check('coupon') || Helpers::module_permission_check('notification') || Helpers::module_permission_check('coupon'))
         <div class="v2-panel-content" data-panel="marketing" @if($active_section!=='marketing') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title">
@@ -576,7 +580,7 @@
                 </div>
                 @endif
 
-                @if(!$is_parcel && (Helpers::module_permission_check('coupon') || Helpers::module_permission_check('advertisement')))
+                @if(!$is_parcel && (Helpers::module_permission_check('coupon') || Helpers::module_permission_check('coupon')))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="mk-promo">
                         <span>{{ translate('Promotions') }}</span>
@@ -589,7 +593,7 @@
                                 <button type="button" class="v2-pin" data-pin="mk-coup" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                             </a>
                         @endif
-                        @if(Helpers::module_permission_check('advertisement'))
+                        @if(Helpers::module_permission_check('coupon'))
                             @php
                                 $ad_create_active = $is('admin/advertisement/create*');
                                 $ad_requests_active = $is('admin/advertisement/requests*');

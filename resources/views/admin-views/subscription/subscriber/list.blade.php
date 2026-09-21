@@ -19,7 +19,7 @@ active
                     <div class="d-flex align-items-start">
                         <img src="{{asset('/public/assets/admin/img/store.png')}}" width="24" alt="img">
                         <div class="w-0 flex-grow pl-2">
-                            <h1 class="page-header-title">{{translate('Subscribed Store List')}}</h1>
+                            <h1 class="page-header-title">{{ in_array(request()->module, [1, 'rental', 'service']) ? translate('Subscribed Provider List') : translate('Subscribed Store List') }}</h1>
                         </div>
                     </div>
                 </div>
@@ -35,6 +35,28 @@ active
                 </div>
             </div>
         </div>
+
+        @if (addon_published_status('Rental') || addon_published_status('Service'))
+        <!-- Nav Menus -->
+        <ul class="nav nav-tabs border-0 nav--tabs nav--pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link {{ !in_array(request()->module, [1, 'rental', 'service']) ? 'active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.subscriberList') }}">{{ translate('Order_Module') }}</a>
+            </li>
+
+            @if (addon_published_status('Rental'))
+            <li class="nav-item">
+                <a class="nav-link {{ in_array(request()->module, [1, 'rental']) ? 'active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.subscriberList', ['module' => 'rental']) }}">{{ translate('Rental_Module') }}</a>
+            </li>
+            @endif
+
+            @if (addon_published_status('Service'))
+            <li class="nav-item">
+                <a class="nav-link {{ request()->module == 'service' ? 'active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.subscriberList', ['module' => 'service']) }}">{{ translate('Service_Module') }}</a>
+            </li>
+            @endif
+        </ul>
+        @endif
+
         <div class="mb-20">
             <div class="row g-3">
                 <div class="col-sm-6 col-lg-3">
@@ -92,7 +114,7 @@ active
         <div class="card">
             <div class="card-header flex-wrap py-2 border-0">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <h4 class="mb-0">{{ translate('Store_List') }}</h4>
+                    <h4 class="mb-0">{{ in_array(request()->module, [1, 'rental', 'service']) ? translate('Provider_List') : translate('Store_List') }}</h4>
                     <span class="badge badge-soft-dark rounded-circle">{{ $subscribers->total() }}</span>
                 </div>
                 <div class="search--button-wrapper justify-content-end">
@@ -117,6 +139,7 @@ active
                         </select>
                     </div>
                     <form class="search-form">
+                        <input type="hidden" name="module" value="{{ request()->module }}">
                         <div class="input-group input--group">
                             <input name="search" type="search" value="{{ request()?->search }}" class="form-control h--40px" placeholder="{{ translate('Ex :Search by name & package name') }}" aria-label="Search here">
                             <button type="submit" class="btn btn--secondary h--40px"><i class="tio-search"></i></button>
@@ -164,7 +187,7 @@ active
                     <table class="table table-borderless middle-align __txt-14px">
                         <thead class="thead-light white--space-false">
                             <th class="border-top px-4 border-bottom text-center">{{ translate('sl') }}</th>
-                            <th class="border-top px-4 border-bottom"> {{ translate('Store Info') }}  </th>
+                            <th class="border-top px-4 border-bottom"> {{ in_array(request()->module, [1, 'rental', 'service']) ? translate('Provider Info') : translate('Store Info') }}  </th>
                             <th class="border-top px-4 border-bottom"> {{ translate('Current Package Name') }} </th>
                             <th class="border-top px-4 border-bottom"> {{ translate('Package Price') }}  </th>
                             <th class="border-top px-4 border-bottom"> {{ translate('Exp Date') }}  </th>
@@ -179,7 +202,7 @@ active
                             <tr>
                                 <td class="px-4 text-center">{{ $k + $subscribers->firstItem() }}</td>
                                 <td class="px-4">
-                                    <a href="{{route('admin.store.view', $subscriber->id)}}" alt="view restaurant" class="table-rest-info min--200">
+                                    <a href="{{ route('admin.store.view', ['store' => $subscriber->id, 'module_id' => $subscriber->module_id]) }}" alt="view restaurant" class="table-rest-info min--200">
                                         <img src="{{ $subscriber->logo_full_url ?? asset('public/assets/admin/img/100x100/1.png') }}" >
                                         <div class="info">
                                             <span class="d-block text-title">
@@ -241,7 +264,7 @@ active
                                 </td>
                                 <td class="px-4">
                                     <div class="btn--container justify-content-center">
-                                        <a class="btn action-btn btn--warning btn-outline-warning" href="{{ route('admin.business-settings.subscriptionackage.subscriberDetail',$subscriber->id) }}">
+                                        <a class="btn action-btn btn--warning btn-outline-warning" href="{{ route('admin.business-settings.subscriptionackage.subscriberDetail', ['id' => $subscriber->id, 'module' => $subscriber->module_id]) }}">
                                             <i class="tio-invisible"></i>
                                         </a>
                                     </div>

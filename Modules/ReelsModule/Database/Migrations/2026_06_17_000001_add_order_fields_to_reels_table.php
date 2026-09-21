@@ -14,15 +14,15 @@ return new class extends Migration
             }
 
             if (!Schema::hasColumn('reels', 'order_now_button')) {
-                $table->boolean('order_now_button')->default(false)->after('productable_id');
+                $table->boolean('order_now_button')->default(false);
             }
 
             if (!Schema::hasColumn('reels', 'order_count')) {
-                $table->unsignedBigInteger('order_count')->default(0)->after('total_store_visits');
+                $table->unsignedBigInteger('order_count')->default(0);
             }
 
             if (!Schema::hasColumn('reels', 'total_sale_amount')) {
-                $table->decimal('total_sale_amount', 12, 4)->default(0)->after('order_count');
+                $table->decimal('total_sale_amount', 12, 4)->default(0);
             }
         });
     }

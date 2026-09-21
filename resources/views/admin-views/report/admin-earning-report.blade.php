@@ -59,6 +59,8 @@
 
         @if (request()->tab === 'rental' && addon_published_status('Rental'))
             @include('rental::admin.report.earning-report.content')
+        @elseif (request()->tab === 'service' && addon_published_status('Service'))
+            @include('service::admin.report.earning-report.content')
         @else
         <div class="card card-body mb-20">
             <h3 class="mb-20">{{ translate('messages.Filter_Data') }}</h3>

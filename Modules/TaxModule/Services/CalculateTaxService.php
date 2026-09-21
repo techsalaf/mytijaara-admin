@@ -23,6 +23,7 @@ class CalculateTaxService
         $orderId = null,
         $countryCode = null,
         $storeId = null,
+        $taxTypeOverride = null,
     ) {
         $systemTaxVat = SystemTaxSetup::with('additionalData')
             ->when($countryCode, fn($query) => $query->where('country_code', $countryCode))
@@ -40,7 +41,7 @@ class CalculateTaxService
 
         try {
 
-            $taxType = $systemTaxVat->tax_type;
+            $taxType = $taxTypeOverride ?? $systemTaxVat->tax_type;
             $totalTaxamount = 0;
             $orderTaxIds = [];
 
@@ -59,7 +60,7 @@ class CalculateTaxService
             $productWiseData = [];
             $addonWiseData = [];
 
-            if (in_array($taxType, ['product_wise', 'category_wise'])) {
+            if (in_array($taxType, ['product_wise', 'category_wise', 'service_wise'])) {
                 [$productWiseData, $addonWiseData] = self::processProductAndAddonTaxes(
                     taxType: $taxType,
                     systemTaxVat: $systemTaxVat,
@@ -171,16 +172,23 @@ class CalculateTaxService
             $dataType = self::getClassNames('parcel_category');
         } else if($systemTaxVat?->tax_payer == 'ride_module'){
             $dataType = self::getClassNames('ride');
+        } else if($systemTaxVat?->tax_payer == 'service_provider'){
+            $dataType = self::getClassNames(in_array($taxType, ['service_wise', 'product_wise']) ? 'service' : 'category');
         }  else {
             $dataType = self::getClassNames($taxType === 'product_wise' ? 'product' : 'category');
         }
 
-        foreach ($productIds as $product) {
+        $itemWiseTypes = ['product_wise', 'service_wise'];
+        $baseDataType = $dataType;
 
-            if($product['is_campaign_item'] == true ){
-                $dataType = self::getClassNames($taxType === 'product_wise' ? 'campaign_product' : 'category');
+        foreach ($productIds as $product) {
+            // Reset per iteration so a campaign line never leaks its class onto the next (non-campaign) line.
+            $dataType = $baseDataType;
+            if(($product['is_campaign_item'] ?? false) == true ){
+                $campaignClass = $systemTaxVat?->tax_payer == 'service_provider' ? 'campaign_service' : 'campaign_product';
+                $dataType = self::getClassNames(in_array($taxType, $itemWiseTypes) ? $campaignClass : 'category');
             }
-            $dataId = $taxType === 'product_wise' ? $product['id'] : $product['category_id'];
+            $dataId = in_array($taxType, $itemWiseTypes) ? $product['id'] : $product['category_id'];
             $taxVatIds = Taxable::where('taxable_type', $dataType)
                 ->where('taxable_id', $dataId)
                 ->where('system_tax_setup_id', $systemTaxVat->id)

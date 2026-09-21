@@ -123,7 +123,7 @@ active
                         </div>
                     </div>
 
-                    @if ( $subscriptionackage->module_type !== 'rental')
+                    @if ( $subscriptionackage->module_type == 'all')
 
                     <div>
                         <div class="d-flex align-items-center gap-2">
@@ -147,7 +147,7 @@ active
                             <span class="form-check-label text-dark">{{ translate('messages.Mobile_App') }}</span>
                         </div>
                     </div>
-                    @if ( $subscriptionackage->module_type !== 'rental')
+                    @if ( $subscriptionackage->module_type == 'all')
 
                     <div>
                         <div class="d-flex align-items-center gap-2">

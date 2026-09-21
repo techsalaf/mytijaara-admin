@@ -168,6 +168,11 @@ class Module extends Model
         return $query->whereNotIn('module_type', ['service', 'ride-share']);
     }
 
+    public function scopeNotRideShare($query): mixed
+    {
+        return $query->where('module_type', '!=', 'ride-share');
+    }
+
     /**
      * @param $query
      * @return mixed
@@ -217,55 +222,63 @@ class Module extends Model
             return;
         }
 
-        $zonesCsv   = empty($zoneIds)
-            ? null
-            : implode(',', array_map('intval', $zoneIds));
-        $modulesCsv = implode(',', $moduleIds);
+        $zones = empty($zoneIds) ? null : array_values(array_map('intval', $zoneIds));
 
-        // Build the three legs separately so we can apply zone/module
-        // filters cleanly without lateral correlation. Each leg returns
-        // (module_id, discount, discount_type); the union is the candidate
-        // pool of all live discount offers across the requested modules.
-        $itemLeg = 'SELECT items.module_id AS module_id, items.discount AS discount, items.discount_type AS discount_type '
-            .'FROM items '
-            .'JOIN stores ON stores.id = items.store_id '
-            .'WHERE items.status = 1 AND items.is_approved = 1 AND items.discount > 0 '
-            .'AND stores.status = 1 '
-            .'AND items.module_id IN ('.$modulesCsv.')'
-            .($zonesCsv ? ' AND stores.zone_id IN ('.$zonesCsv.')' : '');
+        // Each leg returns (module_id, discount, discount_type) and reuses the
+        // same visibility scopes the listing and details endpoints apply, so a
+        // module can never advertise a discount the customer cannot reach.
+        $visibleItems = Item::query()
+            ->active(zone_ids: $zones)
+            ->whereIn('items.module_id', $moduleIds);
 
-        $storeDiscountLeg = 'SELECT stores.module_id AS module_id, discounts.discount AS discount, '
-            ."COALESCE(discounts.discount_type, 'percent') AS discount_type "
-            .'FROM discounts '
-            .'JOIN stores ON stores.id = discounts.store_id '
-            .'WHERE stores.status = 1 '
-            .'AND discounts.start_date <= CURDATE() AND discounts.end_date >= CURDATE() '
-            .'AND discounts.start_time <= CURTIME() AND discounts.end_time >= CURTIME() '
-            .'AND stores.module_id IN ('.$modulesCsv.')'
-            .($zonesCsv ? ' AND stores.zone_id IN ('.$zonesCsv.')' : '');
+        $visibleStoreIds = Store::query()
+            ->Active()
+            ->whereIn('stores.module_id', $moduleIds)
+            ->when($zones, fn ($q) => $q->whereIn('stores.zone_id', $zones))
+            ->select('stores.id')
+            ->toBase();
 
-        $flashLeg = 'SELECT items.module_id AS module_id, flash_sale_items.discount AS discount, flash_sale_items.discount_type AS discount_type '
-            .'FROM flash_sale_items '
-            .'JOIN flash_sales ON flash_sales.id = flash_sale_items.flash_sale_id '
-            .'JOIN items ON items.id = flash_sale_items.item_id '
-            .'JOIN stores ON stores.id = items.store_id '
-            .'WHERE flash_sales.is_publish = 1 '
-            .'AND flash_sales.start_date <= CURDATE() AND flash_sales.end_date >= CURDATE() '
-            .'AND items.status = 1 AND items.is_approved = 1 AND stores.status = 1 '
-            .'AND items.module_id IN ('.$modulesCsv.')'
-            .($zonesCsv ? ' AND stores.zone_id IN ('.$zonesCsv.')' : '');
+        $topPriceByStore = (clone $visibleItems)
+            ->selectRaw('items.store_id AS store_id, MAX(items.price) AS max_price')
+            ->groupBy('items.store_id')
+            ->toBase();
 
-        $sql = $itemLeg.' UNION ALL '.$storeDiscountLeg.' UNION ALL '.$flashLeg;
+        $itemLeg = (clone $visibleItems)
+            ->where('items.discount', '>', 0)
+            ->selectRaw(self::offerColumns('items.discount', 'items.discount_type', 'items.price', 'items.module_id'))
+            ->toBase();
 
-        $rows = DB::select($sql);
+        $storeDiscountLeg = Discount::query()
+            ->validate()
+            ->join('stores', 'stores.id', '=', 'discounts.store_id')
+            ->joinSub($topPriceByStore, 'store_top_price', 'store_top_price.store_id', '=', 'stores.id')
+            ->whereIn('discounts.store_id', $visibleStoreIds)
+            ->selectRaw('stores.module_id AS module_id, discounts.discount AS discount, '
+                ."'percent' AS discount_type, "
+                .'CASE WHEN discounts.max_discount > 0 '
+                .'THEN LEAST(store_top_price.max_price * discounts.discount / 100, discounts.max_discount) '
+                .'ELSE store_top_price.max_price * discounts.discount / 100 END AS saving')
+            ->toBase();
 
-        // Pick the max-discount row per module in PHP. Avoids window
-        // functions (MySQL 8.0+ / MariaDB 10.2+) so this works everywhere.
+        $flashLeg = DB::table('flash_sale_items')
+            ->join('flash_sales', 'flash_sales.id', '=', 'flash_sale_items.flash_sale_id')
+            ->join('items', 'items.id', '=', 'flash_sale_items.item_id')
+            ->whereIn('flash_sale_items.item_id', (clone $visibleItems)->select('items.id')->toBase())
+            ->where('flash_sales.is_publish', 1)
+            ->whereDate('flash_sales.start_date', '<=', now()->format('Y-m-d'))
+            ->whereDate('flash_sales.end_date', '>=', now()->format('Y-m-d'))
+            ->selectRaw(self::offerColumns('flash_sale_items.discount', 'flash_sale_items.discount_type', 'items.price', 'items.module_id'));
+
+        $rows = $itemLeg->unionAll($storeDiscountLeg)->unionAll($flashLeg)->get();
+
+        // Rank by the money a customer actually saves so a flat amount and a
+        // percentage are never compared as bare numbers. Done in PHP to avoid
+        // window functions (MySQL 8.0+ / MariaDB 10.2+).
         $byModule = [];
         foreach ($rows as $r) {
             $mid = (int) $r->module_id;
-            $val = (float) $r->discount;
-            if (! isset($byModule[$mid]) || $val > (float) $byModule[$mid]->discount) {
+            $val = (float) $r->saving;
+            if (! isset($byModule[$mid]) || $val > (float) $byModule[$mid]->saving) {
                 $byModule[$mid] = $r;
             }
         }
@@ -275,6 +288,16 @@ class Module extends Model
             $module->top_offer_value = $entry?->discount;
             $module->top_offer_type  = $entry?->discount_type;
         }
+    }
+
+    private static function offerColumns(string $discount, string $type, string $price, string $moduleId): string
+    {
+        $capped = "LEAST({$discount}, {$price})";
+
+        return "{$moduleId} AS module_id, "
+            ."CASE WHEN {$type} = 'percent' THEN {$discount} ELSE {$capped} END AS discount, "
+            ."{$type} AS discount_type, "
+            ."CASE WHEN {$type} = 'percent' THEN {$price} * {$discount} / 100 ELSE {$capped} END AS saving";
     }
 
     public function getIconFullUrlAttribute(){

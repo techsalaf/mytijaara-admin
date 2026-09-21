@@ -19,7 +19,7 @@ class ReelUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15));
+        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15));
 
         return [
             'description' => 'required|string|max:1000',
@@ -36,7 +36,7 @@ class ReelUpdateRequest extends FormRequest
 
     public function messages(): array
     {
-        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15));
+        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15));
 
         return [
             'description.required' => translate('messages.default_description_is_required'),

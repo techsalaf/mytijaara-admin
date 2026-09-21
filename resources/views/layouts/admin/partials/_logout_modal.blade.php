@@ -45,11 +45,13 @@
 
                             <div class="dropdown-divider"></div>
 
+                            @if(\App\CentralLogics\Helpers::module_permission_check('profile'))
                             <a class="dropdown-item" href="{{route('admin.settings')}}">
                                 <span class="text-truncate pr-2" title="Settings">{{translate('messages.settings')}}</span>
                             </a>
 
                             <div class="dropdown-divider"></div>
+                            @endif
 
                            <a class="dropdown-item log-out" href="javascript:">
                                 <span class="text-truncate pr-2" title="Sign out">{{translate('messages.sign_out')}}</span>

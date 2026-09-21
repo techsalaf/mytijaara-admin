@@ -52,6 +52,15 @@ class FoodDetailsResource
             $images = collect([$formatted['image_full_url']]);
         }
 
+        // Inventory cap. Only modules with the `stock` capability track it
+        // (config/module.php) — `food` does not, so this stays inert there.
+        $tracksStock = (bool) config("module.{$moduleType}.stock", false);
+        $stockLeft   = $tracksStock ? (int) ($item->getAttributes()['stock'] ?? 0) : 0;
+
+        // Live review average — see ItemDetailResource::liveRating(). Keeps the
+        // quick-view modal's rating consistent with the card and admin panel.
+        $live = ItemDetailResource::liveRating($item);
+
         $data = [
             'id'           => (int) $item->id,
             'module_type'  => $moduleType,
@@ -63,8 +72,8 @@ class FoodDetailsResource
             'name'         => (string) ($formatted['name'] ?? $item->name ?? ''),
             'image'        => $formatted['image_full_url'] ?? null,
             'images'       => $images->all(),
-            'rating'          => round((float) ($item->getRawOriginal('avg_rating') ?? $item->avg_rating ?? 0), 1),
-            'ratingCount'     => (int) ($item->getRawOriginal('rating_count') ?? $item->rating_count ?? 0),
+            'rating'          => $live['rating'],
+            'ratingCount'     => $live['count'],
             // 5-bucket counts — backs the rating-click reviews drawer
             // opened from the food modal.
             'ratingDistribution' => ItemDetailResource::ratingDistribution($item),
@@ -92,6 +101,10 @@ class FoodDetailsResource
             'store_discount' => 0.0,
 
             'maximum_cart_quantity'  => (int) ($item->maximum_cart_quantity ?? 0),
+            // Inventory cap for the modal's +/- stepper. `stock` only means
+            // anything when `tracksStock` is set.
+            'tracksStock'            => $tracksStock,
+            'stock'                  => $stockLeft,
             'available_time_starts'  => $formatted['available_time_starts'] ?? $item->available_time_starts,
             'available_time_ends'    => $formatted['available_time_ends'] ?? $item->available_time_ends,
             'available_date_starts'  => $formatted['available_date_starts'] ?? null,

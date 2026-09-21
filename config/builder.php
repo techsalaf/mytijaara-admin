@@ -20,6 +20,17 @@ return [
     'default_platform_name'  => '6amMart',
 
     /*
+     * Extra CKEditor plugins the vendor-panel rich-text editor must load from
+     * public/assets/admin/ckeditor/plugins/. 6amMart's CKEditor build doesn't
+     * compile Justify/Font/color buttons in, so they're loaded here; installs
+     * whose build already includes them leave this empty. Merged with the
+     * always-on 'uploadimage' plugin inside RichTextEditor.
+     */
+    'rich_text_editor' => [
+        'extra_plugins' => 'justify,font,colorbutton,panelbutton',
+    ],
+
+    /*
      * Master switch for storefront wallet-family features: wallet payment,
      * partial payment, loyalty points, referral, and wallet cashback. When
      * false, the storefront hides all of those UI affordances and the
@@ -68,6 +79,15 @@ return [
     'capabilities' => [
         'schemaVersion' => 1,
 
+        // Storefront profile-edit field editability. Phone is the account's
+        // login identity → locked; email is editable. Read on the client
+        // (EditProfileModal disables the field) and enforced server-side in
+        // CustomerAuthProvider::updateProfile.
+        'profile' => [
+            'phoneEditable' => false,
+            'emailEditable' => true,
+        ],
+
         // Business-model / item presentation.
         // itemPresentation: 'auto' (food→modal, else page) | 'modal' | 'page'.
         'modules' => ['mode' => 'multi', 'switcher' => true, 'itemPresentation' => 'auto'],
@@ -79,6 +99,16 @@ return [
         'location' => [
             'enabled' => true, 'map' => true, 'currentLocation' => true,
             'zoneBased' => true, 'savedAddresses' => true,
+            // Email input on every address is a 6Valley-only field; 6amMart
+            // collects email only in guest checkout.
+            'addressEmail' => false,
+            // Extra address inputs rendered under name/phone in the address
+            // form. 6amMart stores road/house/floor.
+            'addressFields' => [
+                ['key' => 'road',  'label' => 'address_form_street', 'half' => false],
+                ['key' => 'house', 'label' => 'address_form_house',  'half' => true],
+                ['key' => 'floor', 'label' => 'address_form_floor',  'half' => true],
+            ],
         ],
 
         // Checkout surface.
@@ -103,12 +133,23 @@ return [
             'wallet' => true, 'loyaltyPoint' => true, 'referral' => true,
             'reviews' => true, 'inbox' => true, 'pushNotif' => true,
             'guestCheckout' => true, 'reorder' => true, 'wishlist' => true, 'blog' => false,
+            // Buy Now (instant checkout) button on the item modal / details page /
+            // quick-view. Off for StackFood + 6amMart per product decision — the
+            // storefront uses the add-to-cart flow only.
+            'buyNow' => false,
+            // Delivery-partner contact affordances on the order-details card.
+            // 6amMart assigns a deliveryman with a reachable phone + storefront
+            // inbox, so both the tap-to-call and chat actions are available.
+            'deliveryManChat' => true, 'deliveryManCall' => true,
         ],
 
         // Auth methods (folds the existing social/login switches under one axis).
         'auth' => [
             'manual' => true, 'otp' => true, 'otpChannel' => 'sms',
             'social' => ['google' => true, 'facebook' => true, 'apple' => true],
+            // Storefront forgot-password: `status` toggles the whole feature;
+            // `modes` lists the allowed reset channels. 6amMart allows both.
+            'forgotPassword' => ['status' => true, 'modes' => ['phone', 'email']],
         ],
     ],
 ];

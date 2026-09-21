@@ -168,7 +168,7 @@
                                                     {{ translate('messages.Edit') }}
                                                 </a>
                                                 @endif
-                                                @if ($data['code']=='en')
+                                                @if ($data['code']=='en' || !empty($data['default']))
                                                 @else
                                                     <a class="dropdown-item d-flex gap-2 align-items-center cursor-pointer call-demo-lang {{( ($key == 0 ||  $key == 1 ) && getEnvMode() == 'demo') ? '' : 'delete'}}"
                                                         data-key="{{ $key }}"

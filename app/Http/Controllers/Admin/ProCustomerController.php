@@ -7,7 +7,6 @@ use App\Exports\ProCustomerSubscriptionListExport;
 use App\Exports\ProCustomerTransactionListExport;
 use App\Http\Controllers\Controller;
 use App\Models\DataSetting;
-use App\Models\Module;
 use App\Models\ProCustomerBenefitSetting;
 use App\Models\ProCustomerFaq;
 use App\Models\ProCustomerSubscription;
@@ -79,6 +78,7 @@ class ProCustomerController extends Controller
             'parcel'     => translate('messages.Parcel'),
             'ride-share' => translate('messages.Ride_Share'),
             'rental'     => translate('messages.Rental'),
+            'service'    => translate('messages.Service'),
         ];
         $minOrderLabels  = [
             'grocery'    => translate('messages.Minimum_order_amount'),
@@ -88,6 +88,7 @@ class ProCustomerController extends Controller
             'parcel'     => translate('messages.Minimum_delivery_amount'),
             'ride-share' => translate('messages.Minimum_ride_amount'),
             'rental'     => translate('messages.Minimum_trip_fare'),
+            'service'    => translate('messages.Minimum_booking_amount'),
         ];
         $minOrderTooltips = [
             'grocery'    => translate('messages.Minimum order total required to qualify for the discount in this module'),
@@ -97,6 +98,7 @@ class ProCustomerController extends Controller
             'parcel'     => translate('messages.Minimum delivery charge required to qualify for the discount'),
             'ride-share' => translate('messages.Minimum ride amount required to qualify for the discount'),
             'rental'     => translate('messages.Minimum trip fare required to qualify for the discount'),
+            'service'    => translate('messages.Minimum booking total required to qualify for the discount'),
         ];
 
         return view('admin-views.pro-customer.benefits-setup', compact(
@@ -524,7 +526,22 @@ class ProCustomerController extends Controller
                 ->first()
             : null;
 
-        $plans = ProCustomerSubscriptionPlan::where('status', 1)->orderBy('duration')->get();
+        $activeFreeTrialPlanId = ($subscription && $subscription->status === 'active' && $subscription->plan_type === 'free_trial')
+            ? $subscription->plan_id
+            : null;
+        $hasUsedFreeTrial = $this->hasUsedFreeTrial((int) $userId);
+
+        $plans = ProCustomerSubscriptionPlan::where('status', 1)
+            ->when($hasUsedFreeTrial, function ($query) use ($activeFreeTrialPlanId) {
+                $query->where(function ($q) use ($activeFreeTrialPlanId) {
+                    $q->where('plan_type', '!=', 'free_trial');
+                    if ($activeFreeTrialPlanId) {
+                        $q->orWhere('id', $activeFreeTrialPlanId);
+                    }
+                });
+            })
+            ->orderBy('duration')
+            ->get();
 
         $statusFlags  = DataSetting::where('type', self::SETTINGS_TYPE)
             ->whereIn('key', self::STATUS_KEYS)
@@ -606,6 +623,10 @@ class ProCustomerController extends Controller
         } catch (\RuntimeException $e) {
             if ($e->getMessage() === 'insufficient_wallet_balance') {
                 Toastr::error(translate('messages.customer_wallet_balance_is_insufficient_for_this_plan'));
+                return back()->withInput();
+            }
+            if ($e->getMessage() === 'free_trial_already_used') {
+                Toastr::error(translate('messages.free_trial_already_used'));
                 return back()->withInput();
             }
             throw $e;
@@ -919,21 +940,9 @@ class ProCustomerController extends Controller
         return back();
     }
 
-    private function activeModuleTypes(): array
-    {
-        return Module::where('status', 1)->distinct()->pluck('module_type')->all();
-    }
-
     private function activeDiscountModules(): array
     {
-        return array_values(array_filter(
-            ProCustomerBenefitSetting::DISCOUNT_MODULE_TYPES,
-            fn($mod) => match ($mod) {
-                'ride-share' => (bool) addon_published_status('RideShare'),
-                'rental'     => (bool) addon_published_status('Rental'),
-                default      => true,
-            }
-        ));
+        return $this->proAddonEnabledDiscountModules();
     }
 
     private function moduleLabels(): array
@@ -946,6 +955,7 @@ class ProCustomerController extends Controller
             'parcel'     => translate('messages.Parcel'),
             'ride-share' => translate('messages.Ride_Share'),
             'rental'     => translate('messages.Rental'),
+            'service'    => translate('messages.Service'),
         ];
     }
 
@@ -956,7 +966,6 @@ class ProCustomerController extends Controller
         $couponOn   = (int) ($statusFlags['coupon_status'] ?? 0) === 1;
         $setupMode  = $statusFlags['discount_setup_mode'] ?? 'central';
         $trim       = fn($v) => rtrim(rtrim((string) $v, '0'), '.');
-        $activeTypes = $this->activeModuleTypes();
         $items      = [];
 
         if ($discountOn) {
@@ -965,10 +974,7 @@ class ProCustomerController extends Controller
                 $labels = $this->moduleLabels();
                 $before = count($items);
 
-                foreach ($this->activeDiscountModules() as $mod) {
-                    if (!in_array($mod, $activeTypes, true)) {
-                        continue;
-                    }
+                foreach ($this->proVisibleDiscountModules() as $mod) {
                     $cfg = $rows->get($mod)?->settings ?? [];
                     $pct = $cfg['percentage'] ?? null;
                     if (!$pct) {
@@ -1024,10 +1030,7 @@ class ProCustomerController extends Controller
             $labels = $this->moduleLabels();
             $before = count($items);
 
-            foreach (ProCustomerBenefitSetting::DELIVERY_FEE_MODULE_TYPES as $mod) {
-                if (!in_array($mod, $activeTypes, true)) {
-                    continue;
-                }
+            foreach ($this->proVisibleDeliveryFeeModules() as $mod) {
                 $cfg = $rows->get($mod)?->settings ?? [];
                 if (empty($cfg)) {
                     continue;

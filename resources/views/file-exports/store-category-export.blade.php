@@ -23,7 +23,7 @@
                     <th>{{ translate('Category_Name') }}</th>
                     <th>{{ translate('Category_ID') }}</th>
                     @if (!empty($data['showStore']))
-                        <th>{{ translate('messages.Store') }}</th>
+                        <th>{{ \App\CentralLogics\Helpers::moduleStoreLabel() }}</th>
                     @endif
                     <th>{{ translate('priority') }}</th>
                     @if ($data['categoryWiseTax'])

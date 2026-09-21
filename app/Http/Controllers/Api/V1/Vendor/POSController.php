@@ -36,14 +36,13 @@ class POSController extends Controller
         $store_discount_amount = 0;
 
         $order_details = [];
+        $lastId = Order::max('id') ?? 99999;
         $order = new Order();
-        $order->id = 100000 + Order::all()->count() + 1;
-        if (Order::find($order->id)) {
-            $order->id = Order::latest()->first()->id + 1;
-        }
+        $order->id = $lastId + 1;
         $order->payment_status = 'paid';
         $order->order_status = 'delivered';
         $order->order_type = 'pos';
+        $order->is_pos = 1;
         $order->payment_method = $request->payment_method;
         $order->transaction_reference = $request->paid_amount;
         $order->store_id = $store->id;
@@ -188,7 +187,7 @@ class POSController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $data = User::
         where(function ($q) use ($key) {
             foreach ($key as $value) {

@@ -309,6 +309,9 @@ class DashboardController extends Controller
             'rental' => addon_published_status('Rental') == 1
                 ? redirect()->route('admin.rental.dashboard')
                 : view('errors.404'),
+            'service' => addon_published_status('Service') == 1
+                ? redirect()->route('admin.service.dashboard')
+                : view('errors.404'),
             default => null,
         };
         if ($redirect) {
@@ -751,7 +754,7 @@ class DashboardController extends Controller
         $currentYear = now()->format('Y');
         $commissionSelect = [
             DB::raw('SUM(order_amount) as total_sell'),
-            DB::raw('SUM(admin_commission + admin_expense - delivery_fee_comission) as commission'),
+            DB::raw("SUM(admin_commission + admin_expense - delivery_fee_comission + COALESCE((SELECT CASE WHEN orders.delivery_type = 'express' THEN orders.delivery_type_charge ELSE 0 END FROM orders WHERE orders.id = order_transactions.order_id), 0)) as commission"),
             DB::raw('SUM(delivery_fee_comission) as delivery_commission'),
         ];
         $applyFilters = function ($q) use ($params) {

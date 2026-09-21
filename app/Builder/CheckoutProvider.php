@@ -325,11 +325,18 @@ class CheckoutProvider implements CheckoutProviderContract
         $additionalChargeAmount  = (float) Helpers::get_business_settings('additional_charge');
         $additionalChargeName    = (string) (Helpers::get_business_settings('additional_charge_name') ?: 'Service Charge');
 
+        // Extra packaging has two gates, both of which the host order pipeline
+        // also applies (PlaceNewOrder: `extra_packaging_data[module_type]` AND
+        // `storeConfig->extra_packaging_status`). Skipping the platform gate
+        // here let the storefront offer — and quote — a charge the host would
+        // then refuse to bill. 6amMart has no Required/Optional split, so the
+        // charge stays a customer opt-in; `required` is reported for shape
+        // parity with the shared checkout component.
         $extraPackagingFee = 0.0;
         $extraPackagingEnabled = false;
-        if ($store && ($cfg = $store->storeConfig ?? null)) {
+        if ($store && $this->packagingAllowedForModule($store) && ($cfg = $store->storeConfig ?? null)) {
             $extraPackagingEnabled = (int) ($cfg->extra_packaging_status ?? 0) === 1;
-            $extraPackagingFee     = (float) ($cfg->extra_packaging_amount ?? 0);
+            $extraPackagingFee     = $extraPackagingEnabled ? (float) ($cfg->extra_packaging_amount ?? 0) : 0.0;
         }
 
         $taxIncluded = false;
@@ -347,8 +354,9 @@ class CheckoutProvider implements CheckoutProviderContract
                 'amount'  => $additionalChargeAmount,
             ],
             'extraPackaging' => [
-                'enabled' => $extraPackagingEnabled,
-                'fee'     => $extraPackagingFee,
+                'enabled'  => $extraPackagingEnabled,
+                'required' => false,
+                'fee'      => $extraPackagingFee,
             ],
             'taxIncluded' => $taxIncluded,
         ];
@@ -424,12 +432,13 @@ class CheckoutProvider implements CheckoutProviderContract
         }
 
         $discountedSubtotal = max(0.0, $itemPrice - $itemDiscount - $couponDiscount);
+        $state['couponCode'] = $couponCode;
 
         // Delivery — pickup short-circuits to zero.
         $deliveryType = $state['deliveryType'] ?? 'delivery';
         [$deliveryFee, $deliveryFeeNote, $distanceKm, $freeDelivery] = $deliveryType === 'pickup'
             ? [0.0, null, null, ['active' => false, 'reason' => 'pickup']]
-            : $this->computeDelivery($scope, $state, $itemPrice, $couponFreeDeliv);
+            : $this->computeDelivery($scope, $state, $discountedSubtotal, $couponFreeDeliv);
 
         $tax = $this->computeTax($scope, $customerId, $state, $discountedSubtotal);
 
@@ -443,15 +452,7 @@ class CheckoutProvider implements CheckoutProviderContract
         $tipsEnabled = (int) Helpers::get_business_settings('dm_tips_status') === 1;
         $dmTip = ($tipsEnabled && $deliveryType !== 'pickup') ? (float) ($state['tip'] ?? 0) : 0.0;
 
-        $packagingFee = 0.0;
-        if (!empty($state['extraPackaging'])) {
-            $store = $scope?->subTenantId ? Store::find($scope->subTenantId) : null;
-            if ($store && ($cfg = $store->storeConfig ?? null)) {
-                $packagingFee = (int) ($cfg->extra_packaging_status ?? 0) === 1
-                    ? (float) ($cfg->extra_packaging_amount ?? 0)
-                    : 0.0;
-            }
-        }
+        $packagingFee = $this->extraPackagingFee($scope, $state);
 
         $taxIncluded = $this->isTaxIncluded();
         $total = $discountedSubtotal + ($taxIncluded ? 0 : $tax) + $deliveryFee + $additionalCharge + $dmTip + $packagingFee;
@@ -466,6 +467,7 @@ class CheckoutProvider implements CheckoutProviderContract
             'couponDiscount'   => $this->roundMoney($couponDiscount),
             'couponError'      => $couponError,
             'tax'              => $this->roundMoney($tax),
+            'taxEnabled'       => true,
             'taxIncluded'      => $taxIncluded,
             'deliveryFee'      => $this->roundMoney($deliveryFee),
             'deliveryFeeNote'  => $deliveryFeeNote,
@@ -479,15 +481,24 @@ class CheckoutProvider implements CheckoutProviderContract
         ]);
     }
 
+
+    public function shippingMethods(?StorefrontScope $scope, ?int $customerId): array
+    {
+        return ['enabled' => false, 'groups' => []];
+    }
+
+    public function selectShippingMethod(?StorefrontScope $scope, ?int $customerId, string $cartGroupId, int $shippingMethodId): array
+    {
+        return ['success' => false, 'error' => 'Order-wise shipping selection is not available.'];
+    }
+
+    public function resolveDigitalPaymentReturn(array $query): array
+    {
+        return ['orderId' => null, 'phone' => null];
+    }
+
     private function sumItemLevelDiscount(array $items): float
     {
-        // For plain rows (no variation), gross = catalog × qty and the
-        // difference vs stored line price surfaces as a visible Discount
-        // row. For rows WITH variations the stored line already includes
-        // the option adders, so catalog × qty < line — we skip those
-        // (the `if ($gross > $line)` guard handles this naturally) and
-        // the breakdown shows a single combined Item Price line, matching
-        // the user's preference for variation-bearing rows.
         $sum = 0.0;
         foreach ($items as $row) {
             $catalog = $row['item']['price'] ?? null;
@@ -504,19 +515,7 @@ class CheckoutProvider implements CheckoutProviderContract
         return $sum;
     }
 
-    /**
-     * Server-side delivery-fee approximation. For Phase 1 we cover:
-     *   - free-delivery short-circuits (admin / coupon / store)
-     *   - distance-based (self-delivery): per_km × km, bounded by min/max
-     *   - fixed-fee (platform delivery): zone or store pivot fixed_shipping_charge
-     *
-     * Surge & vehicle-extra are deferred to placeOrder() (host re-derives them
-     * authoritatively). This is good enough for the user-facing total — the
-     * canonical figure on the order row comes from PlaceNewOrder either way.
-     *
-     * @return array{0: float, 1: ?string, 2: ?float, 3: array{active: bool, reason: ?string}}
-     */
-    private function computeDelivery(?StorefrontScope $scope, array $state, float $itemPrice, bool $couponFreeDelivery): array
+    private function computeDelivery(?StorefrontScope $scope, array $state, float $eligibleAmount, bool $couponFreeDelivery): array
     {
         $storeId = $scope?->subTenantId;
         if (!$storeId) {
@@ -541,11 +540,8 @@ class CheckoutProvider implements CheckoutProviderContract
 
         $distanceKm = $this->haversineKm((float) $store->latitude, (float) $store->longitude, $destLat, $destLng);
 
-        // --- Base delivery fee (BEFORE free-delivery rules) ---
         if ((int) ($store->self_delivery_system ?? 0) === 1) {
-            // Self-delivery: store-owned. Distance × per-km bounded by store
-            // min/max. Surge + vehicle-extra do NOT apply (host's
-            // getDeliveryCharge zeroes them for self-delivery).
+
             $fee = $this->boundedDistanceFee(
                 $distanceKm,
                 (float) $store->per_km_shipping_charge,
@@ -553,13 +549,9 @@ class CheckoutProvider implements CheckoutProviderContract
                 (float) $store->maximum_shipping_charge,
             );
             $note = $fee > 0
-                ? sprintf('%.2f km × store rate', $distanceKm)
+                ? sprintf('Based on %.2f km delivery distance', $distanceKm)
                 : 'Store has no per-km delivery rate set.';
         } else {
-            // Platform delivery: zone-module pivot owns the pricing rule. The
-            // pivot's `delivery_charge_type` switches between distance (per-km
-            // bounded by min/max) and fixed (flat fee). Mirrors the host's
-            // PlaceNewOrder::getDeliveryCharge logic.
             $pivot = \DB::table('module_zone')
                 ->where('zone_id', $store->zone_id)
                 ->where('module_id', $scope?->moduleId)
@@ -584,10 +576,6 @@ class CheckoutProvider implements CheckoutProviderContract
                 $note = $fee > 0 ? 'Flat zone delivery fee.' : 'Flat fee for this zone is zero.';
             }
 
-            // Match getDeliveryCharge() at place-order time: vehicle-extra is
-            // added to the base fee, then surge price is applied. Without this
-            // the screen value drifts below order.delivery_charge — customer
-            // sees one number, gets billed another.
             $vehicleExtra = $this->resolveVehicleExtraCharge($distanceKm);
             if ($vehicleExtra > 0) {
                 $fee += $vehicleExtra;
@@ -607,27 +595,16 @@ class CheckoutProvider implements CheckoutProviderContract
             }
         }
 
-        // --- Free-delivery decision — delegate to the host's canonical
-        // DeliveryFeeLogic::effectiveFee so the storefront matches the order
-        // row exactly. It reads BusinessSetting DIRECTLY (not the forever-
-        // cached get_business_settings helper), so an admin toggling free
-        // delivery off takes effect immediately; and it enforces the
-        // threshold>0 guard, the admin>vendor>coupon priority, and the
-        // baseFee<=0 ⇒ not-free semantic that the previous hand-rolled checks
-        // got wrong (showing a $0.00 "free" fee when it shouldn't). ---
         $effective = \App\CentralLogics\DeliveryFeeLogic::effectiveFee(
             (float) $fee,
             $store,
-            max(0.0, $itemPrice),
+            max(0.0, $eligibleAmount),
             null,
         );
         if ($effective['is_free']) {
             return [0.0, 'Free delivery (' . $effective['free_by'] . ').', $distanceKm, ['active' => true, 'reason' => $effective['free_by']]];
         }
 
-        // Coupon free-delivery — the Builder already validated the coupon
-        // (case-insensitively) in quote(); effectiveFee re-matches `code`
-        // exactly, so honour the already-validated flag here instead.
         if ($couponFreeDelivery && $fee > 0) {
             return [0.0, 'Coupon includes free delivery.', $distanceKm, ['active' => true, 'reason' => 'coupon']];
         }
@@ -635,11 +612,6 @@ class CheckoutProvider implements CheckoutProviderContract
         return [$fee, $note, $distanceKm, ['active' => false, 'reason' => null]];
     }
 
-    /**
-     * Vehicle-extra wrapper around the trait's `getVehicleExtraCharge()`.
-     * Trait is `private` so we re-enter via a thin local proxy. Returns
-     * the extra-charge amount (0 if no matching vehicle row).
-     */
     private function resolveVehicleExtraCharge(float $distanceKm): float
     {
         try {
@@ -651,11 +623,6 @@ class CheckoutProvider implements CheckoutProviderContract
         }
     }
 
-    /**
-     * Surge-price wrapper around the trait's `getSurgePriceValue()`. Returns
-     * `[amount, type ('percent'|'amount')]`. Schedule-at (if set) determines
-     * the surge window — same as PlaceNewOrder.
-     */
     private function resolveSurgePrice($zoneId, $moduleId, ?string $scheduleAt): array
     {
         if (!$zoneId || !$moduleId) {
@@ -697,18 +664,6 @@ class CheckoutProvider implements CheckoutProviderContract
         return [$loc['lat'] ?? null, $loc['lng'] ?? null];
     }
 
-    /**
-     * For pickup orders the trait's `getZoneAndStore()` only resolves the
-     * store when lat/lng are present on the request (see
-     * `PlaceNewOrder.php::getZoneAndStore`). Pickup orders skip address
-     * collection, so without an override the trait short-circuits and
-     * fails validation with "store not found". Fall back to the store's
-     * own coordinates — which is also semantically correct (the
-     * destination IS the store) — and use the store's address as the
-     * displayed delivery address on the order row.
-     *
-     * Returns null when no store is in scope.
-     */
     private function resolvePickupOverride(?StorefrontScope $scope): ?array
     {
         if (!$scope?->subTenantId) {
@@ -727,11 +682,6 @@ class CheckoutProvider implements CheckoutProviderContract
         ];
     }
 
-    /**
-     * Great-circle distance in kilometres between two GPS points.
-     * Mirrors the Haversine formula in the existing storefront JS bundle so
-     * server- and client-computed distances stay aligned.
-     */
     private function haversineKm(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
         $earthRadiusM = 6_378_137.0;
@@ -741,20 +691,6 @@ class CheckoutProvider implements CheckoutProviderContract
         return ($earthRadiusM * 2 * asin(sqrt($a))) / 1000.0;
     }
 
-    /**
-     * Populate `config('module.current_module_data')` from the active scope.
-     *
-     * The host's CouponLogic::is_valide() (and other trait code) reads
-     * `config('module.current_module_data')['id']` when no module_id is
-     * passed. In a normal API request ModuleCheckMiddleware sets this from the
-     * `moduleId` header; our synthetic place-order / tax requests bypass the
-     * middleware, leaving it null — so the array access throws "Trying to
-     * access array offset on null", which both breaks tax calculation AND
-     * fails place-order with "Failed to place order" whenever a coupon is
-     * applied. Mirror the middleware (it stores the Module model) so the
-     * trait's coupon validation resolves the module the same way it would
-     * over HTTP.
-     */
     private function ensureModuleConfig(?StorefrontScope $scope): void
     {
         if (!$scope?->moduleId) {
@@ -771,17 +707,51 @@ class CheckoutProvider implements CheckoutProviderContract
     }
 
     /**
-     * Tax — defers to the host's `getCalculatedTax($request)` trait method
-     * which is the canonical pipeline used at place-order time. It internally
-     * calls `Helpers::getFinalCalculatedTax()` → `\Modules\TaxModule\Services\
-     * CalculateTaxService::getCalculatedTax()` when the TaxModule is published.
-     *
-     * The trait reads the customer's DB cart + the active store + the coupon,
-     * so the result on screen matches what gets stored on the order row.
-     *
-     * Falls back to a per-store-rate approximation only if the trait throws
-     * (e.g. TaxModule not installed and no graceful path).
+     * Platform gate: `extra_packaging_data` is a JSON map of module_type => "1",
+     * and PlaceNewOrder refuses to bill packaging when the store's module is not
+     * enabled in it. Mirror that here so the storefront never offers a charge
+     * the host would drop.
      */
+    private function packagingAllowedForModule(?Store $store): bool
+    {
+        $moduleType = $store?->module?->module_type;
+        if (!$moduleType) {
+            return false;
+        }
+
+        $raw = BusinessSetting::where('key', 'extra_packaging_data')->first()?->value;
+        $map = json_decode((string) $raw, true);
+
+        return is_array($map) && (string) ($map[$moduleType] ?? '0') === '1';
+    }
+
+    /**
+     * Extra packaging charge actually payable for this checkout, applying the
+     * same gates the vendor panel exposes: the platform per-module setting, the
+     * store's `extra_packaging_status`, and the shopper's opt-in.
+     *
+     * Single source of truth for the quote and the place-order request, so the
+     * quoted total and the billed total can never disagree.
+     */
+    private function extraPackagingFee(?StorefrontScope $scope, array $state): float
+    {
+        if (!$scope?->subTenantId || empty($state['extraPackaging'])) {
+            return 0.0;
+        }
+
+        $store = Store::find($scope->subTenantId);
+        if (!$store || !$this->packagingAllowedForModule($store)) {
+            return 0.0;
+        }
+
+        $cfg = $store->storeConfig ?? null;
+        if (!$cfg || (int) ($cfg->extra_packaging_status ?? 0) !== 1) {
+            return 0.0;
+        }
+
+        return (float) ($cfg->extra_packaging_amount ?? 0);
+    }
+
     private function computeTax(?StorefrontScope $scope, ?int $customerId, array $state, float $discountedSubtotal): float
     {
         if (!$scope?->subTenantId || $discountedSubtotal <= 0) {
@@ -790,96 +760,75 @@ class CheckoutProvider implements CheckoutProviderContract
 
         $this->ensureModuleConfig($scope);
 
-        if ($customerId) {
-            try {
-                $user = User::query()->find($customerId);
-                if ($user) {
-                    $request = Request::create('', 'POST', [
-                        'store_id'              => $scope->subTenantId,
-                        'order_type'            => $state['deliveryType'] === 'pickup' ? 'take_away' : 'delivery',
-                        'order_amount'          => $discountedSubtotal,
-                        'coupon_code'           => $state['couponCode'] ?? null,
-                        'extra_packaging_amount' => !empty($state['extraPackaging']) ? 1 : 0,
-                        'is_prescription'       => false,
-                        'is_buy_now'            => 0,
-                    ]);
-                    $request->headers->set('moduleId', (string) $scope->moduleId);
-                    $request->setUserResolver(fn () => $user);
+        $user    = $customerId ? User::query()->find($customerId) : null;
+        $guestId = $user ? null : $this->context->getGuestId();
 
-                    // PlaceNewOrder trait reads `$request->user` as a property
-                    // (set explicitly at line 72 of new_place_order with the
-                    // resolved User model). setUserResolver only wires the
-                    // user() method, leaving `$request->user` null — which
-                    // makes `getCalculatedTax` query the cart with user_id=null,
-                    // find zero rows, and silently return tax_amount=0.
-                    // Mirror new_place_order's contract by merging the user
-                    // into the input bag so the property access resolves.
-                    $request->merge(['user' => $user]);
-
-                    $response = $this->getCalculatedTax($request);
-                    $payload  = $response->getData(true);
-                    if (isset($payload['tax_amount'])) {
-                        $tax = (float) $payload['tax_amount'];
-                        // A zero tax_amount while `$discountedSubtotal > 0`
-                        // means the trait queried the cart and got nothing
-                        // (or got items with zero price). Most common cause:
-                        // cart rows still flagged `is_guest=1` after the
-                        // shopper logged in — the trait queries with
-                        // is_guest=0 (because $request->user is set) and
-                        // finds nothing. Surface the diagnostics so the
-                        // underlying cart-migration gap is fixable.
-                        if ($tax <= 0 && $discountedSubtotal > 0) {
-                            $cartRows = Cart::where('user_id', $customerId)
-                                ->where('module_id', \getModuleId((string) $scope->moduleId))
-                                ->selectRaw('is_guest, count(*) as n, sum(price) as total_price')
-                                ->groupBy('is_guest')
-                                ->get();
-                            \info('Builder quote tax: trait returned tax_amount=0 despite payable subtotal', [
-                                'store_id'    => $scope->subTenantId,
-                                'module_id'   => $scope->moduleId,
-                                'user_id'     => $customerId,
-                                'subtotal'    => $discountedSubtotal,
-                                'cart_rows'   => $cartRows->toArray(),
-                                'tax_status'  => $payload['tax_status'] ?? null,
-                                'tax_included' => $payload['tax_included'] ?? null,
-                                'taxmodule_published' => \addon_published_status('TaxModule'),
-                                'system_tax_active'   => \addon_published_status('TaxModule')
-                                    ? \Modules\TaxModule\Entities\SystemTaxSetup::query()
-                                        ->where('is_active', 1)->where('tax_payer', 'vendor')->exists()
-                                    : null,
-                            ]);
-                        }
-                        return $tax;
-                    }
-
-                    // No `tax_amount` key — trait took a 403 short-circuit
-                    // (different-store cart row, missing prescription,
-                    // stock, etc.). Log so the underlying issue surfaces.
-                    \info('Builder quote tax: trait returned no tax_amount', [
-                        'store_id'  => $scope->subTenantId,
-                        'module_id' => $scope->moduleId,
-                        'user_id'   => $customerId,
-                        'payload'   => $payload,
-                    ]);
-                }
-            } catch (\Throwable $e) {
-                \info('Builder quote tax: trait threw — falling back to store rate. ' . $e->getMessage());
-            }
-        }
-
-        // Fallback: per-store flat rate (used for guests OR when the host
-        // pipeline blew up). Mirrors the old behaviour so unauthenticated
-        // visits still see a number close to reality.
-        $store = Store::query()->where('id', $scope->subTenantId)->first(['tax']);
-        $rate  = (float) ($store->tax ?? 0);
-        if ($rate <= 0) {
+        if (!$user && !$guestId) {
             return 0.0;
         }
 
-        $included = $this->isTaxIncluded();
-        return $included
-            ? ($discountedSubtotal * $rate) / (100 + $rate)
-            : ($discountedSubtotal * $rate) / 100;
+        try {
+            $request = Request::create('', 'POST', [
+                'store_id'              => $scope->subTenantId,
+                'order_type'            => $state['deliveryType'] === 'pickup' ? 'take_away' : 'delivery',
+                'order_amount'          => $discountedSubtotal,
+                'coupon_code'           => $state['couponCode'] ?? null,
+                // Resolved through extraPackagingFee() so the tax base only
+                // includes packaging when it is actually billable.
+                'extra_packaging_amount' => $this->extraPackagingFee($scope, $state) > 0 ? 1 : 0,
+                'is_prescription'       => false,
+                'is_buy_now'            => 0,
+                'guest_id'              => $guestId,
+            ]);
+            $request->headers->set('moduleId', (string) $scope->moduleId);
+
+            if ($user) {
+                $request->setUserResolver(fn () => $user);
+
+                $request->merge(['user' => $user]);
+            }
+
+            $response = $this->getCalculatedTax($request);
+            $payload  = $response->getData(true);
+            if (isset($payload['tax_amount'])) {
+                $tax = (float) $payload['tax_amount'];
+                if ($tax <= 0 && $discountedSubtotal > 0) {
+                    $cartRows = Cart::where('user_id', $user?->id ?? (int) $guestId)
+                        ->where('module_id', \getModuleId((string) $scope->moduleId))
+                        ->selectRaw('is_guest, count(*) as n, sum(price) as total_price')
+                        ->groupBy('is_guest')
+                        ->get();
+                    \info('Builder quote tax: trait returned tax_amount=0 despite payable subtotal', [
+                        'store_id'    => $scope->subTenantId,
+                        'module_id'   => $scope->moduleId,
+                        'user_id'     => $customerId,
+                        'guest_id'    => $guestId,
+                        'subtotal'    => $discountedSubtotal,
+                        'cart_rows'   => $cartRows->toArray(),
+                        'tax_status'  => $payload['tax_status'] ?? null,
+                        'tax_included' => $payload['tax_included'] ?? null,
+                        'taxmodule_published' => \addon_published_status('TaxModule'),
+                        'system_tax_active'   => \addon_published_status('TaxModule')
+                            ? \Modules\TaxModule\Entities\SystemTaxSetup::query()
+                                ->where('is_active', 1)->where('tax_payer', 'vendor')->exists()
+                            : null,
+                    ]);
+                }
+                return $tax;
+            }
+
+            \info('Builder quote tax: trait returned no tax_amount', [
+                'store_id'  => $scope->subTenantId,
+                'module_id' => $scope->moduleId,
+                'user_id'   => $customerId,
+                'guest_id'  => $guestId,
+                'payload'   => $payload,
+            ]);
+        } catch (\Throwable $e) {
+            \info('Builder quote tax: trait threw — quoting zero tax. ' . $e->getMessage());
+        }
+
+        return 0.0;
     }
 
     private function isTaxIncluded(): bool

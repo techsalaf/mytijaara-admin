@@ -16,10 +16,10 @@ class WalletMethodController extends Controller
 {
     public function index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $withdrawal_methods = WithdrawalMethod::ofStatus(1)->get();
         $vendor_withdrawal_methods = DisbursementWithdrawalMethod::where('store_id', Helpers::get_store_id())
-            ->when( isset($key) , function($query) use($key){
+            ->when( $request['search'] , function($query) use($key){
                 $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('method_name', 'like', "%{$value}%");

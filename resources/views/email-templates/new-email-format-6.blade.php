@@ -176,6 +176,7 @@ width: 24px;
                         <h2 id="mail-title" class="mt-2">{{ $title?? translate('Main_Title_or_Subject_of_the_Mail') }}</h2>
                         <div class="mb-2" id="mail-body">{!! $body?? translate('Hi_Sabrina,') !!}</div>
                     </div>
+                    @isset($transaction_id)
                     <table class="bg-section p-10 w-100 text-center">
                         <thead>
                             <tr>
@@ -194,6 +195,7 @@ width: 24px;
                             </tr>
                         </tbody>
                     </table>
+                    @endisset
                     @if ($data?->button_url)
                     <span class="d-block text-center" style="margin-top: 16px">
                                         <a type="button" href="{{ $data['button_url']??'#' }}" class="cmn-btn" id="mail-button">{{ $data['button_name']??'Submit' }}</a>

@@ -24,14 +24,16 @@ class ReelDetailResource extends JsonResource
         $product = $orderable ? $rawProduct : null;
         $isItem = $productType === \App\Models\Item::class;
         $isVehicle = $productType === \Modules\Rental\Entities\Vehicle::class;
+        $isService = $productType === \Modules\Service\Entities\Service::class;
 
         return [
             'id' => $this->id,
             'description' => $this->description,
-            'product_type' => $isItem ? 'item' : ($isVehicle ? 'vehicle' : ($productType ? \Illuminate\Support\Str::snake(class_basename($productType)) : null)),
+            'product_type' => $isItem ? 'item' : ($isVehicle ? 'vehicle' : ($isService ? 'service' : ($productType ? \Illuminate\Support\Str::snake(class_basename($productType)) : null))),
             'product_id' => $this->productable_id,
             'item_id' => $isItem ? $this->productable_id : null,
             'vehicle_id' => $isVehicle ? $this->productable_id : null,
+            'service_id' => $isService ? $this->productable_id : null,
             'order_now_button' => (bool) $this->order_now_button && $orderable,
             'video_url' => $videoUrl,
             'thumbnail_url' => $this->thumbnail_full_url,
@@ -49,6 +51,13 @@ class ReelDetailResource extends JsonResource
                 'store_id' => $product->store_id,
                 'stock' => $product->stock,
                 'maximum_cart_quantity' => $product->maximum_cart_quantity,
+            ] : null,
+            'service' => ($isService && $product) ? [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => (float) $product->base_price,
+                'image_full_url' => $product->thumbnail_full_url,
+                'store_id' => $product->store_id,
             ] : null,
             'vehicle' => ($isVehicle && $product) ? [
                 'id' => $product->id,

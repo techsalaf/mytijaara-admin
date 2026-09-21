@@ -82,7 +82,7 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::get('export-sub-categories', 'CategoryController@export_sub_categories')->name('export-sub-categories');
         });
 
-        Route::group(['prefix' => 'store-category', 'as' => 'store-category.'], function () {
+        Route::group(['prefix' => 'store-category', 'as' => 'store-category.', 'middleware' => ['module:category']], function () {
             Route::get('list', 'StoreCategoryController@index')->name('list');
             Route::get('create', 'StoreCategoryController@create')->name('create');
             Route::post('store', 'StoreCategoryController@store')->name('store');
@@ -100,12 +100,13 @@ Route::group(['namespace' => 'Vendor', 'as' => 'vendor.'], function () {
             Route::post('items/{id}/assign', 'StoreCategoryController@storeAssignedItems')->name('items.assign');
         });
 
-        Route::group(['prefix' => 'custom-role', 'as' => 'custom-role.', 'middleware' => ['module:role' ,'subscription:role']], function () {
+        Route::group(['prefix' => 'custom-role', 'as' => 'custom-role.', 'middleware' => ['module:employee' ,'subscription:role']], function () {
             Route::get('create', 'CustomRoleController@create')->name('create');
             Route::post('create', 'CustomRoleController@store')->name('store');
             Route::get('edit/{id}', 'CustomRoleController@edit')->name('edit');
             Route::post('update/{id}', 'CustomRoleController@update')->name('update-role');
             Route::delete('delete/{id}', 'CustomRoleController@distroy')->name('delete');
+            Route::get('view/{id}', 'CustomRoleController@view')->name('view');
         });
 
         Route::group(['prefix' => 'delivery-man', 'as' => 'delivery-man.'], function () {

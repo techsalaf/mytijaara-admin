@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Brian2694\Toastr\Facades\Toastr;
 use Maatwebsite\Excel\Facades\Excel;
-use Rap2hpoutre\FastExcel\FastExcel;
 use App\Exports\DeliverymanPaymentExport;
 use Illuminate\Support\Facades\Validator;
 
@@ -24,8 +23,8 @@ class ProvideDMEarningController extends Controller
      */
     public function index(Request $request)
     {
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
-        $provide_dm_earning = ProvideDMEarning::when(isset($key), function ($query) use ($key) {
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
+        $provide_dm_earning = ProvideDMEarning::when(isset($request['search']), function ($query) use ($key) {
             return $query->whereHas('delivery_man',function($query)use($key){
                 foreach ($key as $value) {
                     $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
@@ -146,8 +145,8 @@ class ProvideDMEarningController extends Controller
     }
 
     public function dm_earning_list_export(Request $request){
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
-        $dm_earnings = ProvideDMEarning::when(isset($key), function ($query) use ($key) {
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
+        $dm_earnings = ProvideDMEarning::when(isset($request['search']), function ($query) use ($key) {
             return $query->whereHas('delivery_man',function($query)use($key){
                 foreach ($key as $value) {
                     $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
@@ -160,7 +159,7 @@ class ProvideDMEarningController extends Controller
             'search'=>$request->search??null,
 
         ];
-        
+
         if ($request->type == 'excel') {
             return Excel::download(new DeliverymanPaymentExport($data), 'ProvideDMEarning.xlsx');
         } else if ($request->type == 'csv') {
@@ -169,7 +168,7 @@ class ProvideDMEarningController extends Controller
     }
 
     public function search_deliveryman_earning(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $provide_dm_earning = ProvideDMEarning::with('delivery_man')->whereHas('delivery_man',function($query)use($key){
             foreach ($key as $value) {
                 $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");

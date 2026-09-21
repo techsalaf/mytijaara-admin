@@ -14,6 +14,7 @@
 
 @php
     $storeLabel = \App\CentralLogics\Helpers::getStoreLabelByModuleType(config('module.current_module_type'));
+    $isServiceModule = config('module.current_module_type') == 'service';
     $storeInformationLabel = $storeLabel . ' ' . translate('messages.information');
     $allStoreReelsListLabel = translate('messages.All') . ' ' . $storeLabel . ' ' . translate('messages.Reels_List');
     $deletedStoreLabel = $storeLabel . ' ' . translate('messages.deleted');
@@ -69,11 +70,11 @@
                                 <input type="checkbox" class="chart-toggle" data-series="likes" checked>
                             </div>
                             <div class="bg-light rounded p-2 d-flex gap-2 align-items-center">
-                                <span class="flex-shrink-0 fs-12"><i class="tio-record fs-16 text-primary"></i> {{ translate('messages.Store_Visits') }}</span>
+                                <span class="flex-shrink-0 fs-12"><i class="tio-record fs-16 text-primary"></i> {{ $isServiceModule ? translate('Provider Visits') : translate('messages.Store_Visits') }}</span>
                                 <input type="checkbox" class="chart-toggle" data-series="visits" checked>
                             </div>
                             <div class="bg-light rounded p-2 d-flex gap-2 align-items-center">
-                                <span class="flex-shrink-0 fs-12"><i class="tio-record fs-16 text-warning"></i> {{ translate('messages.Sell') }}</span>
+                                <span class="flex-shrink-0 fs-12"><i class="tio-record fs-16 text-warning"></i> {{ $isServiceModule ? translate('Booking') : translate('messages.Sell') }}</span>
                                 <input type="checkbox" class="chart-toggle" data-series="sell" checked>
                             </div>
                         </div>
@@ -142,7 +143,7 @@
                                     <th class="border-0">{{ $storeInformationLabel }}</th>
                                     <th class="text-center border-0">{{ translate('messages.Total_Views') }}</th>
                                     <th class="text-center border-0">{{ translate('messages.Total_Likes') }}</th>
-                                    <th class="text-center border-0">{{ translate('messages.Total_Store_visit') }}</th>
+                                    <th class="text-center border-0">{{ $isServiceModule ? translate('Total Provider visit') : translate('messages.Total_Store_visit') }}</th>
                                     <th class="border-0">{{ translate('messages.Reel_Duration') }}</th>
                                     <th class="text-center border-0">{{ translate('messages.Reels_Status') }}</th>
                                     <th class="text-center border-0">{{ translate('messages.Status') }}</th>
@@ -389,7 +390,7 @@
                                 <div class="col-sm-6">
                                     <label class="custom-control custom-radio mb-0">
                                         <input type="radio" class="custom-control-input" value="{{ $sortValue }}" name="sort_by" {{ request('sort_by', 'all') === $sortValue ? 'checked' : '' }}>
-                                        <span class="custom-control-label fs-12 text-capitalize">{{ translate('messages.' . $sortLabel) }}</span>
+                                        <span class="custom-control-label fs-12 text-capitalize">{{ $isServiceModule && $sortValue === 'most_store_visit' ? translate('most provider visit') : translate('messages.' . $sortLabel) }}</span>
                                     </label>
                                 </div>
                             @endforeach
@@ -513,12 +514,12 @@
                     <div class="bg-light p-3 rounded mb-3">
                         <h4 class="mb-2">{{ translate('messages.Reel_Earning') }}</h4>
                         <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap">
-                            <div>{{ translate('messages.Product') }}: <span class="text-title fw-medium">{{ $reel->productable?->name ?? translate('messages.N/A') }}</span></div>
-                            <div>{{ translate('messages.Order_Now') }}: <span class="text-title fw-medium">{{ $reel->order_now_button ? translate('messages.on') : translate('messages.off') }}</span></div>
+                            <div>{{ $isServiceModule ? translate('Service') : translate('messages.Product') }}: <span class="text-title fw-medium">{{ $reel->productable?->name ?? translate('messages.N/A') }}</span></div>
+                            <div>{{ $isServiceModule ? translate('Book Now') : translate('messages.Order_Now') }}: <span class="text-title fw-medium">{{ $reel->order_now_button ? translate('messages.on') : translate('messages.off') }}</span></div>
                         </div>
                         <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap mt-2">
-                            <div>{{ translate('messages.Total_Sale') }}: <span class="text-title fw-medium">{{ $reel->order_count ?? 0 }}</span></div>
-                            <div>{{ translate('messages.Total_Sale_Amount') }}: <span class="text-title fw-medium">{{ \App\CentralLogics\Helpers::format_currency($reel->total_sale_amount ?? 0) }}</span></div>
+                            <div>{{ $isServiceModule ? translate('Total Booking') : translate('messages.Total_Sale') }}: <span class="text-title fw-medium">{{ $reel->order_count ?? 0 }}</span></div>
+                            <div>{{ $isServiceModule ? translate('Total Booking Amount') : translate('messages.Total_Sale_Amount') }}: <span class="text-title fw-medium">{{ \App\CentralLogics\Helpers::format_currency($reel->total_sale_amount ?? 0) }}</span></div>
                         </div>
                     </div>
 
@@ -542,7 +543,7 @@
                         <div class="col-sm-4">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-shop-outlined fs-16"></i> {{ translate('messages.Store_Visits') }}
+                                    <i class="tio-shop-outlined fs-16"></i> {{ $isServiceModule ? translate('Provider Visits') : translate('messages.Store_Visits') }}
                                 </div>
                                 <h5 class="text-info">{{ $reel->total_store_visits }}</h5>
                             </div>
@@ -550,7 +551,7 @@
                         <div class="col-sm-6">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-shopping-cart fs-16"></i> {{ translate('messages.Total_Sale') }}
+                                    <i class="tio-shopping-cart fs-16"></i> {{ $isServiceModule ? translate('Total Booking') : translate('messages.Total_Sale') }}
                                 </div>
                                 <h5 class="text-info">{{ $reel->order_count ?? 0 }}</h5>
                             </div>
@@ -558,7 +559,7 @@
                         <div class="col-sm-6">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-money fs-16"></i> {{ translate('messages.Total_Sale_Amount') }}
+                                    <i class="tio-money fs-16"></i> {{ $isServiceModule ? translate('Total Booking Amount') : translate('messages.Total_Sale_Amount') }}
                                 </div>
                                 <h5 class="text-info">{{ \App\CentralLogics\Helpers::format_currency($reel->total_sale_amount ?? 0) }}</h5>
                             </div>
@@ -770,8 +771,8 @@
                 labels: [
                     '{{ translate('messages.Views') }}',
                     '{{ translate('messages.Likes') }}',
-                    '{{ translate('messages.Store_Visits') }}',
-                    '{{ translate('messages.Total_Sale') }}'
+                    '{{ $isServiceModule ? translate('Provider Visits') : translate('messages.Store_Visits') }}',
+                    '{{ $isServiceModule ? translate('Total Booking') : translate('messages.Total_Sale') }}'
                 ],
                 colors: ['#F59E0B', '#04BB7B', '#3B82F6', '#9929BD'],
                 legend: {

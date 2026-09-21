@@ -41,7 +41,7 @@ trait ReportFilter
         return $query;
     }
 
- public function scopeSearch($query, $keywords, $relations = [], $mainCol = 'name')
+ public function scopeSearch($query, $keywords, $relations = [], $mainCol = 'name', $orderByRelevance = true)
     {
         if (empty($keywords)) {
             return $query;
@@ -68,15 +68,24 @@ trait ReportFilter
                 });
             }
 
-            // Search in relationships
-            foreach ($relations as $relation => $column) {
-                $q->orWhereHas($relation, function ($rq) use ($column, $keywords) {
+            foreach ($relations as $relation => $columns) {
+                $columns = is_array($columns) ? $columns : [$columns];
+                $q->orWhereHas($relation, function ($rq) use ($columns, $keywords) {
                     foreach ($keywords as $word) {
-                        $rq->where($column, 'like', "%{$word}%");
+                        $rq->where(function ($sub) use ($columns, $word) {
+                            foreach ($columns as $column) {
+                                $sub->orWhere($column, 'like', "%{$word}%");
+                            }
+                        });
                     }
                 });
             }
         });
+
+        if (! $orderByRelevance) {
+            return $query;
+        }
+
         return $query->orderByRaw(
             "CASE
             WHEN `{$defaultColumn}` = ? THEN 1

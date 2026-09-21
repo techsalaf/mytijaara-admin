@@ -193,6 +193,7 @@
                                 <th class="border-top border-bottom">{{ translate('messages.order_id') }}</th>
                                 <th class="border-top border-bottom">{{ translate('messages.customer_name') }}</th>
                                 <th class="border-top border-bottom">{{ translate('messages.referral_discount') }}</th>
+                                <th class="border-top border-bottom text-center">{{ translate('messages.Pro_Discount') }}</th>
                                 <th class="border-top border-bottom text-center">{{ translate('messages.tax') }}</th>
                                 <th class="border-top border-bottom text-center">{{ translate('messages.delivery_charge') }}</th>
                                 <th class="border-top border-bottom text-center">{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge') }}</th>
@@ -227,11 +228,14 @@
                                     <td class="text-center mw--85px">
                                         {{ \App\CentralLogics\Helpers::number_format_short($order['ref_bonus_amount']) }}
                                     </td>
+                                    <td class="text-center mw--85px">
+                                        {{ \App\CentralLogics\Helpers::number_format_short(\App\CentralLogics\OrderLogic::pro_discount_total($order)) }}
+                                    </td>
                                     <td class="text-center mw--85px white-space-nowrap">
                                         {{ \App\CentralLogics\Helpers::number_format_short($order['total_tax_amount']) }}
                                     </td>
                                     <td class="text-center mw--85px">
-                                        {{ \App\CentralLogics\Helpers::number_format_short($order['delivery_charge']) }}
+                                        {{ \App\CentralLogics\Helpers::number_format_short(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}
                                     </td>
                                     <td class="text-center mw--85px">
                                         {{ \App\CentralLogics\Helpers::number_format_short($order['additional_charge']) }}
@@ -321,7 +325,7 @@
         $(document).on('ready', function() {
             $('.js-data-example-ajax-2').select2({
                 ajax: {
-                    url: '{{ url('/') }}/admin/customer/select-list',
+                    url: '{{ route('admin.users.customer.select-list') }}',
                     data: function(params) {
                         return {
                             q: params.term,

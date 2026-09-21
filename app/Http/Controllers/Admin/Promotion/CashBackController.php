@@ -10,7 +10,6 @@ use App\Http\Requests\Admin\CashBackAddRequest;
 use App\Http\Requests\Admin\CashBackUpdateRequest;
 use App\Services\CashBackService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Brian2694\Toastr\Facades\Toastr;
@@ -58,9 +57,6 @@ class CashBackController extends BaseController
         $language = getWebConfig('language');
         $defaultLang = str_replace('_', '-', app()->getLocale());
 
-        // return response()->json([
-        //     'view' => view(CashBackViewPath::UPDATE[VIEW], compact('cashback','language','defaultLang'))->render(),
-        // ]);
 
         return view(CashBackViewPath::UPDATE[VIEW], compact('cashback','language','defaultLang'));
     }
@@ -71,7 +67,7 @@ class CashBackController extends BaseController
         $this->translationRepo->updateByModel(request: $request, model: $cashback, modelPath: 'App\Models\CashBack', attribute: 'title');
 
         Toastr::success(translate('messages.cashback_updated_successfully'));
-        return back();
+        return redirect()->route('admin.users.cashback.add-new');
     }
 
     public function delete(Request $request): RedirectResponse
@@ -81,19 +77,6 @@ class CashBackController extends BaseController
         return back();
     }
 
-
-    // public function getSearchList(Request $request): JsonResponse
-    // {
-    //     $cashbacks = $this->cashBackRepo->getSearchedList(
-    //         searchValue: $request['search'],
-    //         dataLimit: 50
-    //     );
-
-    //     return response()->json([
-    //         'view'=>view(CashBackViewPath::SEARCH[VIEW],compact('cashbacks'))->render(),
-    //         'count'=>$cashbacks->count()
-    //     ]);
-    // }
 
     public function updateStatus(Request $request): RedirectResponse
     {

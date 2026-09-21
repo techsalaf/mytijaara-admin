@@ -3,6 +3,9 @@
 namespace Modules\AI\app\Providers;
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
@@ -19,7 +22,35 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureAiChatRateLimiting();
+
         parent::boot();
+    }
+
+    /**
+     * Rate limiters for the AI chat endpoints.
+     *
+     * `send` triggers a paid LLM call, so it's throttled to prevent cost abuse.
+     * In DEMO mode the per-IP hit-limit in AiChatController (10 messages, with a
+     * friendly "demo restriction" message) is the real cap — so these throttles
+     * are switched OFF there. Otherwise Laravel's generic "Too Many Attempts"
+     * (429) fires first and masks the demo message.
+     */
+    protected function configureAiChatRateLimiting(): void
+    {
+        $isDemo = fn (): bool => function_exists('getEnvMode') && getEnvMode() === 'demo';
+
+        RateLimiter::for('ai-chat-send', function (Request $request) use ($isDemo) {
+            return $isDemo()
+                ? Limit::none()
+                : Limit::perMinute(12)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        RateLimiter::for('ai-chat-group', function (Request $request) use ($isDemo) {
+            return $isDemo()
+                ? Limit::none()
+                : Limit::perMinute(30)->by(optional($request->user())->id ?: $request->ip());
+        });
     }
 
     /**

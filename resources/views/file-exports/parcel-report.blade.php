@@ -31,6 +31,7 @@
                     <th>{{ translate('messages.order_id') }}</th>
                     <th>{{ translate('messages.customer_name') }}</th>
                     <th>{{ translate('messages.referral_discount') }}</th>
+                    <th>{{ translate('messages.Pro_Discount') }}</th>
                     <th>{{ translate('messages.tax') }}</th>
                     <th>{{ translate('messages.delivery_charge') }}</th>
                     <th>{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge') }}</th>
@@ -56,8 +57,9 @@
                             @endif
                         </td>
                         <td>{{ \App\CentralLogics\Helpers::number_format_short($order['ref_bonus_amount']) }}</td>
+                        <td>{{ \App\CentralLogics\Helpers::number_format_short(\App\CentralLogics\OrderLogic::pro_discount_total($order)) }}</td>
                         <td>{{ \App\CentralLogics\Helpers::number_format_short($order['total_tax_amount']) }}</td>
-                        <td>{{ \App\CentralLogics\Helpers::number_format_short($order['delivery_charge']) }}</td>
+                        <td>{{ \App\CentralLogics\Helpers::number_format_short(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}</td>
                         <td>{{ \App\CentralLogics\Helpers::number_format_short($order['additional_charge']) }}</td>
                         <td>{{ \App\CentralLogics\Helpers::number_format_short($order['order_amount']) }}</td>
                         <td>{{ isset($order->transaction) ? $order->transaction->received_by : translate('messages.not_received_yet') }}</td>

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ViewPaths\Admin\Category as CategoryViewPath;
 use App\Http\Requests\Admin\CategoryUpdateRequest;
+use App\Models\Category;
 use App\Traits\FileManagerTrait;
 use Exception;
 use Illuminate\Http\Request;
@@ -58,18 +59,60 @@ class CategoryService
         }
         $moduleId = Config::get('module.current_module_id');
 
+        // The uploaded file must be the category template. If a required column is missing
+        // (e.g. a services bulk template was uploaded by mistake), fail cleanly with the
+        // "wrong format" flag instead of throwing "Undefined array key".
+        $requiredColumns = ['Name', 'Image', 'ParentId', 'Position', 'Priority', 'Status'];
+        if (! $toAdd) {
+            $requiredColumns[] = 'Id';
+        }
+        $firstRow = $collections->first();
+        if ($firstRow !== null) {
+            foreach ($requiredColumns as $column) {
+                if (! array_key_exists($column, (array) $firstRow)) {
+                    return ['flag' => 'wrong_format'];
+                }
+            }
+        }
+
         $data = [];
+        $seenNames = [];
         foreach ($collections as $collection) {
             if ($collection['Name'] === "") {
                 return ['flag' => 'required_fields'];
             }
-            $parentId = is_numeric($collection['ParentId']) ? $collection['ParentId'] : 0;
+
+            // Position defines the level: 0 = main category, 1 = sub category. It is required and must be 0 or 1.
+            $position = is_numeric($collection['Position']) ? (int) $collection['Position'] : null;
+            if (! in_array($position, [0, 1], true)) {
+                return ['flag' => 'invalid_position'];
+            }
+
+            // ParentId links a sub category to its parent main category. A main category never has a parent.
+            $parentId = is_numeric($collection['ParentId']) ? (int) $collection['ParentId'] : 0;
+            if ($position === 1) {
+                $parentExists = $parentId > 0 && Category::where(['id' => $parentId, 'position' => 0, 'module_id' => $moduleId])->exists();
+                if (! $parentExists) {
+                    return ['flag' => 'invalid_parent'];
+                }
+            } else {
+                $parentId = 0;
+            }
+
+            // Sibling-scoped name uniqueness: unique among mains per module, and among a parent's sub categories.
+            $ignoreId = (! $toAdd && is_numeric($collection['Id'])) ? (int) $collection['Id'] : null;
+            $nameKey = $parentId . '|' . mb_strtolower(trim($collection['Name']));
+            if (in_array($nameKey, $seenNames, true) || Category::isDuplicateName($collection['Name'], $moduleId, $parentId, $ignoreId)) {
+                return ['flag' => 'duplicate_name'];
+            }
+            $seenNames[] = $nameKey;
+
             $array = [
                 'name' => $collection['Name'],
                 'image' => $collection['Image'],
                 'parent_id' => $parentId,
                 'module_id' => $moduleId,
-                'position' => $collection['Position'],
+                'position' => $position,
                 'priority' => is_numeric($collection['Priority']) ? $collection['Priority'] : 0,
                 'status' => $collection['Status'] == 'active' ? 1 : 0,
                 'created_at' => now(),

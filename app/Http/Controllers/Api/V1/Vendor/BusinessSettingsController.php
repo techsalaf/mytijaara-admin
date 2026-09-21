@@ -48,7 +48,19 @@ class BusinessSettingsController extends Controller
 
         $store->save();
 
+        $defaultLang = Helpers::system_default_language();
+
         foreach ($data_trans as $key => $i) {
+            if (($i['locale'] ?? null) === $defaultLang) {
+                Translation::where('translationable_type', 'App\Models\Store')
+                    ->where('translationable_id', $store->id)
+                    ->where('locale', $i['locale'])
+                    ->where('key', $i['key'])
+                    ->delete();
+
+                continue;
+            }
+
             Translation::updateOrInsert(
                 ['translationable_type' => 'App\Models\Store',
                 'translationable_id' => $store->id,

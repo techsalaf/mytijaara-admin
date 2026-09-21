@@ -15,7 +15,7 @@
                     <img src="{{asset('public/assets/admin/img/icons/wallet.png')}}" class="w--26" alt="">
                 </span>
                 <span>
-                    {{ translate('messages.store_withdraw_transaction')}}
+                    {{ translate('messages.vendor_withdraw_transaction')}}
                 </span>
             </h1>
         </div>
@@ -103,7 +103,7 @@
                         <tr>
                             <th class="border-0">{{translate('SL')}}</th>
                             <th class="border-0">{{translate('messages.amount')}}</th>
-                            <th class="border-0">{{ translate('messages.store') }}</th>
+                            <th class="border-0">{{ (addon_published_status('Rental') || addon_published_status('Service')) ? translate('messages.store') . '/' . translate('messages.provider') : translate('messages.store') }}</th>
                             <th class="border-0">{{translate('messages.request_time')}}</th>
                             <th class="border-0">{{translate('messages.status')}}</th>
                             <th class="border-0">{{translate('messages.action')}}</th>

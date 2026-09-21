@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\EmployeeRole;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\CentralLogics\Helpers;
 use App\Models\Translation;
 use Illuminate\Validation\Rule;
@@ -15,9 +14,9 @@ class CustomRoleController extends Controller
 {
     public function create(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $rl=EmployeeRole::where('store_id',Helpers::get_store_id())->orderBy('name')
-            ->when( isset($key) , function($query) use($key){
+            ->when( $request['search'] , function($query) use($key){
                 $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");
@@ -88,6 +87,14 @@ class CustomRoleController extends Controller
     {
         $role=EmployeeRole::withoutGlobalScope('translate')->where('store_id',Helpers::get_store_id())->where(['id'=>$id])->first(['id','name','modules']);
         return view('vendor-views.custom-role.edit',compact('role'));
+    }
+
+    public function view($id)
+    {
+        $role=EmployeeRole::withoutGlobalScope('translate')->where('store_id',Helpers::get_store_id())->where(['id'=>$id])->first(['id','name','modules']);
+        return response()->json([
+            'view' => view('vendor-views.custom-role.partials._view_role', compact('role'))->render(),
+        ]);
     }
 
     public function update(Request $request,$id)

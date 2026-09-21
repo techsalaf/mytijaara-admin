@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Session;
 use App\Exports\SubscriptionTransactionsExport;
 use App\Models\SubscriptionBillingAndRefundHistory;
 use Modules\Rental\Emails\ProviderSubscriptionCancel;
+use Modules\Service\Emails\ProviderSubscriptionCancel as ServiceProviderSubscriptionCancel;
 
 class SubscriptionController extends Controller
 {
@@ -34,10 +35,12 @@ class SubscriptionController extends Controller
         ->first();
         if($store->module_type == 'rental') {
             $store->loadCount('vehicles as items_count' );
+        } elseif($store->module_type == 'service') {
+            $store->loadCount('services as items_count' );
         }
 
         $packages = SubscriptionPackage::where('status',1)
-        ->where('module_type', $store?->module?->module_type == 'rental' && addon_published_status('Rental') ? 'rental' : 'all' )
+        ->where('module_type', Helpers::subscriptionPackageType($store) )
         ->latest()->get();
         $admin_commission=BusinessSetting::where('key', 'admin_commission')->first()?->value ;
         $business_name=BusinessSetting::where('key', 'business_name')->first()?->value ;
@@ -78,6 +81,27 @@ class SubscriptionController extends Controller
                 if (config('mail.status') && Helpers::get_mail_status('rental_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_cancel','mail_status' ,$store?->id)) {
                     Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionCancel($store->name));
                 }
+            } elseif($store?->module?->module_type == 'service' && addon_published_status('Service')){
+                if( Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
+                    $data = [
+                        'title' => translate('subscription_canceled'),
+                        'description' => translate('Your_subscription_has_been_canceled'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'subscription',
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $store?->vendor_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+                if (config('mail.status') && Helpers::get_mail_status('service_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','mail_status' ,$store?->id)) {
+                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionCancel($store->name));
+                }
             } else{
             if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
                 $data = [
@@ -117,6 +141,7 @@ class SubscriptionController extends Controller
         }
 
         $store->store_business_model = 'commission';
+        $store->item_section = 1;
         $store->save();
 
         StoreSubscription::where(['store_id' => Helpers::get_store_id()])->update([
@@ -207,9 +232,9 @@ class SubscriptionController extends Controller
         ])
         ->first();
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $transactions= SubscriptionTransaction::where('store_id',Helpers::get_store_id())
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('id', 'like', "%{$value}%");
@@ -258,9 +283,9 @@ class SubscriptionController extends Controller
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
         $store= Store::where('id',Helpers::get_store_id())->first();
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $transactions= SubscriptionTransaction::where('store_id',$store->id)
-        ->when(isset($key), function($query) use($key){
+        ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->Where('id', 'like', "%{$value}%");

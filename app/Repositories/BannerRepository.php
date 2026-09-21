@@ -32,16 +32,16 @@ class BannerRepository implements BannerRepositoryInterface
         return $this->banner->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->banner->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->banner->with($relations)->where($filters)
-        ->when(isset($key) , function($q) use($key){
+        ->when($searchValue , function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('title', 'like', "%{$value}%");
@@ -64,6 +64,9 @@ class BannerRepository implements BannerRepositoryInterface
     public function delete(string $id): bool
     {
         $banner = $this->banner->find($id);
+        if (! $banner) {
+            return false;
+        }
         Helpers::check_and_delete('banner/' , $banner['image']);
         $banner->translations()->delete();
         $banner->delete();
@@ -76,9 +79,9 @@ class BannerRepository implements BannerRepositoryInterface
         return $this->banner->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getSearchedList(string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection
+    public function getSearchedList(?string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->banner->where('module_id', Config::get('module.current_module_id'))->where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('title', 'like', "%{$value}%");

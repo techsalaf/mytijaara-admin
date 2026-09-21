@@ -41,6 +41,7 @@ class SystemTaxVatSetupController extends Controller
             'parcel' => 'parcel',
             'prescription' => 'prescription',
             'ride-share' => 'ride_module',
+            'service' => 'service_provider',
         ];
         $systemTaxVatForPrescription = null;
         $tax_payer = $type_map[$request->type] ?? 'vendor';
@@ -138,7 +139,12 @@ class SystemTaxVatSetupController extends Controller
                 $systemTaxVat->is_default = false;
             }
             $systemTaxVat->tax_payer = $request->type;
-            $systemTaxVat->tax_type = $request->tax_type ?? $request->type == 'rental_provider' ?  'trip_wise' : ($request->type == 'ride_module' ?  'ride_wise' : 'order_wise');
+            $defaultTaxTypes = [
+                'rental_provider' => 'trip_wise',
+                'ride_module' => 'ride_wise',
+                'service_provider' => 'category_wise',
+            ];
+            $systemTaxVat->tax_type = $request->tax_type ?? ($defaultTaxTypes[$request->type] ?? 'order_wise');
         }
         $systemTaxVat->is_active = !$systemTaxVat->is_active;
         $systemTaxVat->save();
@@ -176,10 +182,15 @@ class SystemTaxVatSetupController extends Controller
     }
     private function validateRequest(Request $request, $id = null): void
     {
-        $request->validate(
-            [
-                'tax_ids' => 'required_if:tax_type,order_wise|required_if:tax_type,trip_wise|',
-            ]
-        );
+        $rateRequiredTypes = $request->tax_payer == 'service_provider'
+            ? ['booking_wise']
+            : ['order_wise', 'trip_wise'];
+        $rules = [];
+        foreach ($rateRequiredTypes as $type) {
+            $rules[] = 'required_if:tax_type,' . $type;
+        }
+        $request->validate([
+            'tax_ids' => implode('|', $rules),
+        ]);
     }
 }

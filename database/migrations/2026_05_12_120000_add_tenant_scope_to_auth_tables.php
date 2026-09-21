@@ -30,8 +30,8 @@ return new class extends Migration
         $this->dropIndexIfExists('users', 'users_ref_code_unique');
 
         Schema::table('users', function (Blueprint $t) {
-            $t->unsignedBigInteger('tenant_id')->default(0)->after('id');
-            $t->unsignedBigInteger('sub_tenant_id')->default(0)->after('tenant_id');
+            $t->unsignedBigInteger('tenant_id')->default(0);
+            $t->unsignedBigInteger('sub_tenant_id')->default(0);
 
             $t->unique(['email', 'tenant_id', 'sub_tenant_id'], 'users_email_scope_unique');
             $t->unique(['phone', 'tenant_id', 'sub_tenant_id'], 'users_phone_scope_unique');

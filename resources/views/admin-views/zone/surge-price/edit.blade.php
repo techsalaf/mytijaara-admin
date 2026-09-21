@@ -105,7 +105,7 @@
                                     whereHas('zones', function ($query) use ($surge) {
                                 $query->where('zone_id', $surge->zone_id);
                             })
-                            ->where('module_type','!=','rental')->get())
+                            ->whereNotIn('module_type',['rental','ride-share','service'])->get())
                             <select name="module_ids[]" id="module_selected" class="form-control h--45px js-select2-custom" multiple="multiple" placeholder="Module Select" data-placeholder="Module">
                                 <option></option>
                                 @foreach($modules as $module)

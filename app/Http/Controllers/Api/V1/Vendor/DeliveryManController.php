@@ -55,7 +55,7 @@ class DeliveryManController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)],403);
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $delivery_men=DeliveryMan::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('f_name', 'like', "%{$value}%")

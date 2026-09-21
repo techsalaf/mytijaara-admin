@@ -20,8 +20,8 @@ class SurgePriceController extends Controller
     public function index(Request $request, $zone_id)
     {
         $zone = Zone::findOrFail($zone_id);
-        $key = explode(' ', $request['search']);
-        $surges = SurgePrice::where('zone_id', $zone_id)->when(isset($key), function($query) use($key) {
+        $key = explode(' ', $request['search'] ?? '');
+        $surges = SurgePrice::where('zone_id', $zone_id)->when($request['search'], function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('surge_price_name', 'like', "%{$value}%");

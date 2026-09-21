@@ -179,7 +179,7 @@
                                     </td>
                                     <td>
                                         @if($order->customer)
-                                            <a class="text-title text-capitalize" href="{{route('admin.customer.view',[$order['user_id']])}}">
+                                            <a class="text-title text-capitalize" href="{{route('admin.users.customer.view',[$order['user_id']])}}">
                                                 <strong>{{$order->customer['f_name'].' '.$order->customer['l_name']}}</strong>
                                                 <div>{{$order->customer['phone']}}</div>
                                             </a>
@@ -267,7 +267,7 @@
                                                 @if($order->customer)
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="customer-namekey">{{translate('Name')}}</span>:
-                                                    <span class="text-dark"> <a class="text-dark text-capitalize" href="{{route('admin.customer.view',[$order['user_id']])}}"> {{$order->customer['f_name'].' '.$order->customer['l_name']}}  </a>  </span>
+                                                    <span class="text-dark"> <a class="text-dark text-capitalize" href="{{route('admin.users.customer.view',[$order['user_id']])}}"> {{$order->customer['f_name'].' '.$order->customer['l_name']}}  </a>  </span>
                                                 </div>
 
                                                 <div class="d-flex align-items-center gap-2">

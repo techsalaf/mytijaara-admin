@@ -257,6 +257,23 @@ class CategoryProvider implements CategoryProviderContract
             ->type($type);
     }
 
+    public function translatedNamesByIds(array $ids): array
+    {
+        $ids = collect($ids)->filter(fn ($id) => is_numeric($id))->map(fn ($id) => (int) $id)->unique()->all();
+        if ($ids === []) {
+            return [];
+        }
+
+        // Unfiltered by product count: the curated explore/home tabs must show
+        // every configured category's translated name — including categories
+        // with no live products, which forScope() intentionally drops. The name
+        // is localized by Category's `translate` global scope (session locale).
+        return Category::whereIn('id', $ids)
+            ->get(['id', 'name'])
+            ->mapWithKeys(fn (Category $category) => [(int) $category->id => (string) $category->name])
+            ->all();
+    }
+
     public function findIdBySlug(?StorefrontScope $scope, string $slug): ?int
     {
         $slug = \trim($slug);

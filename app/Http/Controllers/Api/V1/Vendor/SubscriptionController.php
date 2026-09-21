@@ -18,6 +18,7 @@ use App\Models\SubscriptionTransaction;
 use Illuminate\Support\Facades\Validator;
 use App\Models\SubscriptionBillingAndRefundHistory;
 use Modules\Rental\Emails\ProviderSubscriptionCancel;
+use Modules\Service\Emails\ProviderSubscriptionCancel as ServiceProviderSubscriptionCancel;
 
 class SubscriptionController extends Controller
 {
@@ -25,7 +26,7 @@ class SubscriptionController extends Controller
     {
         $module = Module::whereId($request->module_id)->first();
         $packages = SubscriptionPackage::where('status', 1)
-            ->where('module_type', $module?->module_type == 'rental' && addon_published_status('Rental') ? 'rental' : 'all')
+            ->where('module_type', Helpers::subscriptionPackageType($module))
             ->latest()->get();
         return response()->json(['packages' => $packages], 200);
     }
@@ -119,7 +120,7 @@ class SubscriptionController extends Controller
             'to' => 'required',
         ]);
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
@@ -131,7 +132,7 @@ class SubscriptionController extends Controller
 
         $transactions =  SubscriptionTransaction::where('store_id', $store_id)->latest()
             ->with('store:id,name', 'package:id,package_name')
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->Where('id', 'like', "%{$value}%");
@@ -196,6 +197,27 @@ class SubscriptionController extends Controller
                 }
                 if (config('mail.status') && Helpers::get_mail_status('rental_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_cancel','mail_status' ,$store?->id)) {
                     Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionCancel($store->name));
+                }
+            } elseif($store?->module?->module_type == 'service' && addon_published_status('Service')){
+                if( Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
+                    $data = [
+                        'title' => translate('subscription_canceled'),
+                        'description' => translate('Your_subscription_has_been_canceled'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'subscription',
+                        'order_status' => '',
+                    ];
+                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $store?->vendor_id,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+                if (config('mail.status') && Helpers::get_mail_status('service_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','mail_status' ,$store?->id)) {
+                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionCancel($store->name));
                 }
             } else{
                 if (Helpers::getNotificationStatusData('store', 'store_subscription_cancel', 'push_notification_status', $store->id)  &&  $store?->vendor?->firebase_token) {

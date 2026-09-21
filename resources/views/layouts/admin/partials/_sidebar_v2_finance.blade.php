@@ -12,11 +12,21 @@
 
     $rental_on = addon_published_status('Rental');
     $ride_on   = addon_published_status('RideShare');
+    $service_on = addon_published_status('Service');
+
+    $can_report       = Helpers::module_permission_check('report');
+    $can_admin_tax    = Helpers::module_permission_check('admin_text_module');
+    $can_vendor_vat   = Helpers::module_permission_check('vendor_vat_report');
+    $can_trip_tax     = Helpers::module_permission_check('admin_text_module');
+    $can_provider_vat = Helpers::module_permission_check('vendor_vat_report');
+    $can_tax_section  = $can_report || $can_admin_tax || $can_vendor_vat
+        || ($rental_on && ($can_trip_tax || $can_provider_vat))
+        || ($ride_on && $can_admin_tax);
 
     $active_section = 'withdraws';
     if ($is('admin/transactions/store-disbursement*') || $is('admin/transactions/dm-disbursement*') || $is('admin/transactions/rider-disbursement*')) $active_section = 'disbursements';
     elseif ($is('admin/transactions/account-transaction*') || $is('admin/transactions/provide-deliveryman-earnings*') || $is('admin/transactions/provide-rider-earnings*') || $is('admin/transactions/withdraw-method*')) $active_section = 'cash';
-    elseif ($is('admin/transactions/report/*tax*') || $is('admin/transactions/rental/report/*tax*') || $is('admin/transactions/ride-share/report/*tax*') || $is('taxvat/*')) $active_section = 'tax';
+    elseif ($is('admin/transactions/report/*tax*') || $is('admin/transactions/rental/report/*tax*') || $is('admin/transactions/service/report/*tax*') || $is('admin/transactions/ride-share/report/*tax*') || $is('taxvat/*')) $active_section = 'tax';
 @endphp
 
 <aside id="v2-shell" class="v2-shell" data-workspace="finance" data-active-section="{{ $active_section }}">
@@ -33,12 +43,12 @@
                     <i data-lucide="send"></i><span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if(Helpers::module_permission_check('collect_cash') || Helpers::module_permission_check('provide_dm_earning') || Helpers::module_permission_check('settings'))
+            @if(Helpers::module_permission_check('collect_cash') || Helpers::module_permission_check('provide_dm_earning') || Helpers::module_permission_check('withdraw_method'))
                 <button class="v2-rail-btn {{ $active_section==='cash' ? 'is-active' : '' }}" data-section="cash" data-label="{{ translate('Cash Operations') }}" aria-label="{{ translate('Cash Operations') }}">
                     <i data-lucide="banknote"></i><span class="v2-pin-dot"></span>
                 </button>
             @endif
-            @if(Helpers::module_permission_check('report'))
+            @if($can_tax_section)
                 <button class="v2-rail-btn {{ $active_section==='tax' ? 'is-active' : '' }}" data-section="tax" data-label="{{ translate('Tax & Compliance') }}" aria-label="{{ translate('Tax & Compliance') }}">
                     <i data-lucide="receipt"></i><span class="v2-pin-dot"></span>
                 </button>
@@ -114,7 +124,7 @@
         </div>
         @endif
 
-        @if(Helpers::module_permission_check('collect_cash') || Helpers::module_permission_check('provide_dm_earning') || Helpers::module_permission_check('settings'))
+        @if(Helpers::module_permission_check('collect_cash') || Helpers::module_permission_check('provide_dm_earning') || Helpers::module_permission_check('withdraw_method'))
         <div class="v2-panel-content" data-panel="cash" @if($active_section!=='cash') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Cash Operations') }}</span></div>
@@ -153,7 +163,7 @@
                 </div>
                 @endif
 
-                @if(Helpers::module_permission_check('settings'))
+                @if(Helpers::module_permission_check('withdraw_method'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="fc-mtd"><span>{{ translate('Withdraw methods') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -168,7 +178,7 @@
         </div>
         @endif
 
-        @if(Helpers::module_permission_check('report'))
+        @if($can_tax_section)
         <div class="v2-panel-content" data-panel="tax" @if($active_section!=='tax') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Tax & Compliance') }}</span></div>
@@ -181,6 +191,7 @@
                     <button type="button" class="v2-group-header" data-group-toggle="ft-admin"><span>{{ translate('Admin Tax report') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
                         {{-- URIs use kebab-case despite camelCase route names. Active patterns match the URI tree. --}}
+                        @if($can_admin_tax)
                         <a class="v2-nav-item {{ ($is('admin/transactions/report/get-tax-*') || $is('admin/transactions/report/admin-tax-*') || $is('admin/transactions/report/tax-*')) ? 'is-active' : '' }}" href="{{ route('admin.transactions.report.getTaxReport') }}" data-id="tax-admin-order">
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Order module') }}</span>
                             <button type="button" class="v2-pin" data-pin="tax-admin-order" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
@@ -189,16 +200,23 @@
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Parcel module') }}</span>
                             <button type="button" class="v2-pin" data-pin="tax-admin-parcel" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
-                        @if($rental_on && Route::has('admin.transactions.rental.report.getTaxReport'))
+                        @endif
+                        @if($rental_on && $can_trip_tax && Route::has('admin.transactions.rental.report.getTaxReport'))
                             <a class="v2-nav-item {{ ($is('admin/transactions/rental/report/get-tax-*') || $is('admin/transactions/rental/report/admin-tax-*') || $is('admin/transactions/rental/report/tax-*')) ? 'is-active' : '' }}" href="{{ route('admin.transactions.rental.report.getTaxReport') }}" data-id="tax-admin-rental">
                                 <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Rental module') }}</span>
                                 <button type="button" class="v2-pin" data-pin="tax-admin-rental" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                             </a>
                         @endif
-                        @if($ride_on && Route::has('admin.transactions.ride-share.report.ride-wise-taxes'))
+                        @if($ride_on && $can_admin_tax && Route::has('admin.transactions.ride-share.report.ride-wise-taxes'))
                             <a class="v2-nav-item {{ $is('admin/transactions/ride-share/report/ride-wise-tax*') ? 'is-active' : '' }}" href="{{ route('admin.transactions.ride-share.report.ride-wise-taxes') }}" data-id="tax-admin-ride">
                                 <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Ride Share module') }}</span>
                                 <button type="button" class="v2-pin" data-pin="tax-admin-ride" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                            </a>
+                        @endif
+                        @if($service_on && $can_report && Route::has('admin.transactions.service.report.getTaxReport'))
+                            <a class="v2-nav-item {{ ($is('admin/transactions/service/report/get-tax-*') || $is('admin/transactions/service/report/admin-tax-*') || $is('admin/transactions/service/report/tax-*')) ? 'is-active' : '' }}" href="{{ route('admin.transactions.service.report.getTaxReport') }}" data-id="tax-admin-service">
+                                <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Service module') }}</span>
+                                <button type="button" class="v2-pin" data-pin="tax-admin-service" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                             </a>
                         @endif
                     </div>
@@ -207,14 +225,22 @@
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="ft-vendor"><span>{{ translate('Vendor Tax Report') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
+                        @if($can_vendor_vat)
                         <a class="v2-nav-item {{ ($is('admin/transactions/report/vendor-wise-tax*') || $is('admin/transactions/report/vendor-tax*')) ? 'is-active' : '' }}" href="{{ route('admin.transactions.report.vendorWiseTaxes') }}" data-id="vat-store">
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Vendor Tax Report') }}</span>
                             <button type="button" class="v2-pin" data-pin="vat-store" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
-                        @if($rental_on && Route::has('admin.transactions.rental.report.providerWiseTaxes'))
+                        @endif
+                        @if($rental_on && $can_provider_vat && Route::has('admin.transactions.rental.report.providerWiseTaxes'))
                             <a class="v2-nav-item {{ ($is('admin/transactions/rental/report/provider-wise-tax*') || $is('admin/transactions/rental/report/provider-tax*')) ? 'is-active' : '' }}" href="{{ route('admin.transactions.rental.report.providerWiseTaxes') }}" data-id="vat-rental">
                                 <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Provider Tax Report') }}</span>
                                 <button type="button" class="v2-pin" data-pin="vat-rental" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                            </a>
+                        @endif
+                        @if($service_on && $can_report && Route::has('admin.transactions.service.report.providerWiseTaxes'))
+                            <a class="v2-nav-item {{ ($is('admin/transactions/service/report/provider-wise-tax*') || $is('admin/transactions/service/report/provider-tax*')) ? 'is-active' : '' }}" href="{{ route('admin.transactions.service.report.providerWiseTaxes') }}" data-id="vat-service">
+                                <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('Service Provider Tax Report') }}</span>
+                                <button type="button" class="v2-pin" data-pin="vat-service" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                             </a>
                         @endif
                     </div>

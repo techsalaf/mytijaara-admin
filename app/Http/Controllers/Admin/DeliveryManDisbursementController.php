@@ -32,12 +32,12 @@ class DeliveryManDisbursementController extends Controller
 
     public function view(Request $request,$id)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $delivery_man_id = $request->query('delivery_man_id', 'all');
         $payment_method_id = $request->query('payment_method_id', 'all');
         $disbursement = Disbursement::findOrFail($id);
         $disbursements=DisbursementDetails::with('delivery_man','withdraw_method')->where(['disbursement_id'=>$id])
-            ->when(isset($key) , function($q) use($key){
+            ->when($request['search'] , function($q) use($key){
                 $q->whereHas('delivery_man', function ($q) use($key){
                     $q->where(function ($q) use ($key) {
                         foreach ($key as $value) {
@@ -64,12 +64,12 @@ class DeliveryManDisbursementController extends Controller
     }
     public function export(Request $request,$id,$type='excel')
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $delivery_man_id = $request->query('delivery_man_id', 'all');
         $payment_method_id = $request->query('payment_method_id', 'all');
         $disbursement = Disbursement::findOrFail($id);
         $disbursements=DisbursementDetails::where(['disbursement_id'=>$id])
-            ->when(isset($key) , function($q) use($key){
+            ->when($request['search'] , function($q) use($key){
                 $q->whereHas('delivery_man', function ($q) use($key){
                     $q->where(function ($q) use ($key) {
                         foreach ($key as $value) {

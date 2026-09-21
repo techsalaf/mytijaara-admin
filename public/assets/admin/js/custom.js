@@ -256,3 +256,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 HSDemo();
+document.addEventListener('keydown', function (e) {
+    var el = e.target;
+    if (el && el.matches && el.matches('input[type="number"][min="0"]')) {
+        if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === 'E') {
+            e.preventDefault();
+        }
+    }
+});
+
+document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (el && el.matches && el.matches('input[type="number"][min="0"]')) {
+        if (el.value !== '' && parseFloat(el.value) < 0) {
+            el.value = '';
+        }
+    }
+});

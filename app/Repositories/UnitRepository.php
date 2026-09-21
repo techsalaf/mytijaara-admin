@@ -29,15 +29,15 @@ class UnitRepository implements UnitRepositoryInterface
         return $this->unit->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         $dataLimit = is_string($dataLimit) ? (int)$dataLimit : $dataLimit;
         return $this->unit->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->unit->where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('unit', 'like', "%{$value}%");
@@ -46,9 +46,9 @@ class UnitRepository implements UnitRepositoryInterface
     }
     public function getExportList($request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->unit
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                        $q->orWhere('unit', 'like', "%{$value}%");

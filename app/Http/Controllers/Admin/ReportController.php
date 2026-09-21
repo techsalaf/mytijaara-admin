@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\CentralLogics\OrderLogic;
 use App\Exports\DisbursementReportExport;
 use App\Models\DeliveryMan;
 use App\Models\DisbursementDetails;
@@ -31,6 +32,7 @@ use App\Exports\TransactionReportExport;
 use App\Exports\ParcelTransactionReportExport;
 use App\Exports\ParcelExpenseReportExport;
 use App\Exports\RentalExpenseReportExport;
+use App\Exports\ServiceExpenseReportExport;
 use App\Exports\RideshareExpenseReportExport;
 use App\Exports\OtherExpenseReportExport;
 use Illuminate\Support\Facades\DB;
@@ -51,7 +53,7 @@ class ReportController extends Controller
 
     public function day_wise_report(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $from =  null;
         $to = null;
@@ -66,218 +68,99 @@ class ReportController extends Controller
         $store_id = $request->query('store_id', 'all');
         $store = is_numeric($store_id) ? Store::findOrFail($store_id) : null;
 
-        $order_transactions = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store', 'delivery_man')->whereHas('order', function ($q) {
-            $q->where('order_type', '!=', 'parcel');
-        })->when(isset($zone), function ($query) use ($zone) {
-            return $query->where('zone_id', $zone->id);
-        })
-                        ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('order_id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-            ->when(isset($store), function ($query) use ($store) {
-                return $query->whereHas('order', function ($q) use ($store) {
-                    $q->where('store_id', $store->id);
-                });
-            })
-            ->when(request('module_id'), function ($query) {
-                return $query->module(request('module_id'));
-            })
-            ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-            })
-            ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                return $query->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                return $query->whereYear('created_at', date('Y') - 1);
-            })
-            ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-            })->orderBy('created_at', 'desc')
+        $module_id = request('module_id');
+        $search = $request['search'] ?? null;
+
+        $order_transactions = $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
+            ->with('order', 'order.details', 'order.customer', 'order.store', 'delivery_man')
+            ->orderBy('created_at', 'desc')
             ->paginate(config('default_pagination'))->withQueryString();
 
-        $admin_earned = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-            $q->where('order_type', '!=', 'parcel');
-        })->when(isset($zone), function ($query) use ($zone) {
-            return $query->where('zone_id', $zone->id);
-        })
-                        ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('order_id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-            ->when(isset($store), function ($query) use ($store) {
-                return $query->whereHas('order', function ($q) use ($store) {
-                    $q->where('store_id', $store->id);
-                });
-            })
-            ->when(request('module_id'), function ($query) {
-                return $query->module(request('module_id'));
-            })
-            ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-            })
-            ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                return $query->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                return $query->whereYear('created_at', date('Y') - 1);
-            })
-            ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-            })->orderBy('created_at', 'desc')
+        $admin_earned = 0;
+        $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
             ->notRefunded()
-            ->sum(DB::raw('admin_commission'));
+            ->with('order')
+            ->orderBy('id')
+            ->chunk(500, function ($transactions) use (&$admin_earned) {
+                foreach ($transactions as $transaction) {
+                    $admin_earned += OrderLogic::admin_net_income($transaction);
+                }
+            });
 
-        $admin_earned_delivery_commission = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-            $q->where('order_type', '!=', 'parcel');
-        })->when(isset($zone), function ($query) use ($zone) {
-            return $query->where('zone_id', $zone->id);
-        })
-                        ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('order_id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-            ->when(isset($store), function ($query) use ($store) {
-                return $query->whereHas('order', function ($q) use ($store) {
-                    $q->where('store_id', $store->id);
-                });
-            })
-            ->when(request('module_id'), function ($query) {
-                return $query->module(request('module_id'));
-            })
-            ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-            })
-            ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                return $query->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                return $query->whereYear('created_at', date('Y') - 1);
-            })
-            ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-            })
-            ->orderBy('created_at', 'desc')
-            ->sum(DB::raw('case when delivery_man_id is null then original_delivery_charge else delivery_fee_comission end'));
-
-
-        $store_earned = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-            $q->where('order_type', '!=', 'parcel');
-        })->when(isset($zone), function ($query) use ($zone) {
-            return $query->where('zone_id', $zone->id);
-        })
-                        ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('order_id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-            ->when(isset($store), function ($query) use ($store) {
-                return $query->whereHas('order', function ($q) use ($store) {
-                    $q->where('store_id', $store->id);
-                });
-            })
-            ->when(request('module_id'), function ($query) {
-                return $query->module(request('module_id'));
-            })
-            ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-            })
-            ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                return $query->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                return $query->whereYear('created_at', date('Y') - 1);
-            })
-            ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-            })->orderBy('created_at', 'desc')
+        $store_earned = $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
             ->notRefunded()
-            ->sum(DB::raw('store_amount'));
-            // ->sum(DB::raw('store_amount - tax'));
+            ->sum(DB::raw('store_amount - tax'));
 
-        $deliveryman_earned = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-            $q->where('order_type', '!=', 'parcel');
-        })->when(isset($zone), function ($query) use ($zone) {
-            return $query->where('zone_id', $zone->id);
-        })
-                        ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('order_id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-            ->when(isset($store), function ($query) use ($store) {
-                return $query->whereHas('order', function ($q) use ($store) {
-                    $q->where('store_id', $store->id);
-                });
-            })
-            ->when(request('module_id'), function ($query) {
-                return $query->module(request('module_id'));
-            })
-            ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-            })
-            ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                return $query->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                return $query->whereYear('created_at', date('Y') - 1);
-            })
-            ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-            })
+        $deliveryman_earned = $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
             ->whereNotNull('delivery_man_id')
-            ->orderBy('created_at', 'desc')
             ->sum(DB::raw('original_delivery_charge + dm_tips'));
-        return view('admin-views.report.day-wise-report', compact('order_transactions', 'zone', 'store', 'filter', 'admin_earned', 'admin_earned_delivery_commission', 'store_earned', 'deliveryman_earned','key','from','to'));
+
+        [$total, $delivered, $canceled] = $this->dayWiseOrderStats(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to);
+
+        return view('admin-views.report.day-wise-report', compact('order_transactions', 'zone', 'store', 'filter', 'admin_earned', 'store_earned', 'deliveryman_earned', 'key', 'from', 'to', 'total', 'delivered', 'canceled'));
+    }
+
+    private function dayWiseTransactionQuery($zone, $store, $search, $key, $moduleId, $filter, $from, $to)
+    {
+        return OrderTransaction::whereHas('order', function ($q) {
+                $q->where('order_type', '!=', 'parcel');
+            })
+            ->when(isset($zone), function ($query) use ($zone) {
+                return $query->where('zone_id', $zone->id);
+            })
+            ->when($search, function ($query) use ($key) {
+                return $query->search(keywords: $key, mainCol: 'order_id', orderByRelevance: false);
+            })
+            ->when(isset($store), function ($query) use ($store) {
+                return $query->whereHas('order', function ($q) use ($store) {
+                    $q->where('store_id', $store->id);
+                });
+            })
+            ->when($moduleId, function ($query) use ($moduleId) {
+                return $query->module($moduleId);
+            })
+            ->applyDateFilter($filter, $from, $to);
+    }
+
+    private function dayWiseOrderStats($zone, $store, $search, $key, $moduleId, $filter, $from, $to): array
+    {
+        $baseStats = function () use ($zone, $store, $search, $key, $moduleId, $filter, $from, $to) {
+            return Order::where('order_type', '!=', 'parcel')
+                ->when(isset($zone), function ($query) use ($zone) {
+                    return $query->where('zone_id', $zone->id);
+                })
+                ->when($search, function ($query) use ($key) {
+                    return $query->search(keywords: $key, mainCol: 'id', orderByRelevance: false);
+                })
+                ->when($moduleId, function ($query) use ($moduleId) {
+                    return $query->module($moduleId);
+                })
+                ->when(isset($store), function ($query) use ($store) {
+                    return $query->where('store_id', $store->id);
+                })
+                ->applyDateFilter($filter, $from, $to)
+                ->Notpos();
+        };
+
+        $total = $baseStats()->count();
+        if ($total == 0) {
+            $total = 0.01;
+        }
+
+        $delivered = $baseStats()
+            ->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled'])
+            ->sum('order_amount');
+
+        $canceled = $baseStats()
+            ->where('order_status', 'refunded')
+            ->sum(DB::raw('order_amount - delivery_charge - dm_tips'));
+
+        return [$total, $delivered, $canceled];
     }
 
     public function day_wise_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
          $from =  null;
         $to = null;
@@ -291,302 +174,34 @@ class ReportController extends Controller
         $store_id = $request->query('store_id', 'all');
         $store = is_numeric($store_id) ? Store::findOrFail($store_id) : null;
 
-        $order_transactions = OrderTransaction::whereHas('order', function ($q) {
-            $q->where('order_type', '!=', 'parcel');
-        })->when(isset($zone), function ($query) use ($zone) {
-            return $query->where('zone_id', $zone->id);
-        })
-                        ->when(isset($key), function ($query) use ($key) {
-                    return $query->where(function ($q) use ($key) {
-                            foreach ($key as $value) {
-                                $q->orWhere('order_id', 'like', "%{$value}%");
-                            }
-                        });
-                })
-            ->when(isset($store), function ($query) use ($store) {
-                return $query->whereHas('order', function ($q) use ($store) {
-                    $q->where('store_id', $store->id);
-                });
-            })
-            ->when(request('module_id'), function ($query) {
-                return $query->module(request('module_id'));
-            })
-            ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-            })
-            ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                return $query->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-            })
-            ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                return $query->whereYear('created_at', date('Y') - 1);
-            })
-            ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-            })->orderBy('created_at', 'desc')
+        $module_id = request('module_id');
+        $search = $request['search'] ?? null;
+
+        $order_transactions = $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
+            ->with('order', 'order.details', 'order.customer', 'order.store', 'delivery_man')
+            ->orderBy('created_at', 'desc')
             ->get();
 
-            $admin_earned = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-                $q->where('order_type', '!=', 'parcel');
-            })->when(isset($zone), function ($query) use ($zone) {
-                return $query->where('zone_id', $zone->id);
-            })
-                            ->when(isset($key), function ($query) use ($key) {
-                        return $query->where(function ($q) use ($key) {
-                                foreach ($key as $value) {
-                                    $q->orWhere('order_id', 'like', "%{$value}%");
-                                }
-                            });
-                    })
-                ->when(isset($store), function ($query) use ($store) {
-                    return $query->whereHas('order', function ($q) use ($store) {
-                        $q->where('store_id', $store->id);
-                    });
-                })
-                ->when(request('module_id'), function ($query) {
-                    return $query->module(request('module_id'));
-                })
-                ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                    return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-                })
-                ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                    return $query->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                    return $query->whereYear('created_at', date('Y') - 1);
-                })
-                ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                    return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-                })->orderBy('created_at', 'desc')
-                ->notRefunded()
-                ->sum(DB::raw('admin_commission -  delivery_fee_comission'));
-            // ->sum(DB::raw('(admin_commission + admin_expense) - delivery_fee_comission'));
+        $admin_earned = 0;
+        $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
+            ->notRefunded()
+            ->with('order')
+            ->orderBy('id')
+            ->chunk(500, function ($transactions) use (&$admin_earned) {
+                foreach ($transactions as $transaction) {
+                    $admin_earned += OrderLogic::admin_net_income($transaction);
+                }
+            });
 
-            $admin_earned_delivery_commission = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-                $q->where('order_type', '!=', 'parcel');
-            })->when(isset($zone), function ($query) use ($zone) {
-                return $query->where('zone_id', $zone->id);
-            })
-                            ->when(isset($key), function ($query) use ($key) {
-                        return $query->where(function ($q) use ($key) {
-                                foreach ($key as $value) {
-                                    $q->orWhere('order_id', 'like', "%{$value}%");
-                                }
-                            });
-                    })
-                ->when(isset($store), function ($query) use ($store) {
-                    return $query->whereHas('order', function ($q) use ($store) {
-                        $q->where('store_id', $store->id);
-                    });
-                })
-                ->when(request('module_id'), function ($query) {
-                    return $query->module(request('module_id'));
-                })
-                ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                    return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-                })
-                ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                    return $query->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                    return $query->whereYear('created_at', date('Y') - 1);
-                })
-                ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                    return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-                })->orderBy('created_at', 'desc')
-                ->sum(DB::raw('case when delivery_man_id is null then original_delivery_charge else delivery_fee_comission end'));
+        $store_earned = $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
+            ->notRefunded()
+            ->sum(DB::raw('store_amount - tax'));
 
-            $store_earned = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-                $q->where('order_type', '!=', 'parcel');
-            })->when(isset($zone), function ($query) use ($zone) {
-                return $query->where('zone_id', $zone->id);
-            })
-                            ->when(isset($key), function ($query) use ($key) {
-                        return $query->where(function ($q) use ($key) {
-                                foreach ($key as $value) {
-                                    $q->orWhere('order_id', 'like', "%{$value}%");
-                                }
-                            });
-                    })
-                ->when(isset($store), function ($query) use ($store) {
-                    return $query->whereHas('order', function ($q) use ($store) {
-                        $q->where('store_id', $store->id);
-                    });
-                })
-                ->when(request('module_id'), function ($query) {
-                    return $query->module(request('module_id'));
-                })
-                ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                    return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-                })
-                ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                    return $query->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                    return $query->whereYear('created_at', date('Y') - 1);
-                })
-                ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                    return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-                })->orderBy('created_at', 'desc')
-                ->notRefunded()
-                ->sum(DB::raw('store_amount'));
-                // ->sum(DB::raw('store_amount - tax'));
+        $deliveryman_earned = $this->dayWiseTransactionQuery(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to)
+            ->whereNotNull('delivery_man_id')
+            ->sum(DB::raw('original_delivery_charge + dm_tips'));
 
-            $deliveryman_earned = OrderTransaction::with('order', 'order.details', 'order.customer', 'order.store')->whereHas('order', function ($q) {
-                $q->where('order_type', '!=', 'parcel');
-            })->when(isset($zone), function ($query) use ($zone) {
-                return $query->where('zone_id', $zone->id);
-            })
-                            ->when(isset($key), function ($query) use ($key) {
-                        return $query->where(function ($q) use ($key) {
-                                foreach ($key as $value) {
-                                    $q->orWhere('order_id', 'like', "%{$value}%");
-                                }
-                            });
-                    })
-                ->when(isset($store), function ($query) use ($store) {
-                    return $query->whereHas('order', function ($q) use ($store) {
-                        $q->where('store_id', $store->id);
-                    });
-                })
-                ->when(request('module_id'), function ($query) {
-                    return $query->module(request('module_id'));
-                })
-                ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                    return $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
-                })
-                ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                    return $query->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                    return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                })
-                ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                    return $query->whereYear('created_at', date('Y') - 1);
-                })
-                ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                    return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
-                })
-                ->whereNotNull('delivery_man_id')
-                ->orderBy('created_at', 'desc')
-                ->sum(DB::raw('original_delivery_charge + dm_tips'));
-
-                $delivered = Order::where('order_type', '!=', 'parcel')->when(isset($zone), function ($query) use ($zone) {
-                    return $query->where('zone_id', $zone->id);
-                })
-                ->when(isset($key), function ($query) use ($key) {
-                        return $query->where(function ($q) use ($key) {
-                                foreach ($key as $value) {
-                                    $q->orWhere('id', 'like', "%{$value}%");
-                                }
-                            });
-                    })
-                    ->when(request('module_id'), function ($query) {
-                        return $query->module(request('module_id'));
-                    })
-                    ->whereIn('order_status', ['delivered','refund_requested','refund_request_canceled'])
-                    ->when(isset($store), function ($query) use ($store) {
-                        return $query->where('store_id', $store->id);
-                    })
-                    ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                        return $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
-                    })
-                    ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                        return $query->whereYear('created_at', now()->format('Y'));
-                    })
-                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                    })
-                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                    })
-                    ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                        return $query->whereYear('created_at', date('Y') - 1);
-                    })
-                    ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                        return $query->whereBetween('created_at', [
-                            now()
-                                ->startOfWeek()
-                                ->format('Y-m-d H:i:s'),
-                            now()
-                                ->endOfWeek()
-                                ->format('Y-m-d H:i:s'),
-                        ]);
-                    })
-                    ->Notpos()
-                    ->sum('order_amount');
-                $canceled = Order::where('order_type', '!=', 'parcel')->when(isset($zone), function ($query) use ($zone) {
-                    return $query->where('zone_id', $zone->id);
-                })
-                ->when(isset($key), function ($query) use ($key) {
-                        return $query->where(function ($q) use ($key) {
-                                foreach ($key as $value) {
-                                    $q->orWhere('id', 'like', "%{$value}%");
-                                }
-                            });
-                    })
-                    ->when(request('module_id'), function ($query) {
-                        return $query->module(request('module_id'));
-                    })
-                    ->where(['order_status' => 'refunded'])
-                    ->when(isset($store), function ($query) use ($store) {
-                        return $query->where('store_id', $store->id);
-                    })
-                    ->when(isset($from) && isset($to) && $from != null && $to != null && $filter == 'custom', function ($query) use ($from, $to) {
-                        return $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
-                    })
-                    ->when(isset($filter) && $filter == 'this_year', function ($query) {
-                        return $query->whereYear('created_at', now()->format('Y'));
-                    })
-                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                    })
-                    ->when(isset($filter) && $filter == 'this_month', function ($query) {
-                        return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
-                    })
-                    ->when(isset($filter) && $filter == 'previous_year', function ($query) {
-                        return $query->whereYear('created_at', date('Y') - 1);
-                    })
-                    ->when(isset($filter) && $filter == 'this_week', function ($query) {
-                        return $query->whereBetween('created_at', [
-                            now()
-                                ->startOfWeek()
-                                ->format('Y-m-d H:i:s'),
-                            now()
-                                ->endOfWeek()
-                                ->format('Y-m-d H:i:s'),
-                        ]);
-                    })
-                    ->whereNotNull('delivery_man_id')
-                    ->Notpos()
-                    // ->sum(DB::raw('order_amount - original_delivery_charge'));
-                    ->sum(DB::raw('order_amount - delivery_charge - dm_tips'));
+        [, $delivered, $canceled] = $this->dayWiseOrderStats(zone: $zone, store: $store, search: $search, key: $key, moduleId: $module_id, filter: $filter, from: $from, to: $to);
 
             $data = [
                 'order_transactions'=>$order_transactions,
@@ -596,7 +211,7 @@ class ReportController extends Controller
                 'zone'=>is_numeric($zone_id)?Helpers::get_zones_name($zone_id):null,
                 'store'=>is_numeric($store_id)?Helpers::get_stores_name($store_id):null,
                 'module'=>request('module_id')?Helpers::get_module_name(request('module_id')):null,
-                'admin_earned'=>$admin_earned + $admin_earned_delivery_commission,
+                'admin_earned'=>$admin_earned,
                 'store_earned'=>$store_earned,
                 'deliveryman_earned'=>$deliveryman_earned,
                 'delivered'=>$delivered,
@@ -663,7 +278,7 @@ class ReportController extends Controller
 
     private static function get_item_data($request){
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if (session()->has('from_date') == false) {
             session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
             session()->put('to_date', now()->lastOfMonth()->format('Y-m-d'));
@@ -704,7 +319,7 @@ class ReportController extends Controller
         ->when(isset($zone), fn($q) => $q->whereIn('items.store_id', $zone->stores->pluck('id')))
         ->when(isset($store), fn($q) => $q->where('items.store_id', $store->id))
         ->when(isset($category), fn($q) => $q->where('items.category_id', $category->id))
-        ->when(isset($key), fn($q) => $q->where(function ($q2) use ($key) {
+        ->when($request['search'], fn($q) => $q->where(function ($q2) use ($key) {
             foreach ($key as $value) {
                 $q2->orWhere('items.name', 'like', "%{$value}%");
             }
@@ -725,7 +340,7 @@ class ReportController extends Controller
 
     public function parcel_transaction_report(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $from = null;
         $to = null;
@@ -744,7 +359,7 @@ class ReportController extends Controller
             $module_id = null;
         }
 
-        $base = function () use ($zone, $key, $module_id, $parcelModuleIds, $from, $to, $filter) {
+        $base = function () use ($request, $zone, $key, $module_id, $parcelModuleIds, $from, $to, $filter) {
             return OrderTransaction::whereHas('order', function ($q) {
                     $q->where('order_type', 'parcel');
                 })
@@ -758,7 +373,7 @@ class ReportController extends Controller
                 ->when(isset($zone), function ($q) use ($zone) {
                     return $q->where('zone_id', $zone->id);
                 })
-                ->when(isset($key), function ($q) use ($key) {
+                ->when($request['search'], function ($q) use ($key) {
                     return $q->where(function ($qq) use ($key) {
                         foreach ($key as $value) {
                             $qq->orWhere('order_id', 'like', "%{$value}%");
@@ -783,7 +398,7 @@ class ReportController extends Controller
         };
 
         $order_transactions = $base()
-            ->with('order', 'order.details', 'order.customer', 'delivery_man')
+            ->with('order', 'order.details', 'order.customer', 'order.orderProDiscount', 'delivery_man')
             ->orderBy('created_at', 'desc')
             ->paginate(config('default_pagination'))
             ->withQueryString();
@@ -797,15 +412,52 @@ class ReportController extends Controller
             ->whereNotNull('delivery_man_id')
             ->sum(DB::raw('original_delivery_charge + dm_tips'));
 
+        $appliedModuleIds = $module_id ? [(int) $module_id] : $parcelModuleIds;
+        [$total, $delivered, $canceled] = $this->parcelOrderStats(zone: $zone, appliedModuleIds: $appliedModuleIds, search: $request['search'] ?? null, key: $key, filter: $filter, from: $from, to: $to);
+
         return view('admin-views.report.parcel-transaction-report', compact(
             'order_transactions', 'zone', 'filter', 'admin_earned',
-            'admin_earned_delivery_commission', 'deliveryman_earned', 'key', 'from', 'to', 'module_id'
+            'admin_earned_delivery_commission', 'deliveryman_earned', 'key', 'from', 'to', 'module_id',
+            'total', 'delivered', 'canceled'
         ));
+    }
+
+    private function parcelOrderStats($zone, $appliedModuleIds, $search, $key, $filter, $from, $to): array
+    {
+        $baseStats = function () use ($zone, $appliedModuleIds, $search, $key, $filter, $from, $to) {
+            return Order::where('order_type', 'parcel')
+                ->when(! empty($appliedModuleIds), function ($query) use ($appliedModuleIds) {
+                    return $query->whereIn('module_id', $appliedModuleIds);
+                })
+                ->when(isset($zone), function ($query) use ($zone) {
+                    return $query->where('zone_id', $zone->id);
+                })
+                ->when($search, function ($query) use ($key) {
+                    return $query->search(keywords: $key, mainCol: 'id', orderByRelevance: false);
+                })
+                ->applyDateFilter($filter, $from, $to)
+                ->Notpos();
+        };
+
+        $total = $baseStats()->count();
+        if ($total == 0) {
+            $total = 0.01;
+        }
+
+        $delivered = $baseStats()
+            ->whereIn('order_status', ['delivered', 'refund_requested', 'refund_request_canceled'])
+            ->sum('order_amount');
+
+        $canceled = $baseStats()
+            ->where('order_status', 'refunded')
+            ->sum(DB::raw('order_amount - delivery_charge - dm_tips'));
+
+        return [$total, $delivered, $canceled];
     }
 
     public function parcel_transaction_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $from = null;
         $to = null;
@@ -824,7 +476,7 @@ class ReportController extends Controller
             $module_id = null;
         }
 
-        $base = function () use ($zone, $key, $module_id, $parcelModuleIds, $from, $to, $filter) {
+        $base = function () use ($request, $zone, $key, $module_id, $parcelModuleIds, $from, $to, $filter) {
             return OrderTransaction::whereHas('order', function ($q) {
                     $q->where('order_type', 'parcel');
                 })
@@ -838,7 +490,7 @@ class ReportController extends Controller
                 ->when(isset($zone), function ($q) use ($zone) {
                     return $q->where('zone_id', $zone->id);
                 })
-                ->when(isset($key), function ($q) use ($key) {
+                ->when($request['search'], function ($q) use ($key) {
                     return $q->where(function ($qq) use ($key) {
                         foreach ($key as $value) {
                             $qq->orWhere('order_id', 'like', "%{$value}%");
@@ -863,7 +515,7 @@ class ReportController extends Controller
         };
 
         $order_transactions = $base()
-            ->with('order', 'order.details', 'order.customer', 'delivery_man')
+            ->with('order', 'order.details', 'order.customer', 'order.orderProDiscount', 'delivery_man')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -874,7 +526,7 @@ class ReportController extends Controller
             ->whereNotNull('delivery_man_id')
             ->sum(DB::raw('original_delivery_charge + dm_tips'));
 
-        $parcelOrderBase = function () use ($zone, $key, $module_id, $parcelModuleIds, $from, $to, $filter) {
+        $parcelOrderBase = function () use ($request, $zone, $key, $module_id, $parcelModuleIds, $from, $to, $filter) {
             return Order::where('order_type', 'parcel')
                 ->when(! empty($parcelModuleIds), function ($q) use ($module_id, $parcelModuleIds) {
                     if ($module_id) {
@@ -886,7 +538,7 @@ class ReportController extends Controller
                 ->when(isset($zone), function ($q) use ($zone) {
                     return $q->where('zone_id', $zone->id);
                 })
-                ->when(isset($key), function ($q) use ($key) {
+                ->when($request['search'], function ($q) use ($key) {
                     return $q->where(function ($qq) use ($key) {
                         foreach ($key as $value) {
                             $qq->orWhere('id', 'like', "%{$value}%");
@@ -951,7 +603,7 @@ class ReportController extends Controller
 
     public function item_search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         if (session()->has('from_date') == false) {
             session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
@@ -1105,13 +757,13 @@ class ReportController extends Controller
             '"'.translate('Sat').'"'
         );
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $filter = $request->query('filter', 'all_time');
 
         $stores = Store::query()
 
-        ->when(isset($key), function ($query) use ($key) {
+        ->when($request['search'], function ($query) use ($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%");
@@ -1377,7 +1029,7 @@ class ReportController extends Controller
 
     public function store_summary_search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $filter = $request->query('filter', 'all_time');
 
@@ -1463,7 +1115,7 @@ class ReportController extends Controller
             '"'.translate('Fri').'"',
             '"'.translate('Sat').'"'
         );
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $store_id = $request->query('store_id', 'all');
         $filter = $request->query('filter', 'all_time');
@@ -1703,7 +1355,7 @@ class ReportController extends Controller
         }
         $from = session('from_date');
         $to = session('to_date');
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $store_id = $request->query('store_id', 'all');
         $filter = $request->query('filter', 'all_time');
@@ -1715,7 +1367,7 @@ class ReportController extends Controller
             $items = Item::withoutGlobalScope(StoreScope::class)
             ->when(isset($zone), fn($q) => $q->whereIn('items.store_id', $zone->stores()->pluck('id')))
             ->when(isset($store), fn($q) => $q->where('items.store_id', $store->id))
-            ->when(isset($key), function ($q) use ($key) {
+            ->when(isset($request['search']), function ($q) use ($key) {
                 $q->where(function ($sub) use ($key) {
                     foreach ($key as $value) {
                         $sub->orWhere('items.name', 'like', "%{$value}%");
@@ -1821,7 +1473,7 @@ class ReportController extends Controller
             '"'.translate('Sat').'"'
         );
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $store_id = $request->query('store_id', 'all');
@@ -1831,7 +1483,7 @@ class ReportController extends Controller
 
         // order list with pagination
         $orders = Order::with(['customer', 'store', 'orderProDiscount'])
-            ->when(isset($key), function ($query) use ($key) {
+            ->when(isset($request['search']), function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%");
@@ -2142,7 +1794,7 @@ class ReportController extends Controller
 
     public function store_order_search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $from = session('from_date');
         $to = session('to_date');
@@ -2182,7 +1834,7 @@ class ReportController extends Controller
 
     public function store_order_export(Request $request)
     {
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $from = session('from_date');
         $to = session('to_date');
@@ -2194,7 +1846,7 @@ class ReportController extends Controller
         $filter = $request->query('filter', 'all_time');
 
         $orders = Order::with(['customer', 'store', 'orderProDiscount'])
-        ->when(isset($key), function ($query) use ($key) {
+        ->when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('id', 'like', "%{$value}%");
@@ -2299,7 +1951,7 @@ class ReportController extends Controller
 
     public function store_summary_export(Request $request)
     {
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $filter = $request->query('filter', 'all_time');
 
@@ -2422,7 +2074,7 @@ class ReportController extends Controller
 
     public function expense_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if (session()->has('from_date') == false) {
             session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
             session()->put('to_date', now()->lastOfMonth()->format('Y-m-d'));
@@ -2489,7 +2141,7 @@ class ReportController extends Controller
 
     public function expense_search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         if (session()->has('from_date') == false) {
             session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
@@ -2542,7 +2194,7 @@ class ReportController extends Controller
             ->when(isset($filter) && $filter == 'this_week', function ($query) {
                 return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
             })
-            ->when(isset($key), function ($query) use ($key){
+            ->when($request['search'], function ($query) use ($key){
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('type', 'like', "%{$value}%")
@@ -2568,7 +2220,7 @@ class ReportController extends Controller
 
     public function order_report(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         if (session()->has('from_date') == false) {
             session()->put('from_date', date('Y-m-01'));
@@ -2615,7 +2267,7 @@ class ReportController extends Controller
             ->when(isset($filter) && $filter == 'this_week', function ($query) {
                 return $query->whereBetween('schedule_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
             })
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%");
@@ -2659,7 +2311,7 @@ class ReportController extends Controller
             ->when(isset($filter) && $filter == 'this_week', function ($query) {
                 return $query->whereBetween('schedule_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
             })
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%");
@@ -2690,7 +2342,7 @@ class ReportController extends Controller
 
     public function order_report_export(Request $request)
     {
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         if (session()->has('from_date') == false) {
             session()->put('from_date', date('Y-m-01'));
@@ -2737,7 +2389,7 @@ class ReportController extends Controller
             ->when(isset($filter) && $filter == 'this_week', function ($query) {
                 return $query->whereBetween('schedule_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
             })
-            ->when(isset($key), function ($query) use ($key) {
+            ->when(isset($request['search']), function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%");
@@ -2771,7 +2423,7 @@ class ReportController extends Controller
 
     public function expense_report(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if (session()->has('from_date') == false) {
             session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
             session()->put('to_date', now()->lastOfMonth()->format('Y-m-d'));
@@ -2951,6 +2603,10 @@ class ReportController extends Controller
         $expense = Expense::with('trip', 'trip.customer')->where('amount', '>', 0)
             ->whereNotNull('trip_id')
             ->when(isset($zone) || isset($customer), function ($query) use ($zone, $customer) {
+                if (! addon_published_status('Rental')) {
+                    return $query->whereRaw('1 = 0');
+                }
+
                 return $query->whereHas('trip', function ($q) use ($zone, $customer) {
                     $q->when($zone, fn ($qq) => $qq->where('zone_id', $zone->id));
                     $q->when($customer, fn ($qq) => $qq->where('user_id', $customer->id));
@@ -2984,6 +2640,10 @@ class ReportController extends Controller
         $expenses = Expense::with('trip', 'trip.customer')->where('created_by', 'admin')->where('amount', '>', 0)
             ->whereNotNull('trip_id')
             ->when(isset($zone) || isset($customer), function ($query) use ($zone, $customer) {
+                if (! addon_published_status('Rental')) {
+                    return $query->whereRaw('1 = 0');
+                }
+
                 return $query->whereHas('trip', function ($q) use ($zone, $customer) {
                     $q->when($zone, fn ($qq) => $qq->where('zone_id', $zone->id));
                     $q->when($customer, fn ($qq) => $qq->where('user_id', $customer->id));
@@ -3029,6 +2689,10 @@ class ReportController extends Controller
         $expense = Expense::with('ride', 'ride.customer')->where('amount', '>', 0)
             ->whereNotNull('ride_id')
             ->when(isset($zone) || isset($customer), function ($query) use ($zone, $customer) {
+                if (! addon_published_status('RideShare')) {
+                    return $query->whereRaw('1 = 0');
+                }
+
                 return $query->whereHas('ride', function ($q) use ($zone, $customer) {
                     $q->when($zone, fn ($qq) => $qq->where('zone_id', $zone->id));
                     $q->when($customer, fn ($qq) => $qq->where('customer_id', $customer->id));
@@ -3062,6 +2726,10 @@ class ReportController extends Controller
         $expenses = Expense::with('ride', 'ride.customer')->where('created_by', 'admin')->where('amount', '>', 0)
             ->whereNotNull('ride_id')
             ->when(isset($zone) || isset($customer), function ($query) use ($zone, $customer) {
+                if (! addon_published_status('RideShare')) {
+                    return $query->whereRaw('1 = 0');
+                }
+
                 return $query->whereHas('ride', function ($q) use ($zone, $customer) {
                     $q->when($zone, fn ($qq) => $qq->where('zone_id', $zone->id));
                     $q->when($customer, fn ($qq) => $qq->where('customer_id', $customer->id));
@@ -3089,9 +2757,95 @@ class ReportController extends Controller
         }
     }
 
+    public function service_expense_report(Request $request)
+    {
+        if (session()->has('from_date') == false) {
+            session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
+            session()->put('to_date', now()->lastOfMonth()->format('Y-m-d'));
+        }
+        $from = session('from_date');
+        $to = session('to_date');
+        $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
+        $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
+        $customer_id = $request->query('customer_id', 'all');
+        $customer = is_numeric($customer_id) ? User::findOrFail($customer_id) : null;
+        $filter = $request->query('filter', 'all_time');
+        $type = $request->query('type', 'all');
+
+        $expense = Expense::with('serviceBooking', 'serviceBooking.customer')->where('amount', '>', 0)
+            ->whereNotNull('service_booking_id')
+            ->when(isset($zone) || isset($customer), function ($query) use ($zone, $customer) {
+                if (! service_addon_active()) {
+                    return $query->whereRaw('1 = 0');
+                }
+
+                return $query->whereHas('serviceBooking', function ($q) use ($zone, $customer) {
+                    $q->when($zone, fn ($qq) => $qq->where('zone_id', $zone->id));
+                    $q->when($customer, fn ($qq) => $qq->where('user_id', $customer->id));
+                });
+            })
+            ->when(isset($type) && $type != 'all', fn ($q) => $q->where('type', $type))
+            ->when(isset($filter), fn ($q) => $q->applyDateFilter($filter, $from, $to))
+            ->search(keywords: $request['search'], mainCol: ['type', 'service_booking_id'])
+            ->where('created_by', 'admin')
+            ->orderBy('created_at', 'desc')
+            ->paginate(config('default_pagination'))->withQueryString();
+
+        return view('admin-views.report.service-expense-report', compact('expense', 'zone', 'filter', 'customer', 'type'));
+    }
+
+    public function service_expense_export(Request $request)
+    {
+        if (session()->has('from_date') == false) {
+            session()->put('from_date', now()->firstOfMonth()->format('Y-m-d'));
+            session()->put('to_date', now()->lastOfMonth()->format('Y-m-d'));
+        }
+        $from = session('from_date');
+        $to = session('to_date');
+        $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
+        $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
+        $customer_id = $request->query('customer_id', 'all');
+        $customer = is_numeric($customer_id) ? User::findOrFail($customer_id) : null;
+        $filter = $request->query('filter', 'all_time');
+        $type = $request->query('type', 'all');
+
+        $expenses = Expense::with('serviceBooking', 'serviceBooking.customer')->where('created_by', 'admin')->where('amount', '>', 0)
+            ->whereNotNull('service_booking_id')
+            ->when(isset($zone) || isset($customer), function ($query) use ($zone, $customer) {
+                if (! service_addon_active()) {
+                    return $query->whereRaw('1 = 0');
+                }
+
+                return $query->whereHas('serviceBooking', function ($q) use ($zone, $customer) {
+                    $q->when($zone, fn ($qq) => $qq->where('zone_id', $zone->id));
+                    $q->when($customer, fn ($qq) => $qq->where('user_id', $customer->id));
+                });
+            })
+            ->when(isset($type) && $type != 'all', fn ($q) => $q->where('type', $type))
+            ->when(isset($filter), fn ($q) => $q->applyDateFilter($filter, $from, $to))
+            ->search(keywords: $request['search'], mainCol: ['type', 'service_booking_id'])
+            ->orderBy('id')->get();
+
+        $data = [
+            'expenses' => $expenses,
+            'search' => $request->search ?? null,
+            'from' => (($filter == 'custom') && $from) ? $from : null,
+            'to' => (($filter == 'custom') && $to) ? $to : null,
+            'zone' => is_numeric($zone_id) ? Helpers::get_zones_name($zone_id) : null,
+            'customer' => is_numeric($customer_id) ? Helpers::get_customer_name($customer_id) : null,
+            'filter' => $filter,
+        ];
+
+        if ($request->export_type == 'excel') {
+            return Excel::download(new ServiceExpenseReportExport($data), 'ServiceExpenseReport.xlsx');
+        } elseif ($request->export_type == 'csv') {
+            return Excel::download(new ServiceExpenseReportExport($data), 'ServiceExpenseReport.csv');
+        }
+    }
+
     public function parcel_report(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         if (session()->has('from_date') == false) {
             session()->put('from_date', date('Y-m-01'));
@@ -3165,7 +2919,7 @@ class ReportController extends Controller
 
     public function parcel_report_export(Request $request)
     {
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         if (session()->has('from_date') == false) {
             session()->put('from_date', date('Y-m-01'));
@@ -3249,7 +3003,7 @@ class ReportController extends Controller
         $type = $request->query('type', 'all');
 
         $expense = Expense::with('user:id,f_name,l_name')->where('amount', '>', 0)
-            ->whereNull('order_id')->whereNull('trip_id')->whereNull('ride_id')
+            ->whereNull('order_id')->whereNull('trip_id')->whereNull('ride_id')->whereNull('service_booking_id')
             ->when($customer, fn ($q) => $q->where('user_id', $customer->id))
             ->when(isset($type) && $type != 'all', fn ($q) => $q->where('type', $type))
             ->when(isset($filter), fn ($q) => $q->applyDateFilter($filter, $from, $to))
@@ -3275,7 +3029,7 @@ class ReportController extends Controller
         $type = $request->query('type', 'all');
 
         $expenses = Expense::with('user:id,f_name,l_name')->where('created_by', 'admin')->where('amount', '>', 0)
-            ->whereNull('order_id')->whereNull('trip_id')->whereNull('ride_id')
+            ->whereNull('order_id')->whereNull('trip_id')->whereNull('ride_id')->whereNull('service_booking_id')
             ->when($customer, fn ($q) => $q->where('user_id', $customer->id))
             ->when(isset($type) && $type != 'all', fn ($q) => $q->where('type', $type))
             ->when(isset($filter), fn ($q) => $q->applyDateFilter($filter, $from, $to))
@@ -3320,7 +3074,7 @@ class ReportController extends Controller
 
     public function low_stock_report(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $store_id = $request->query('store_id', 'all');
         $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
@@ -3328,7 +3082,7 @@ class ReportController extends Controller
         $stock_modules = array_keys(array_filter(config('module'), function ($var) {
             if (isset($var['stock']) && $var['stock']) return $var;
         }));
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $items = Item::withoutGlobalScope(StoreScope::class)->with(['store', 'store.zone'])->whereHas('store.module', function ($query) {
             $query->where('module_type', '!=', 'food');
@@ -3368,7 +3122,7 @@ class ReportController extends Controller
         $stock_modules = array_keys(array_filter(config('module'), function ($var) {
             if (isset($var['stock']) && $var['stock']) return $var;
         }));
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $items = Item::withoutGlobalScope(StoreScope::class)
         ->with(['store', 'store.zone'])->whereHas('store.module', function ($query) use ($stock_modules) {
@@ -3407,7 +3161,7 @@ class ReportController extends Controller
         $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
         $store = is_numeric($store_id) ? Store::findOrFail($store_id) : null;
         $module_id = $request->query('module_id', session()->get('current_module'));
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $items = Item::withoutGlobalScope(StoreScope::class)
             ->with(['store', 'store.zone'])
@@ -3454,7 +3208,7 @@ class ReportController extends Controller
 
     public function low_stock_wise_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $store_id = $request->query('store_id', 'all');
         $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
@@ -3462,7 +3216,7 @@ class ReportController extends Controller
         $stock_modules = array_keys(array_filter(config('module'), function ($var) {
             if (isset($var['stock']) && $var['stock']) return $var;
         }));
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $items = Item::withoutGlobalScope(StoreScope::class)->with(['store', 'store.zone'])->whereHas('store.module', function ($query) {
             $query->where('module_type', '!=', 'food');
@@ -3505,7 +3259,7 @@ class ReportController extends Controller
 
     public function low_stock_search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $store_id = $request->query('store_id', 'all');
@@ -3514,7 +3268,7 @@ class ReportController extends Controller
         $stock_modules = array_keys(array_filter(config('module'), function ($var) {
             if (isset($var['stock']) && $var['stock']) return $var;
         }));
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $items = Item::withoutGlobalScope(StoreScope::class)->with(['store', 'store.zone'])->whereHas('store.module', function ($query) {
             $query->where('module_type', '!=', 'food');
@@ -3553,7 +3307,7 @@ class ReportController extends Controller
             $from = $request->from ?? null;
             $to = $request->to ?? null;
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
         $store_id = $request->query('store_id', 'all');
@@ -3621,7 +3375,7 @@ class ReportController extends Controller
             ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
             })
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                 $q->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('disbursement_id', 'like', "%{$value}%")
@@ -3654,7 +3408,7 @@ class ReportController extends Controller
             $from = $request->from ?? null;
             $to = $request->to ?? null;
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $zone_id = $request->query('zone_id', auth('admin')?->user()?->zone_id ?: 'all');
         $zone = is_numeric($zone_id) ? Zone::findOrFail($zone_id) : null;
         $store_id = $request->query('store_id', 'all');
@@ -3722,7 +3476,7 @@ class ReportController extends Controller
             ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
             })
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                 $q->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('disbursement_id', 'like', "%{$value}%")

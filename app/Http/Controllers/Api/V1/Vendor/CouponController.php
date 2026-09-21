@@ -46,7 +46,11 @@ class CouponController extends Controller
             'start_date' => 'required',
             'expire_date' => 'required',
             'coupon_type' => 'required|in:free_delivery,default',
-            'discount' => 'required_if:coupon_type,default'
+            'discount' => 'required_if:coupon_type,default',
+            'max_discount' => 'exclude_unless:discount_type,percent|required|numeric|min:0.01',
+        ],[
+            'max_discount.required' => translate('Max discount is required for percentage discount type'),
+            'max_discount.min' => translate('Max discount can not be 0 for percentage discount type'),
         ]);
         $customer_id  = $request->customer_ids ?? ['all'];
         if ($validator->fails()) {
@@ -128,7 +132,10 @@ class CouponController extends Controller
             'expire_date' => 'required',
             'discount' => 'required_if:coupon_type,default',
             'coupon_type' => 'required|in:free_delivery,default',
-
+            'max_discount' => 'exclude_unless:discount_type,percent|required|numeric|min:0.01',
+        ],[
+            'max_discount.required' => translate('Max discount is required for percentage discount type'),
+            'max_discount.min' => translate('Max discount can not be 0 for percentage discount type'),
         ]);
         $data = json_decode($request->translations, true);
 
@@ -220,7 +227,7 @@ class CouponController extends Controller
         $limit = $request['limit']??25;
         $offset = $request['offset']??1;
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $coupons=Coupon::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('title', 'like', "%{$value}%")

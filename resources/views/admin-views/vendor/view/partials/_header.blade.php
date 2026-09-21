@@ -34,13 +34,15 @@
                             href="javascript:" data-toggle="modal" data-target="#confirmation-reason-btn"><i
                                 class="tio-clear font-weight-bold pr-1"></i> {{ translate('messages.Reject') }}</a>
                     @endif
-                    <form method="post" action="{{ route('admin.store.application', [$store['id'], 1]) }}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="Approve this vendor application?">@csrf<button type="submit" class="btn btn--primary border-0   py-1 d-center h-35px m-0 text-capitalize font-weight-bold float-right "
+                    <a class="btn btn--primary border-0   py-1 d-center h-35px m-0 text-capitalize font-weight-bold float-right swal_fire_alert"
+                        data-url="{{ route('admin.store.application', [$store['id'], 1]) }}"
                          data-title="{{translate('messages.are_you_sure_?')}}"
                                        data-image_url="{{ asset('public/assets/admin/img/off-danger.png') }}"
                                        data-confirm_button_text="{{ translate('messages.yes') }}"
                                        data-cancel_button_text="{{ translate('messages.No') }}"
-                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"><i
-                            class="tio-done font-weight-bold pr-1"></i>{{ translate('messages.approve') }}</button></form>
+                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"
+                        href="javascript:"><i
+                            class="tio-done font-weight-bold pr-1"></i>{{ translate('messages.approve') }}</a>
                 @endif
             </div>
         </div>
@@ -188,7 +190,7 @@
         aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content pb-2 max-w-500">
-                <form action="{{ route('admin.store.application', [$store['id'], 0]) }}" method="post">@csrf
+                <form action="{{ route('admin.store.application', [$store['id'], 0]) }}" method="get">
                 <div class="modal-header">
                     <button type="button"
                         class="close bg-modal-btn w-30px h-30 rounded-circle position-absolute right-0 top-0 m-2 z-2"

@@ -91,7 +91,7 @@
                                         ])
                                         <div>
                                             @php($fullName = $user ? trim(($user->f_name ?? '') . ' ' . ($user->l_name ?? '')) : '')
-                                            <a href="{{ route('admin.customer.view', $user?->id) }}"
+                                            <a href="{{ route('admin.users.customer.view', $user?->id) }}"
                                                 class="text-dark fw-500 text-hover-primary max-w-215px text-wrap line--limit-1"
                                                 title="{{ $fullName ?: translate('messages.N/A') }}">
                                                 {{ $fullName ? \Illuminate\Support\Str::limit($fullName, 25) : translate('messages.N/A') }}

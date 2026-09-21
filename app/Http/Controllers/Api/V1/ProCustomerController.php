@@ -34,9 +34,10 @@ class ProCustomerController extends Controller
 
     /**
      * GET /api/v1/pro-customer/plans
-     * Public — no auth required.
+     * Public — no auth required. When called with a valid token, the free
+     * trial plan is hidden for customers who have already used one.
      */
-    public function plans(): JsonResponse
+    public function plans(Request $request): JsonResponse
     {
         $proMemberStatus = (int) Helpers::get_business_settings('pro_member_status');
 
@@ -52,7 +53,11 @@ class ProCustomerController extends Controller
         $businessName = Helpers::get_business_settings('business_name') ?: 'Mart';
         $proBrand = trim($businessName) . ' ' . translate('messages.Pro');
 
+        $userId = $request->user()?->id ?? auth('api')->user()?->id;
+        $hasUsedFreeTrial = $userId ? $this->hasUsedFreeTrial($userId) : false;
+
         $plans = ProCustomerSubscriptionPlan::where('status', 1)
+            ->when($hasUsedFreeTrial, fn($q) => $q->where('plan_type', '!=', 'free_trial'))
             ->orderBy('duration')
             ->get()
             ->map(function ($plan) {
@@ -260,6 +265,9 @@ class ProCustomerController extends Controller
             if ($e->getMessage() === 'insufficient_wallet_balance') {
                 return response()->json(['errors' => [['code' => 'insufficient_wallet_balance', 'message' => translate('messages.wallet_balance_is_insufficient_for_this_plan')]]], 403);
             }
+            if ($e->getMessage() === 'free_trial_already_used') {
+                return response()->json(['errors' => [['code' => 'free_trial_already_used', 'message' => translate('messages.free_trial_already_used')]]], 403);
+            }
             throw $e;
         }
 
@@ -367,7 +375,7 @@ class ProCustomerController extends Controller
             ];
         } else {
             $modules = [];
-            foreach (ProCustomerBenefitSetting::DISCOUNT_MODULE_TYPES as $mod) {
+            foreach ($this->proVisibleDiscountModules() as $mod) {
                 $cfg = ProCustomerBenefitSetting::getSettings('discount', $mod);
                 $modules[$mod] = [
                     'percentage'       => $f($cfg['percentage'] ?? null),
@@ -380,7 +388,7 @@ class ProCustomerController extends Controller
         }
 
         $deliveryFeeData = ['active' => $deliveryActive ? 1 : 0, 'modules' => []];
-        foreach (ProCustomerBenefitSetting::DELIVERY_FEE_MODULE_TYPES as $mod) {
+        foreach ($this->proVisibleDeliveryFeeModules() as $mod) {
             $cfg = ProCustomerBenefitSetting::getSettings('delivery_fee', $mod);
             $deliveryFeeData['modules'][$mod] = [
                 'offer_type'                 => $cfg['offer_type'] ?? 'full_free',

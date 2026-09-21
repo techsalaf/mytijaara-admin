@@ -85,7 +85,7 @@
                                         </span>
                                 </label>
                                 <select id="coupon_type" name="coupon_type" class="form-control" >
-                                    @if ($store_data->sub_self_delivery == 1)
+                                    @if (($store_data->sub_self_delivery == 1 && !in_array($store_data->module?->module_type, ['service', 'rental'])) || $coupon['coupon_type']=='free_delivery')
                                     <option value="free_delivery" {{$coupon['coupon_type']=='free_delivery'?'selected':''}}>{{translate('messages.free_delivery')}}</option>
                                     @endif
                                     <option value="default" {{$coupon['coupon_type']=='default'?'selected':''}}>{{translate('messages.default')}}</option>
@@ -100,8 +100,9 @@
                                             data-original-title="{{ translate('messages.Required.') }}"> *
                                         </span>
                                 </label>
-                                <input id="coupon_code" type="text" name="code" class="form-control" value="{{$coupon['code']}}"
-                                        placeholder="{{\Illuminate\Support\Str::random(8)}}" required maxlength="100">
+                                <input id="coupon_code" type="text" class="form-control" value="{{$coupon['code']}}"
+                                        maxlength="100" disabled>
+                                <input type="hidden" name="code" value="{{$coupon['code']}}">
                             </div>
                         </div>
                         <div class="col-sm-6 col-lg-3">
@@ -182,8 +183,10 @@
                         <div class="col-sm-6 col-lg-3 {{$coupon['coupon_type']=='free_delivery'?'d-none':''}}" id="max_discount_div">
                             <div class="form-group error-wrapper">
                                 <label class="input-label" for="max_discount">{{translate('messages.max_discount')}}</label>
-                                <input type="number" min="0" max="999999999999.99" step="0.01"
-                                        value="{{$coupon['max_discount']}}" name="max_discount" id="max_discount" class="form-control" {{$coupon['coupon_type']=='free_delivery'?'readonly':''}}>
+                                <input type="number" min="{{$coupon['discount_type']=='percent'?'0.01':'0'}}" max="999999999999.99" step="0.01"
+                                        value="{{$coupon['max_discount']}}" name="max_discount" id="max_discount" class="form-control"
+                                        {{$coupon['coupon_type']=='free_delivery' || $coupon['discount_type']=='amount' ?'readonly':''}}
+                                        {{$coupon['coupon_type']!='free_delivery' && $coupon['discount_type']=='percent' ?'required':''}}>
                             </div>
                         </div>
 

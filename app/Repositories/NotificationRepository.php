@@ -32,14 +32,14 @@ class NotificationRepository implements NotificationRepositoryInterface
         return $this->notification->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->notification->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->notification->with($relations)->where($filters)
             ->when(isset($key ), function ($q) use ($key){
                 $q->where(function ($q) use ($key) {
@@ -75,7 +75,7 @@ class NotificationRepository implements NotificationRepositoryInterface
 
     public function getExportList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->notification->when(isset($key ), function ($q) use ($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {

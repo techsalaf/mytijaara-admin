@@ -28,7 +28,7 @@ interface RiderRepositoryInterface extends RepositoryInterface
      * @param int|null $offset
      * @return Collection|LengthAwarePaginator
      */
-    public function getZoneWiseListWhere(string $zoneId = 'all', string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator;
+    public function getZoneWiseListWhere(string $zoneId = 'all', ?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator;
 
     /**
      * @param Request $request
@@ -42,7 +42,7 @@ interface RiderRepositoryInterface extends RepositoryInterface
      * @param array $relations
      * @return Model|null
      */
-    public function getActiveFirstWhere(string $searchValue = null, array $filters = [], array $relations = []): ?Model;
+    public function getActiveFirstWhere(?string $searchValue = null, array $filters = [], array $relations = []): ?Model;
 
         /**
      * @param string $zoneId
@@ -54,7 +54,7 @@ interface RiderRepositoryInterface extends RepositoryInterface
      * @param int|null $offset
      * @return Collection|LengthAwarePaginator
      */
-    public function getFilterWiseListWhere(string $zoneId = 'all', string $searchValue = null, array $filters = [],  string $additionalFilter = null ,string $jobType = null ,array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator;
+    public function getFilterWiseListWhere(string $zoneId = 'all', ?string $searchValue = null, array $filters = [],  ?string $additionalFilter = null ,?string $jobType = null ,array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator;
 
 
 }

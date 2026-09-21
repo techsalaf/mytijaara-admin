@@ -19,7 +19,7 @@
             </h1>
             @include('admin-views.business-settings.partials.nav-menu')
         </div>
-        <form action="{{ route('admin.customer.update-settings') }}" method="post" enctype="multipart/form-data"
+        <form action="{{ route('admin.users.customer.update-settings') }}" method="post" enctype="multipart/form-data"
             id="update-settings">
             @csrf
             <div class="row g-3">
@@ -179,10 +179,18 @@
                     </div>
                     @if (addon_published_status('AI'))
                         @php($customer_personalization_status = $data['customer_personalization_status'] ?? 0)
+                        @php($customer_personalization_tooltip = addon_published_status('Service')
+                            ? translate('Personalized home page is available for the Grocery, Pharmacy, Food, Shop and Service modules.')
+                            : translate('Personalized home page is available for the Grocery, Pharmacy, Food and Shop modules.'))
                         <div class="card mb-20 p-20" id="customer-personalization">
                             <div class="d-flex align-items-center justify-content-between gap-2 flex-sm-nowrap flex-wrap">
                                 <div>
-                                    <h4 class="mb-1">{{ translate('AI Personalization') }}</h4>
+                                    <h4 class="mb-1 d-flex align-items-center">
+                                        {{ translate('AI Personalization') }}
+                                        <span class="form-label-secondary d-flex" data-toggle="tooltip"
+                                            data-placement="right"
+                                            data-original-title="{{ $customer_personalization_tooltip }}"><i class="tio-info text-muted ps--3"></i></span>
+                                    </h4>
                                     <p class="fs-12 m-0">
                                         {{ translate('Show each customer a more relevant order of items, stores, and categories.') }}
                                     </p>

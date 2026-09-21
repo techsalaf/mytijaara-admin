@@ -399,6 +399,7 @@ class DeliveryMan extends Authenticatable
         });
         static::addGlobalScope(new ZoneScope);
 
+
         if(!request()->is('api/*') && !request()->is('deliveryman-earning-report-invoice/*') && addon_published_status('RideShare')){
             static::addGlobalScope('delivery_only', function (Builder $builder) {
                 $builder->where('is_delivery', 1);

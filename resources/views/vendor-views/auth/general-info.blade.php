@@ -698,6 +698,8 @@
         "{{ translate('messages.Estimated_pickup_time') }} <span class='text-danger'>*</span>";
         const approxDeliveryText =
         "{{ translate('messages.approx_delivery_time') }} <span class='text-danger'>*</span>";
+        const approxServiceText =
+        "{{ translate('messages.approx_service_time') }} <span class='text-danger'>*</span>";
 
         // Reset all button loaders
         function resetButtonLoaders() {

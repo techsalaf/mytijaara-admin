@@ -8,6 +8,7 @@ use App\Models\ItemCampaign;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\CentralLogics\PersonalizationService;
+use App\CentralLogics\StoreLogic;
 use Illuminate\Support\Facades\Validator;
 
 class CampaignController extends Controller
@@ -49,7 +50,7 @@ class CampaignController extends Controller
         }
         try {
             $campaign = Campaign::with(['stores'=>function($q)use($zone_id,$longitude,$latitude){
-                $q->withOpen($longitude??0,$latitude??0)->Active()->where('campaign_status','confirmed')->when(config('module.current_module_data'), function($query){
+                $q->with(['discount' => fn($query) => $query->validate()])->withOpen($longitude??0,$latitude??0)->Active()->where('campaign_status','confirmed')->when(config('module.current_module_data'), function($query){
                     $query->where('module_id', config('module.current_module_data')['id'])->whereHas('zone.modules',function($query){
                         $query->where('modules.id', config('module.current_module_data')['id']);
                     });
@@ -69,6 +70,15 @@ class CampaignController extends Controller
             $campaign=Helpers::basic_campaign_data_formatting($campaign, false);
 
             $campaign['stores'] = Helpers::store_data_formatting($campaign['stores'], true);
+
+            foreach ($campaign['stores'] as $store) {
+                $store['store_discount'] = ($store->relationLoaded('discount') && $store->discount) ? [
+                    'discount' => (float) $store->discount->discount,
+                    'discount_type' => $store->discount->discount_type ?? 'percent',
+                ] : null;
+                $store['offers'] = StoreLogic::collect_store_offers($store);
+                unset($store['discount']);
+            }
 
             return response()->json($campaign, 200);
         } catch (\Exception $e) {

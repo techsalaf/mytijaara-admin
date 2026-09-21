@@ -41,6 +41,7 @@ use Carbon\Carbon;
 trait PlaceNewOrder
 {
     use ManagesProCustomerSubscription;
+    use CreatesGuestAccount;
 
     public function new_place_order(Request $request, $is_prescription = false)
     {
@@ -474,6 +475,10 @@ trait PlaceNewOrder
 
                 }
 
+                $saver = $this->resolveSaverDeliveryType($request, $zone, $store, $module_wise_delivery_charge, getModuleId($request->header('moduleId')), (float) $order->delivery_charge);
+                $order->delivery_type = $saver['delivery_type'];
+                $order->delivery_type_charge = round($saver['delivery_type_charge'], config('round_up_to_digit'));
+
                 if ($coupon) {
                     $coupon->increment('total_uses');
                 }
@@ -747,70 +752,6 @@ trait PlaceNewOrder
 
         return app($serviceClass);
     }
-
-    private function createNewUser($request)
-    {
-        if (!$request->create_new_user) {
-            return false;
-        }
-
-        $createsAt = ['tenant_id' => 0, 'sub_tenant_id' => 0];
-
-        $validationError = match (true) {
-            !$request->password => [
-                'status_code' => 403,
-                'message'     => translate('messages.password_is_required'),
-                'code'        => 'password',
-            ],
-            User::withoutGlobalScope(\App\Scopes\HostScope::class)
-                ->where('phone', $request->contact_person_number)
-                ->where($createsAt)
-                ->exists() => [
-                'status_code' => 403,
-                'message'     => translate('messages.phone_already_taken'),
-                'code'        => 'phone_person_email',
-            ],
-            User::withoutGlobalScope(\App\Scopes\HostScope::class)
-                ->where('email', $request->contact_person_email)
-                ->where($createsAt)
-                ->exists() => [
-                'status_code' => 403,
-                'message'     => translate('messages.email_already_taken'),
-                'code'        => 'contact_person_email',
-            ],
-            default => null,
-        };
-
-        if ($validationError) {
-            return $validationError;
-        }
-
-        $user = new User();
-        $user->f_name = $request->contact_person_name;
-        $user->email = $request->contact_person_email;
-        $user->phone = $request->contact_person_number;
-        $user->password = bcrypt($request->password);
-        $user->ref_code = Helpers::generate_referer_code($user);
-        $user->login_medium = 'manual';
-        $user->tenant_id     = $createsAt['tenant_id'];
-        $user->sub_tenant_id = $createsAt['sub_tenant_id'];
-        $user->save();
-
-        try {
-            if (config('mail.status') && $request->contact_person_email && Helpers::get_mail_status('registration_mail_status_user') == '1' && Helpers::getNotificationStatusData('customer', 'customer_registration', 'mail_status')) {
-                Mail::to($request->contact_person_email)->send(new CustomerRegistration($request->contact_person_name));
-            }
-        } catch (\Exception $exception) {
-            info('createNewUser' ,[$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
-        }
-        if ($request->guest_id  && isset($user->id)) {
-
-            Cart::where('user_id', $request->guest_id)->update(['user_id' => $user->id, 'is_guest' => 0]);
-        }
-
-        return ['newUser' => true, 'user' => $user];
-    }
-
 
     private function validationCheck($request)
     {
@@ -1126,7 +1067,7 @@ trait PlaceNewOrder
                 $original_delivery_charge += $extra;
             }
         }
-        $saver = $this->resolveSaverDeliveryType($request, $zone, $module_wise_delivery_charge, $moduleId, (float) ($delivery_charge ?? 0));
+        $saver = $this->resolveSaverDeliveryType($request, $zone, $store, $module_wise_delivery_charge, $moduleId, (float) ($delivery_charge ?? 0));
 
         return [
             'delivery_charge' => $delivery_charge,
@@ -1137,11 +1078,14 @@ trait PlaceNewOrder
         ];
     }
 
-    private function resolveSaverDeliveryType($request, $zone, $module_wise_delivery_charge, $moduleId, float $delivery_charge): array
+    private function resolveSaverDeliveryType($request, $zone, $store, $module_wise_delivery_charge, $moduleId, float $delivery_charge): array
     {
         $default = ['delivery_type' => 'standard', 'delivery_type_charge' => 0.0];
 
         if (!$zone || !$module_wise_delivery_charge) {
+            return $default;
+        }
+        if ($store?->sub_self_delivery == 1) {
             return $default;
         }
         if (($request->order_type ?? null) !== 'delivery') {
@@ -1877,9 +1821,9 @@ trait PlaceNewOrder
                         return $query->where('id', $request->cart_id);
                     })
                     ->get()->map(function ($data) {
-                        $data->add_on_ids = json_decode($data->add_on_ids, true);
-                        $data->add_on_qtys = json_decode($data->add_on_qtys, true);
-                        $data->variation = json_decode($data->variation, true);
+                        $data->add_on_ids = is_array($data->add_on_ids) ? $data->add_on_ids : json_decode($data->add_on_ids, true);
+                        $data->add_on_qtys = is_array($data->add_on_qtys) ? $data->add_on_qtys : json_decode($data->add_on_qtys, true);
+                        $data->variation = is_array($data->variation) ? $data->variation : json_decode($data->variation, true);
                         return $data;
                     });
 

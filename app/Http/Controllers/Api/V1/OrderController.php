@@ -1296,6 +1296,9 @@ class OrderController extends Controller
         if (!\in_array($type, ['express', 'slightly_delay'], true)) {
             return null;
         }
+        if ((int) ($order->store?->sub_self_delivery ?? 0) === 1) {
+            return null;
+        }
         if (!$order->store?->delivery_time || $order->order_type !== 'delivery') {
             return null;
         }
@@ -1532,7 +1535,7 @@ class OrderController extends Controller
         $module_id = $request->header('moduleId') ?? null;
         $store_id = $request->store_id ?? null;
 
-        $latest_ids = Order::where('user_id', $user->id)
+        $orders = Order::where('user_id', $user->id)
             ->where('is_guest', 0)
             ->where('order_status', 'delivered')
             ->when(isset($module_id), function ($q) use ($module_id) {
@@ -1541,14 +1544,12 @@ class OrderController extends Controller
             ->when(isset($store_id), function ($q) use ($store_id) {
                 $q->where('store_id', $store_id);
             })
-            ->pluck('id');
-
-        $orders = Order::whereIn('id', $latest_ids)
             ->with([
                 'store:id,name,logo,module_id,zone_id,slug',
                 'details:id,order_id,item_id,quantity,item_campaign_id',
                 'details.item:id,name,image,store_id',
             ])
+            ->orderByDesc('delivered')
             ->latest()
             ->take(10)
             ->get();

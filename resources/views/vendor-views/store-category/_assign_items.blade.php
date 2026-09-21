@@ -24,8 +24,9 @@
       data-search-url="{{ route('vendor.store-category.items.search', $category->id) }}">
     @csrf
 
+    @php($isService = $isService ?? false)
     <div class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
-        <h3 class="mb-0">{{ translate('Select Items For Category') }}</h3>
+        <h3 class="mb-0">{{ $isService ? translate('Select Services For Category') : translate('Select Items For Category') }}</h3>
         <button type="button"
             class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary text-dark offcanvas-close fz-15px p-0"
             aria-label="Close">&times;</button>
@@ -36,7 +37,11 @@
             style="background-color: #FFF8E5; border: 1px solid #FFE6A8;">
             <i class="tio-info mt-1" style="color: #F2A93B;"></i>
             <div class="fs-12 text-body">
-                {{ translate('Once you create store categories, you must add your items to those categories. Without assigning items, they will not appear on your store details page. If you want to proceed with the main category, you can skip adding any store categories.') }}
+                @if($isService)
+                    {{ translate('Once you create store categories, you must add your services to those categories. Without assigning services, they will not appear on your store details page. If you want to proceed with the main category, you can skip adding any store categories.') }}
+                @else
+                    {{ translate('Once you create store categories, you must add your items to those categories. Without assigning items, they will not appear on your store details page. If you want to proceed with the main category, you can skip adding any store categories.') }}
+                @endif
             </div>
         </div>
 
@@ -46,7 +51,7 @@
                 <i class="tio-warning-outlined mt-1" style="color: #E53935;"></i>
                 <div class="fs-12 text-body">
                     {{ translate('There are') }}
-                    <strong>{{ $unassignedCount }} {{ translate('items') }}</strong>
+                    <strong>{{ $unassignedCount }} {{ $isService ? translate('services') : translate('items') }}</strong>
                     {{ translate('that are unassigned to any category. Please assign them to a category so they can be visible on the store details page.') }}
                 </div>
             </div>
@@ -59,7 +64,7 @@
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-            <h6 class="mb-0">{{ translate('Item List') }}</h6>
+            <h6 class="mb-0">{{ $isService ? translate('Service List') : translate('Item List') }}</h6>
             <span class="badge badge-soft-primary fs-12">
                 <span id="assignItemsSelectedCount">0</span> {{ translate('Selected') }}
             </span>
@@ -69,6 +74,7 @@
             @include('vendor-views.store-category._assign_items_list', [
                 'items' => $items,
                 'category' => $category,
+                'isService' => $isService,
             ])
         </div>
     </div>

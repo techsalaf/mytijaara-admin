@@ -81,7 +81,7 @@
                                 </label>
                                 <select id="coupon_type" name="coupon_type" class="form-control" >
                                     <option value="default">{{translate('messages.default')}}</option>
-                                    @if ($store_data->sub_self_delivery == 1)
+                                    @if ($store_data->sub_self_delivery == 1 && !in_array($store_data->module?->module_type, ['service', 'rental']))
                                     <option value="free_delivery">{{translate('messages.free_delivery')}}</option>
                                     @endif
                             </select>
@@ -374,10 +374,9 @@
             $('#coupon_limit').val(null);
             $('#date_from').val(null);
             $('#date_to').val(null);
-            $('#discount_type').val('amount');
             $('#discount').val(null);
-            $('#max_discount').val(0);
             $('#min_purchase').val(0);
+            $('#discount_type').val('amount').trigger('change');
             $('#select_customer').val(null).trigger('change');
         })
     </script>

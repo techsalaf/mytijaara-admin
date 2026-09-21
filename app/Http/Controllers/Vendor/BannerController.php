@@ -15,7 +15,7 @@ class BannerController extends Controller
 {
     function list(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $banners=Banner::where('data',Helpers::get_store_id())->where('created_by','store')
         ->when($key, function($query)use($key){
             $query->where(function ($q) use ($key) {
@@ -113,7 +113,7 @@ class BannerController extends Controller
     }
 
     // public function search(Request $request){
-    //     $key = explode(' ', $request['search']);
+    //     $key = explode(' ', $request['search'] ?? '');
     //     $banners=Banner::where('data',Helpers::get_store_id())->where('created_by','store')->where(function ($q) use ($key) {
     //         foreach ($key as $value) {
     //             $q->orWhere('title', 'like', "%{$value}%");

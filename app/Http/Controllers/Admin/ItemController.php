@@ -994,6 +994,7 @@ class ItemController extends Controller
             if ($request->variations && $product_variations && count($product_variations)) {
 
                 $price += Helpers::food_variation_price($product_variations, $request->variations);
+                $price -= Helpers::product_discount_calculate($product, $price, $product->store)['discount_amount'];
             } else {
                 $price = $product->price - Helpers::product_discount_calculate($product, $product->price, $product->store)['discount_amount'];
             }
@@ -1042,7 +1043,7 @@ class ItemController extends Controller
                 $query->where('position', '>', '0');
             })
             ->where(['parent_id' => $request->parent_id])
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['q'], function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->where('name', 'like', "%{$value}%");
                 }
@@ -1139,7 +1140,7 @@ class ItemController extends Controller
         $brand_id = $request->query('brand_id', 'all');
 
         $type = $request->query('type', 'all');
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $items = Item::withoutGlobalScope(StoreScope::class)
             ->when($request->query('module_id', null), function ($query) use ($request) {
                 return $query->module($request->query('module_id'));
@@ -1249,7 +1250,7 @@ class ItemController extends Controller
     // public function search(Request $request)
     // {
     //     $view = 'admin-views.product.partials._table';
-    //     $key = explode(' ', $request['search']);
+    //     $key = explode(' ', $request['search'] ?? '');
     //     $store_id = $request->query('store_id', 'all');
     //     $category_id = $request->query('category_id', 'all');
     //     $items = Item::withoutGlobalScope(StoreScope::class)
@@ -1282,9 +1283,9 @@ class ItemController extends Controller
     public function review_list(Request $request)
     {
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $reviews = Review::with('item')
-            ->when(isset($key), function ($query) use ($key, $request) {
+            ->when($request['search'], function ($query) use ($key, $request) {
                 $query->where(function ($query) use ($key, $request) {
 
                     $query->whereHas('item', function ($query) use ($key) {
@@ -1319,9 +1320,9 @@ class ItemController extends Controller
 
     // public function review_search(Request $request)
     // {
-    //     $key = explode(' ', $request['search']);
+    //     $key = explode(' ', $request['search'] ?? '');
     //     $reviews = Review::with('item')
-    //     ->when(isset($key), function($query) use($key){
+    //     ->when(isset($request['search']), function($query) use($key){
     //         $query->whereHas('item', function ($query) use ($key) {
     //             foreach ($key as $value) {
     //                 $query->where('name', 'like', "%{$value}%");
@@ -1339,9 +1340,9 @@ class ItemController extends Controller
 
     public function reviews_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $reviews = Review::with('item')
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 $query->whereHas('item', function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->where('name', 'like', "%{$value}%");
@@ -1764,7 +1765,7 @@ class ItemController extends Controller
 
     public function search_vendor(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if ($request->has('store_id')) {
 
             $foods = Item::withoutGlobalScope(StoreScope::class)
@@ -1801,7 +1802,7 @@ class ItemController extends Controller
         }
 
         $foods = $model->withoutGlobalScope(StoreScope::class)->where('store_id', $request->store_id)
-            ->when(isset($key), function ($q) use ($key) {
+            ->when(request()->search, function ($q) use ($key) {
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->where('name', 'like', "%{$value}%");
@@ -1864,7 +1865,7 @@ class ItemController extends Controller
         }
 
         $type = $request->query('type', 'all');
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $item = $model->withoutGlobalScope(StoreScope::class)
             ->when($request->query('module_id', null), function ($query) use ($request) {
                 return $query->module($request->query('module_id'));
@@ -1942,7 +1943,7 @@ class ItemController extends Controller
 
     public function search_store(Request $request, $store_id)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $foods = Item::withoutGlobalScope(StoreScope::class)
             ->where('store_id', $store_id)
             ->where(function ($q) use ($key) {
@@ -2073,7 +2074,7 @@ class ItemController extends Controller
         $zone_id = $request->query('zone_id', 'all');
         $type = $request->query('type', 'all');
         $filter = $request->query('filter');
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $from = $request->query('from');
         $to = $request->query('to');
 

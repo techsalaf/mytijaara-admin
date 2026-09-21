@@ -44,6 +44,7 @@ class BannerUpdateRequest extends FormRequest
     {
         return [
             'title' => 'required|max:191',
+            'image' => 'nullable|image|mimes:' . IMAGE_FORMAT_FOR_VALIDATION . '|max:' . (MAX_FILE_SIZE * 1024),
             'banner_type' => 'required',
             'zone_id' => 'required',
             'store_id' => 'required_if:banner_type,store_wise',
@@ -58,6 +59,7 @@ class BannerUpdateRequest extends FormRequest
             'zone_id.required' => translate('messages.select_a_zone'),
             'store_id.required_if'=> translate('messages.store is required when banner type is store wise'),
             'item_id.required_if'=> translate('validation.required_if',['attribute'=>translate('messages.item'), 'other'=>translate('messages.banner_type'), 'value'=>translate('messages.item_wise')]),
+            'image.max' => translate('messages.image_must_be_less_than_2mb'),
             'title.0.required'=>translate('default_data_is_required'),
         ];
     }

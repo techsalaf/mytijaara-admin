@@ -71,7 +71,7 @@ class CustomerWalletController extends Controller
         $filter = $request->query('filter', 'all_time');
         $key = [];
         if ($request->search) {
-            $key = explode(' ', $request['search']);
+            $key = explode(' ', $request['search'] ?? '');
         }
         $data = WalletTransaction::selectRaw('sum(credit+admin_bonus) as total_credit, sum(debit) as total_debit,
          SUM(IF(transaction_type = "add_fund_by_admin", credit + admin_bonus, 0)) as add_fund_total,
@@ -179,7 +179,7 @@ class CustomerWalletController extends Controller
         $filter = $request->query('filter', 'all_time');
         $key = [];
         if ($request->search) {
-            $key = explode(' ', $request['search']);
+            $key = explode(' ', $request['search'] ?? '');
         }
 
         $data = WalletTransaction::selectRaw('sum(credit) as total_credit, sum(debit) as total_debit')

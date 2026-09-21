@@ -3,6 +3,7 @@
 use App\Http\Middleware\ActivationCheckMiddleware;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AdminRentalModuleCheckMiddleware;
+use App\Http\Middleware\AdminServiceModuleCheckMiddleware;
 // Core Laravel web middleware
 use App\Http\Middleware\APIGuestMiddleware;
 use App\Http\Middleware\MaintenanceMode;
@@ -18,6 +19,7 @@ use App\Http\Middleware\LocalizationMiddleware;
 use App\Http\Middleware\ModuleCheckMiddleware;
 use App\Http\Middleware\ModulePermissionMiddleware;
 use App\Http\Middleware\ProviderRentalModuleCheckMiddleware;
+use App\Http\Middleware\ProviderServiceModuleCheckMiddleware;
 use App\Http\Middleware\ReactValid;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\Subscription;
@@ -85,6 +87,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'vendor' => VendorMiddleware::class,
             'vendor.api' => VendorTokenIsValid::class,
             'dm.api' => DmTokenIsValid::class,
+            'serviceman.api' => \Modules\Service\Http\Middleware\ServicemanTokenIsValid::class,
             'module' => ModulePermissionMiddleware::class,
             'installation-check' => InstallationMiddleware::class,
             'actch' => ActivationCheckMiddleware::class,
@@ -103,6 +106,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'current-module' => CurrentModule::class,
             'admin-rental-module' => AdminRentalModuleCheckMiddleware::class,
             'provider-rental-module' => ProviderRentalModuleCheckMiddleware::class,
+            'admin-service-module' => AdminServiceModuleCheckMiddleware::class,
+            'provider-service-module' => ProviderServiceModuleCheckMiddleware::class,
             'maintenance' => MaintenanceMode::class,
         ]);
     })

@@ -353,9 +353,10 @@
                                                             <div>
                                                                 <strong
                                                                     class="line--limit-1">{{ Str::limit($detail->item['name'], 25, '...') }}</strong>
+                                                                <?php $unitPrice = $detail['price']; ?>
                                                                 <h6>
                                                                     {{ $detail['quantity'] }} x
-                                                                    {{ \App\CentralLogics\Helpers::format_currency($detail['price']) }}
+                                                                    {{ \App\CentralLogics\Helpers::format_currency($unitPrice) }}
                                                                 </h6>
                                                                 @if ($order->store && $order->store->module->module_type == 'food')
                                                                     @if (isset($detail['variation']) ? json_decode($detail['variation'], true) : [])
@@ -439,8 +440,11 @@
                                                 @endif
                                                 <td>
                                                     <div class="text-right">
-                                                        <?php $amount = $detail['price'] * $detail['quantity']; ?>
-                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($amount) }}</h5>
+                                                        <?php
+                                                            $amount = $detail['price'] * $detail['quantity'];
+                                                            $lineTotal = $unitPrice * $detail['quantity'];
+                                                        ?>
+                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($lineTotal) }}</h5>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -471,9 +475,10 @@
                                                                 <strong
                                                                     class="line--limit-1">{{ Str::limit($detail->campaign['name'], 25, '...') }}</strong>
 
+                                                                <?php $unitPrice = $detail['price']; ?>
                                                                 <h6>
                                                                     {{ $detail['quantity'] }} x
-                                                                    {{ \App\CentralLogics\Helpers::format_currency($detail['price']) }}
+                                                                    {{ \App\CentralLogics\Helpers::format_currency($unitPrice) }}
                                                                 </h6>
 
                                                                 @if (count(json_decode($detail['variation'], true)) > 0)
@@ -514,8 +519,11 @@
                                                 @endif
                                                 <td>
                                                     <div class="text-right">
-                                                        <?php $amount = $detail['price'] * $detail['quantity']; ?>
-                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($amount) }}</h5>
+                                                        <?php
+                                                            $amount = $detail['price'] * $detail['quantity'];
+                                                            $lineTotal = $unitPrice * $detail['quantity'];
+                                                        ?>
+                                                        <h5>{{ \App\CentralLogics\Helpers::format_currency($lineTotal) }}</h5>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -636,10 +644,11 @@
                                              @endif
                                         :</dt>
                                     <dd class="col-6">
-                                        + {{ \App\CentralLogics\Helpers::format_currency($delivery_fee_info['base']) }}
+                                        + {{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}
                                         <hr>
                                     </dd>
-                                    @include('partials.delivery-type-row', ['order' => $order, 'layout' => 'dl'])
+                                    @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'dl', 'ddClass' => ''])
+                                    @include('partials.delivery-type-row', ['order' => $order, 'layout' => 'dl', 'ddClass' => ''])
                                     <dt class="col-6">{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge') }}:</dt>
                                     <dd class="col-6">
                                         + {{ \App\CentralLogics\Helpers::format_currency($order['additional_charge']) }}
@@ -767,7 +776,7 @@
                                         href="javascript:">{{ translate('messages.make_ready_for_handover') }}</a>
                                      @if($order['order_status'] == 'handover'|| ($order['order_status'] == 'picked_up' && $order->store->sub_self_delivery == 1))
                                         <a class="btn  w-100
-                                        {{ ($order['order_type'] == 'take_away' || $order->store->sub_self_delivery == 1)  ?  'btn--primary order-status-change-alert'  :  'btn--secondary  self-delivery-warning' }} "
+                                        {{ ($order['order_type'] == 'take_away' || $order->store->sub_self_delivery == 1 || $order->is_pos)  ?  'btn--primary order-status-change-alert'  :  'btn--secondary  self-delivery-warning' }} "
                                            data-url="{{ route('vendor.order.status', ['id' => $order['id'], 'order_status' => 'delivered']) }}"
                                            data-message="{{ translate('messages.Change status to delivered (payment status will be paid if not)?') }}"
                                            data-verification="{{ $order_delivery_verification ? 'true' : 'false' }}"

@@ -27,6 +27,7 @@ use App\Library\Payment as PaymentInfo;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\DisbursementHistoryExport;
 use Modules\Rental\Emails\ProviderWithdrawRequestMail;
+use Modules\Service\Emails\ProviderWithdrawRequestMail as ServiceProviderWithdrawRequestMail;
 
 class WalletController extends Controller
 {
@@ -68,10 +69,12 @@ class WalletController extends Controller
             {
                 $admin= Admin::where('role_id', 1)->first();
                 $wallet_transaction = WithdrawRequest::where('vendor_id',Helpers::get_vendor_id())->latest()->first();
-                if( Helpers::get_store_data()?->module?->module_type !== 'rental' && config('mail.status') && Helpers::get_mail_status('withdraw_request_mail_status_admin') == '1' &&   Helpers::getNotificationStatusData('admin','withdraw_request','mail_status')) {
+                if( Helpers::get_store_data()?->module?->module_type !== 'rental' && Helpers::get_store_data()?->module?->module_type !== 'service' && config('mail.status') && Helpers::get_mail_status('withdraw_request_mail_status_admin') == '1' &&   Helpers::getNotificationStatusData('admin','withdraw_request','mail_status')) {
                     Mail::to($admin?->getRawOriginal('email'))->send(new WithdrawRequestMail('pending',$wallet_transaction));
                 } elseif(Helpers::get_store_data()?->module?->module_type == 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_withdraw_request_mail_status_admin') == '1' &&   Helpers::getRentalNotificationStatusData('admin','provider_withdraw_request','mail_status') ){
                     Mail::to($admin?->getRawOriginal('email'))->send(new ProviderWithdrawRequestMail('pending',$wallet_transaction));
+                 } elseif(Helpers::get_store_data()?->module?->module_type == 'service' && addon_published_status('Service') && config('mail.status') && Helpers::get_mail_status('service_withdraw_request_mail_status_admin') == '1' &&   Helpers::getServiceNotificationStatusData('admin','service_provider_withdraw_request','mail_status') ){
+                    Mail::to($admin?->getRawOriginal('email'))->send(new ServiceProviderWithdrawRequestMail('pending',$wallet_transaction));
                  }
             }
             catch(\Exception $e)
@@ -210,9 +213,9 @@ class WalletController extends Controller
         $data =  data_get($this->getWithdrawMethods() , 'data' , [] );
         $withdrawal_methods =  data_get($this->getWithdrawMethods() , 'withdrawal_methods' , [] );
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $account_transaction = AccountTransaction::
-        when(isset($key), function ($query) use ($key) {
+        when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('ref', 'like', "%{$value}%");
@@ -231,11 +234,11 @@ class WalletController extends Controller
         $data =  data_get($this->getWithdrawMethods() , 'data' , [] );
         $withdrawal_methods =  data_get($this->getWithdrawMethods() , 'withdrawal_methods' , [] );
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
 
         $disbursements=DisbursementDetails::with('store','withdraw_method')
             ->where('store_id', Helpers::get_store_id())
-            ->when(isset($key), function ($q) use ($key){
+            ->when(isset($request['search']), function ($q) use ($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('disbursement_id', 'like', "%{$value}%")
@@ -287,10 +290,10 @@ class WalletController extends Controller
     public function getDisbursementExport(Request $request)
     {
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $disbursements = DisbursementDetails::with('store', 'withdraw_method')
             ->where('store_id', Helpers::get_store_id())
-            ->when(isset($key), function ($q) use ($key) {
+            ->when(isset($request['search']), function ($q) use ($key) {
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('disbursement_id', 'like', "%{$value}%")

@@ -14,14 +14,22 @@ $(document).on('ready', function () {
 
     function discount_check() {
         if ($('#discount_type').val() == 'amount') {
-            $('#max_discount').attr("readonly", "true");
+            $('#max_discount').attr("readonly", "true").attr("min", 0).removeAttr("required");
             $('#max_discount').val(0);
-            $('#discount').attr('max', $('#min_purchase').val() || 0);
+            let minPurchase = parseFloat($('#min_purchase').val());
+            if (!isNaN(minPurchase) && minPurchase > 0) {
+                $('#discount').attr('max', minPurchase);
+            } else {
+                $('#discount').removeAttr('max');
+            }
             validateDiscount();
         }
         else {
             if ($('#discount_type').val() == 'percent') {
-                $('#max_discount').removeAttr("readonly");
+                $('#max_discount').removeAttr("readonly").attr("min", "0.01").attr("required", "required");
+                if ((parseFloat($('#max_discount').val()) || 0) <= 0) {
+                    $('#max_discount').val('');
+                }
             }
             $('#discount').attr('max', 100);
         }
@@ -78,6 +86,16 @@ function coupon_type_change(coupon_type) {
             break;
     }
 
+    // Pro Customer coupons apply to the customer's subscription window, not a fixed campaign
+    // date range — hide Start/Expire Date and stop requiring them for this type.
+    if (coupon_type === 'pro_customer') {
+        $('#start_date_wrap, #expire_date_wrap').hide();
+        $('#date_from, #date_to').val('').removeAttr('required');
+    } else {
+        $('#start_date_wrap, #expire_date_wrap').show();
+        $('#date_from, #date_to').attr('required', true);
+    }
+
     if (coupon_type === 'free_delivery') {
         $('#discount_type').attr("disabled", true).val("").trigger("change");
         $('#max_discount, #discount').val(0).attr("readonly", true);
@@ -91,9 +109,12 @@ function coupon_type_change(coupon_type) {
     }
 
     if ($('#discount_type').val() === 'amount') {
-        $('#max_discount').val(0).attr("readonly", true);
+        $('#max_discount').val(0).attr("readonly", true).attr("min", 0).removeAttr("required");
     } else if ($('#discount_type').val() === 'percent') {
-        $('#max_discount').removeAttr("readonly");
+        $('#max_discount').removeAttr("readonly").attr("min", "0.01").attr("required", "required");
+        if ((parseFloat($('#max_discount').val()) || 0) <= 0) {
+            $('#max_discount').val('');
+        }
     }
 }
 $('#reset_btn').click(function () {

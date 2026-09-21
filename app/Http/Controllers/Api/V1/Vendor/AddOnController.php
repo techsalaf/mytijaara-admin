@@ -215,7 +215,7 @@ class AddOnController extends Controller
         $limit = $request['limite'] ?? 25;
         $offset = $request['offset'] ?? 1;
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $addons = AddOn::withoutGlobalScope(StoreScope::class)->whereHas('store', function ($query) use ($vendor) {
             return $query->where('vendor_id', $vendor['id']);
         })->where(function ($q) use ($key) {

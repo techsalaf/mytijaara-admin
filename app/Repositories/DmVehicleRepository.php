@@ -29,16 +29,16 @@ class DmVehicleRepository implements DmVehicleRepositoryInterface
         return $this->vehicle->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->vehicle->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->vehicle->with($relations)->where($filters)
-            ->when(isset($key), function($query) use($key){
+            ->when($searchValue, function($query) use($key){
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->where('type', 'like', "%{$value}%");
@@ -47,11 +47,11 @@ class DmVehicleRepository implements DmVehicleRepositoryInterface
             })
             ->latest()->paginate($dataLimit);
     }
-    public function getListWhereWithCount(string $searchValue = null, array $filters = [], array $relations = [], array $withCountRelations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhereWithCount(?string $searchValue = null, array $filters = [], array $relations = [], array $withCountRelations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->vehicle->with($relations)->withcount($withCountRelations)->where($filters)
-            ->when(isset($key), function($query) use($key){
+            ->when($searchValue, function($query) use($key){
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->where('type', 'like', "%{$value}%");
@@ -85,9 +85,9 @@ class DmVehicleRepository implements DmVehicleRepositoryInterface
         return $this->vehicle->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getSearchedList(string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection
+    public function getSearchedList(?string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->vehicle->where(function ($query) use ($key) {
             foreach ($key as $value) {
                 $query->orWhere('title', 'like', "%{$value}%");
@@ -95,7 +95,7 @@ class DmVehicleRepository implements DmVehicleRepositoryInterface
         })->limit($dataLimit)->get();
     }
 
-    public function getExistFirst(array $params, string $id = null): ?Model
+    public function getExistFirst(array $params, ?string $id = null): ?Model
     {
         $startingCoverageArea = $params['starting_coverage_area'];
         $maximumCoverageArea = $params['maximum_coverage_area'];

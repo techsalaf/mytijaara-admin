@@ -365,7 +365,7 @@ class OrderActionsProvider implements OrderActionsProviderContract
      * filename, 'D') — caller must not emit a second response after this
      * returns success.
      */
-    public function downloadInvoice(?StorefrontScope $scope, int $orderId, int $customerId): array
+    public function downloadInvoice(?StorefrontScope $scope, int $orderId, ?int $customerId, ?string $guestPhone = null): array
     {
         // loadOrder() enforces (user_id, is_guest=0) ownership + scope.
         // The host's /order-invoice/{id} route has NO ownership check
@@ -377,7 +377,10 @@ class OrderActionsProvider implements OrderActionsProviderContract
         // flows — the storefront invoice header reads store.{name,
         // address, phone, email, logo_full_url} for branding, so the
         // existing eager-load is exactly what we need here too.
-        $order = $this->loadOrder($scope, $orderId, $customerId, null);
+        //
+        // loadOrder enforces ownership by auth customer id OR matching guest
+        // phone, so the widened (guest-capable) signature reuses the same guard.
+        $order = $this->loadOrder($scope, $orderId, $customerId, $guestPhone);
         if (!$order) {
             return ['success' => false, 'error' => 'Order not found.'];
         }
@@ -414,6 +417,20 @@ class OrderActionsProvider implements OrderActionsProviderContract
         }
 
         return ['success' => true];
+    }
+
+    /**
+     * 6amMart is a multi-vendor mart with no digital-product concept, so there
+     * is no downloadable file to stream. Returns the not-available payload; the
+     * storefront never surfaces a digital-download action for mart orders.
+     */
+    public function downloadDigitalProduct(
+        ?StorefrontScope $scope,
+        int $orderDetailId,
+        ?int $customerId,
+        ?string $guestPhone,
+    ): array {
+        return ['success' => false, 'error' => 'Digital downloads are not available.'];
     }
 
     /* ─── reorder ─────────────────────────────────────────── */

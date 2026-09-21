@@ -22,7 +22,7 @@ class AdvertisementController extends Controller
      */
     public function index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
        $total_adds= Advertisement::where('store_id',Helpers::get_store_id())->count();
 
        $adds=Advertisement::where('store_id',Helpers::get_store_id())

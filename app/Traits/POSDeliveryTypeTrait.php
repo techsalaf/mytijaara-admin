@@ -23,10 +23,8 @@ trait POSDeliveryTypeTrait
             return $empty;
         }
 
-        // The saver delivery-time section is only available for stores that
-        // handle their own delivery. When self delivery is off, hide it.
-        if ($storeSelfDelivery === false) {
-            return array_merge($empty, ['reason' => 'self_delivery_off']);
+        if ($storeSelfDelivery === true) {
+            return array_merge($empty, ['reason' => 'self_delivery_on']);
         }
 
         $pivot = ModuleZone::query()
@@ -135,9 +133,15 @@ trait POSDeliveryTypeTrait
         session()->forget(['delivery_type', 'delivery_type_charge', 'cart_delivery_fee']);
     }
 
-    public function applySaverToOrder($order, int $moduleId, int $zoneId, float $baseDeliveryCharge): void
+    public function applySaverToOrder($order, int $moduleId, int $zoneId, float $baseDeliveryCharge, ?bool $storeSelfDelivery = null): void
     {
         if (!$order) {
+            return;
+        }
+
+        if ($storeSelfDelivery === true) {
+            $order->delivery_type = ModuleZoneDeliveryOption::TYPE_STANDARD;
+            $order->delivery_type_charge = 0;
             return;
         }
 

@@ -45,7 +45,7 @@
         <tr>
             <th>{{ translate('sl') }}</th>
             @if (isset($data['module_type']))
-            <th>{{$data['module_type'] == 'rental'? translate('trip_id') : translate('messages.order_id') }}</th>
+            <th>{{$data['module_type'] == 'rental'? translate('trip_id') : ($data['module_type'] == 'service'? translate('messages.booking_id') : translate('messages.order_id')) }}</th>
             @elseif(addon_published_status('Rental'))
                 <th>{{ translate('messages.order_id') }}</th>
                 <th>{{ translate('trip_id') }}</th>
@@ -61,7 +61,9 @@
                 <td>{{ $key+1}}</td>
                 @if (isset($data['module_type']))
                     <td>
-                        @if ($exp->order && $data['module_type'] != 'rental')
+                        @if ($data['module_type'] == 'service')
+                            {{ $exp['service_booking_id'] }}
+                        @elseif ($exp->order && $data['module_type'] != 'rental')
                             {{ $exp['order_id'] }}
                         @elseif ($exp->trip && $data['module_type'] == 'rental')
                             {{ $exp['trip_id'] }}
@@ -103,6 +105,15 @@
                             {{ translate('messages.Guest_user') }}
                         @endif
 
+
+                    @elseif ($exp->serviceBooking)
+                    @if($exp->serviceBooking?->is_guest)
+                        <strong>{{ $exp->serviceBooking['user_info']['contact_person_name'] ?? translate('messages.Guest_user') }}</strong>
+                    @elseif($exp->serviceBooking?->customer)
+                        {{ $exp->serviceBooking?->customer['f_name'].' '.$exp->serviceBooking?->customer['l_name'] }}
+                    @else
+                        <label class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
+                    @endif
 
                     @elseif ($exp['type'] == 'add_fund_bonus')
                     {{ $exp->user->f_name.' '.$exp->user->l_name }}

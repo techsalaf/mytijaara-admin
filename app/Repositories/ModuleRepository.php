@@ -32,17 +32,17 @@ class ModuleRepository implements ModuleRepositoryInterface
         return $this->module->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->module->get();
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
 
         return $this->module->withCount($relations)->where($filters)
-            ->when(isset($key) , function($q) use($key){
+            ->when($searchValue , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('module_name', 'like', "%{$value}%");
@@ -79,9 +79,9 @@ class ModuleRepository implements ModuleRepositoryInterface
 
     public function getExportList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->module->withCount('stores')->
-        when(isset($key) , function($q) use($key){
+        when($request['search'] , function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('module_name', 'like', "%{$value}%");
@@ -96,11 +96,11 @@ class ModuleRepository implements ModuleRepositoryInterface
         return $this->module->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getSearchListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection
+    public function getSearchListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
 
-        return $this->module->when(isset($key) , function($q) use($key){
+        return $this->module->when($searchValue , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('module_name', 'like', "%{$value}%");

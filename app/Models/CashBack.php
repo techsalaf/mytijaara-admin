@@ -58,6 +58,11 @@ class CashBack extends Model
         return $query->where('is_rental', 1);
     }
 
+    public function scopeService($query): mixed
+    {
+        return $query->where('is_service', 1);
+    }
+
     /**
      * @param $query
      * @return mixed

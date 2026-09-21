@@ -2,6 +2,17 @@
 
 $(document).ready(function () {
     let datatable = $.HSCore.components.HSDatatables.init($('#columnSearchDatatable'));
+
+    $('.select-subwrapper').each(function () {
+        const wrapper = $(this);
+        const checkboxes = wrapper.find('.check-item .form-check-input');
+        const allChecked = checkboxes.length > 0 && checkboxes.length === checkboxes.filter(':checked').length;
+        wrapper.find('.check-all').prop('checked', allChecked);
+    });
+
+    const allCheckboxes = $('.check--item-wrapper .check-item .form-check-input');
+    const allChecked = allCheckboxes.length > 0 && allCheckboxes.length === allCheckboxes.filter(':checked').length;
+    $('#select-all').prop('checked', allChecked);
 });
 
 $('#reset-btn').on('click', function () {
@@ -11,11 +22,9 @@ $('#reset-btn').on('click', function () {
 });
 
 $('#select-all').on('change', function () {
-    if (this.checked === true) {
-        $('.check--item-wrapper .check-item .form-check-input').prop('checked', true);
-    } else {
-        $('.check--item-wrapper .check-item .form-check-input').prop('checked', false);
-    }
+    const isChecked = this.checked === true;
+    $('.check--item-wrapper .check-item .form-check-input').prop('checked', isChecked);
+    $('.select-subwrapper .check-all').prop('checked', isChecked);
 });
 
 $('.check--item-wrapper .check-item .form-check-input').on('change', function () {
@@ -30,6 +39,10 @@ $('.select-subwrapper .check-all').on('change', function () {
     const isChecked = $(this).is(':checked');
 
     wrapper.find('.check-item .form-check-input').prop('checked', isChecked);
+
+    const allCheckboxes = $('.check--item-wrapper .check-item .form-check-input');
+    const allChecked = allCheckboxes.length === allCheckboxes.filter(':checked').length;
+    $('#select-all').prop('checked', allChecked);
 });
 
 // Handle individual checkbox update

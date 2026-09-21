@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Category;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Validation\Validator;
 
 /**
  * @property int parent_id
@@ -33,6 +36,29 @@ class CategoryAddRequest extends FormRequest
             'name.0' => 'required',
             'image' => 'required_if:position,==,0',
         ];
+    }
+
+    /**
+     * Reject a category whose name duplicates a sibling: main categories must be unique
+     * within the module, sub categories unique within their parent.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $defaultName = Category::defaultName($this->name, $this->lang);
+            if ($defaultName === null) {
+                return;
+            }
+
+            $parentId = (int) ($this->position == 0 ? 0 : ($this->parent_id ?? 0));
+            $moduleId = (int) Config::get('module.current_module_id');
+
+            if (Category::isDuplicateName($defaultName, $moduleId, $parentId)) {
+                $validator->errors()->add('name.0', translate($parentId === 0
+                    ? 'messages.category_name_already_exists'
+                    : 'messages.sub_category_name_already_exists_under_this_category'));
+            }
+        });
     }
 
     public function messages(): array

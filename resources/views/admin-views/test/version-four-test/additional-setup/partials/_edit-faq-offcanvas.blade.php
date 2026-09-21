@@ -69,7 +69,7 @@
                 </div>
             </div>
             <div  class="align-items-center bg-white bottom-0 d-flex gap-3 justify-content-center offcanvas-footer p-3 position-sticky">
-                <a href="{{ route('admin.customer.list') }}"
+                <a href="{{ route('admin.users.customer.list') }}"
                     class="btn w-100 btn--reset offcanvas-close">{{ translate('Cancel') }}</a>
                 <button type="submit" id="apply_filter" class="btn w-100 btn--primary">{{ translate('Update') }}</button>
             </form>

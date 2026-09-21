@@ -382,7 +382,7 @@
                                     <div class="rounded border py-2 min-h-45px bg-white px-3">
                                         <div class="row g-lg-3 g-1">
                                             @foreach (config('module.module_type') as $key => $value)
-                                                @if ($value != 'parcel' && $value != 'rental' && $value != 'ride-share')
+                                                @if ($value != 'parcel' && $value != 'rental' && $value != 'ride-share' && $value != 'service')
                                                     <div class="col-lg-3 col-sm-6">
                                                         <div class="custom-control custom-checkbox pt-1">
                                                             <input class="custom-control-input extra-packaging-option" type="checkbox" {{ isset($extra_packaging_data[$value]) && $extra_packaging_data[$value] == 1 ? 'checked' : '' }} id="inlineCheckbox{{$key}}" value="1" name="{{ $value }}">

@@ -260,6 +260,41 @@ class CartProvider implements CartProviderContract
         return \json_encode($normalized) ?: '';
     }
 
+    /**
+     * Whether the row's module tracks inventory at all (config/module.php
+     * `stock`). `food` does not, so its rows sit at stock = 0 without being
+     * depleted and must never cap the stepper.
+     */
+    private function tracksStock($itemModel): bool
+    {
+        $moduleType = $itemModel?->module?->module_type;
+
+        return $moduleType ? (bool) config("module.{$moduleType}.stock", false) : false;
+    }
+
+    /**
+     * Stock left for this exact cart line: the matched variation combination's
+     * when the line carries one, else the item's own. Zero when the module
+     * doesn't track stock — callers gate on `tracksStock` first.
+     */
+    private function remainingStock($itemModel, array $variation): int
+    {
+        if (!$itemModel || !$this->tracksStock($itemModel)) {
+            return 0;
+        }
+
+        $type = $variation[0]['type'] ?? null;
+        if ($type !== null) {
+            foreach ($this->decodeJson($itemModel->getAttributes()['variations'] ?? null) as $combo) {
+                if (\is_array($combo) && (string) ($combo['type'] ?? '') === (string) $type) {
+                    return (int) ($combo['stock'] ?? 0);
+                }
+            }
+        }
+
+        return (int) ($itemModel->getAttributes()['stock'] ?? 0);
+    }
+
     /* ─── formatting ──────────────────────────────────────── */
 
     private function formatRow(Cart $row): array
@@ -283,6 +318,12 @@ class CartProvider implements CartProviderContract
             'add_on_ids'  => $addOnIds,
             'add_on_qtys' => $addOnQtys,
             'item'        => $formatted,
+            // Inventory cap for the drawer's +/- stepper. Not read from
+            // `item.stock`: for a variation line the binding limit is the
+            // chosen combination's stock, and the row's own `variation.stock`
+            // is the per-add quantity, not what is left on the shelf.
+            'tracksStock' => $this->tracksStock($itemModel),
+            'stock'       => $this->remainingStock($itemModel, $variation),
         ];
     }
 

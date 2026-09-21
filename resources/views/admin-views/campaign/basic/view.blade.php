@@ -66,14 +66,14 @@
 
                     <div class="col-lg-6">
                         <div class="bg-1079801A p-20 rounded h-100">
-                            <h4 class="mb-15 font-weight-normal fs-14">{{translate('messages.Select Store for add this campaign')}}</h4>
+                            <h4 class="mb-15 font-weight-normal fs-14">{{ config('module.current_module_type') === 'service' ? translate('messages.Select Provider for add this campaign') : translate('messages.Select Store for add this campaign') }}</h4>
                             <form action="{{route('admin.campaign.addstore',$campaign->id)}}" id="store-add-form" method="POST">
                                 @csrf
                                 <div class="d-flex flex-wrap gap-4 flex-column align-items-end">
                                     <div class="w-100">
                                     @php($allstores=App\Models\Store::Active()->where('module_id', $campaign->module_id)->get(['id', 'name']))
                                         <select name="store_id" id="store_id" class="custom-select js-select2-custom form-control">
-                                            <option disabled selected    value=""> {{ translate('messages.select_store') }}</option>
+                                            <option disabled selected    value=""> {{ config('module.current_module_type') === 'service' ? translate('messages.select_provider') : translate('messages.select_store') }}</option>
                                             @forelse($allstores as $store)
                                             @if(!in_array($store->id, $store_ids))
                                             <option value="{{$store->id}}" data-verified="{{ (int) $store->verified_seller }}" >{{$store->name}}</option>
@@ -84,7 +84,7 @@
                                         </select>
                                     </div>
                                     <div class="mt-lg-2">
-                                        <button type="submit" class="btn btn--primary font-weight-regular fs-14 h--45px">{{translate('messages.add_store')}}</button>
+                                        <button type="submit" class="btn btn--primary font-weight-regular fs-14 h--45px">{{ config('module.current_module_type') === 'service' ? translate('messages.add_provider') : translate('messages.add_store') }}</button>
                                     </div>
                                 </div>
                             </form>
@@ -164,7 +164,7 @@
                         <thead class="thead-light">
                             <tr>
                                 <th class="border-0">{{ translate('messages.SL') }}</th>
-                                <th class="border-0 w--15">{{translate('messages.store')}}</th>
+                                <th class="border-0 w--15">{{ config('module.current_module_type') === 'service' ? translate('messages.provider') : translate('messages.store') }}</th>
                                 <th class="border-0 w--25">{{translate('messages.owner')}}</th>
                                 <th class="border-0">{{translate('messages.Contact Info')}}</th>
                                 <th class="border-0">{{translate('messages.Joining Date')}}</th>
@@ -232,12 +232,12 @@
                                     @if ($store->pivot && $store->pivot->campaign_status == 'pending')
                                     <div class="btn--container justify-content-center">
                                         <a class="btn btn-sm btn--primary btn-outline-primary action-btn status-change-alert"
-                                            data-url="{{ route('admin.campaign.store_confirmation', [$campaign->id, $store->id, 'confirmed']) }}" data-message="{{ translate('messages.you_want_to_confirm_this_store') }}"
+                                            data-url="{{ route('admin.campaign.store_confirmation', [$campaign->id, $store->id, 'confirmed']) }}" data-message="{{ (config('module.current_module_type') === 'service' ? translate('messages.you_want_to_confirm_this_provider') : translate('messages.you_want_to_confirm_this_store')) }}"
                                             class="toggle-switch-input" data-toggle="tooltip" data-placement="top" title="{{translate('Approve')}}">
                                             <i class="tio-done font-weight-bold"></i>
                                         </a>
                                         <a class="btn btn-sm btn--danger btn-outline-danger action-btn status-change-alert" href="javascript:"
-                                            data-url="{{ route('admin.campaign.store_confirmation', [$campaign->id, $store->id, 'rejected']) }}" data-message="{{ translate('messages.you_want_to_reject_this_store') }}" data-toggle="tooltip" data-placement="top" title="{{translate('Deny')}}">
+                                            data-url="{{ route('admin.campaign.store_confirmation', [$campaign->id, $store->id, 'rejected']) }}" data-message="{{ config('module.current_module_type') === 'service' ? translate('messages.you_want_to_reject_this_provider') : translate('messages.you_want_to_reject_this_store') }}" data-toggle="tooltip" data-placement="top" title="{{translate('Deny')}}">
                                             <i class="tio-clear font-weight-bold"></i>
                                         </a>
                                         <div></div>
@@ -246,7 +246,7 @@
 
                                     <div class="btn--container justify-content-center">
                                         <a class="btn btn-sm btn--primary btn-outline-primary action-btn status-change-alert"
-                                            data-url="{{ route('admin.campaign.store_confirmation', [$campaign->id, $store->id, 'confirmed']) }}" data-message="{{ translate('messages.you_want_to_confirm_this_store') }}"
+                                            data-url="{{ route('admin.campaign.store_confirmation', [$campaign->id, $store->id, 'confirmed']) }}" data-message="{{ (config('module.current_module_type') === 'service' ? translate('messages.you_want_to_confirm_this_provider') : translate('messages.you_want_to_confirm_this_store')) }}"
                                             class="toggle-switch-input" data-toggle="tooltip" data-placement="top" title="{{translate('Approve')}}">
                                             <i class="tio-done font-weight-bold"></i>
                                         </a>
@@ -255,7 +255,7 @@
                                     @else
                                     <div class="btn--container justify-content-center">
                                         <a class="btn btn--danger btn-outline-danger action-btn form-alert" href="javascript:"
-                                            data-id="campaign-{{$store->id}}" data-message="{{translate('messages.want_to_remove_store')}}" title="{{translate('messages.delete_campaign')}}"><i class="tio-delete-outlined"></i>
+                                            data-id="campaign-{{$store->id}}" data-message="{{ config('module.current_module_type') === 'service' ? translate('messages.want_to_remove_provider') : translate('messages.want_to_remove_store') }}" title="{{translate('messages.delete_campaign')}}"><i class="tio-delete-outlined"></i>
                                         </a>
 
                                         <form action="{{route('admin.campaign.remove-store',[$campaign->id, $store['id']])}}"

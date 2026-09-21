@@ -33,7 +33,7 @@ class StoreDisbursementController extends Controller
 
     public function view(Request $request,$id)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $store_id = $request->query('store_id', 'all');
         $payment_method_id = $request->query('payment_method_id', 'all');
         $disbursement = Disbursement::findOrFail($id);
@@ -42,7 +42,7 @@ class StoreDisbursementController extends Controller
 
 
         $disbursements=DisbursementDetails::with('store','withdraw_method')->where(['disbursement_id'=>$id])
-            ->when(isset($key) , function($q) use($key){
+            ->when($request['search'] , function($q) use($key){
                 $q->whereHas('store', function ($q) use($key){
                     $q->where(function($query)use ($key){
                         $query->orWhereHas('vendor', function ($q) use ($key) {
@@ -85,12 +85,12 @@ class StoreDisbursementController extends Controller
     }
     public function export(Request $request,$id, $type = 'excel')
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $store_id = $request->query('store_id', 'all');
         $payment_method_id = $request->query('payment_method_id', 'all');
         $disbursement = Disbursement::findOrFail($id);
         $disbursements=DisbursementDetails::where(['disbursement_id'=>$id])
-            ->when(isset($key) , function($q) use($key){
+            ->when($request['search'] , function($q) use($key){
                 $q->whereHas('store', function ($q) use($key){
                     $q->where(function($query)use ($key){
                         $query->orWhereHas('vendor', function ($q) use ($key) {

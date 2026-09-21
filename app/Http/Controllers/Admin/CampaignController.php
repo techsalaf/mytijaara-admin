@@ -35,7 +35,7 @@ class CampaignController extends Controller
 
     function list(Request $request, $type)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if($type=='basic')
         {
             $campaigns=Campaign::with('module')->where('module_id', Config::get('module.current_module_id'))
@@ -990,7 +990,7 @@ class CampaignController extends Controller
 
 
     public function basic_campaign_export(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $campaigns=Campaign::with('module')->where('module_id', Config::get('module.current_module_id'))
         ->when(isset($key ), function ($q) use ($key){
             $q->where(function ($q) use ($key) {
@@ -1025,7 +1025,7 @@ class CampaignController extends Controller
 
 
     public function item_campaign_export(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $campaigns=ItemCampaign::where('module_id', Config::get('module.current_module_id'))
         ->when(isset($key ), function ($q) use ($key){
             $q->where(function ($q) use ($key) {

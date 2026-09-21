@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-lg-12 text-center "><h1 > {{ Config::get('module.current_module_type')== 'food' ?  translate('Food_Campaign_List') : translate('Item_Campaign_List') }}
+    <div class="col-lg-12 text-center "><h1 > {{ Config::get('module.current_module_type') === 'service' ? translate('Service_Campaign_List') : (Config::get('module.current_module_type')== 'food' ?  translate('Food_Campaign_List') : translate('Item_Campaign_List')) }}
     </h1></div>
     <div class="col-lg-12">
 
@@ -23,11 +23,11 @@
 
         <tr>
             <th>{{ translate('sl') }}</th>
-            <th>{{ translate('Item_Name') }}</th>
+            <th>{{ Config::get('module.current_module_type') === 'service' ? translate('Service_Name') : translate('Item_Name') }}</th>
             <th>{{ translate('Description') }}</th>
             <th>{{ translate('Category_Name') }}</th>
             <th>{{ translate('Sub_Category_Name') }}</th>
-            <th>{{ translate('Item_Unit') }}</th>
+            <th>{{ Config::get('module.current_module_type') === 'service' ? translate('Service_Unit') : translate('Item_Unit') }}</th>
             <th>{{ translate('Price') }}</th>
             <th>{{ translate('Available_Variations') }} </th>
             <th>{{ translate('Discount') }} </th>
@@ -41,7 +41,7 @@
             <th>{{ translate('End_Date') }} </th>
             <th>{{ translate('Daily_Start_Time') }} </th>
             <th>{{ translate('Daily_End_Time') }} </th>
-            <th>{{ translate('Store_Name') }} </th>
+            <th>{{ Config::get('module.current_module_type') === 'service' ? translate('Provider_Name') : translate('Store_Name') }} </th>
         </thead>
         <tbody>
         @foreach($data as $key => $campaign)

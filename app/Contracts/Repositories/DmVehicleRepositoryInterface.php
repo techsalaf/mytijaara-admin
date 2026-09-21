@@ -21,14 +21,14 @@ interface DmVehicleRepositoryInterface extends RepositoryInterface
      * @param int|string $dataLimit
      * @return Collection
      */
-    public function getSearchedList(string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection;
+    public function getSearchedList(?string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection;
 
     /**
      * @param array $params
      * @param string|null $id
      * @return Model|null
      */
-    public function getExistFirst(array $params, string $id = null): ?Model;
+    public function getExistFirst(array $params, ?string $id = null): ?Model;
 
 
     /**
@@ -39,6 +39,6 @@ interface DmVehicleRepositoryInterface extends RepositoryInterface
      * @param int|null $offset
      * @return Collection|LengthAwarePaginator
      */
-    public function getListWhereWithCount(string $searchValue = null, array $filters = [], array $relations = [], array $withCountRelations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator;
+    public function getListWhereWithCount(?string $searchValue = null, array $filters = [], array $relations = [], array $withCountRelations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator;
 
 }

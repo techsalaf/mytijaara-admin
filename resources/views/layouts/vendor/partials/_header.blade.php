@@ -13,7 +13,7 @@
                 </button>
                 <!-- End Navbar Vertical Toggle -->
             </div>
-            @if(\App\CentralLogics\Helpers::check_website_builder_status())
+            @if(\App\CentralLogics\Helpers::check_website_builder_status() && \App\CentralLogics\Helpers::employee_module_permission_check('custom_website'))
             <div class="" id="vendor-dashboard-builder-button">
                 <a href="{{ route('vendor.builder.index', ['page' => 'global-settings']) }}"
                    class="website-builder-btn">

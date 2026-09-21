@@ -202,37 +202,41 @@ class StoreCategoryController extends Controller
 
         $storeId = $this->storeId($request);
 
-        // Variations live in different columns per module: the food module uses
-        // `food_variations`, every other module uses `variations`. All items in this
-        // list belong to the vendor's single store, so resolve the module type once.
         $moduleType = $request['vendor']->stores[0]->module_type ?? null;
+        $isService  = $this->isServiceModule($request);
+        $model      = $this->bindableModel($request);
 
         $limit  = (int) $request->query('limit', 25);
         $offset = (int) $request->query('offset', 1);
         if ($limit < 1)  { $limit = 25; }
         if ($offset < 1) { $offset = 1; }
 
-        $paginator = $this->queryAssignableItems($storeId, (int) $category->id, $request->query('search'))
+        $paginator = $this->queryAssignableItems($storeId, (int) $category->id, $request->query('search'), $model)
             ->paginate($limit, ['*'], 'page', $offset);
 
-        // Count strictly-unassigned items for the "There are X items unassigned..." banner.
-        $unassignedCount = Item::query()
+        $unassignedCount = $model::query()
             ->where('store_id', $storeId)
             ->whereNull('store_category_id')
             ->count();
 
-        $items = collect($paginator->items())->map(function ($item) use ($category, $moduleType) {
-            // Variations are stored as a JSON TEXT column; defensively handle both
-            // array (if a cast is added later) and raw string forms.
-            $variations = $moduleType === 'food' ? $item->food_variations : $item->variations;
+        $items = collect($paginator->items())->map(function ($item) use ($category, $moduleType, $isService) {
+            if ($isService) {
+                $variations = $item->variations;
+                $imageUrl   = $item->thumbnail_full_url;
+                $price      = $item->base_price;
+            } else {
+                $variations = $moduleType === 'food' ? $item->food_variations : $item->variations;
+                $imageUrl   = $item->image_full_url;
+                $price      = $item->price;
+            }
             $variations = is_string($variations) ? json_decode($variations, true) : $variations;
             $variationsCount = is_array($variations) ? count($variations) : 0;
 
             return [
                 'id'                  => (int) $item->id,
                 'name'                => $item->name,
-                'image_full_url'      => $item->image_full_url,
-                'price'               => $item->price,
+                'image_full_url'      => $imageUrl,
+                'price'               => $price,
                 'store_category_id'   => $item->store_category_id ? (int) $item->store_category_id : null,
                 'is_assigned'         => ((int) $item->store_category_id === (int) $category->id),
                 'variations_count'    => $variationsCount,
@@ -252,13 +256,6 @@ class StoreCategoryController extends Controller
         ], 200);
     }
 
-    /**
-     * POST /vendor/store-category/assign-items
-     * Body: { category_id: int, item_ids: int[] }
-     * Sets store_category_id = category_id on submitted item ids (scoped to vendor's
-     * store). Items previously in this category but not in the new list are reverted
-     * to NULL.
-     */
     public function assignItems(Request $request): JsonResponse
     {
         if ($block = $this->guard($request)) {
@@ -280,6 +277,7 @@ class StoreCategoryController extends Controller
         }
 
         $storeId = $this->storeId($request);
+        $model   = $this->bindableModel($request);
 
         $itemIds = $request->input('item_ids', []);
         if (\is_string($itemIds)) {
@@ -295,7 +293,7 @@ class StoreCategoryController extends Controller
 
         $allowedNewIds = [];
         if (!empty($submittedIds)) {
-            $allowedNewIds = Item::query()
+            $allowedNewIds = $model::query()
                 ->where('store_id', $storeId)
                 ->whereIn('id', $submittedIds)
                 ->where(function ($q) use ($category) {
@@ -307,31 +305,29 @@ class StoreCategoryController extends Controller
         }
 
         if (!empty($allowedNewIds)) {
-            Item::query()
+            $model::query()
                 ->where('store_id', $storeId)
                 ->whereIn('id', $allowedNewIds)
                 ->update(['store_category_id' => $category->id]);
         }
 
-        // Un-assign items previously in this category but unchecked.
-        Item::query()
+        $model::query()
             ->where('store_id', $storeId)
             ->where('store_category_id', $category->id)
             ->when(!empty($allowedNewIds), fn ($q) => $q->whereNotIn('id', $allowedNewIds))
             ->update(['store_category_id' => null]);
 
         return response()->json([
-            'message'        => translate('messages.Items_assigned_successfully'),
+            'message'        => $this->isServiceModule($request)
+                ? translate('messages.Services_assigned_successfully')
+                : translate('messages.Items_assigned_successfully'),
             'assigned_count' => count($allowedNewIds),
         ], 200);
     }
 
-    /**
-     * Reusable builder for the assignable item list.
-     */
-    private function queryAssignableItems(int $storeId, int $categoryId, ?string $search = null)
+    private function queryAssignableItems(int $storeId, int $categoryId, ?string $search = null, string $model = Item::class)
     {
-        return Item::query()
+        return $model::query()
             ->where('store_id', $storeId)
             ->where(function ($q) use ($categoryId) {
                 $q->whereNull('store_category_id')
@@ -349,7 +345,7 @@ class StoreCategoryController extends Controller
 
     private function guard(Request $request): ?JsonResponse
     {
-        if (!Helpers::storeCategoryStatus()) {
+        if (!Helpers::vendorCategoryStatus()) {
             return response()->json(['errors' => [['code' => 'disabled', 'message' => translate('messages.Store_category_feature_is_disabled')]]], 403);
         }
         if (empty($request['vendor']->stores) || !isset($request['vendor']->stores[0])) {
@@ -361,6 +357,17 @@ class StoreCategoryController extends Controller
     private function storeId(Request $request): int
     {
         return (int) $request['vendor']->stores[0]->id;
+    }
+
+    private function isServiceModule(Request $request): bool
+    {
+        return (($request['vendor']->stores[0]->module_type ?? null) === 'service') && addon_published_status('Service');
+    }
+
+    /** @return class-string<\Illuminate\Database\Eloquent\Model> */
+    private function bindableModel(Request $request): string
+    {
+        return $this->isServiceModule($request) ? \Modules\Service\Entities\Service::class : Item::class;
     }
 
     private function ownedQuery(Request $request)
@@ -390,7 +397,7 @@ class StoreCategoryController extends Controller
 
         public function getProducts(Request $request, $id)
     {
-        if (!Helpers::storeCategoryStatus()) {
+        if (!Helpers::vendorCategoryStatus()) {
             return response()->json([] , 200);
         }
 

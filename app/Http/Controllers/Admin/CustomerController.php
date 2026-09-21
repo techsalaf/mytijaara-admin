@@ -55,7 +55,7 @@ class CustomerController extends Controller
         $show_limit=  $request->show_limit ?? null;
         $key = [];
         if ($request->search) {
-            $key = explode(' ', $request['search']);
+            $key = explode(' ', $request['search'] ?? '');
         }
 
         $order_date_start = null;
@@ -257,7 +257,7 @@ class CustomerController extends Controller
             $storefront_id = null;
         }
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $customers = User::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('f_name', 'like', "%{$value}%")
@@ -288,12 +288,12 @@ class CustomerController extends Controller
         $customer = User::find($id);
         if (isset($customer)) {
             $total_order_amount = Order::selectRaw('sum(order_amount) as total_order_amount')->latest()->where(['user_id' => $id])
-                ->when(isset($key), function($query) use($key){
+                ->when(isset($request['search']), function($query) use($key){
                     $query->Where('id', 'like', "%{$key}%");
                 } )
                 ->Notpos()->get();
             $orders = Order::withcount('details')->latest()->where(['user_id' => $id])
-            ->when(isset($key), function($query) use($key){
+            ->when(isset($request['search']), function($query) use($key){
                 $query->Where('id', 'like', "%{$key}%");
             } )
             ->Notpos()->paginate(config('default_pagination'));
@@ -310,11 +310,11 @@ class CustomerController extends Controller
         $customer = User::find($id);
         if (isset($customer)) {
             $total_trips_amount = Trips::selectRaw('sum(trip_amount) as total_trip_amount')->latest()->where(['user_id' => $id])
-                ->when(isset($key), function($query) use($key){
+                ->when(isset($request['search']), function($query) use($key){
                     $query->Where('id', 'like', "%{$key}%");
                 })->get();
             $trips = Trips::withcount('trip_details')->latest()->where(['user_id' => $id])
-            ->when(isset($key), function($query) use($key){
+            ->when(isset($request['search']), function($query) use($key){
                 $query->Where('id', 'like', "%{$key}%");
             })->paginate(config('default_pagination'));
             $moduleType = 'rental';
@@ -347,10 +347,10 @@ class CustomerController extends Controller
 
     public function customer_trip_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $trips = Trips::latest()->where(['user_id' => $request->id])
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%");
@@ -383,10 +383,10 @@ class CustomerController extends Controller
             $join_date_end = Carbon::createFromFormat('m/d/Y', $join_date_end)->endOfDay();
         }
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
 
-        $customers = Newsletter::when(isset($key), function($query) use($key) {
+        $customers = Newsletter::when($request['search'], function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('email', 'like', "%". $value."%");
@@ -432,7 +432,7 @@ class CustomerController extends Controller
     }
 
     public function subscribed_customer_export(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $filter=  $request->filter ?? null;
         $show_limit=  $request->show_limit ?? null;
@@ -446,7 +446,7 @@ class CustomerController extends Controller
 
 
 
-        $customers = Newsletter::when(isset($key), function($query) use($key) {
+        $customers = Newsletter::when($request['search'], function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('email', 'like', "%". $value."%");
@@ -560,7 +560,7 @@ class CustomerController extends Controller
         $show_limit=  $request->show_limit ?? null;
         $key = [];
         if ($request->search) {
-            $key = explode(' ', $request['search']);
+            $key = explode(' ', $request['search'] ?? '');
         }
 
         $order_date_start = null;

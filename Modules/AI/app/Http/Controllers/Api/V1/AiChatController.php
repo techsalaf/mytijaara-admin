@@ -11,6 +11,7 @@ use Modules\AI\app\Services\AiChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 
 class AiChatController extends Controller
 {
@@ -25,6 +26,27 @@ class AiChatController extends Controller
      */
     public function send(Request $request): JsonResponse
     {
+        // Demo-mode hit limit — mirrors the product data-generation cap
+        // (ProductAutoFillController): allow only 10 AI chat messages per IP so
+        // the public demo isn't drained. A distinct cache key gives chat its own
+        // budget, separate from product auto-fill.
+        if (getEnvMode() == 'demo') {
+            $ip       = $request->header('x-forwarded-for') ?: $request->ip();
+            $cacheKey = 'restricted_ai_chat_ip_' . $ip;
+            $hits     = Cache::store('file')->get($cacheKey, 0);
+
+            if ($hits >= 10) {
+                return response()->json([
+                    'errors' => [[
+                        'code'    => 'demo_limit',
+                        'message' => translate('Demo Mode Restriction: AI chat can only be used 10 times in demo mode. Further attempts are disabled to maintain a fair demo experience.'),
+                    ]],
+                ], 403);
+            }
+
+            Cache::store('file')->forever($cacheKey, $hits + 1);
+        }
+
         $validator = Validator::make($request->all(), [
             'message'         => 'required|string|max:2000',
             'conversation_id' => 'nullable|integer',
@@ -160,12 +182,16 @@ class AiChatController extends Controller
             ->orderBy('id')
             ->paginate($limit, ['*'], 'page', $offset);
 
+        $data = collect($messages->items())
+            ->each(fn (AiMessage $message) => $message->metadata = $this->withGroupedCart($message->metadata))
+            ->all();
+
         return response()->json([
             'total_size'      => $messages->total(),
             'limit'           => $limit,
             'offset'          => $offset,
             'conversation_id' => $conversation->id,
-            'data'            => $messages->items(),
+            'data'            => $data,
         ], 200);
     }
 
@@ -232,23 +258,12 @@ class AiChatController extends Controller
             }
         }
 
-        // Auto-resume: when no conversation_id was sent (frontend forgot to echo
-        // it back), pick up the user's most recent active conversation in the
-        // same module + zone within the last 30 minutes. This preserves cart /
-        // variation context across turns even when the client doesn't thread it.
-        $recent = AiConversation::where('status', 'active')
-            ->when($user, fn ($q) => $q->where('user_id', $user->getKey()))
-            ->when(!$user && $guestId, fn ($q) => $q->where('guest_id', $guestId))
-            ->where('module_id', $moduleId)
-            ->where('zone_id', $zoneId)
-            ->where('updated_at', '>=', now()->subMinutes(30))
-            ->orderByDesc('updated_at')
-            ->first();
-
-        if ($recent) {
-            return $recent;
-        }
-
+        // No (valid) conversation_id → always start a fresh conversation. The
+        // client owns conversation threading: every response returns a
+        // conversation_id, and sending it back continues that chat; omitting it
+        // begins a new one. (Previously this auto-resumed the most recent active
+        // conversation in the same module+zone within 30 minutes, which meant a
+        // brand-new chat silently reattached to the old one — removed.)
         return AiConversation::create([
             'user_id'   => $user?->getKey(),
             'guest_id'  => $user ? null : $guestId,
@@ -339,6 +354,68 @@ class AiChatController extends Controller
             ->value('id');
 
         return $default ? (int) $default : null;
+    }
+
+    private function withGroupedCart(mixed $metadata): mixed
+    {
+        if (! is_array($metadata)) {
+            return $metadata;
+        }
+
+        $cartItems = $metadata['cart_items'] ?? [];
+        unset($metadata['cart_items']);
+
+        $metadata['cart'] = $this->groupCartByStore(is_array($cartItems) ? $cartItems : []);
+
+        return $metadata;
+    }
+
+    private function groupCartByStore(array $cartItems): array
+    {
+        $stores     = [];
+        $grandTotal = 0.0;
+        $totalItems = 0;
+
+        foreach ($cartItems as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $storeId   = (int) ($row['store_id'] ?? 0);
+            $lineTotal = round((float) ($row['line_total'] ?? 0), 2);
+            $quantity  = (int) ($row['quantity'] ?? 0);
+
+            if (! isset($stores[$storeId])) {
+                $stores[$storeId] = [
+                    'store_id'       => $storeId,
+                    'store_name'     => $row['store_name'] ?? ('Store #' . $storeId),
+                    'items'          => [],
+                    'store_subtotal' => 0.0,
+                ];
+            }
+
+            $stores[$storeId]['items'][] = [
+                'cart_id'        => $row['cart_id'] ?? null,
+                'item_id'        => (int) ($row['item_id'] ?? 0),
+                'name'           => $row['name'] ?? null,
+                'variation'      => $row['variation'] ?? '',
+                'image'          => $row['image'] ?? null,
+                'image_full_url' => $row['image_full_url'] ?? null,
+                'quantity'       => $quantity,
+                'unit_price'     => (float) ($row['unit_price'] ?? 0),
+                'line_total'     => $lineTotal,
+            ];
+            $stores[$storeId]['store_subtotal'] = round($stores[$storeId]['store_subtotal'] + $lineTotal, 2);
+
+            $grandTotal += $lineTotal;
+            $totalItems++;
+        }
+
+        return [
+            'stores'      => array_values($stores),
+            'grand_total' => round($grandTotal, 2),
+            'total_items' => $totalItems,
+        ];
     }
 
     private function errorProcessor($validator): array

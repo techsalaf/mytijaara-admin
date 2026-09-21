@@ -1035,6 +1035,177 @@ trait NotificationDataSetUpTrait
         self::checkAndUpdateAdminNotificationData($data);
         return true;
     }
+    public static function getServiceAdminNotificationSetupData()
+    {
+        //admin
+        $data []=[
+            'title' => 'provider_registration',
+            'key' => 'service_provider_self_registration',
+            'type' => 'admin',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'disable',
+            'sub_title' => 'Sent_notification_on_provider_self_registration',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_withdraw_request',
+            'key' => 'service_provider_withdraw_request',
+            'type' => 'admin',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'disable',
+            'sub_title' => 'Sent_notification_on_provider_withdraw_request',
+            'module_type' => 'service',
+        ];
+
+        //provider
+        $data []=[
+            'title' => 'provider_registration',
+            'key' => 'service_provider_registration',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'disable',
+            'sub_title' => 'Sent_notification_on_provider_registration',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_registration_approval',
+            'key' => 'service_provider_registration_approval',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'disable',
+            'sub_title' => 'Sent_notification_on_provider_registration_approval',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_registration_deny',
+            'key' => 'service_provider_registration_deny',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'disable',
+            'sub_title' => 'Sent_notification_on_provider_registration_deny',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_account_block',
+            'key' => 'service_provider_account_block',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_account_block',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_account_unblock',
+            'key' => 'service_provider_account_unblock',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_account_unblock',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_withdraw_approve',
+            'key' => 'service_provider_withdraw_approve',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_withdraw_approve',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_withdraw_rejaction',
+            'key' => 'service_provider_withdraw_rejaction',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_withdraw_rejaction',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_booking_notification',
+            'key' => 'service_provider_booking_notification',
+            'type' => 'provider',
+            'mail_status' => 'disable',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_booking_notification',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_success',
+            'key' => 'service_provider_subscription_success',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_success',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_renew',
+            'key' => 'service_provider_subscription_renew',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_renew',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_shift',
+            'key' => 'service_provider_subscription_shift',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_shift',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_cancel',
+            'key' => 'service_provider_subscription_cancel',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_cancel',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_plan_update',
+            'key' => 'service_provider_subscription_plan_update',
+            'type' => 'provider',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'inactive',
+            'sub_title' => 'Sent_notification_on_provider_subscription_plan_update',
+            'module_type' => 'service',
+        ];
+
+        //customer
+        $data []=[
+            'title' => 'customer_booking_notification',
+            'key' => 'service_customer_booking_notification',
+            'type' => 'customer',
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_customer_booking_notification',
+            'module_type' => 'service',
+        ];
+
+        self::checkAndUpdateAdminNotificationData($data);
+        return true;
+    }
 
     public static function getRentalStoreNotificationSetupData($id): array
     {
@@ -1137,6 +1308,113 @@ trait NotificationDataSetUpTrait
             'push_notification_status' => 'inactive',
             'sub_title' => 'Sent_notification_on_provider_subscription_plan_update',
             'module_type' => 'rental',
+        ];
+
+
+        return $data;
+    }
+
+    public static function getServiceStoreNotificationSetupData($id): array
+    {
+        $data []=[
+            'title' => 'provider_account_block',
+            'key' => 'service_provider_account_block',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_account_block',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_account_unblock',
+            'key' => 'service_provider_account_unblock',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_account_unblock',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_withdraw_approve',
+            'key' => 'service_provider_withdraw_approve',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_withdraw_approve',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_withdraw_rejaction',
+            'key' => 'service_provider_withdraw_rejaction',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_withdraw_rejaction',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_booking_notification',
+            'key' => 'service_provider_booking_notification',
+            'store_id' => $id,
+            'mail_status' => 'disable',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_booking_notification',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_success',
+            'key' => 'service_provider_subscription_success',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_success',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_renew',
+            'key' => 'service_provider_subscription_renew',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_renew',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_shift',
+            'key' => 'service_provider_subscription_shift',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_shift',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_cancel',
+            'key' => 'service_provider_subscription_cancel',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'active',
+            'sub_title' => 'Sent_notification_on_provider_subscription_cancel',
+            'module_type' => 'service',
+        ];
+        $data []=[
+            'title' => 'provider_subscription_plan_update',
+            'key' => 'service_provider_subscription_plan_update',
+            'store_id' => $id,
+            'mail_status' => 'active',
+            'sms_status' => 'disable',
+            'push_notification_status' => 'inactive',
+            'sub_title' => 'Sent_notification_on_provider_subscription_plan_update',
+            'module_type' => 'service',
         ];
 
 

@@ -32,7 +32,7 @@ class BrandRepository implements BrandRepositoryInterface
         return $this->brand->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
 
         return $this->brand->where(function($query){
@@ -40,13 +40,13 @@ class BrandRepository implements BrandRepositoryInterface
         })->get();
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->brand->where(function($query){
             $query->whereNull('module_id')->orWhere('module_id',  Config::get('module.current_module_id'));
             })->orderBy('name')
-            ->when(isset($key) , function($q) use($key){
+            ->when($searchValue , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");
@@ -76,11 +76,11 @@ class BrandRepository implements BrandRepositoryInterface
 
     public function getExportList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->brand->where(function($query){
             $query->whereNull('module_id')->orWhere('module_id',  Config::get('module.current_module_id'));
         })->orderBy('name')
-            ->when(isset($key) , function($q) use($key){
+            ->when($request['search'] , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");

@@ -10,6 +10,7 @@ use App\Models\StoreCategory;
 use App\Traits\ItemFilter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -64,19 +65,22 @@ class StoreCategoryController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\ProviderLogic::apiCategoriesWithServices($request);
+        }
+
         try {
             if (method_exists(Helpers::class, 'setZoneIds')) {
                 Helpers::setZoneIds($request);
             }
 
-            $zones = json_decode($request->header('zoneId'), true);
+            $zoneHeader = $request->header('zoneId');
+            $zones = is_string($zoneHeader) && $zoneHeader !== '' ? json_decode($zoneHeader, true) : null;
             $moduleHeader = $request->header('moduleId');
             $moduleId = $moduleHeader ? getModuleId($moduleHeader) : (config('module.current_module_data')['id'] ?? null);
             $moduleId = is_numeric($moduleId) ? (int) $moduleId : null;
 
             $storeId = (int) $request->query('store_id');
-            $limit  = max(1, (int) $request->query('limit', 25));
-            $offset = max(1, (int) $request->query('offset', 1));
             $type   = $request->query('type', 'all');
 
             $filters = $this->resolveSearchFilters($request);
@@ -90,7 +94,25 @@ class StoreCategoryController extends Controller
                 'tags'         => 'tag',
             ];
 
-            $itemsTable = (new Item)->getTable();
+            $cacheKey = 'store_cat_items_' . md5(json_encode([
+                'store'     => $storeId,
+                'zones'     => $zones,
+                'module'    => $moduleId,
+                'type'      => $type,
+                'sort'      => $sortBy,
+                'filter'    => $additionalData['filter_by'],
+                'search'    => $searchKey,
+                'rating'    => $request->query('rating_count'),
+                'min_price' => $request->query('min_price'),
+                'max_price' => $request->query('max_price'),
+                'locale'    => app()->getLocale(),
+            ]));
+
+            $payload = Cache::remember($cacheKey, now()->addMinutes(10), function () use (
+                $request, $zones, $moduleId, $storeId, $type,
+                $sortBy, $additionalData, $searchKey, $searchRelations
+            ) {
+                $itemsTable = (new Item)->getTable();
 
             $applyItemConstraints = function ($q) use ($type, $storeId, $itemsTable, $zones, $moduleId) {
                 $q->active(zone_ids: $zones, module_id: $moduleId)
@@ -160,14 +182,12 @@ class StoreCategoryController extends Controller
             }
 
             if (empty($categoryIds)) {
-                return response()->json([
+                return [
                     'total_size'         => 0,
-                    'limit'              => $limit,
-                    'offset'             => $offset,
                     'category_source'    => $useStoreCategory ? 'store_category' : 'main_category',
                     'categories'         => [],
                     'category_wise_items' => (object) [],
-                ], 200);
+                ];
             }
 
             $itemsCountByCategory = Item::query()
@@ -190,54 +210,130 @@ class StoreCategoryController extends Controller
                 })
                 ->values();
 
-            $itemsBuilder = Item::query()
+            $totalItems = (int) $itemsCountByCategory->sum();
+
+            $grouped = [];
+
+            $groupColumn = $useStoreCategory ? 'store_category_id' : 'category_id';
+
+            $items = Item::query()
                 ->tap($baseItemScope)
                 ->tap($applyItemConstraints)
                 ->tap($applyItemFilters)
+                ->with([
+                    'store' => fn ($q) => $q->with(['storeConfig', 'module', 'storage']),
+                ])
                 ->reorder()
                 ->addSelect("{$itemsTable}.*")
-                ->selectRaw("{$categoryKeyCol} AS cat_group")
-                ->orderByRaw("FIELD({$categoryKeyCol}, " . implode(',', $categoryIds) . ')')
                 ->orderBy("{$itemsTable}.name", 'asc')
                 ->orderBy("{$itemsTable}.id", 'asc')
-                ->applySorting($sortBy);
-
-            $totalItems = (clone $itemsBuilder)->count("{$itemsTable}.id");
-
-            $items = $itemsBuilder
-                ->skip(($offset - 1) * $limit)
-                ->take($limit)
+                ->applySorting($sortBy)
                 ->get();
 
-            $formattedItems = (object) [];
-            if ($items->isNotEmpty()) {
-                $locale = app()->getLocale();
-                $itemsByCategory = $items->groupBy(fn ($it) => (int) $it->cat_group);
-                $grouped = [];
+            $store      = $items->first()?->store;
+            $storeName  = $store?->name;
+            $storeSlug  = $store?->slug;
+            $storeLogo  = $store?->logo_full_url;
+            $storeFree  = $store?->free_delivery;
+            $moduleType = $store?->module_type;
+            $halalTag   = (int) ($store?->storeConfig?->halal_tag_status ?? 0);
+            $verified   = $store ? Helpers::get_verified_seller_status($store, $store->storeConfig) : 0;
 
-                foreach ($categoryIds as $catId) {
-                    if (!$itemsByCategory->has($catId)) {
-                        continue;
-                    }
-                    $grouped[(string) $catId] = Helpers::product_data_formatting(
-                        $itemsByCategory[$catId], true, false, $locale
-                    );
+            $decode = function ($val) {
+                if (is_array($val)) {
+                    return $val;
                 }
+                if (!is_string($val) || $val === '') {
+                    return [];
+                }
+                $decoded = json_decode($val, true);
 
-                $formattedItems = (object) $grouped;
+                return is_array($decoded) ? $decoded : [];
+            };
+
+            $mapItem = function ($it) use (
+                $decode, $moduleType, $storeName, $storeSlug, $storeLogo,
+                $storeFree, $halalTag, $verified
+            ) {
+                $variations = array_map(fn ($v) => [
+                    'variant_key' => $v['type'] ?? null,
+                    'name'        => $v['type'] ?? null,
+                    'price'       => (float) ($v['price'] ?? 0),
+                    'stock'       => (int) ($v['stock'] ?? 0),
+                ], $decode($it->variations));
+
+                $foodVariations = $decode($it->food_variations);
+                $hasVariant     = $moduleType === 'food' ? count($foodVariations) : count($variations);
+
+                return [
+                    'id'          => (int) $it->id,
+                    'name'        => $it->name,
+                    'module_type' => $moduleType,
+                    'store_id'    => (int) $it->store_id,
+                    'store_slug'  => $storeSlug,
+
+                    'image_full_url' => $it->image_full_url,
+
+                    'price'                 => (float) $it->price,
+                    'base_price'            => (float) $it->price,
+                    'discount'              => (float) $it->discount,
+                    'discount_type'         => $it->discount_type,
+                    'available_date_starts' => null,
+
+                    'variations'            => $variations,
+                    'food_variations'       => $foodVariations,
+                    'has_variant'           => (int) $hasVariant,
+                    'stock'                 => (int) $it->stock,
+                    'maximum_cart_quantity' => (int) ($it->maximum_cart_quantity ?? 0),
+
+                    'halal_tag_status' => $halalTag,
+                    'is_halal'         => (int) $it->is_halal,
+                    'organic'          => (int) $it->organic,
+                    'veg'              => (int) $it->veg,
+                    'avg_rating'       => (float) $it->avg_rating,
+                    'rating_count'     => (int) $it->rating_count,
+
+                    'available_time_starts' => $it->available_time_starts,
+                    'available_time_ends'   => $it->available_time_ends,
+                    'status'                => (int) $it->status,
+
+                    'store_name'          => $storeName,
+                    'store_logo_full_url' => $storeLogo,
+                    'store' => [
+                        'free_delivery'   => $storeFree,
+                        'logo_full_url'   => $storeLogo,
+                        'verified_seller' => $verified,
+                    ],
+                    'store_details' => [
+                        'logo_full_url'   => $storeLogo,
+                        'verified_seller' => $verified,
+                    ],
+                ];
+            };
+
+            $allItems = $items->groupBy($groupColumn);
+
+            foreach ($categoryIds as $catId) {
+                $catItems = $allItems[$catId] ?? null;
+
+                if ($catItems && $catItems->isNotEmpty()) {
+                    $grouped[(string) $catId] = $catItems->map($mapItem)->values();
+                }
             }
 
-            return response()->json([
-                'total_size'         => $totalItems,
-                'limit'              => $limit,
-                'offset'             => $offset,
-                'category_source'    => $useStoreCategory ? 'store_category' : 'main_category',
-                'categories'         => $categoriesData,
-                'category_wise_items' => $formattedItems,
-            ], 200);
+            $formattedItems = (object) $grouped;
+
+                return [
+                    'total_size'         => $totalItems,
+                    'category_source'    => $useStoreCategory ? 'store_category' : 'main_category',
+                    'categories'         => $categoriesData,
+                    'category_wise_items' => $formattedItems,
+                ];
+            });
+
+            return response()->json($payload, 200);
         } catch (\Exception $e) {
             return response()->json([$e->getMessage()], 200);
         }
     }
-
 }

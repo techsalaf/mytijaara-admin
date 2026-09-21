@@ -14,8 +14,10 @@
             <div class="row g-1 align-items-center">
                 <div class="col-xxl-9 col-lg-8 col-md-7 col-sm-6">
                     <div>
-                        <h4 class="mb-1">
+                        <h4 class="mb-1 d-flex align-items-center gap-1">
                             {{ translate('Vendor Can Upload Reels') }}
+                            <i class="tio-info text-muted fs-14" data-toggle="tooltip" data-placement="right"
+                                data-original-title="{{ translate('When enabled, vendors can create and upload reels on the platform from their own panel.') }}"></i>
                         </h4>
                         <p class="mb-0 fs-12">
                             {{ translate('When this feature is enabled, Vendors can create and upload reels on the platform.') }}

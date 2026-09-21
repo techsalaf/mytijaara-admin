@@ -3,7 +3,6 @@
         class="js-navbar-vertical-aside navbar navbar-vertical-aside navbar-vertical navbar-vertical-fixed navbar-expand-xl navbar-bordered">
         <div class="navbar-vertical-container">
             <div class="navbar-brand-wrapper justify-content-between">
-                <!-- Logo -->
 
                 @php($store_data = \App\CentralLogics\Helpers::get_store_data())
                 <a class="navbar-brand" href="{{ route('vendor.dashboard') }}" aria-label="Front">
@@ -14,29 +13,26 @@
                         data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}"
                         src="{{ $store_data->logo_full_url }}" alt="Logo">
                 </a>
-                <!-- End Logo -->
 
-                <!-- Navbar Vertical Toggle -->
+                
                 <button type="button"
                     class="js-navbar-vertical-aside-toggle-invoker navbar-vertical-aside-toggle btn btn-icon btn-xs btn-ghost-dark">
                     <i class="tio-clear tio-lg"></i>
                 </button>
-                <!-- End Navbar Vertical Toggle -->
 
                 <div class="navbar-nav-wrap-content-left">
-                    <!-- Navbar Vertical Toggle -->
+                    
                     <button type="button" class="js-navbar-vertical-aside-toggle-invoker close">
                         <i class="tio-first-page navbar-vertical-aside-toggle-short-align" data-toggle="tooltip"
                             data-placement="right" title="Collapse"></i>
                         <i class="tio-last-page navbar-vertical-aside-toggle-full-align"
                             data-template='<div class="tooltip d-none d-sm-block" role="tooltip"><div class="arrow"></div><div class="tooltip-inner"></div></div>'></i>
                     </button>
-                    <!-- End Navbar Vertical Toggle -->
+                    
                 </div>
 
             </div>
 
-            <!-- Content -->
             <div class="navbar-vertical-content text-capitalize bg--005555" id="navbar-vertical-content">
                 <form class="sidebar--search-form">
                     <div class="search--form-group">
@@ -46,7 +42,7 @@
                     </div>
                 </form>
                 <ul class="navbar-nav navbar-nav-lg nav-tabs">
-                    <!-- Dashboards -->
+                    
                     <li class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel') ? 'active' : '' }}">
                         <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('vendor.dashboard') }}"
                             title="{{ translate('messages.dashboard') }}">
@@ -56,7 +52,7 @@
                             </span>
                         </a>
                     </li>
-                    <!-- End Dashboards -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('pos'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/pos') ? 'active' : '' }}">
@@ -74,7 +70,6 @@
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
 
-                        <!-- Order -->
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/order*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
@@ -238,10 +233,10 @@
                                 </li>
                             </ul>
                         </li>
-                        <!-- End Order -->
+                        
                     @endif
 
-                    @if (in_array($store_data->module->module_type, ['grocery', 'ecommerce']))
+                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('item') && in_array($store_data->module->module_type, ['grocery', 'ecommerce']))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/item/flash-sale*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
@@ -265,9 +260,8 @@
                         </li>
                     @endif
 
-
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('item'))
-                        <!-- Food -->
+                        
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/item*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
@@ -349,9 +343,9 @@
                                 @endif
                             </ul>
                         </li>
-                        <!-- End Food -->
+                        
                     @endif
-                    <!-- AddOn -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('addon'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/addon*') ? 'active' : '' }}">
@@ -365,7 +359,7 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End AddOn -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('category'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/category*') ? 'active' : '' }}">
@@ -397,7 +391,7 @@
                         </li>
                     @endif
 
-                    @if (\App\CentralLogics\Helpers::storeCategoryStatus())
+                    @if (\App\CentralLogics\Helpers::storeCategoryStatus() && \App\CentralLogics\Helpers::employee_module_permission_check('category'))
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/store-category*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                 href="{{ route('vendor.store-category.list') }}" title="{{ translate('messages.My_Category') }}">
@@ -406,7 +400,6 @@
                             </a>
                         </li>
                     @endif
-
 
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('campaign') ||
@@ -417,7 +410,7 @@
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
                     @endif
-                    <!-- Campaign -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('campaign'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/campaign*') ? 'active' : '' }}">
@@ -448,9 +441,8 @@
                             </ul>
                         </li>
                     @endif
-                    <!-- End Campaign -->
 
-                    <!-- Coupon -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('coupon'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/coupon*') ? 'active' : '' }}">
@@ -463,8 +455,7 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End Coupon -->
-                    <!-- banner -->
+
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('banner'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/banner*') ? 'active' : '' }}">
@@ -477,8 +468,6 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End banner -->
-
 
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('advertisement') ||
@@ -489,7 +478,7 @@
                         </li>
                     @endif
 
-                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('advertisement'))
+                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('coupon'))
                         <li class="navbar-vertical-aside-has-menu @yield('advertisement_create')">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                 href="{{ route('vendor.advertisement.create') }}"
@@ -561,7 +550,6 @@
                         </li>
                     @endif
 
-                    <!-- DeliveryMan -->
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('deliveryman') || App\CentralLogics\Helpers::employee_module_permission_check('deliveryman_list'))
                         <li class="nav-item">
@@ -598,14 +586,11 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End DeliveryMan -->
-
-
 
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('wallet') ||
                             \App\CentralLogics\Helpers::employee_module_permission_check('wallet_method'))
-                        <!-- Business Section-->
+                        
                         <li class="nav-item">
                             <small class="nav-subtitle"
                                 title="{{ translate('messages.Wallet Management') }}">{{ translate('messages.Wallet Management') }}</small>
@@ -613,9 +598,8 @@
                         </li>
                     @endif
 
-
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('wallet'))
-                        <!-- StoreWallet -->
+                        
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/wallet') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
@@ -639,12 +623,8 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End StoreWallet -->
 
-
-
-
-                    <!-- Employee-->
+                    
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('role') ||
                             \App\CentralLogics\Helpers::employee_module_permission_check('employee'))
@@ -698,8 +678,6 @@
                             </ul>
                         </li>
                     @endif
-                    <!-- End Employee -->
-
 
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('expense_report') ||
@@ -730,7 +708,7 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End Business Settings -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('disbursement_report'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/report/disbursement-report') ? 'active' : '' }}">
@@ -741,7 +719,7 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End Business Settings -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('vat_report'))
                         <li class="navbar-vertical-aside-has-menu @yield('vendor_tax_report')">
                             <a class="nav-link " href="{{ route('vendor.report.vendorTax') }}"
@@ -752,7 +730,6 @@
                         </li>
                     @endif
 
-
                     @if (
                         \App\CentralLogics\Helpers::employee_module_permission_check('store_setup') ||
                             \App\CentralLogics\Helpers::employee_module_permission_check('notification_setup') ||
@@ -760,14 +737,13 @@
                             \App\CentralLogics\Helpers::employee_module_permission_check('reviews') ||
                             \App\CentralLogics\Helpers::employee_module_permission_check('chat') ||
                             \App\CentralLogics\Helpers::employee_module_permission_check('my_shop'))
-                        <!-- Business Section-->
+                        
                         <li class="nav-item">
                             <small class="nav-subtitle"
                                 title="{{ translate('messages.business_section') }}">{{ translate('messages.business_section') }}</small>
                             <small class="tio-more-horizontal nav-subtitle-replacer"></small>
                         </li>
                     @endif
-
 
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('store_setup'))
                         <li
@@ -817,8 +793,7 @@
                         </li>
                     @endif
 
-
-                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('reviews'))
+                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('reviews') && (\App\CentralLogics\Helpers::get_business_settings('review_section') ?? 1))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/reviews') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
@@ -830,7 +805,7 @@
                             </a>
                         </li>
                     @endif
-                    <!-- End Business Settings -->
+                    
                     @if (\App\CentralLogics\Helpers::employee_module_permission_check('chat'))
                         <li
                             class="navbar-vertical-aside-has-menu {{ Request::is('vendor-panel/message*') ? 'active' : '' }}">
@@ -845,9 +820,7 @@
                         </li>
                     @endif
 
-
-
-                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('advertisement'))
+                    @if (\App\CentralLogics\Helpers::employee_module_permission_check('coupon'))
                         <li class="nav-item px-20 pb-5">
                             <div class="promo-card">
                                 <div class="position-relative">
@@ -865,7 +838,7 @@
                     @endif
                 </ul>
             </div>
-            <!-- End Content -->
+            
         </div>
     </aside>
 </div>

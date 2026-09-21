@@ -72,13 +72,22 @@ class InstallController extends Controller
 
     public function purchase_code(Request $request)
     {
-        // NulledMaster: Set default values, no verification needed
         Helpers::setEnvironmentValue('SOFTWARE_ID', 'MzY3NzIxMTI=');
-        Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username'] ?? 'NulledMaster');
-        Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key'] ?? 'NULLED-FREE-FOR-ALL');
+        Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username']);
+        Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key']);
 
-        Session::put(base64_decode('cHVyY2hhc2Vfa2V5'), $request[base64_decode('cHVyY2hhc2Vfa2V5')] ?? 'NULLED-FREE-FOR-ALL');//pk
-        Session::put(base64_decode('dXNlcm5hbWU='), $request[base64_decode('dXNlcm5hbWU=')] ?? 'NulledMaster');//un
+        $post = [
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'username' => $request['username'],
+            'purchase_key' => $request['purchase_key'],
+            'domain' => preg_replace("#^[^:/.]*[:/]+#i", "", url('/')),
+        ];
+        // $response = $this->dmvf($post);
+
+        // return redirect($response.'?token='.bcrypt('step_3'));
+        Session::put(base64_decode('cHVyY2hhc2Vfa2V5'), $request[base64_decode('cHVyY2hhc2Vfa2V5')]);//pk
+        Session::put(base64_decode('dXNlcm5hbWU='), $request[base64_decode('dXNlcm5hbWU=')]);//un
         return redirect('step3?token='.bcrypt('step_3'));
     }
 
@@ -183,7 +192,7 @@ class InstallController extends Controller
                     BUYER_USERNAME=' . session('username') . '
                     SOFTWARE_ID=MzY3NzIxMTI=
 
-                    SOFTWARE_VERSION=4.0.1
+                    SOFTWARE_VERSION=4.1
                     REACT_APP_KEY=45370351
                     ';
             $file = fopen(base_path('.env'), 'w');

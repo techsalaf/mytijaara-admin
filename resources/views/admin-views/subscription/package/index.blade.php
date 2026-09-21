@@ -28,16 +28,24 @@ active
                 </div>
             </div>
 
-            @if (addon_published_status('Rental'))
+            @if (addon_published_status('Rental') || addon_published_status('Service'))
             <!-- Nav Menus -->
             <ul class="nav nav-tabs border-0 nav--tabs nav--pills mb-4">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->module != 1 ? 'active' : '' }}   " href="{{ route('admin.business-settings.subscriptionackage.index')  }}">{{ translate('All_Module') }}</a>
+                    <a class="nav-link {{ !in_array(request()->module, [1, 'rental', 'service']) ? 'active' : '' }}   " href="{{ route('admin.business-settings.subscriptionackage.index')  }}">{{ translate('All_Module') }}</a>
                 </li>
 
+                @if (addon_published_status('Rental'))
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->module == 1 ?'active' : '' }} " href="{{ route('admin.business-settings.subscriptionackage.index',['module'=> true])  }}">{{ translate('Rental_Module') }}</a>
+                    <a class="nav-link {{ in_array(request()->module, [1, 'rental']) ?'active' : '' }} " href="{{ route('admin.business-settings.subscriptionackage.index',['module'=> 'rental'])  }}">{{ translate('Rental_Module') }}</a>
                 </li>
+                @endif
+
+                @if (addon_published_status('Service'))
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->module == 'service' ?'active' : '' }} " href="{{ route('admin.business-settings.subscriptionackage.index',['module'=> 'service'])  }}">{{ translate('Service_Module') }}</a>
+                </li>
+                @endif
             </ul>
             @endif
 
@@ -154,7 +162,7 @@ active
 
                                 </div>
                             </div>
-                            <a href="{{ route('admin.business-settings.subscriptionackage.create',[ 'module' => request()->module == 1 ? 'rental' : 'all' ]) }}" class="btn btn--primary border-0"><i class="tio-add"></i> {{translate('Add Subcription Package')}}</a>
+                            <a href="{{ route('admin.business-settings.subscriptionackage.create',[ 'module' => in_array(request()->module, [1, 'rental']) ? 'rental' : (request()->module == 'service' ? 'service' : 'all') ]) }}" class="btn btn--primary border-0"><i class="tio-add"></i> {{translate('Add Subcription Package')}}</a>
                             <!-- Static Export Button -->
                         </div>
                     </div>
@@ -235,11 +243,11 @@ active
                         <div class="max-w-542 mx-auto py-sm-5 py-4">
                             <img class="mb-4" src="{{asset('/public/assets/admin/img/empty-subscription.svg')}}" alt="img">
                             <h4 class="mb-3">{{translate('Create Subscription Plan')}}</h4>
-                            @if ( request()->module == 1)
+                            @if ( in_array(request()->module, [1, 'rental', 'service']))
                                 <p class="mb-4">
                                     {{translate('Add new subscription packages to the list. So that Providers get more options to join the business for the growth and success.')}}<br>
                                 </p>
-                                <a href="{{ route('admin.business-settings.subscriptionackage.create',[ 'module' => 'rental']) }}" class="btn btn--primary border-0"><i class="tio-add"></i> {{translate('Add Subcription Package')}}</a>
+                                <a href="{{ route('admin.business-settings.subscriptionackage.create',[ 'module' => in_array(request()->module, [1, 'rental']) ? 'rental' : 'service']) }}" class="btn btn--primary border-0"><i class="tio-add"></i> {{translate('Add Subcription Package')}}</a>
                             @else
                                 <p class="mb-4">
                                     {{translate('Add new subscription packages to the list. So that Stores get more options to join the business for the growth and success.')}}<br>
@@ -272,7 +280,7 @@ active
                         </div>
                         <div class="text-center" id="toggle-message">
                             <h3>{{ translate('Are_You_Sure_You_want_To_Off_The_Status?') }}</h3>
-                            @if ( request()->module == 1)
+                            @if ( in_array(request()->module, [1, 'rental', 'service']))
                             <p>{{ translate('You_are_about_to_deactivate_a_subscription_package._You_have_the_option_to_either_switch_all_Providers_plans_or_allow_Providers_to_make_changes._Please_choose_an_option_below_to_proceed.') }}</p>
                         </div>
                     </div>
@@ -323,7 +331,7 @@ active
                         </div>
                         <div class="text-center" id="toggle-message">
                             <h3>{{ translate('Are_You_Sure_You_want_To_ON_The_Status?') }}</h3>
-                            @if ( request()->module == 1)
+                            @if ( in_array(request()->module, [1, 'rental', 'service']))
                             <p>{{ translate('This_package_will_be_available_for_the_providers.') }}</p>
 
                             @else

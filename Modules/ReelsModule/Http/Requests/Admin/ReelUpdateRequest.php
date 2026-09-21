@@ -19,7 +19,7 @@ class ReelUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15));
+        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15));
 
         return [
             'store_id' => 'required|exists:stores,id',
@@ -38,7 +38,7 @@ class ReelUpdateRequest extends FormRequest
 
     public function messages(): array
     {
-        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15));
+        $maxUploadSizeMb = max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15));
         $storeLabelLower = Helpers::getStoreLabelByModuleType(config('module.current_module_type'), true);
 
         return [

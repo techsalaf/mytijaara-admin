@@ -260,6 +260,16 @@ class OrderProvider implements OrderProviderContract
         $reviewable = $rawStatus === 'delivered'
             && (string) ($order->order_type ?? '') !== 'parcel';
 
+        // Delivery verification OTP — the customer reads it out to the
+        // delivery partner at hand-off. Shown only when admin's
+        // `order_delivery_verification` setting is on AND the order still
+        // needs verifying (not in a terminal state where the OTP is moot).
+        $verificationCode = (int) (Helpers::get_business_settings('order_delivery_verification') ?? 0) === 1
+            && ! in_array($rawStatus, ['delivered', 'canceled', 'failed', 'refunded', 'returned'], true)
+            && ! empty($order->otp)
+                ? (string) $order->otp
+                : null;
+
         return OrderDetailDTO::fromArray([
             'id'             => (string) $order->id,
             'date'           => $order->created_at
@@ -290,7 +300,61 @@ class OrderProvider implements OrderProviderContract
             // 4-step timeline + map coords. Returns null for orders that
             // can't be tracked (pickup orders, parcel, cancelled, etc.).
             'tracking'       => $this->mapTracking($order),
+            // Offline-payment bank/reference details the customer submitted.
+            'offlinePayment' => $this->mapOfflinePayment($order),
+            // Cash "bring change for" amount — only when the shopper asked for change.
+            'changeAmount'   => (int) ($order->bring_change_amount ?? 0) > 0 ? (float) $order->bring_change_amount : null,
+            // Reason the order was cancelled — naturally null unless cancelled.
+            'cancellationNote' => $order->cancellation_note ?: null,
+            // Delivery verification OTP (gated above).
+            'verificationCode' => $verificationCode,
         ])->toArray();
+    }
+
+    /**
+     * Offline-payment info the customer submitted (method name + the fields
+     * they filled), so the order-details page can show the bank information.
+     * Null unless this is an offline-payment order with a stored record.
+     */
+    private function mapOfflinePayment(Order $order): ?array
+    {
+        if ($order->payment_method !== 'offline_payment') {
+            return null;
+        }
+
+        $record = $order->offline_payments;
+        if (! $record) {
+            return null;
+        }
+
+        $info = \json_decode($record->payment_info ?? '[]', true);
+        if (! \is_array($info)) {
+            $info = [];
+        }
+
+        $labels = [
+            'method_name'    => 'Payment Method',
+            'name'           => 'Payment By',
+            'date'           => 'Date',
+            'transaction_id' => 'Transaction ID',
+        ];
+
+        $fields = [];
+        foreach ($info as $key => $value) {
+            if ($key === 'method_id' || $value === null || $value === '') {
+                continue;
+            }
+            $fields[] = [
+                'label' => $labels[$key] ?? \ucwords(\str_replace('_', ' ', (string) $key)),
+                'value' => (string) $value,
+            ];
+        }
+
+        return [
+            'methodName' => $info['method_name'] ?? null,
+            'status'     => (string) ($record->status ?? ''),
+            'fields'     => $fields,
+        ];
     }
 
     private function mapItems(array $details): array
@@ -503,6 +567,9 @@ class OrderProvider implements OrderProviderContract
             'name'    => $field('contact_person_name', 'contact_person_name'),
             'phone'   => $field('contact_person_number', 'contact_person_number'),
             'email'   => $stored['contact_person_email'] ?? $order->customer?->email ?? null,
+            // Customer's checkout instructions, surfaced on the order-details page.
+            'instruction'         => $order->delivery_instruction ?: null,
+            'unavailableItemNote' => $order->unavailable_item_note ?: null,
         ];
     }
 

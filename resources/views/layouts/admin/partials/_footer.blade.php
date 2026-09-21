@@ -10,13 +10,17 @@
             <div class="d-flex justify-content-end">
                 <!-- List Dot -->
                 <ul class="list-inline list-separator list-separator-before text-left">
+                    @if(\App\CentralLogics\Helpers::module_permission_check('settings'))
                     <li class="list-inline-item">
                         <a class="list-separator-link" href="{{route('admin.business-settings.business-setup')}}">{{translate('messages.business_setup')}}</a>
                     </li>
+                    @endif
 
+                    @if(\App\CentralLogics\Helpers::module_permission_check('profile'))
                     <li class="list-inline-item">
                         <a class="list-separator-link" href="{{route('admin.settings')}}">{{translate('messages.profile')}}</a>
                     </li>
+                    @endif
 
                     <li class="list-inline-item">
                         <!-- Keyboard Shortcuts Toggle -->

@@ -92,7 +92,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get('export', [StoreCategoryController::class, 'exportList'])->name('export');
         });
 
-        Route::group(['prefix' => 'attribute', 'as' => 'attribute.', 'middleware' => ['module:attribute']], function () {
+        Route::group(['prefix' => 'attribute', 'as' => 'attribute.', 'middleware' => ['module:category']], function () {
             Route::get(Attribute::INDEX[URI], [AttributeController::class, 'index'])->name('add-new');
             Route::post(Attribute::ADD[URI], [AttributeController::class, 'add'])->name('store');
             Route::get(Attribute::UPDATE[URI] . '/{id}', [AttributeController::class, 'getUpdateView'])->name('edit');
@@ -101,7 +101,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get(Attribute::EXPORT[URI], [AttributeController::class, 'exportList'])->name('export-attributes');
         });
 
-        Route::group(['prefix' => 'unit', 'as' => 'unit.', 'middleware' => ['module:unit']], function () {
+        Route::group(['prefix' => 'unit', 'as' => 'unit.', 'middleware' => ['module:category']], function () {
             Route::get(Unit::INDEX[URI], [UnitController::class, 'index'])->name('index');
             Route::post(Unit::ADD[URI], [UnitController::class, 'add'])->name('store');
             Route::get(Unit::UPDATE[URI] . '/{id}', [UnitController::class, 'getUpdateView'])->name('edit');
@@ -170,7 +170,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get(Notification::EXPORT[URI], [NotificationController::class, 'exportList'])->name('export');
         });
 
-        Route::group(['prefix' => 'common-condition', 'as' => 'common-condition.'], function () {
+        Route::group(['prefix' => 'common-condition', 'as' => 'common-condition.', 'middleware' => ['module:category']], function () {
             Route::get(CommonCondition::DROPDOWN[URI], [CommonConditionController::class, 'getDropdownList'])->name('get-all');
             Route::get(CommonCondition::INDEX[URI], [CommonConditionController::class, 'index'])->name('add');
             Route::post(CommonCondition::ADD[URI], [CommonConditionController::class, 'add'])->name('store');
@@ -181,7 +181,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
             Route::get( 'view/{id}', [CommonConditionController::class, 'getDetailsView'])->name('view');
         });
 
-        Route::group(['prefix' => 'brand', 'as' => 'brand.'], function () {
+        Route::group(['prefix' => 'brand', 'as' => 'brand.', 'middleware' => ['module:category']], function () {
             Route::get(Brand::DROPDOWN[URI], [BrandController::class, 'getDropdownList'])->name('get-all');
             Route::get(Brand::INDEX[URI], [BrandController::class, 'index'])->name('add');
             Route::post(Brand::ADD[URI], [BrandController::class, 'add'])->name('store');
@@ -193,7 +193,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
         });
 
 
-        Route::group(['prefix' => 'advertisement', 'as' => 'advertisement.', 'middleware' => ['module:advertisement']], function () {
+        Route::group(['prefix' => 'advertisement', 'as' => 'advertisement.', 'middleware' => ['module:coupon']], function () {
 
             Route::get('/', [AdvertisementController::class, 'index'])->name('index');
             Route::get('create/', [AdvertisementController::class, 'create'])->name('create');
@@ -217,14 +217,17 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
         Route::group(['prefix' => 'business-settings', 'as' => 'business-settings.'], function () {
 
             Route::group(['prefix' => 'subscription', 'middleware' => ['module:subscription']], function () {
+                Route::get('/settings', [SubscriptionController::class, 'settings'])->name('subscriptionackage.settings');
+                Route::post('/setting-update', [SubscriptionController::class, 'settingUpdate'])->name('subscriptionackage.settingUpdate');
+            });
+
+            Route::group(['prefix' => 'subscription', 'middleware' => ['module:subscription']], function () {
 
                 Route::resource('subscriptionackage', SubscriptionController::class);
                 Route::get('/status/{subscriptionackage}', [SubscriptionController::class, 'statusChange'])->name('subscriptionackage.status');
                 Route::get('/overView/{subscriptionackage}', [SubscriptionController::class, 'overView'])->name('subscriptionackage.overView');
                 Route::get('/transaction/{subscriptionackage}', [SubscriptionController::class, 'transaction'])->name('subscriptionackage.transaction');
-                Route::get('/settings', [SubscriptionController::class, 'settings'])->name('subscriptionackage.settings');
                 Route::get('/trial-status', [SubscriptionController::class, 'trialStatus'])->name('subscriptionackage.trialStatus');
-                Route::post('/setting-update', [SubscriptionController::class, 'settingUpdate'])->name('subscriptionackage.settingUpdate');
                 Route::get('/invoice/{id}', [SubscriptionController::class, 'invoice'])->name('subscriptionackage.invoice');
                 Route::post('/switch-plan', [SubscriptionController::class, 'switchPlan'])->name('subscriptionackage.switchPlan');
                 Route::get('/package-export', [SubscriptionController::class, 'packageExport'])->name('subscriptionackage.packageExport');
@@ -246,7 +249,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
 
 
-            Route::group(['prefix' => 'zone', 'as' => 'zone.', 'middleware' => ['module:zone']], function () {
+            Route::group(['prefix' => 'zone', 'as' => 'zone.', 'middleware' => ['module:settings']], function () {
                 Route::get(Zone::INDEX[URI], [ZoneController::class, 'index'])->name('home');
                 Route::post(Zone::ADD[URI], [ZoneController::class, 'add'])->name('store');
                 Route::get(Zone::UPDATE[URI] . '/{id}', [ZoneController::class, 'getUpdateView'])->name('edit');
@@ -264,7 +267,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                 Route::get(Zone::OFFLINE_PAYMENT[URI] . '/{id}/{offline_payment}', [ZoneController::class, 'updateOfflinePayment'])->name('offline-payment');
                 Route::get('default-status/{id}', [ZoneController::class, 'defaultStatus'])->name('default-status');
 
-                Route::group(['prefix' => 'surge-price', 'as' => 'surge-price.', 'middleware' => ['module:zone']], function () {
+                Route::group(['prefix' => 'surge-price', 'as' => 'surge-price.', 'middleware' => ['module:settings']], function () {
                     Route::get('/{zone_id}', [SurgePriceController::class, 'index'])->name('list');
                     Route::get('create/{zone_id}', [SurgePriceController::class, 'create'])->name('create');
                     Route::post('store', [SurgePriceController::class, 'store'])->name('store');
@@ -274,7 +277,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                     Route::delete('delete/{id}', [SurgePriceController::class, 'destroy'])->name('delete');
                 });
 
-                Route::group(['prefix' => 'smart-banner', 'as' => 'smart-banner.', 'middleware' => ['module:zone']], function () {
+                Route::group(['prefix' => 'smart-banner', 'as' => 'smart-banner.', 'middleware' => ['module:settings']], function () {
                     Route::get('categories/{module_id}', [SmartBannerController::class, 'categoriesByModule'])->name('categories');
                     Route::get('stores/{module_id}/{zone_id}', [SmartBannerController::class, 'storesByModuleZone'])->name('stores');
                     Route::get('view/{id}', [SmartBannerController::class, 'view'])->name('view');
@@ -302,7 +305,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
         });
 
         Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
-            Route::group(['prefix' => 'custom-role', 'as' => 'custom-role.', 'middleware' => ['module:employee_role']], function () {
+            Route::group(['prefix' => 'custom-role', 'as' => 'custom-role.', 'middleware' => ['module:employee']], function () {
                 Route::get(CustomRole::ADD[URI], [CustomRoleController::class, 'index'])->name('create');
                 Route::post(CustomRole::ADD[URI], [CustomRoleController::class, 'add'])->name('store');
                 Route::get(CustomRole::EDIT[URI] . '/{id}', [CustomRoleController::class, 'getUpdateView'])->name('edit');
@@ -325,7 +328,7 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
 
             // customer routes
             Route::group(['prefix' => 'customer', 'as' => 'customer.'], function () {
-                Route::group(['prefix' => 'wallet', 'as' => 'wallet.', 'middleware' => ['module:customer_management']], function () {
+                Route::group(['prefix' => 'wallet', 'as' => 'wallet.', 'middleware' => ['module:customer_wallet']], function () {
                     Route::group(['prefix' => 'bonus', 'as' => 'bonus.'], function () {
                         Route::get(WalletBonus::INDEX[URI], [WalletBonusController::class, 'index'])->name('add-new');
                         Route::post(WalletBonus::ADD[URI], [WalletBonusController::class, 'add'])->name('store');
@@ -374,27 +377,28 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
                     Route::get(DeliveryMan::REFERRAL_EXPORT[URI], [DeliveryManController::class, 'getReferralEarnExportList'])->name('referral-export');
                     Route::get('disbursement-export/{id}/{type}', [DeliveryManController::class, 'disbursement_export'])->name('disbursement-export');
 
-                    Route::group(['prefix' => 'reviews', 'as' => 'reviews.'], function () {
-                        Route::get(DeliveryMan::REVIEW_LIST[URI], [DeliveryManController::class, 'getReviewListView'])->name('list');
-                        Route::post(DeliveryMan::REVIEW_SEARCH_LIST[URI], [DeliveryManController::class, 'getReviewSearchList'])->name('search');
-                        Route::get(DeliveryMan::REVIEW_STATUS[URI] . '/{id}/{status}', [DeliveryManController::class, 'updateReviewStatus'])->name('status');
-                        Route::get(DeliveryMan::EXPORT[URI], [DeliveryManController::class, 'getAllReviewExportList'])->name('export');
-                    });
 
                     // message
                     Route::get(DeliveryMan::CONVERSATION_VIEW[URI] . '/{conversation_id}/{user_id}', [DeliveryManController::class, 'getConversationView'])->name('message-view');
                     Route::get(DeliveryMan::CONVERSATION_DETAILS[URI], [DeliveryManController::class, 'getConversationList'])->name('message-list-search');
+                });
 
-                    Route::group(['prefix' => 'vehicle', 'as' => 'vehicle.'], function () {
-                        Route::get(DmVehicle::INDEX[URI], [DmVehicleController::class, 'index'])->name('list');
-                        Route::get(DmVehicle::ADD[URI], [DmVehicleController::class, 'getAddView'])->name('create');
-                        Route::post(DmVehicle::ADD[URI], [DmVehicleController::class, 'add'])->name('store');
-                        Route::get(DmVehicle::UPDATE[URI] . '/{id}', [DmVehicleController::class, 'getUpdateView'])->name('edit');
-                        Route::post(DmVehicle::UPDATE[URI] . '/{id}', [DmVehicleController::class, 'update'])->name('update');
-                        Route::delete(DmVehicle::DELETE[URI] . '/{id}', [DmVehicleController::class, 'delete'])->name('delete');
-                        Route::get(DmVehicle::UPDATE_STATUS[URI] . '/{id}/{status}', [DmVehicleController::class, 'updateStatus'])->name('status');
-                        Route::get(DmVehicle::VIEW[URI] . '/{id}', [DmVehicleController::class, 'getDetailsView'])->name('view');
-                    });
+                Route::group(['prefix' => 'reviews', 'as' => 'reviews.', 'middleware' => ['module:deliveryman']], function () {
+                    Route::get(DeliveryMan::REVIEW_LIST[URI], [DeliveryManController::class, 'getReviewListView'])->name('list');
+                    Route::post(DeliveryMan::REVIEW_SEARCH_LIST[URI], [DeliveryManController::class, 'getReviewSearchList'])->name('search');
+                    Route::get(DeliveryMan::REVIEW_STATUS[URI] . '/{id}/{status}', [DeliveryManController::class, 'updateReviewStatus'])->name('status');
+                    Route::get(DeliveryMan::EXPORT[URI], [DeliveryManController::class, 'getAllReviewExportList'])->name('export');
+                });
+
+                Route::group(['prefix' => 'vehicle', 'as' => 'vehicle.', 'middleware' => ['module:deliveryman']], function () {
+                    Route::get(DmVehicle::INDEX[URI], [DmVehicleController::class, 'index'])->name('list');
+                    Route::get(DmVehicle::ADD[URI], [DmVehicleController::class, 'getAddView'])->name('create');
+                    Route::post(DmVehicle::ADD[URI], [DmVehicleController::class, 'add'])->name('store');
+                    Route::get(DmVehicle::UPDATE[URI] . '/{id}', [DmVehicleController::class, 'getUpdateView'])->name('edit');
+                    Route::post(DmVehicle::UPDATE[URI] . '/{id}', [DmVehicleController::class, 'update'])->name('update');
+                    Route::delete(DmVehicle::DELETE[URI] . '/{id}', [DmVehicleController::class, 'delete'])->name('delete');
+                    Route::get(DmVehicle::UPDATE_STATUS[URI] . '/{id}/{status}', [DmVehicleController::class, 'updateStatus'])->name('status');
+                    Route::get(DmVehicle::VIEW[URI] . '/{id}', [DmVehicleController::class, 'getDetailsView'])->name('view');
                 });
             });
         });

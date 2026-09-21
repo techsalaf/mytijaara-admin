@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title', translate('messages.Store_Categories'))
+@section('title', \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Categories'))
 
 @push('css_or_js')
 @endpush
@@ -14,7 +14,7 @@
                     <img src="{{ asset('public/assets/admin/img/category.png') }}" class="w--20" alt="">
                 </span>
                 <span>
-                    {{ translate('messages.Store_Categories') }}
+                    {{ \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Categories') }}
                     <span class="badge badge-soft-dark ml-2" id="itemCount">{{ $categories->total() }}</span>
                 </span>
             </h1>
@@ -47,7 +47,7 @@
                                             {{ translate('messages.name') }} ({{ translate('messages.default') }})
                                             <span class="form-label-secondary text-danger" data-toggle="tooltip" data-placement="right" data-original-title="{{ translate('messages.Required.') }}"> *</span>
                                         </label>
-                                        <input type="text" name="name[]" value="{{ old('name.0') }}" class="form-control" placeholder="{{ translate('messages.Type_Store_Category_Name') }}" maxlength="191">
+                                        <input type="text" name="name[]" value="{{ old('name.0') }}" class="form-control" placeholder="{{ translate('messages.Type') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Category_Name') }}" maxlength="191">
                                     </div>
                                     <input type="hidden" name="lang[]" value="default">
                                     @foreach ($language as $key => $lang)
@@ -55,14 +55,14 @@
                                             <label class="input-label">
                                                 {{ translate('messages.name') }} ({{ strtoupper($lang) }})
                                             </label>
-                                            <input type="text" name="name[]" value="{{ old('name.' . $key + 1) }}" class="form-control" placeholder="{{ translate('messages.Type_Store_Category_Name') }}" maxlength="191">
+                                            <input type="text" name="name[]" value="{{ old('name.' . $key + 1) }}" class="form-control" placeholder="{{ translate('messages.Type') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Category_Name') }}" maxlength="191">
                                         </div>
                                         <input type="hidden" name="lang[]" value="{{ $lang }}">
                                     @endforeach
                                 @else
                                     <div class="form-group m-0">
                                         <label class="input-label">{{ translate('messages.name') }}</label>
-                                        <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Type_Store_Category_Name') }}" value="{{ old('name.0') }}" maxlength="191">
+                                        <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Type') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Category_Name') }}" value="{{ old('name.0') }}" maxlength="191">
                                     </div>
                                     <input type="hidden" name="lang[]" value="default">
                                 @endif
@@ -71,10 +71,10 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <div class="form-group m-0">
-                                            <label class="input-label">{{ translate('messages.Store') }}
+                                            <label class="input-label">{{ \App\CentralLogics\Helpers::moduleStoreLabel() }}
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <select required name="store_id" class="form-control js-store-select2-ajax" data-placeholder="{{ translate('messages.Select_Store') }}"></select>
+                                            <select required name="store_id" class="form-control js-store-select2-ajax" data-placeholder="{{ translate('messages.Select') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() }}"></select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -95,7 +95,7 @@
                                 <div class="text-center py-1">
                                     <div class="mx-auto text-center">
                                         <div class="mb-4">
-                                            <h5 class="mb-1">{{ translate('messages.Store_Category_Image') }}
+                                            <h5 class="mb-1">{{ \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Category_Image') }}
                                                 <span class="text-danger">*</span>
                                             </h5>
                                             <p class="mb-0 fs-12 gray-dark">{{ translate('messages.Upload_image') }}</p>
@@ -128,12 +128,12 @@
             <div class="card-header py-2 border-0">
                 <div class="search--button-wrapper">
                     <h5 class="card-title">
-                        {{ translate('messages.Store_Category_List') }}
+                        {{ \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.Category_List') }}
                         <span class="badge badge-soft-dark ml-2">{{ $categories->total() }}</span>
                     </h5>
                     <form class="search-form w-340-lg">
                         <div class="input-group input--group">
-                            <input type="search" name="search" value="{{ request()?->search ?? null }}" class="form-control h-40" placeholder="{{ translate('messages.search_store_categories') }}">
+                            <input type="search" name="search" value="{{ request()?->search ?? null }}" class="form-control h-40" placeholder="{{ translate('messages.search') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.categories') }}">
                             <button type="submit" class="btn btn--primary h-40"><i class="tio-search"></i></button>
                         </div>
                     </form>
@@ -164,7 +164,7 @@
                             <tr>
                                 <th class="text-title border-0">{{ translate('sl') }}</th>
                                 <th class="text-title border-0">{{ translate('messages.name') }}</th>
-                                <th class="text-title border-0">{{ translate('messages.Store') }}</th>
+                                <th class="text-title border-0">{{ \App\CentralLogics\Helpers::moduleStoreLabel() }}</th>
                                 <th class="text-title border-0 text-center">{{ translate('messages.status') }}</th>
                                 <th class="text-title border-0 text-center">{{ translate('messages.priority') }}</th>
                                 <th class="text-title border-0 text-center">{{ translate('messages.action') }}</th>
@@ -210,7 +210,7 @@
                                             <a class="btn action-btn btn-outline-theme-dark offcanvas-trigger data-info-show" href="javascript:void(0)" data-id="{{ $category['id'] }}" data-url="{{ route('admin.store-category.edit', [$category['id']]) }}" data-target="#offcanvas__storeCategoryBtn">
                                                 <i class="tio-edit"></i>
                                             </a>
-                                            <a class="btn action-btn btn--danger btn-outline-danger form-alert" href="javascript:" data-id="store-category-{{ $category['id'] }}" data-message="{{ translate('messages.Want_to_delete_this_store_category') }}">
+                                            <a class="btn action-btn btn--danger btn-outline-danger form-alert" href="javascript:" data-id="store-category-{{ $category['id'] }}" data-message="{{ translate('messages.Want_to_delete_this') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() . ' ' . translate('messages.category') }}">
                                                 <i class="tio-delete-outlined"></i>
                                             </a>
                                             <form action="{{ route('admin.store-category.delete') }}" method="post" id="store-category-{{ $category['id'] }}">
@@ -252,7 +252,7 @@
 
         function initStoreSelect2Ajax(selector) {
             $(selector).select2({
-                placeholder: $(selector).data('placeholder') || '{{ translate('messages.Select_Store') }}',
+                placeholder: $(selector).data('placeholder') || '{{ translate('messages.Select') . ' ' . \App\CentralLogics\Helpers::moduleStoreLabel() }}',
                 allowClear: false,
                 ajax: {
                     url: '{{ route('admin.store.get-stores') }}',
@@ -261,6 +261,7 @@
                     data: params => ({
                         q: params.term,
                         module_type: '{{ config('module.current_module_type') }}',
+                        include_addon_providers: 1,
                         show_active: 1,
                         page: params.page
                     }),

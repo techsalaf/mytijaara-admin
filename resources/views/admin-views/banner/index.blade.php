@@ -2,6 +2,8 @@
 
 @section('title',translate('messages.banner'))
 
+@php($isServiceModule = \Illuminate\Support\Facades\Config::get('module.current_module_type') == 'service' && service_addon_active())
+
 @push('css_or_js')
 
 @endpush
@@ -47,7 +49,7 @@
                                         <div class="form-group error-wrapper">
                                             <label class="input-label"
                                                 for="default_title">{{ translate('messages.title') }}
-                                                (Default)
+                                                (Default) <span class="text-danger">*</span>
                                             </label>
                                             <input type="text" name="title[]" id="default_title"
                                                 class="form-control" placeholder="{{ translate('messages.new_banner') }}" required
@@ -73,7 +75,7 @@
                                         <div id="default-form">
                                             <div class="form-group error-wrapper">
                                                 <label class="input-label"
-                                                    for="exampleFormControlInput1">{{ translate('messages.title') }} ({{ translate('messages.default') }})</label>
+                                                    for="exampleFormControlInput1">{{ translate('messages.title') }} ({{ translate('messages.default') }}) <span class="text-danger">*</span></label>
                                                 <input type="text" name="title[]" class="form-control"
                                                     placeholder="{{ translate('messages.new_banner') }}" required>
                                             </div>
@@ -81,7 +83,7 @@
                                         </div>
                                     @endif
                                     <div class="form-group error-wrapper">
-                                        <label class="input-label" for="title">{{translate('messages.zone')}}</label>
+                                        <label class="input-label" for="title">{{translate('messages.zone')}} <span class="text-danger">*</span></label>
                                         <select name="zone_id" id="zone" class="form-control js-select2-custom" required>
                                             <option disabled selected>---{{translate('messages.select')}}---</option>
                                             @foreach($zones as $zone)
@@ -96,23 +98,23 @@
                                         </select>
                                     </div>
                                     <div class="form-group error-wrapper">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.banner_type')}}</label>
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.banner_type')}} <span class="text-danger">*</span></label>
                                         <select name="banner_type" id="banner_type" class="form-control">
-                                            <option value="store_wise">{{translate('messages.store_wise')}}</option>
-                                            <option value="item_wise">{{translate('messages.item_wise')}}</option>
+                                            <option value="store_wise">{{ $isServiceModule ? translate('Provider wise') : translate('messages.store_wise') }}</option>
+                                            <option value="item_wise">{{ $isServiceModule ? translate('Service wise') : translate('messages.item_wise') }}</option>
                                             <option value="default">{{translate('messages.default')}}</option>
                                         </select>
                                     </div>
                                     <div class="form-group mb-0 error-wrapper" id="store_wise">
-                                        <label class="input-label" for="exampleFormControlSelect1">{{translate('messages.store')}}<span
-                                                class="input-label-secondary"></span></label>
-                                        <select name="store_id" id="store_id" class="js-data-example-ajax form-control"  title="{{translate('messages.select_store')}}">
-                                            <option disabled selected>---{{translate('messages.select_store')}}---</option>
+                                        <label class="input-label" for="exampleFormControlSelect1">{{ $isServiceModule ? translate('Provider') : translate('messages.store') }}<span
+                                                class="input-label-secondary"></span> <span class="text-danger">*</span></label>
+                                        <select name="store_id" id="store_id" class="js-data-example-ajax form-control"  title="{{ $isServiceModule ? translate('Select Provider') : translate('messages.select_store') }}">
+                                            <option value=""></option>
                                         </select>
                                     </div>
                                     <div class="form-group mb-0 error-wrapper" id="item_wise">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.select_item')}}</label>
-                                        <select name="item_id" id="choice_item" class="form-control js-select2-custom" placeholder="{{translate('messages.select_item')}}">
+                                        <label class="input-label" for="exampleFormControlInput1">{{ $isServiceModule ? translate('Select service') : translate('messages.select_item') }} <span class="text-danger">*</span></label>
+                                        <select name="item_id" id="choice_item" class="form-control js-select2-custom" placeholder="{{ $isServiceModule ? translate('Select service') : translate('messages.select_item') }}">
 
                                         </select>
                                     </div>
@@ -123,17 +125,20 @@
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="error-wrapper">
-                                        <div class="h-100 d-flex flex-column">
-                                            <label class="mt-auto mb-0 d-block text-center">{{translate('messages.banner_image')}} <small class="text-danger">* ( {{translate('messages.ratio')}} 3:1 )</small></label>
-                                            <div class="text-center py-3 my-auto">
-                                                <img class="img--vertical" id="viewer"
-                                                    src="{{asset('public/assets/admin/img/900x400/img1.jpg')}}" alt="banner image"/>
-                                            </div>
-                                            <div class="custom-file">
-                                                <input type="file" name="image" id="customFileEg1" class="custom-file-input"
-                                                    accept=".webp, .jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
-                                            </div>
+                                        <div class="h-100 d-flex flex-column justify-content-center">
+                                            <label class="input-label d-block text-center mb-2">{{translate('messages.banner_image')}} <span class="text-danger">*</span></label>
+                                            @include('admin-views.partials._image-uploader', [
+                                                'id' => 'banner-image',
+                                                'name' => 'image',
+                                                'ratio' => '2:1',
+                                                'isRequired' => true,
+                                                'existingImage' => '',
+                                                'imageExtension' => IMAGE_EXTENSION,
+                                                'imageFormat' => IMAGE_FORMAT,
+                                                'maxSize' => MAX_FILE_SIZE,
+                                                'textPosition' => 'bottom',
+                                                'show_clear_button' => false,
+                                            ])
                                         </div>
                                     </div>
                                 </div>
@@ -214,7 +219,7 @@
 
                                     </span>
                                     </td>
-                                    <td>{{translate('messages.'.$banner['type'])}}</td>
+                                    <td>{{ $isServiceModule && $banner['type'] == 'store_wise' ? translate('Provider wise') : ($isServiceModule && $banner['type'] == 'item_wise' ? translate('Service wise') : translate('messages.'.$banner['type'])) }}</td>
 
                                     <td  >
                                         <div class="d-flex justify-content-center">
@@ -307,10 +312,11 @@
     <script>
         "use strict";
         var module_id = {{Config::get('module.current_module_id')}};
+        var item_source_url = "{{ $isServiceModule ? route('admin.service.get-services') : url('/').'/admin/item/get-items' }}";
 
         function get_items()
         {
-            var nurl = '{{url('/')}}/admin/item/get-items?module_id='+module_id;
+            var nurl = item_source_url + '?module_id='+module_id;
 
             if(!Array.isArray(zone_id))
             {
@@ -332,6 +338,7 @@
             get_items();
 
             $('.js-data-example-ajax').select2({
+                placeholder: '{{ $isServiceModule ? translate('Select Provider') : translate('messages.select_store') }}',
                 ajax: {
                     url: '{{ route('admin.store.get-stores') }}',
                     data: function (params) {
@@ -339,7 +346,8 @@
                             q: params.term, // search term
                             zone_ids: [zone_id],
                             page: params.page,
-                            module_id: module_id
+                            module_id: module_id,
+                            include_addon_providers: 1 // service is an addon provider; opt in so its stores list
                         };
                     },
                     processResults: function (data) {
@@ -365,6 +373,22 @@
 
             let $form = $(this);
             if (!$form.valid()) {
+                return false;
+            }
+
+            let banner_type = $('#banner_type').val();
+            if (banner_type === 'store_wise' && !$('#store_id').val()) {
+                toastr.error('{{ $isServiceModule ? translate('Please select a provider') : translate('Please select a store') }}', {
+                    CloseButton: true,
+                    ProgressBar: true
+                });
+                return false;
+            }
+            if (banner_type === 'item_wise' && !$('#choice_item').val()) {
+                toastr.error('{{ $isServiceModule ? translate('Please select a service') : translate('Please select an item') }}', {
+                    CloseButton: true,
+                    ProgressBar: true
+                });
                 return false;
             }
 
@@ -408,7 +432,6 @@
         $('#zone').val(null).trigger('change');
         $('#store_id').val(null).trigger('change');
         $('#choice_item').val(null).trigger('change');
-        $('#viewer').attr('src','{{asset('public/assets/admin/img/900x400/img1.jpg')}}');
     })
     </script>
 @endpush

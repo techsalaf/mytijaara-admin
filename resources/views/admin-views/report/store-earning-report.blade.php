@@ -12,6 +12,7 @@
             'parcel' => 'Comprehensive Financial Overview and Analytics for Store Parcel',
             'rental' => 'Comprehensive Financial Overview and Analytics for Store Rental',
             'ride-share' => 'Comprehensive Financial Overview and Analytics for Store Rides',
+            'service' => 'Comprehensive Financial Overview and Analytics for Store Service',
             default => 'Comprehensive Financial Overview and Analytics for Store Orders',
         };
     @endphp
@@ -20,7 +21,7 @@
         <div class="page-header pb-0">
             <div>
                 <h1 class="page-header-title text-capitalize">
-                    {{translate('messages.Store_Earning_Report') }}
+                    {{translate('messages.Vendor_Earning_Report') }}
                 </h1>
                 <p>
                     {{ $reportOverviewTitle }}
@@ -32,7 +33,7 @@
         <div class="js-nav-scroller hs-nav-scroller-horizontal mb-20">
             <ul class="nav mb-0 nav-tabs border-0 nav--tabs nav--pills">
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->tab !== 'rental' ? 'active' : '' }}"
+                    <a class="nav-link {{ !in_array(request()->tab, ['rental', 'service']) ? 'active' : '' }}"
                         href="{{ route('admin.transactions.report.store-earning-report') }}"
                         aria-disabled="true">{{ translate('messages.Order Modules') }}</a>
                 </li>
@@ -43,7 +44,14 @@
                             aria-disabled="true">{{ translate('messages.Rental Module') }}</a>
                     </li>
                 @endif
-            
+                @if (addon_published_status('Service'))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->tab === 'service' ? 'active' : '' }}"
+                            href="{{ route('admin.transactions.report.store-earning-report', ['tab' => 'service']) }}"
+                            aria-disabled="true">{{ translate('messages.Service Module') }}</a>
+                    </li>
+                @endif
+
             </ul>
         </div>
 
@@ -62,6 +70,22 @@
                 'store_id' => $store_id,
                 'module_id' => $module_id,
                 'tab' => 'rental',
+            ])
+        @elseif (request()->tab === 'service' && addon_published_status('Service'))
+            @include('service::vendor.report.earning-report.content', [
+                'report_url' => route('admin.transactions.report.store-earning-report'),
+                'summary_url' => route('admin.transactions.service.report.provider-earning-summary'),
+                'breakdown_url' => route('admin.transactions.service.report.provider-earning-breakdown'),
+                'expense_url' => route('admin.transactions.service.report.provider-expense-breakdown'),
+                'trend_url' => route('admin.transactions.service.report.provider-earning-trend'),
+                'reset_url' => route('admin.transactions.report.store-earning-report', ['tab' => 'service']),
+                'transactions_export_url' => route('admin.transactions.service.report.provider-earning-export'),
+                'transactions_url' => route('admin.transactions.service.report.provider-earning-transactions'),
+                'show_store_select' => true,
+                'store' => $store,
+                'store_id' => $store_id,
+                'module_id' => $module_id,
+                'tab' => 'service',
             ])
         @else
             @include('admin-views.report.partials._store_earning_report_content', [

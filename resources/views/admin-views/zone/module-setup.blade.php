@@ -235,6 +235,43 @@
                                value="{{ $pivot?->maximum_shipping_charge ?? 0 }}">
                         <input type="hidden" name="module_data[{{ $module->id }}][maximum_cod_order_amount]"
                                value="{{ $pivot?->maximum_cod_order_amount ?? 0 }}">
+                    @elseif ($module->module_type == 'service' && addon_published_status('Service'))
+                        <div class="col-md-12 mb-2" id="module_{{ $module->id }}">
+                            <div class="module-row card view-details-container overflow-hidden">
+                                <a href="#0"
+                                   class="card-header border-0 view-btn d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                    <h5 class="m-0">{{ $module->module_name }}</h5>
+                                    <i class="tio-chevron-down fs-24 text-title"></i>
+                                </a>
+                                <div class="card-body view-details border-top">
+                                    <div
+                                        class="bg-opacity-primary-10 rounded py-2 px-3 d-flex flex-wrap gap-1 align-items-center">
+                                        <div class="gap-1 d-flex align-items-center">
+                                            <i class="tio-light-on theme-clr-dark fs-16"></i>
+                                            <p class="m-0 fs-12">
+                                                {{ translate('Service module doesn’t support delivery charges. You can set service prices from:') }}
+                                                <a href="{{ route('admin.service.list', ['module_id' => $module->id]) }}"
+                                                   class="font-semibold text-title">
+                                                   {{ translate('Service Module') }} > {{ translate('Service Management') }} > {{ translate('Service Setup') }}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" value="distance"
+                               name="module_data[{{ $module->id }}][delivery_charge_type]">
+                        <input type="hidden" name="module_data[{{ $module->id }}][fixed_shipping_charge]"
+                               value="{{ $pivot?->fixed_shipping_charge ?? 0 }}">
+                        <input type="hidden" name="module_data[{{ $module->id }}][per_km_shipping_charge]"
+                               value="{{ $pivot?->per_km_shipping_charge ?? 0 }}">
+                        <input type="hidden" name="module_data[{{ $module->id }}][minimum_shipping_charge]"
+                               value="{{ $pivot?->minimum_shipping_charge ?? 0 }}">
+                        <input type="hidden" name="module_data[{{ $module->id }}][maximum_shipping_charge]"
+                               value="{{ $pivot?->maximum_shipping_charge ?? 0 }}">
+                        <input type="hidden" name="module_data[{{ $module->id }}][maximum_cod_order_amount]"
+                               value="{{ $pivot?->maximum_cod_order_amount ?? 0 }}">
                     @else
                         <div class="col-md-12 mb-2" id="module_{{ $module->id }}">
                             <div class="module-row card view-details-container overflow-hidden">
@@ -449,6 +486,70 @@
                 moduleContainer.find('input.delivery-type-radio').on('change', function () {
                     toggleChargeFields(moduleContainer);
                 });
+            });
+
+            function reduceChargeCap(moduleContainer) {
+                const selectedType = moduleContainer.find('input.delivery-type-radio:checked').val();
+                const $capField = selectedType === 'fixed'
+                    ? moduleContainer.find('input[name$="[fixed_shipping_charge]"]')
+                    : moduleContainer.find('input[name$="[maximum_shipping_charge]"]');
+                const cap = parseFloat($capField.val());
+                return { $capField, cap: isNaN(cap) ? 0 : cap };
+            }
+
+            function validateReduceCharge(moduleContainer) {
+                const $reduceField = moduleContainer.find('input[name$="[delivery_types][slightly_delay][reduce_charge]"]');
+                if (!$reduceField.length) {
+                    return true;
+                }
+
+                const $toggle = moduleContainer.find('.saver-options-toggle');
+                $reduceField.removeClass('is-invalid');
+
+                if (!$toggle.length || !$toggle.is(':checked')) {
+                    return true;
+                }
+
+                const reduceCharge = parseFloat($reduceField.val());
+                const { cap } = reduceChargeCap(moduleContainer);
+
+                if (cap > 0 && reduceCharge > cap) {
+                    $reduceField.addClass('is-invalid');
+                    return false;
+                }
+
+                return true;
+            }
+
+            $('[id^="module_"]').each(function () {
+                const moduleContainer = $(this);
+                const $reduceField = moduleContainer.find('input[name$="[delivery_types][slightly_delay][reduce_charge]"]');
+                const $fixedField = moduleContainer.find('input[name$="[fixed_shipping_charge]"]');
+                const $maxField = moduleContainer.find('input[name$="[maximum_shipping_charge]"]');
+
+                $reduceField.add($fixedField).add($maxField).on('input', function () {
+                    validateReduceCharge(moduleContainer);
+                });
+                moduleContainer.find('input.delivery-type-radio').on('change', function () {
+                    validateReduceCharge(moduleContainer);
+                });
+            });
+
+            $('#zone_form').on('submit', function (e) {
+                let firstInvalidModule = null;
+
+                $('[id^="module_"]').each(function () {
+                    const moduleContainer = $(this);
+                    if (!validateReduceCharge(moduleContainer) && !firstInvalidModule) {
+                        firstInvalidModule = moduleContainer;
+                    }
+                });
+
+                if (firstInvalidModule) {
+                    e.preventDefault();
+                    toastr.error('{{ translate('messages.Reduce charge cannot be greater than the delivery charge') }}');
+                    openModuleSection(firstInvalidModule);
+                }
             });
         });
 

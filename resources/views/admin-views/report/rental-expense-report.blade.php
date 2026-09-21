@@ -201,7 +201,7 @@
         $(document).on('ready', function() {
             $('.js-data-example-ajax-2').select2({
                 ajax: {
-                    url: '{{ url('/') }}/admin/customer/select-list',
+                    url: '{{ route('admin.users.customer.select-list') }}',
                     data: function(params) {
                         return {
                             q: params.term,

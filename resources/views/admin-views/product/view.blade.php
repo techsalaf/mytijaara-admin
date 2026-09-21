@@ -459,7 +459,7 @@
                                 <td>
                                     @if ($review->customer)
                                         <a class="d-flex align-items-center"
-                                            href="{{ route('admin.customer.view', [$review['user_id']]) }}">
+                                            href="{{ route('admin.users.customer.view', [$review['user_id']]) }}">
                                             @include('partials._user-avatar', [
                                                 'imageUrl'  => $review->customer->image_full_url,
                                                 'proStatus' => $review->customer->pro_status ?? false,

@@ -16,21 +16,25 @@ $(document).on('ready', function () {
     });
     $('#min_purchase').on('click', function () {
         discount_check();
-        console.log('min_purchase clicked');
-
     });
     function discount_check() {
         if ($('#discount_type').val() == 'amount') {
-            $('#max_discount').attr("readonly", "true");
+            $('#max_discount').attr("readonly", "true").attr("min", 0).removeAttr("required");
             $('#max_discount').val(0);
-            $('#discount').attr('max', $('#min_purchase').val() || 0);
+            let minPurchase = parseFloat($('#min_purchase').val());
+            if (!isNaN(minPurchase) && minPurchase > 0) {
+                $('#discount').attr('max', minPurchase);
+            } else {
+                $('#discount').removeAttr('max');
+            }
             validateDiscount();
-
-            console.log($('#discount').attr('max'));
         }
         else {
             if ($('#discount_type').val() == 'percent') {
-                $('#max_discount').removeAttr("readonly");
+                $('#max_discount').removeAttr("readonly").attr("min", "0.01").attr("required", "required");
+                if ((parseFloat($('#max_discount').val()) || 0) <= 0) {
+                    $('#max_discount').val('');
+                }
             }
             $('#discount').attr('max', 100);
         }
@@ -101,19 +105,29 @@ function coupon_type_change(coupon_type) {
         if(coupon_type ==='free_delivery')
         {
             $('#discount_type').prop("disabled", true).val("").trigger("change");
-            $('#max_discount').val(0).prop("readonly", true);
+            $('#max_discount').val(0).prop("readonly", true).removeAttr("required").attr("min","0");
             $('#discount').val(0).prop("readonly", true).removeAttr("required").attr("min","0");
             $('#discount_type_div').addClass('d-none');
             $('#max_discount_div').addClass('d-none');
             $('#discount_div').addClass('d-none');
         }
         else{
-            $('#max_discount').removeAttr("readonly");
             $('#discount').removeAttr("readonly").attr("required","true").attr("min","1");
-            $('#discount_type').removeAttr("disabled").attr("required","true").val('percent');
+            $('#discount_type').removeAttr("disabled").attr("required","true");
+            if (!$('#discount_type').val()) {
+                $('#discount_type').val('percent');
+            }
             $('#discount_type_div').removeClass('d-none');
             $('#max_discount_div').removeClass('d-none');
             $('#discount_div').removeClass('d-none');
+            if ($('#discount_type').val() === 'amount') {
+                $('#max_discount').val(0).attr("readonly", "true").attr("min", 0).removeAttr("required");
+            } else {
+                $('#max_discount').removeAttr("readonly").attr("min", "0.01").attr("required", "required");
+                if ((parseFloat($('#max_discount').val()) || 0) <= 0) {
+                    $('#max_discount').val('');
+                }
+            }
         }
 
 }

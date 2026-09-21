@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 use App\Models\SubscriptionBillingAndRefundHistory;
 use Modules\Rental\Emails\ProviderWithdrawRequestMail;
+use Modules\Service\Emails\ProviderWithdrawRequestMail as ServiceProviderWithdrawRequestMail;
 
 class VendorController extends Controller
 {
@@ -54,17 +55,55 @@ class VendorController extends Controller
         $store['discount']=$discount;
         $store['schedules']=$store->schedules()->get();
         $store['module']=$store->module;
-        $vendor['order_count'] =$vendor->orders->where('order_type','!=','pos')->whereNotIn('order_status',['canceled','failed'])->count();
-        $vendor['todays_order_count'] =$vendor->todaysorders->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
-        $vendor['this_week_order_count'] =$vendor->this_week_orders->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
-        $vendor['this_month_order_count'] =$vendor->this_month_orders->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
+        $is_service_provider = ($vendor->stores[0]->module_type ?? null) === 'service' && service_addon_active();
+        if ($is_service_provider) {
+            $service_store_id = (int) $vendor->stores[0]->id;
+
+            $vendor['order_count'] = DB::table('service_bookings')
+                ->where('provider_id', $service_store_id)
+                ->whereNotIn('booking_status', ['canceled', 'payment_failed'])
+                ->count();
+            $vendor['todays_order_count'] = DB::table('service_bookings')
+                ->where('provider_id', $service_store_id)->where('booking_status', 'completed')
+                ->whereDate('created_at', now())->count();
+            $vendor['this_week_order_count'] = DB::table('service_bookings')
+                ->where('provider_id', $service_store_id)->where('booking_status', 'completed')
+                ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
+            $vendor['this_month_order_count'] = DB::table('service_bookings')
+                ->where('provider_id', $service_store_id)->where('booking_status', 'completed')
+                ->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count();
+
+            $providerEarning = fn () => DB::table('booking_transactions')
+                ->join('service_bookings', 'service_bookings.id', '=', 'booking_transactions.booking_id')
+                ->where('booking_transactions.provider_id', $service_store_id);
+
+            $vendor['total_earning'] = (float) $providerEarning()->sum('booking_transactions.store_amount');
+            $vendor['todays_earning'] = (float) $providerEarning()
+                ->whereDate('booking_transactions.created_at', now())
+                ->sum('booking_transactions.store_amount');
+            $vendor['this_week_earning'] = (float) $providerEarning()
+                ->whereBetween('booking_transactions.created_at', [now()->startOfWeek(), now()->endOfWeek()])
+                ->sum('booking_transactions.store_amount');
+            $vendor['this_month_earning'] = (float) $providerEarning()
+                ->whereMonth('booking_transactions.created_at', now()->month)
+                ->whereYear('booking_transactions.created_at', now()->year)
+                ->sum('booking_transactions.store_amount');
+        } else {
+            $vendor['order_count'] =$vendor->orders()->where('order_type','!=','pos')->whereNotIn('order_status',['canceled','failed'])->count();
+            $vendor['todays_order_count'] =$vendor->todaysorders()->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
+            $vendor['this_week_order_count'] =$vendor->this_week_orders()->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
+            $vendor['this_month_order_count'] =$vendor->this_month_orders()->where('order_type','!=','pos')->whereIn('order_status', ['refunded', 'delivered'])->count();
+            $vendor['todays_earning'] =(float)$vendor->todays_earning()->sum('store_amount');
+            $vendor['this_week_earning'] =(float)$vendor->this_week_earning()->sum('store_amount');
+            $vendor['this_month_earning'] =(float)$vendor->this_month_earning()->sum('store_amount');
+        }
+
         $vendor['member_since_days'] = (int) $vendor->created_at->diffInDays();
         $vendor['cash_in_hands'] =$vendor->wallet?(float)$vendor->wallet->collected_cash:0;
         $vendor['balance'] =$vendor->wallet?(float)$vendor->wallet->balance:0;
-        $vendor['total_earning'] =$vendor->wallet?(float)$vendor->wallet->total_earning:0;
-        $vendor['todays_earning'] =(float)$vendor->todays_earning()->sum('store_amount');
-        $vendor['this_week_earning'] =(float)$vendor->this_week_earning()->sum('store_amount');
-        $vendor['this_month_earning'] =(float)$vendor->this_month_earning()->sum('store_amount');
+        if (! $is_service_provider) {
+            $vendor['total_earning'] =$vendor->wallet?(float)$vendor->wallet->total_earning:0;
+        }
 
             if($vendor['balance']  < 0){
                 $vendor['balance']  = 0 ;
@@ -155,6 +194,8 @@ class VendorController extends Controller
                     else{
                         if($st?->module_type == 'rental'){
                             $max_product_uploads = $vendor['subscription']->max_product - $st?->vehicles()->count() > 0?  $vendor['subscription']->max_product - $st?->vehicles()->count() : 0 ;
+                        } elseif($st?->module_type == 'service' && service_addon_active()){
+                            $max_product_uploads = $vendor['subscription']->max_product - $st?->services()->count() > 0?  $vendor['subscription']->max_product - $st?->services()->count() : 0 ;
                         } else{
                             $max_product_uploads= $vendor['subscription']->max_product - $st?->items()->count() > 0?  $vendor['subscription']->max_product - $st?->items()->count() : 0 ;
                         }
@@ -392,7 +433,7 @@ class VendorController extends Controller
             }
         }
 
-        if($request['status'] =="confirmed" && !$vendor->stores[0]->sub_self_delivery && config('order_confirmation_model') == 'deliveryman' && $order->order_type != 'take_away')
+        if($request['status'] =="confirmed" && !$vendor->stores[0]->sub_self_delivery && config('order_confirmation_model') == 'deliveryman' && $order->order_type != 'take_away' && !$order->is_pos)
         {
             return response()->json([
                 'errors' => [
@@ -410,7 +451,7 @@ class VendorController extends Controller
             ], 403);
         }
 
-        if($request['status']=='delivered' && $order->order_type != 'take_away' && !$vendor->stores[0]->sub_self_delivery)
+        if($request['status']=='delivered' && $order->order_type != 'take_away' && !$order->is_pos && !$vendor->stores[0]->sub_self_delivery)
         {
             return response()->json([
                 'errors' => [
@@ -764,8 +805,8 @@ class VendorController extends Controller
             });
         }
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
-        $paginator = $paginator->when(isset($key), function ($query) use ($key) {
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
+        $paginator = $paginator->when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%");
@@ -878,11 +919,14 @@ class VendorController extends Controller
                 $mail_status = Helpers::get_mail_status('withdraw_request_mail_status_admin');
                 $admin= \App\Models\Admin::where('role_id', 1)->first();
                 $wallet_transaction = WithdrawRequest::where('vendor_id',$w->vendor_id)->latest()->first();
-                if($request['vendor']?->stores[0]?->module?->module_type !== 'rental' &&  config('mail.status') && $mail_status == '1'  &&  Helpers::getNotificationStatusData('admin','withdraw_request','mail_status' )) {
+                if($request['vendor']?->stores[0]?->module?->module_type !== 'rental' && $request['vendor']?->stores[0]?->module?->module_type !== 'service' &&  config('mail.status') && $mail_status == '1'  &&  Helpers::getNotificationStatusData('admin','withdraw_request','mail_status' )) {
                     Mail::to($admin?->getRawOriginal('email'))->send(new WithdrawRequestMail('admin_mail',$wallet_transaction));
                 }
                 elseif($request['vendor']?->stores[0]?->module?->module_type == 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_withdraw_request_mail_status_admin') == '1' &&   Helpers::getRentalNotificationStatusData('admin','provider_withdraw_request','mail_status') ){
                     Mail::to($admin?->getRawOriginal('email'))->send(new ProviderWithdrawRequestMail('pending',$wallet_transaction));
+                }
+                elseif($request['vendor']?->stores[0]?->module?->module_type == 'service' && addon_published_status('Service') && config('mail.status') && Helpers::get_mail_status('service_withdraw_request_mail_status_admin') == '1' &&   Helpers::getServiceNotificationStatusData('admin','service_provider_withdraw_request','mail_status') ){
+                    Mail::to($admin?->getRawOriginal('email'))->send(new ServiceProviderWithdrawRequestMail('pending',$wallet_transaction));
                 }
                 return response()->json(['message'=>translate('messages.withdraw_request_placed_successfully')],200);
             }
@@ -1453,9 +1497,9 @@ class VendorController extends Controller
         $offset = $request['offset'] ?? 1;
         $vendor = $request['vendor'];
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
         $paginator = AccountTransaction::
-        when(isset($key), function ($query) use ($key) {
+        when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('ref', 'like', "%{$value}%");

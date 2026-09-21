@@ -99,7 +99,7 @@ class OrderController extends Controller
         ->when(in_array($status, ['pending','confirmed']), function($query){
             return $query->OrderScheduledIn(30);
         })
-        ->when(isset($key), function ($query) use ($key) {
+        ->when(request()?->search, function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('id', 'like', "%{$value}%")
@@ -184,7 +184,7 @@ class OrderController extends Controller
         ->when(in_array($status, ['pending','confirmed']), function($query){
             return $query->OrderScheduledIn(30);
         })
-        ->when(isset($key), function ($query) use ($key) {
+        ->when(request()?->search, function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('id', 'like', "%{$value}%")
@@ -290,7 +290,7 @@ class OrderController extends Controller
 
 
 
-        if($request['order_status']=='delivered' && $order->order_type != 'take_away' && !Helpers::get_store_data()->sub_self_delivery)
+        if($request['order_status']=='delivered' && $order->order_type != 'take_away' && !$order->is_pos && !Helpers::get_store_data()->sub_self_delivery)
         {
             Toastr::warning(translate('messages.you_can_not_delivered_delivery_order'));
             return back();
@@ -298,7 +298,7 @@ class OrderController extends Controller
 
         if($request['order_status'] =="confirmed")
         {
-            if(!Helpers::get_store_data()->sub_self_delivery && config('order_confirmation_model') == 'deliveryman' && $order->order_type != 'take_away')
+            if(!Helpers::get_store_data()->sub_self_delivery && config('order_confirmation_model') == 'deliveryman' && $order->order_type != 'take_away' && !$order->is_pos)
             {
                 Toastr::warning(translate('messages.order_confirmation_warning'));
                 return back();

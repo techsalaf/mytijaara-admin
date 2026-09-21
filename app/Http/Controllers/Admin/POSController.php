@@ -46,7 +46,7 @@ class POSController extends Controller
             return back();
         }
         $search = $request->query('search', false);
-        $key = explode(' ', $search);
+        $key = explode(' ', $search ?? '');
 
         if ($request->session()->has('cart')) {
             $cart = $request->session()->get('cart', collect([]));
@@ -751,15 +751,14 @@ class POSController extends Controller
 
         $order_details = [];
         $product_data = [];
+        $lastId = Order::max('id') ?? 99999;
         $order = new Order();
-        $order->id = 100000 + Order::count() + 1;
-        if (Order::find($order->id)) {
-            $order->id = Order::latest()->first()->id + 1;
-        }
+        $order->id = $lastId + 1;
         $order->distance = isset($address) ? $address['distance'] : 0;
         $order->payment_status = $request->type == 'wallet'?'paid':'unpaid';
         $order->order_status = $request->type == 'wallet'?'confirmed':'pending';
         $order->order_type = 'delivery';
+        $order->is_pos = 1;
         $order->payment_method = $request->type;
         $order->store_id = $store->id;
         $order->module_id = $store->module_id;
@@ -874,7 +873,7 @@ class POSController extends Controller
 
             $order->order_amount = $total_price + $tax_amount + $order->delivery_charge;
             // Apply saver time logic to order
-            $this->applySaverToOrder($order, (int) $order->module_id, (int) $order->zone_id, (float) $order->delivery_charge);
+            $this->applySaverToOrder($order, (int) $order->module_id, (int) $order->zone_id, (float) $order->delivery_charge, (bool) $self_delivery_status);
             $order->adjusment = $request->amount - ($total_price + $tax_amount + $order->delivery_charge);
             $order->payment_method = $request->type == 'wallet'?'wallet':'cash_on_delivery';
 

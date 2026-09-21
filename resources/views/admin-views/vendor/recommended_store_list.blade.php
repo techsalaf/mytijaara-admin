@@ -215,27 +215,29 @@
         let name = $(this).val();
         if (name.length > 0) {
             $("#hide_class").addClass('d-flex search-result-box').removeClass('d-none');
-            $("#hide_class_2").addClass('d-none');
 
-            $.get("{{ route('admin.get_all_stores') }}", { name: name }, function(response) {
+            $.get("{{ route('admin.get_all_stores') }}", { name: name, exclude_recommended: 1 }, function(response) {
                 $('.search-result-box').empty().html(response.result);
             });
         }else{
-            location.reload();
+            $("#hide_class").empty().removeClass('d-flex search-result-box').addClass('d-none');
         }
     });
 
 
         function selected_stores(key, remove=false) {
+            key = parseInt(key);
             if(remove == true){
                 selected_store_ids = selected_store_ids.filter(function(e) { return e !== key })
             }else{
+                if(selected_store_ids.includes(key)){
+                    return;
+                }
                 selected_store_ids.push(key);
             }
 
-            $("#hide_class").removeClass('d-flex');
-            $("#hide_class").removeClass('search-result-box');
-            $("#hide_class").addClass('d-none');
+            $('.search-bar-input').val('');
+            $("#hide_class").empty().removeClass('d-flex search-result-box').addClass('d-none');
             $("#hide_class_2").removeClass('d-none');
 
             $('#store_ids').val(selected_store_ids);
@@ -246,10 +248,9 @@
 
 
         $('.remove_all_data').on('click', function () {
-            $("#hide_class").removeClass('d-flex');
-            $("#hide_class").removeClass('search-result-box');
-            $("#hide_class").addClass('d-none');
-            $("#hide_class_2").addClass('d-none');
+            $("#hide_class").empty().removeClass('d-flex search-result-box').addClass('d-none');
+            $("#hide_class_2").empty().addClass('d-none');
+            $('.search-bar-input').val('');
             selected_store_ids = [];
             $('#store_ids').val(null);
         })

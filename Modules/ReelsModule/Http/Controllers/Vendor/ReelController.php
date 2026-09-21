@@ -22,10 +22,11 @@ use Modules\ReelsModule\Entities\Reel;
 use Modules\ReelsModule\Entities\ReelEngagement;
 use Modules\ReelsModule\Http\Requests\Vendor\ReelStoreRequest;
 use Modules\ReelsModule\Http\Requests\Vendor\ReelUpdateRequest;
+use Modules\ReelsModule\Support\ReelProductableResolver;
 
 class ReelController extends Controller
 {
-    private array $allowedModuleTypes = ['grocery', 'food', 'ecommerce', 'pharmacy','rental'];
+    private array $allowedModuleTypes = ['grocery', 'food', 'ecommerce', 'pharmacy', 'rental', 'service'];
 
     public function index(Request $request): View|RedirectResponse
     {
@@ -360,6 +361,9 @@ class ReelController extends Controller
 
     private function buildOverviewCards(array $overview): array
     {
+        // Services are booked, not sold: show booking wording for the service module.
+        $isService = Helpers::get_store_data()?->module?->module_type === 'service';
+
         return [
             [
                 'value' => $overview['total_reels'] ?? 0,
@@ -391,16 +395,16 @@ class ReelController extends Controller
             ],
             [
                 'value' => Helpers::format_currency($overview['total_sale_amount'] ?? 0),
-                'label' => translate('messages.Total_Sale_Amount'),
-                'tooltip' => translate('messages.Total_order_value_from_Reel_Order_Now_purchases'),
+                'label' => $isService ? translate('messages.Total Booking Amount') : translate('messages.Total_Sale_Amount'),
+                'tooltip' => $isService ? translate('messages.Total booking value from Reel Book Now bookings') : translate('messages.Total_order_value_from_Reel_Order_Now_purchases'),
                 'icon' => 'tio-money',
                 'color' => 'text-primary',
                 'bg' => 'bg-primary bg-opacity-10',
             ],
             [
                 'value' => $overview['total_sale'] ?? 0,
-                'label' => translate('messages.Total_Sale'),
-                'tooltip' => translate('messages.Total_orders_placed_using_the_Reel_Order_Now_button'),
+                'label' => $isService ? translate('messages.Total Booking') : translate('messages.Total_Sale'),
+                'tooltip' => $isService ? translate('messages.Total bookings placed using the Reel Book Now button') : translate('messages.Total_orders_placed_using_the_Reel_Order_Now_button'),
                 'icon' => 'tio-shopping-cart',
                 'color' => 'text-warning',
                 'bg' => 'bg-warning bg-opacity-10',
@@ -416,7 +420,7 @@ class ReelController extends Controller
         $reel->store_id = $store->id;
         $reel->module_id = (int) $store->module_id;
         $reel->module_type = (string) $store->module_type;
-        $product = $this->resolveReelProductable($request->input('product_id'), $store->id);
+        $product = ReelProductableResolver::resolve($store, $request->input('product_id'));
         $reel->productable_type = $product['type'];
         $reel->productable_id = $product['id'];
         $reel->order_now_button = $request->boolean('order_now_button');
@@ -529,7 +533,7 @@ class ReelController extends Controller
 
         $maxSizeMb = match ($type) {
             'thumbnail' => 2,
-            'video' => max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15)),
+            'video' => max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15)),
             default => 0,
         };
 
@@ -568,23 +572,43 @@ class ReelController extends Controller
             ->count();
     }
 
-    private function isRentalStore(?int $storeId): bool
+    private function storeModuleType(?int $storeId): ?string
     {
         if (!$storeId) {
-            return false;
+            return null;
         }
 
-        return \App\Models\Store::with('module:id,module_type')->find($storeId)?->module?->module_type === 'rental';
+        return \App\Models\Store::with('module:id,module_type')->find($storeId)?->module?->module_type;
+    }
+
+    private function isRentalStore(?int $storeId): bool
+    {
+        return $this->storeModuleType($storeId) === 'rental';
+    }
+
+    private function isServiceStore(?int $storeId): bool
+    {
+        return $this->storeModuleType($storeId) === 'service';
     }
 
     private function productLabel(?int $storeId): string
     {
-        return $this->isRentalStore($storeId) ? translate('messages.Vehicle') : translate('messages.Product');
+        if ($this->isRentalStore($storeId)) {
+            return translate('messages.Vehicle');
+        }
+
+        if ($this->isServiceStore($storeId)) {
+            return translate('messages.Service');
+        }
+
+        return translate('messages.Product');
     }
 
     private function actionLabel(?int $storeId): string
     {
-        return $this->isRentalStore($storeId) ? translate('messages.Book_Now') : translate('messages.Order_Now');
+        return $this->isRentalStore($storeId) || $this->isServiceStore($storeId)
+            ? translate('messages.Book_Now')
+            : translate('messages.Order_Now');
     }
 
     private function getStoreItems(?int $storeId): Collection
@@ -610,6 +634,24 @@ class ReelController extends Controller
                 ]);
         }
 
+        if ($this->isServiceStore($storeId)) {
+            if (!class_exists(\Modules\Service\Entities\Service::class)) {
+                return collect();
+            }
+
+            return \Modules\Service\Entities\Service::withoutGlobalScopes()
+                ->where('store_id', $storeId)
+                ->where('status', 1)
+                ->where('is_approved', 1)
+                ->orderBy('name')
+                ->get(['id', 'name', 'base_price'])
+                ->map(fn ($service) => (object) [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'price' => (float) $service->base_price,
+                ]);
+        }
+
         // withoutGlobalScopes() bypasses Store/Zone scoping (the vendor panel
         // has no zone header), but it also strips the model's `translate` scope
         // that pins the always-eager-loaded `translations` to the current
@@ -627,33 +669,4 @@ class ReelController extends Controller
             ->get(['id', 'name', 'price']);
     }
 
-    private function resolveReelProductable($productId, int $storeId): array
-    {
-        $productId = (int) $productId;
-        $empty = ['type' => null, 'id' => null];
-
-        if (!$productId) {
-            return $empty;
-        }
-
-        if ($this->isRentalStore($storeId)) {
-            if (!class_exists(\Modules\Rental\Entities\Vehicle::class)) {
-                return $empty;
-            }
-
-            $belongs = \Modules\Rental\Entities\Vehicle::withoutGlobalScopes()
-                ->where('id', $productId)
-                ->where('provider_id', $storeId)
-                ->exists();
-
-            return $belongs ? ['type' => \Modules\Rental\Entities\Vehicle::class, 'id' => $productId] : $empty;
-        }
-
-        $belongs = Item::withoutGlobalScopes()
-            ->where('id', $productId)
-            ->where('store_id', $storeId)
-            ->exists();
-
-        return $belongs ? ['type' => Item::class, 'id' => $productId] : $empty;
-    }
 }

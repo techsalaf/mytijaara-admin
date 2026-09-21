@@ -80,11 +80,28 @@ document.getElementById('seturl').addEventListener('click', function () {
         } else if (value === 'exclude') {
             $('#tax_rate_setup').removeClass('disabled');
             $('#tax__rate1').attr('required', true);
-            if($('#tax_type').val() == 'order_wise'){
+            if($('#tax_type').val() == 'order_wise' || ($('#tax_type').data('tax_payer') === 'service_provider' && $('#tax_type').val() === 'booking_wise')){
                 $('#tax__rate').attr('required', true);
+            } else {
+                $('#tax__rate').attr('required', false);
             }
         }
     }
+
+$(document).on('reset', '#tax_settings form', function () {
+    const $form = $(this);
+    setTimeout(function () {
+        $form.find('.js-select2-custom').trigger('change');
+        const currentValue = $('input[name="tax_status"]:checked').val();
+        if (currentValue) {
+            handleTaxStatusChange(currentValue);
+        }
+        $('#tax_type').trigger('change');
+        $('.check_additional_data').each(function () {
+            this.dispatchEvent(new Event('change'));
+        });
+    }, 0);
+});
 
 $(document).ready(function () {
     $('input[name="tax_status"]').on('change', function () {
@@ -100,15 +117,51 @@ $(document).ready(function () {
     }
     $('#tax_type').on('change', function () {
 
-        if (this.value == 'product_wise') {
+        const isServiceProvider = $(this).data('tax_payer') === 'service_provider';
+
+        if (this.value == 'product_wise' || (isServiceProvider && this.value === 'service_wise')) {
             $('#tax_type_change_alert').removeClass('d-none').addClass('d-flex');
+            if (isServiceProvider && this.value === 'service_wise') {
+                $('#alert_for_service').removeClass('d-none');
+                $('#alert_for_item').addClass('d-none');
+            } else {
+                $('#alert_for_item').removeClass('d-none');
+                $('#alert_for_service').addClass('d-none');
+            }
         } else {
             $('#tax_type_change_alert').removeClass('d-flex').addClass('d-none');
         }
 
 
         if ($('input[name="tax_status"]:checked').val() == 'exclude') {
-            if (this.value === 'product_wise') {
+            if ($(this).data('tax_payer') === 'service_provider') {
+                $('#info_for_item').addClass('d-none');
+                if (this.value === 'booking_wise') {
+                    $('#info_notes').addClass('d-none').removeClass('d-flex');
+                    $('#info_for_category').addClass('d-none');
+                    $('#info_for_service').addClass('d-none');
+                    $('#tax_rate_div').removeClass('d-none');
+                    $('#tax__rate').attr('required', true);
+                } else if (this.value === 'category_wise') {
+                    $('#info_notes').removeClass('d-none').addClass('d-flex');
+                    $('#info_for_category').removeClass('d-none');
+                    $('#info_for_service').addClass('d-none');
+                    $('#tax_rate_div').addClass('d-none');
+                    $('#tax__rate').attr('required', false);
+                } else if (this.value === 'service_wise') {
+                    $('#info_notes').removeClass('d-none').addClass('d-flex');
+                    $('#info_for_service').removeClass('d-none');
+                    $('#info_for_category').addClass('d-none');
+                    $('#tax_rate_div').addClass('d-none');
+                    $('#tax__rate').attr('required', false);
+                } else {
+                    $('#info_notes').addClass('d-none').removeClass('d-flex');
+                    $('#info_for_category').addClass('d-none');
+                    $('#info_for_service').addClass('d-none');
+                    $('#tax_rate_div').addClass('d-none');
+                    $('#tax__rate').attr('required', false);
+                }
+            } else if (this.value === 'product_wise') {
                 $('#info_notes').removeClass('d-none').addClass('d-flex');
                 $('#info_for_item').removeClass('d-none');
                 $('#info_for_category').addClass('d-none');

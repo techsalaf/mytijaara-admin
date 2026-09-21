@@ -39,8 +39,12 @@
                         </span>
                         <span class="d-block fs-12">
                             {{ translate('messages.Time') }}:
-                            {{ \App\CentralLogics\Helpers::time_format($banner->start_time) }} -
-                            {{ $banner->end_time ? \App\CentralLogics\Helpers::time_format($banner->end_time) : translate('messages.until_you_turn_off') }}
+                            @if($banner->start_time)
+                                {{ \App\CentralLogics\Helpers::time_format($banner->start_time) }} -
+                                {{ $banner->end_time ? \App\CentralLogics\Helpers::time_format($banner->end_time) : translate('messages.until_you_turn_off') }}
+                            @else
+                                {{ translate('messages.all_day') }}
+                            @endif
                         </span>
                     </td>
                     <td>{{ $banner->module ? translate($banner->module->module_name) : translate('messages.all_modules') }}</td>

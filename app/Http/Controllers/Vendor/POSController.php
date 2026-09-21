@@ -49,9 +49,12 @@ class POSController extends Controller
     }
     public function index(Request $request)
     {
+        if (Helpers::get_store_data()?->module_type == 'service') {
+            abort(404);
+        }
         $category = $request->query('category_id', 0);
         $categories = Category::active()->module(Helpers::get_store_data()->module_id)->get();
-        $keyword = $request->query('keyword', false);
+        $keyword = $request->query('pos_keyword', false);
         $store = Store::find(Helpers::get_store_data()->module_id);
         $key = explode(' ', $keyword);
         $products = Item::active()
@@ -69,7 +72,7 @@ class POSController extends Controller
         })
         ->latest()->paginate(10);
 
-        $hasNavParams = $request->filled('keyword')
+        $hasNavParams = $request->filled('pos_keyword')
             || $request->filled('category_id')
             || $request->filled('page');
 
@@ -686,7 +689,12 @@ class POSController extends Controller
             }
             $address = $request->session()->get('address');
         }
-        $distance_data = isset($address) ? $address['distance'] : 0;
+
+        $hasDeliveryAddress = isset($address)
+            && !empty($address['latitude'])
+            && !empty($address['longitude']);
+
+        $distance_data = $hasDeliveryAddress ? $address['distance'] : 0;
 
         $store = Helpers::get_store_data();
 
@@ -735,24 +743,23 @@ class POSController extends Controller
         $order_details = [];
         $product_data = [];
 
+        $lastId = Order::max('id') ?? 99999;
         $order = new Order();
-        $order->id = 100000 + Order::count() + 1;
-        if (Order::find($order->id)) {
-            $order->id = Order::latest()->first()->id + 1;
-        }
-        $order->payment_status = isset($address)?'unpaid':'paid';
-        if($request->user_id){
+        $order->id = $lastId + 1;
+        $order->payment_status = $hasDeliveryAddress?'unpaid':'paid';
+        if($request->user_id && $hasDeliveryAddress){
 
-            $order->order_status = isset($address)?'confirmed':'delivered';
-            $order->order_type = isset($address)?'delivery':'take_away';
+            $order->order_status = 'confirmed';
+            $order->order_type = 'delivery';
         }else{
             $order->order_status = 'delivered';
             $order->order_type = 'take_away';
         }
+        $order->is_pos = 1;
         if($order->order_type == 'take_away'){
             $order->delivered = now();
         }
-        $order->distance = isset($address) ? $address['distance'] : 0;
+        $order->distance = $hasDeliveryAddress ? $address['distance'] : 0;
         $order->payment_method = $request->type;
         $order->store_id = $store->id;
         $order->module_id = Helpers::get_store_data()->module_id;
@@ -830,17 +837,23 @@ class POSController extends Controller
         }
 
 
-        $pos_delivery_calc = $this->calculatePosDeliveryFee(
-            $store->id,
-            $order->distance,
-            $request->user_id,
-            (float) $total_price,
-        );
-        $order->delivery_charge          = $pos_delivery_calc['delivery_fee'];
-        $order->original_delivery_charge = $pos_delivery_calc['original_delivery_charge'];
-        $pro_delivery_savings            = (float) ($pos_delivery_calc['original_delivery_charge'] - $pos_delivery_calc['delivery_fee']);
-        if (!empty($pos_delivery_calc['free_delivery_by'])) {
-            $order->free_delivery_by = $pos_delivery_calc['free_delivery_by'];
+        $pro_delivery_savings = 0.0;
+        if ($hasDeliveryAddress) {
+            $pos_delivery_calc = $this->calculatePosDeliveryFee(
+                $store->id,
+                $order->distance,
+                $request->user_id,
+                (float) $total_price,
+            );
+            $order->delivery_charge          = $pos_delivery_calc['delivery_fee'];
+            $order->original_delivery_charge = $pos_delivery_calc['original_delivery_charge'];
+            $pro_delivery_savings            = (float) ($pos_delivery_calc['original_delivery_charge'] - $pos_delivery_calc['delivery_fee']);
+            if (!empty($pos_delivery_calc['free_delivery_by'])) {
+                $order->free_delivery_by = $pos_delivery_calc['free_delivery_by'];
+            }
+        } else {
+            $order->delivery_charge          = 0;
+            $order->original_delivery_charge = 0;
         }
 
         $finalCalculatedTax =  Helpers::getFinalCalculatedTax($order_details, $additionalCharges, $totalDiscount, $total_price, $store->id);
@@ -859,22 +872,24 @@ class POSController extends Controller
             $order->store_discount_amount= $store_discount_amount;
             $order->tax_percentage = 0;
             $order->total_tax_amount = $tax_amount;
-            $pos_eligible_amount = max(0, $product_price + $total_addon_price - $store_discount_amount - ($flash_sale_admin_discount_amount ?? 0) - ($flash_sale_vendor_discount_amount ?? 0));
-            $pos_effective_delivery = \App\CentralLogics\DeliveryFeeLogic::effectiveFee(
-                (float) $order->delivery_charge,
-                $store,
-                $pos_eligible_amount,
-                \App\CentralLogics\DeliveryFeeLogic::resolveCouponCodeFromSession(),
-            );
-            if ($pos_effective_delivery['is_free']) {
+            if ($hasDeliveryAddress) {
+                $pos_eligible_amount = max(0, $product_price + $total_addon_price - $store_discount_amount - ($flash_sale_admin_discount_amount ?? 0) - ($flash_sale_vendor_discount_amount ?? 0));
+                $pos_effective_delivery = \App\CentralLogics\DeliveryFeeLogic::effectiveFee(
+                    (float) $order->delivery_charge,
+                    $store,
+                    $pos_eligible_amount,
+                    \App\CentralLogics\DeliveryFeeLogic::resolveCouponCodeFromSession(),
+                );
+                if ($pos_effective_delivery['is_free']) {
 
-                $order->delivery_charge  = 0;
-                $order->free_delivery_by = $pos_effective_delivery['free_by'];
-                $pro_delivery_savings    = 0.0;
+                    $order->delivery_charge  = 0;
+                    $order->free_delivery_by = $pos_effective_delivery['free_by'];
+                    $pro_delivery_savings    = 0.0;
+                }
             }
 
             $order->order_amount = $total_price + $tax_amount + $order->delivery_charge;
-            $this->applySaverToOrder($order, (int) $order->module_id, (int) $order->zone_id, (float) $order->delivery_charge);
+            $this->applySaverToOrder($order, (int) $order->module_id, (int) $order->zone_id, (float) $order->delivery_charge, (bool) $self_delivery_status);
             if($request->type == 'card'){
 
                 $order->adjusment = 0;

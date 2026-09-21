@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\CentralLogics\Helpers;
-use App\Http\Controllers\Controller;
 use App\CentralLogics\PersonalizationService;
+use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Item;
 use App\Models\ItemCampaign;
@@ -13,11 +13,33 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+use Modules\Service\Lib\BookingCartService;
 
 class CartController extends Controller
 {
+    /**
+     * The Service module reuses the shared `carts` table but with service semantics (item_type =
+     * Service, provider/service-named fields, no add-ons/stock). When the active module is an
+     * enabled service-type module, every cart endpoint delegates to the module's booking cart so
+     * one URL (api/v1/customer/cart/*) serves both item and service carts. Other modules keep the
+     * existing item-cart logic below.
+     */
+    private function isServiceModule(): bool
+    {
+        $module = config('module.current_module_data');
+
+        return service_addon_active()
+            && $module
+            && ($module['module_type'] ?? null) === 'service'
+            && (int) ($module['status'] ?? 0) === 1;
+    }
+
     public function get_carts(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::getCarts($request);
+        }
+
         $validator = Validator::make($request->all(), [
             'guest_id' => $request->user ? 'nullable' : 'required',
             'store_id' => 'required',
@@ -40,6 +62,10 @@ class CartController extends Controller
 
     public function get_all_carts(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::getAllCarts($request);
+        }
+
         [$userId, $isGuest] = $this->resolveCartOwner($request);
         $moduleId = getModuleId($request->header('moduleId'));
         $longitude = $request->header('longitude');
@@ -50,7 +76,8 @@ class CartController extends Controller
             isGuest: $isGuest,
             moduleId: $moduleId,
             returnRaw: true
-        )->groupBy(fn($cart) => $cart->store_id ?? data_get($cart, 'item.store_id') ?? 'unknown')
+        )->groupBy(fn ($cart) => $cart->store_id ?? data_get($cart, 'item.store_id') ?? 'unknown')
+            ->sortByDesc(fn (Collection $storeCarts) => $storeCarts->max('id'))
             ->map(function (Collection $storeCarts, $storeId) use ($longitude, $latitude) {
                 $store = (is_numeric($storeId)
                     ? Store::WithOpenWithDeliveryTime($longitude ?? 0, $latitude ?? 0)->with('module:id,module_type')->find($storeId)
@@ -62,18 +89,18 @@ class CartController extends Controller
 
                 return [
                     'store' => [
-                        'id'                => $store?->id ?? (is_numeric($storeId) ? (int) $storeId : null),
-                        'name'              => $store?->name,
-                        'slug'              => $store?->slug,
-                        'module_type'       => $store?->module_type,
-                        'logo'              => $store?->logo,
-                        'logo_full_url'     => $store?->logo_full_url,
-                        'item_count'        => $storeCarts->count(),
-                        'delivery_time'     => $delivery_time,
+                        'id' => $store?->id ?? (is_numeric($storeId) ? (int) $storeId : null),
+                        'name' => $store?->name,
+                        'slug' => $store?->slug,
+                        'module_type' => $store?->module_type,
+                        'logo' => $store?->logo,
+                        'logo_full_url' => $store?->logo_full_url,
+                        'item_count' => $storeCarts->count(),
+                        'delivery_time' => $delivery_time,
                         'min_delivery_time' => isset($delivery_parts[0]) ? (int) $delivery_parts[0] : 0,
                         'max_delivery_time' => isset($delivery_parts[1]) ? (int) preg_replace('/[^0-9]/', '', $delivery_parts[1]) : 0,
-                        'distance'          => (float) ($store?->distance ?? 0),
-                        'distance_km'       => isset($store->distance) ? round(((float) $store->distance) / 1000, 2) : 0,
+                        'distance' => (float) ($store?->distance ?? 0),
+                        'distance_km' => isset($store->distance) ? round(((float) $store->distance) / 1000, 2) : 0,
                     ],
                     'carts' => $storeCarts->values()->all(),
                 ];
@@ -84,13 +111,17 @@ class CartController extends Controller
 
     public function add_to_cart(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::addToCart($request);
+        }
+
         $validator = Validator::make($request->all(), [
             'guest_id' => $request->user ? 'nullable' : 'required',
-            'item_id'  => 'required|integer',
-            'model'    => 'required|string|in:Item,ItemCampaign',
-            'price'    => 'required|numeric',
+            'item_id' => 'required|integer',
+            'model' => 'required|string|in:Item,ItemCampaign',
+            'price' => 'required|numeric',
             'quantity' => 'required|integer|min:1',
-            'reel_id'  => 'nullable|integer',
+            'reel_id' => 'nullable|integer',
             'store_id' => 'required',
         ]);
 
@@ -100,11 +131,11 @@ class CartController extends Controller
 
         [$userId, $isGuest] = $this->resolveCartOwner($request);
         $moduleId = getModuleId($request->header('moduleId'));
-        $storeId  = $this->resolveStoreIdFromRequest($request->store_id);
-        $model    = $this->resolveItemType($request->model);
-        $item     = $this->resolveItem($request->model, $request->item_id);
+        $storeId = $this->resolveStoreIdFromRequest($request->store_id);
+        $model = $this->resolveItemType($request->model);
+        $item = $this->resolveItem($request->model, $request->item_id);
 
-        if (!$item) {
+        if (! $item) {
             return response()->json([
                 'errors' => [['code' => 'cart_item', 'message' => translate('messages.item_not_found')]],
             ], 403);
@@ -134,23 +165,23 @@ class CartController extends Controller
             ], 403);
         }
 
-        $cart              = new Cart();
-        $cart->user_id     = $userId;
-        $cart->module_id   = $moduleId;
-        $cart->store_id    = $this->resolveStoreId($item);
-        $cart->item_id     = $request->item_id;
-        $cart->is_guest    = $isGuest;
-        $cart->add_on_ids  = json_encode($request->add_on_ids ?? []);
+        $cart = new Cart;
+        $cart->user_id = $userId;
+        $cart->module_id = $moduleId;
+        $cart->store_id = $this->resolveStoreId($item);
+        $cart->item_id = $request->item_id;
+        $cart->is_guest = $isGuest;
+        $cart->add_on_ids = json_encode($request->add_on_ids ?? []);
         $cart->add_on_qtys = json_encode($request->add_on_qtys ?? []);
-        $cart->item_type   = $model;
-        $cart->reel_id     = Helpers::resolve_reel_id($request->filled('reel_id') ? (int) $request->reel_id : null, (int) $request->item_id);
-        $cart->price       = $request->price;
-        $cart->quantity    = $request->quantity;
-        $cart->variation   = json_encode($request->variation ?? []);
+        $cart->item_type = $model;
+        $cart->reel_id = Helpers::resolve_reel_id($request->filled('reel_id') ? (int) $request->reel_id : null, (int) $request->item_id);
+        $cart->price = $request->price;
+        $cart->quantity = $request->quantity;
+        $cart->variation = json_encode($request->variation ?? []);
         $cart->save();
 
-        if (!$isGuest && $model === Item::class) {
-            PersonalizationService::recordItemAction((int)$userId, (int)$request->item_id, 'cart');
+        if (! $isGuest && $model === Item::class) {
+            PersonalizationService::recordItemAction((int) $userId, (int) $request->item_id, 'cart');
         }
 
         $item->carts()->save($cart);
@@ -165,9 +196,13 @@ class CartController extends Controller
 
     public function add_to_cart_multiple(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::addToCartMultiple($request);
+        }
+
         $validator = Validator::make($request->all(), [
             'item_list' => 'required|array',
-            'store_id'  => 'required',
+            'store_id' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -176,13 +211,13 @@ class CartController extends Controller
 
         [$userId, $isGuest] = $this->resolveCartOwner($request);
         $moduleId = getModuleId($request->header('moduleId'));
-        $storeId  = $this->resolveStoreIdFromRequest($request->store_id);
+        $storeId = $this->resolveStoreIdFromRequest($request->store_id);
 
         foreach ($request->item_list as $singleItem) {
             $model = $this->resolveItemType($singleItem['model']);
-            $item  = $this->resolveItem($singleItem['model'], $singleItem['item_id']);
+            $item = $this->resolveItem($singleItem['model'], $singleItem['item_id']);
 
-            if (!$item) {
+            if (! $item) {
                 return response()->json([
                     'errors' => [['code' => 'cart_item', 'message' => translate('messages.item_not_found')]],
                 ], 403);
@@ -212,19 +247,19 @@ class CartController extends Controller
                 ], 403);
             }
 
-            $cart              = new Cart();
-            $cart->user_id     = $userId;
-            $cart->module_id   = $moduleId;
-            $cart->store_id    = $this->resolveStoreId($item);
-            $cart->item_id     = $singleItem['item_id'];
-            $cart->is_guest    = $isGuest;
-            $cart->add_on_ids  = json_encode($singleItem['add_on_ids'] ?? []);
+            $cart = new Cart;
+            $cart->user_id = $userId;
+            $cart->module_id = $moduleId;
+            $cart->store_id = $this->resolveStoreId($item);
+            $cart->item_id = $singleItem['item_id'];
+            $cart->is_guest = $isGuest;
+            $cart->add_on_ids = json_encode($singleItem['add_on_ids'] ?? []);
             $cart->add_on_qtys = json_encode($singleItem['add_on_qtys'] ?? []);
-            $cart->item_type   = $model;
-            $cart->reel_id     = Helpers::resolve_reel_id(isset($singleItem['reel_id']) ? (int) $singleItem['reel_id'] : null, (int) $singleItem['item_id']);
-            $cart->price       = $singleItem['price'];
-            $cart->quantity    = $singleItem['quantity'];
-            $cart->variation   = json_encode($singleItem['variation'] ?? []);
+            $cart->item_type = $model;
+            $cart->reel_id = Helpers::resolve_reel_id(isset($singleItem['reel_id']) ? (int) $singleItem['reel_id'] : null, (int) $singleItem['item_id']);
+            $cart->price = $singleItem['price'];
+            $cart->quantity = $singleItem['quantity'];
+            $cart->variation = json_encode($singleItem['variation'] ?? []);
             $cart->save();
 
             $item->carts()->save($cart);
@@ -240,10 +275,14 @@ class CartController extends Controller
 
     public function update_cart(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::updateCart($request);
+        }
+
         $validator = Validator::make($request->all(), [
-            'cart_id'  => 'required',
+            'cart_id' => 'required',
             'guest_id' => $request->user ? 'nullable' : 'required',
-            'price'    => 'required|numeric',
+            'price' => 'required|numeric',
             'quantity' => 'required|integer|min:1',
             'store_id' => 'required',
         ]);
@@ -254,10 +293,10 @@ class CartController extends Controller
 
         [$userId, $isGuest] = $this->resolveCartOwner($request);
         $moduleId = getModuleId($request->header('moduleId'));
-        $storeId  = $this->resolveStoreIdFromRequest($request->store_id);
-        $cart     = Cart::find($request->cart_id);
+        $storeId = $this->resolveStoreIdFromRequest($request->store_id);
+        $cart = Cart::find($request->cart_id);
 
-        if (!$cart || (int) $cart->user_id !== (int) $userId || (int) $cart->is_guest !== (int) $isGuest) {
+        if (! $cart || (int) $cart->user_id !== (int) $userId || (int) $cart->is_guest !== (int) $isGuest) {
             return response()->json([
                 'errors' => [['code' => 'cart', 'message' => translate('messages.cart_not_found')]],
             ], 404);
@@ -267,7 +306,7 @@ class CartController extends Controller
             ? Item::find($cart->item_id)
             : ItemCampaign::find($cart->item_id);
 
-        if (!$item) {
+        if (! $item) {
             return response()->json([
                 'errors' => [['code' => 'cart_item', 'message' => translate('messages.item_not_found')]],
             ], 404);
@@ -284,15 +323,15 @@ class CartController extends Controller
             ], 403);
         }
 
-        $cart->user_id     = $userId;
-        $cart->module_id   = $moduleId;
-        $cart->store_id    = $this->resolveStoreId($item);
-        $cart->is_guest    = $isGuest;
-        $cart->add_on_ids  = $request->has('add_on_ids') ? json_encode($request->add_on_ids ?? []) : $cart->add_on_ids;
+        $cart->user_id = $userId;
+        $cart->module_id = $moduleId;
+        $cart->store_id = $this->resolveStoreId($item);
+        $cart->is_guest = $isGuest;
+        $cart->add_on_ids = $request->has('add_on_ids') ? json_encode($request->add_on_ids ?? []) : $cart->add_on_ids;
         $cart->add_on_qtys = $request->has('add_on_qtys') ? json_encode($request->add_on_qtys ?? []) : $cart->add_on_qtys;
-        $cart->price       = $request->price;
-        $cart->quantity    = $request->quantity;
-        $cart->variation   = $request->variation ? json_encode($request->variation) : $cart->variation;
+        $cart->price = $request->price;
+        $cart->quantity = $request->quantity;
+        $cart->variation = $request->variation ? json_encode($request->variation) : $cart->variation;
         $cart->save();
 
         return response()->json($this->getFormattedCartResponse(
@@ -305,8 +344,12 @@ class CartController extends Controller
 
     public function remove_cart_item(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::removeCartItem($request);
+        }
+
         $validator = Validator::make($request->all(), [
-            'cart_id'  => 'required',
+            'cart_id' => 'required',
             'guest_id' => $request->user ? 'nullable' : 'required',
             'store_id' => 'required',
         ]);
@@ -319,7 +362,7 @@ class CartController extends Controller
         $storeId = $this->resolveStoreIdFromRequest($request->store_id);
         $cart = Cart::find($request->cart_id);
 
-        if (!$cart || (int) $cart->user_id !== (int) $userId || (int) $cart->is_guest !== (int) $isGuest) {
+        if (! $cart || (int) $cart->user_id !== (int) $userId || (int) $cart->is_guest !== (int) $isGuest) {
             return response()->json([
                 'errors' => [['code' => 'cart', 'message' => translate('messages.cart_not_found')]],
             ], 404);
@@ -337,6 +380,10 @@ class CartController extends Controller
 
     public function remove_cart(Request $request): JsonResponse
     {
+        if ($this->isServiceModule()) {
+            return BookingCartService::removeCart($request);
+        }
+
         $validator = Validator::make($request->all(), [
             'guest_id' => $request->user ? 'nullable' : 'required',
         ]);
@@ -347,12 +394,12 @@ class CartController extends Controller
 
         [$userId, $isGuest] = $this->resolveCartOwner($request);
         $moduleId = getModuleId($request->header('moduleId'));
-        $storeId  = $this->resolveStoreIdFromRequest($request->store_id);
+        $storeId = $this->resolveStoreIdFromRequest($request->store_id);
 
         Cart::where('user_id', $userId)
             ->where('is_guest', $isGuest)
             ->where('module_id', $moduleId)
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->delete();
 
         return response()->json($this->getFormattedCartResponse(
@@ -373,13 +420,13 @@ class CartController extends Controller
         $carts = Cart::where('user_id', $userId)
             ->where('is_guest', $isGuest)
             ->where('module_id', $moduleId)
-            ->when($storeId, fn($q) => $q->where('store_id', $storeId))
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->get()
             ->map(function ($data) {
-                $data->add_on_ids  = json_decode($data->add_on_ids, true);
+                $data->add_on_ids = json_decode($data->add_on_ids, true);
                 $data->add_on_qtys = json_decode($data->add_on_qtys, true);
-                $data->variation   = json_decode($data->variation, true);
-                $data->item        = Helpers::cart_product_data_formatting(
+                $data->variation = json_decode($data->variation, true);
+                $data->item = Helpers::cart_product_data_formatting(
                     $data->item,
                     $data->variation,
                     $data->add_on_ids,
@@ -387,9 +434,10 @@ class CartController extends Controller
                     false,
                     app()->getLocale()
                 );
+
                 return $data;
             })
-            ->filter(fn($cart) => $cart->item);
+            ->filter(fn ($cart) => $cart->item);
 
         return $returnRaw ? $carts : $carts->values()->all();
     }
@@ -412,7 +460,7 @@ class CartController extends Controller
     private function outOfStockError($item, $variation, int $quantity): ?array
     {
         $moduleType = $item->module?->module_type ?? null;
-        if (!$moduleType || !config('module.' . $moduleType . '.stock')) {
+        if (! $moduleType || ! config('module.'.$moduleType.'.stock')) {
             return null;
         }
 
@@ -426,7 +474,7 @@ class CartController extends Controller
         }
 
         if ($quantity > $stock) {
-            return ['code' => 'stock', 'message' => trim(($item->name ?? '') . ' ' . translate('messages.is_out_of_stock'))];
+            return ['code' => 'stock', 'message' => trim(($item->name ?? '').' '.translate('messages.is_out_of_stock'))];
         }
 
         return null;

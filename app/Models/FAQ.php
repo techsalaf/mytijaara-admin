@@ -13,12 +13,18 @@ class FAQ extends Model
     protected $casts = [
         'id' => 'integer',
         'status' => 'integer',
+        'faqable_id' => 'integer',
     ];
 
 
     public function translations()
     {
         return $this->morphMany(Translation::class, 'translationable');
+    }
+
+    public function faqable()
+    {
+        return $this->morphTo();
     }
 
     public function getQuestionAttribute($value){

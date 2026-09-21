@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\HandlesMissingAddonRelations;
 use App\Traits\ReportFilter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Rental\Entities\Trips;
 use Modules\RideShare\Entities\TripManagement\RideRequest;
+use Modules\Service\Entities\ServiceBooking;
 
 class Expense extends Model
 {
-    use HasFactory, ReportFilter;
+    use HandlesMissingAddonRelations, HasFactory, ReportFilter;
     protected $casts = [
         'id' => 'integer',
         'order_id' => 'integer',
@@ -62,15 +64,20 @@ class Expense extends Model
         return $this->belongsTo(RideRequest::class, 'ride_id');
     }
 
+    public function serviceBooking()
+    {
+        if (! addon_published_status('Service')) {
+            return $this->missingAddonRelation('service_booking_id');
+        }
+
+        return $this->belongsTo(ServiceBooking::class, 'service_booking_id');
+    }
+
     public function scopeWithoutAddon($query)
     {
         return $query
             ->whereNull('ride_id')
-            ->whereNull('trip_id');
-    }
-
-    protected function missingAddonRelation(string $foreignKey)
-    {
-        return $this->belongsTo(self::class, $foreignKey)->whereRaw('1 = 0');
+            ->whereNull('trip_id')
+            ->whereNull('service_booking_id');
     }
 }

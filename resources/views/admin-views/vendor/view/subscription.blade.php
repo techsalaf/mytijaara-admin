@@ -36,7 +36,7 @@
                         <div class="max-w-595">
                             <h3 class="name">{{ translate('Commission Base Plan') }}</h3>
                             <div class="info-text fs-14">
-                                {{ translate('Store will pay') }} {{ $store->comission > 0 ?  $store->comission :  $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
+                                {{ translate('Store will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
                             </div>
                         </div>
                     </div>
@@ -44,7 +44,7 @@
                         <div class="bg-white d-flex align-items-center justify-content-between gap-2 flex-wrap rounded py-3 px-xxl-4 px-3">
                             <h4 class="title mt-2">
                                 <span class="text-180 fs-32 theme-clr">
-                                 {{ $store->comission > 0 ?  $store->comission :  $admin_commission }}%
+                                 {{ $store->comission ?? $admin_commission }}%
                                 </span>
                                 <span class="fs-14 font-semibold d-block">{{ translate('messages.Commission_per_order') }}</span>
                             </h4>
@@ -102,9 +102,9 @@
                 <div class="d-flex flex-wrap flex-md-nowrap justify-content-between __plan-details-top">
                     <div class="w-100">
                         <h3 class="name text--primary">{{ translate('Commission Base Plan') }}</h3>
-                        <h4 class="title mt-2"><span class="text-180">{{ $store->comission > 0 ?  $store->comission :  $admin_commission }} %</span> {{ translate('messages.Commission_per_order') }}</h4>
+                        <h4 class="title mt-2"><span class="text-180">{{ $store->comission ?? $admin_commission }} %</span> {{ translate('messages.Commission_per_order') }}</h4>
                         <div class="info-text ">
-                            {{ translate('Store will pay') }} {{ $store->comission > 0 ?  $store->comission :  $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
+                            {{ translate('Store will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
                         </div>
                         <div class="mt-3">
                             <form action="{{route('admin.store.update-settings',[$store['id'] , 'tab' => 'business_plan'])}}" method="post">
@@ -362,11 +362,11 @@
                                 <div class="inner-div">
                                     <div class="text-center">
                                         <h3 class="title">{{ translate('Commission Base') }}</h3>
-                                        <h2 class="price">{{  $store->comission > 0 ?  $store->comission :  $admin_commission }}%</h2>
+                                        <h2 class="price">{{  $store->comission ?? $admin_commission }}%</h2>
                                     </div>
                                     <div class="py-5 mt-4">
                                         <div class="info-text text-center">
-                                            {{ translate('Store will pay') }} {{  $store->comission > 0 ?  $store->comission :  $admin_commission }}% {{ translate('commission to') }} {{ $business_name }} {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
+                                            {{ translate('Store will pay') }} {{  $store->comission ?? $admin_commission }}% {{ translate('commission to') }} {{ $business_name }} {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
                                         </div>
                                     </div>
                                     <div class="text-center">

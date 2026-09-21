@@ -313,7 +313,7 @@
                                     <td>
                                         @if($review->customer)
                                             <a
-                                                href="{{route('admin.customer.view',[$review['user_id']])}}">
+                                                href="{{route('admin.users.customer.view',[$review['user_id']])}}">
                                                 <div>
                                     <span class="d-block h5 text-hover-primary mb-0">{{Str::limit($review->customer['f_name']." ".$review->customer['l_name'], 15)}} </span>
                                                     <span class="d-block font-size-sm text-body">{{Str::limit($review->customer->phone)}}</span>

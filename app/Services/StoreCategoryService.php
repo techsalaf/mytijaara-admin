@@ -24,7 +24,7 @@ class StoreCategoryService
     public function buildQuery(array $filters = []): Builder
     {
         return StoreCategory::query()
-            ->withCount('items')
+            ->withCount([$this->resolveCountRelation($filters['store_id'] ?? null) . ' as items_count'])
             ->when(isset($filters['store_id']) && $filters['store_id'] !== '', function ($q) use ($filters) {
                 $q->where('store_id', $filters['store_id']);
             })
@@ -42,6 +42,21 @@ class StoreCategoryService
                 relations: ['translations' => 'value'],
                 mainCol: ['name', 'id']
             );
+    }
+
+    private function resolveCountRelation($storeId): string
+    {
+        if (!empty($storeId) && addon_published_status('Service')) {
+            // Resolve module_type through the module relation (accessor) rather than a direct
+            // `stores.module_type` column select — standalone Service deployments have no such
+            // column, so ->value('module_type') would throw "Unknown column 'module_type'".
+            $moduleType = Store::with('module:id,module_type')->find($storeId)?->module_type;
+            if ($moduleType === 'service') {
+                return 'services';
+            }
+        }
+
+        return 'items';
     }
 
     public function create(int $storeId, string $name, ?int $priority = 0, ?UploadedFile $image = null): StoreCategory

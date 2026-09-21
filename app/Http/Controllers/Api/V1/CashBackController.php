@@ -22,14 +22,18 @@ class CashBackController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $customer_id=Auth::user()?->id ?? $request->customer_id ?? 'all';
-        return  Helpers::getCalculatedCashBackAmount(amount:$request->amount, customer_id:$customer_id, type:Module::whereId(getModuleId($request->header('moduleId')))->first()?->module_type == 'rental' ? 1 : null);
+        return  Helpers::getCalculatedCashBackAmount(amount:$request->amount, customer_id:$customer_id, type:$this->resolveCashbackType($request));
     }
-    
+
     public function list(Request $request){
         $customer_id=Auth::user()?->id ?? request()?->customer_id ?? 'all';
+        $moduleType = Module::whereId(getModuleId($request->header('moduleId')))->first()?->module_type;
         $data =CashBack::active()
-        ->when(Module::whereId(getModuleId($request->header('moduleId')))->first()?->module_type == 'rental', function($query){
+        ->when($moduleType == 'rental', function($query){
             $query->rental();
+        })
+        ->when($moduleType == 'service', function($query){
+            $query->service();
         })
         ->Running()
         ->where(function($query)use($customer_id){
@@ -45,6 +49,17 @@ class CashBackController extends Controller
             })
         ->orderBy('cashback_amount','desc')->get();
         return response()->json($data, 200);
+    }
+
+    private function resolveCashbackType(Request $request): int|string|null
+    {
+        $moduleType = Module::whereId(getModuleId($request->header('moduleId')))->first()?->module_type;
+
+        return match ($moduleType) {
+            'rental' => 1,
+            'service' => 'service',
+            default => null,
+        };
     }
 
 }

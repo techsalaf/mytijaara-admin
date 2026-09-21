@@ -17,7 +17,7 @@ class CampaignController extends Controller
 {
     function list(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $campaigns=Campaign::with('stores')->running()->latest()->module(Helpers::get_store_data()->module_id)
 
@@ -80,7 +80,7 @@ class CampaignController extends Controller
 
 
     public function searchItem(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $campaigns=ItemCampaign::where('store_id', Helpers::get_store_id())
         ->where(function ($q) use ($key) {
             foreach ($key as $value) {

@@ -29,17 +29,17 @@ class WalletBonusRepository implements WalletBonusRepositoryInterface
         return $this->bonus->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->bonus->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->bonus->with($relations)->where($filters)
 
         ->when($searchValue !== null, function ($query) use ($searchValue) {
-            $key = explode(' ', $searchValue);
+            $key = explode(' ', $searchValue ?? '');
             $query->where(function ($query) use ($key) {
             foreach ($key as $value) {
                 $query->orWhere('title', 'like', "%{$value}%");

@@ -28,8 +28,8 @@
             </td>
         </tr>
     @else
-        <dt class="col-6">{{ $rowLabel }} :</dt>
-        <dd class="col-6 text-right">
+        <dt class="col-6 {{ $dtClass ?? '' }}">{{ $rowLabel }} :</dt>
+        <dd class="col-6 {{ $ddClass ?? 'text-right' }}">
             {{ $rowSign }} {{ \App\CentralLogics\Helpers::format_currency($rowAmount) }}
         </dd>
     @endif

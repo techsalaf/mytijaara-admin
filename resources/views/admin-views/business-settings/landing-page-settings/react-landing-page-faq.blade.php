@@ -389,6 +389,7 @@
                 @php($key = explode(' ', $search))
                 @php(
                         $faqs = App\Models\FAQ::latest()
+                        ->whereNull('faqable_id')
                         ->where('page_type', 'react_landing_page')
                         ->when($search, function($query) use($key) {
                             $query->where(function($q) use($key) {
@@ -555,9 +556,9 @@
                             <h2 class="mb-md-4 mb-3 fs-24 text-center">
                                 {!! \App\CentralLogics\Helpers::highlightWords($faq_title?->value ?? 'Got Questions? We’ve Got $Answers$') !!}
                             </h2>
-                            @php($customerTab = App\Models\FAQ::latest()->where('user_type','customer')->take(5)->get())
-                            @php($sellerTab = App\Models\FAQ::latest()->where('user_type','vendor')->take(5)->get())
-                            @php($riderTab = App\Models\FAQ::latest()->where('user_type','deliveryman')->take(5)->get())
+                            @php($customerTab = App\Models\FAQ::latest()->whereNull('faqable_id')->where('user_type','customer')->take(5)->get())
+                            @php($sellerTab = App\Models\FAQ::latest()->whereNull('faqable_id')->where('user_type','vendor')->take(5)->get())
+                            @php($riderTab = App\Models\FAQ::latest()->whereNull('faqable_id')->where('user_type','deliveryman')->take(5)->get())
                             <ul class="nav nav-tabs rounded-10 border-0 question-tabs max-w-595 mx-auto mb-20"
                                 id="myTab"
                                 role="tablist">

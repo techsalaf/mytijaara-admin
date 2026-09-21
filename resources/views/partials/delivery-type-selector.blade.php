@@ -3,6 +3,7 @@
     $selectorSetUrl       = $setUrl  ?? '';
     $selectorZoneId       = $zoneId  ?? '';
     $selectorModuleId     = $moduleId ?? '';
+    $selectorStoreId      = $storeId ?? '';
     $selectorStoreTime    = $storeDeliveryTime ?? '';
     $selectorCurrencySym  = \App\CentralLogics\Helpers::currency_symbol();
     $selectorCurrencyPos  = \App\CentralLogics\Helpers::get_business_settings('currency_symbol_position') ?? 'left';
@@ -15,6 +16,7 @@
      data-set-url="{{ $selectorSetUrl }}"
      data-zone-id="{{ $selectorZoneId }}"
      data-module-id="{{ $selectorModuleId }}"
+     data-store-id="{{ $selectorStoreId }}"
      data-store-delivery-time="{{ $selectorStoreTime }}"
      data-currency-symbol="{{ $selectorCurrencySym }}"
      data-currency-position="{{ $selectorCurrencyPos }}"

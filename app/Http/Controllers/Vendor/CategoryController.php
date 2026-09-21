@@ -17,9 +17,9 @@ class CategoryController extends Controller
 {
     function index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $categories=Category::where(['position'=>0])->module(Helpers::get_store_data()->module_id)
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%");
@@ -44,13 +44,13 @@ class CategoryController extends Controller
 
     function sub_index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $categories=Category::with(['parent'])
         ->whereHas('parent',function($query){
             $query->module(Helpers::get_store_data()->module_id);
         })
         ->where(['position'=>1])
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");
@@ -62,7 +62,7 @@ class CategoryController extends Controller
     }
 
     // public function search(Request $request){
-    //     $key = explode(' ', $request['search']);
+    //     $key = explode(' ', $request['search'] ?? '');
     //     $categories=Category::where(['position'=>0])
     //     ->module(Helpers::get_store_data()->module_id)
     //     ->where(function ($q) use ($key) {
@@ -79,7 +79,7 @@ class CategoryController extends Controller
     // }
 
 //    public function sub_search(Request $request){
-//        $key = explode(' ', $request['search']);
+//        $key = explode(' ', $request['search'] ?? '');
 //        $categories=Category::with(['parent'])
 //        ->where(function ($q) use ($key) {
 //            foreach ($key as $value) {
@@ -95,9 +95,9 @@ class CategoryController extends Controller
 //    }
 
     public function export_categories(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $categories=Category::where(['position'=>0])->module(Helpers::get_store_data()->module_id)
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%");
@@ -122,13 +122,13 @@ class CategoryController extends Controller
     }
 
     public function export_sub_categories(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $categories=Category::with(['parent'])
         ->whereHas('parent',function($query){
             $query->module(Helpers::get_store_data()->module_id);
         })
         ->where(['position'=>1])
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");

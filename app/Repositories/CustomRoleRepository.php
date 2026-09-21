@@ -30,14 +30,14 @@ class CustomRoleRepository implements CustomRoleRepositoryInterface
         return $this->role->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->role->whereNotIn('id', [1])->get();
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->role->whereNotIn('id',[1])
             ->when(isset($searchValue), function($query) use($key) {
             $query->where(function ($q) use ($key) {
@@ -70,7 +70,7 @@ class CustomRoleRepository implements CustomRoleRepositoryInterface
 
     public function getSearchList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->role->where('id','!=','1')
             ->where(function ($q) use ($key) {
                 foreach ($key as $value) {

@@ -30,14 +30,16 @@ trait VatTaxConfiguration
                 'tax_calculate_on_ride_module' => ['ride_wise'],
                 'tax_calculate_on_parcel' => ['order_wise','category_wise'],
                 'tax_calculate_on_prescription' => ['order_wise'],
+                'tax_calculate_on_service_provider' => ['category_wise', 'service_wise', 'booking_wise'],
 
                 'additional_tax' => [ 'tax_on_packaging_charge'],
                 'additional_tax_rental_provider' => [],
                 'additional_tax_ride_module' => [],
                 'additional_tax_parcel' => [],
                 'additional_tax_prescription' => ['tax_on_packaging_charge'],
+                'additional_tax_service_provider' => [],
 
-                'payer_types'=> [ 'vendor','rental_provider','ride_module', 'parcel', 'prescription'],
+                'payer_types'=> [ 'vendor','rental_provider','ride_module', 'parcel', 'prescription', 'service_provider'],
             ],
             'stackfood' => [
                 'tax_calculate_from' => ['Calculate_Tax_on_Billing_Address_Location'],
@@ -92,6 +94,8 @@ trait VatTaxConfiguration
                 'ride' =>  'Modules\RideShare\Entities\TripManagement\RideRequest',
                 'parcel_category' =>  'App\Models\ParcelCategory',
                 'campaign_product' =>  'App\Models\ItemCampaign',
+                'service' =>  'Modules\Service\Entities\Service',
+                'campaign_service' =>  'Modules\Service\Entities\ServiceCampaign',
             ],
             'stackfood' => [
                 'product' => 'App\Models\Food',

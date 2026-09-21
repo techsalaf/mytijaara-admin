@@ -1030,6 +1030,7 @@ class ItemController extends Controller
             $product_variations = json_decode($product->food_variations, true);
             if ($request->variations && $product_variations && count($product_variations)) {
                 $price += Helpers::food_variation_price($product_variations, $request->variations);
+                $price -= Helpers::product_discount_calculate($product, $price, $product->store)['discount_amount'];
             } else {
                 $price = $product->price - Helpers::product_discount_calculate($product, $product->price, $product->store)['discount_amount'];
             }
@@ -1090,7 +1091,7 @@ class ItemController extends Controller
         $type = $request->query('type', 'all');
         $sub_category_id = $request->query('sub_category_id', 'all');
         $store_category_id = $request->query('store_category_id', 'all');
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $items = Item::when(is_numeric($category_id), function ($query) use ($category_id) {
                 return $query->whereHas('category', function ($q) use ($category_id) {
                     return $q->whereId($category_id)->orWhere('parent_id', $category_id);
@@ -1103,7 +1104,7 @@ class ItemController extends Controller
                 return $query->where('store_category_id', $store_category_id);
             })
             ->where('is_approved', 1)
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                     $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->where('name', 'like', "%{$value}%");
@@ -1128,7 +1129,7 @@ class ItemController extends Controller
     // public function search(Request $request)
     // {
     //     $view = 'vendor-views.product.partials._table';
-    //     $key = explode(' ', $request['search']);
+    //     $key = explode(' ', $request['search'] ?? '');
     //     $settings_access = Helpers::get_mail_status('access_all_products');
     //     $items = Item::where(function ($q) use ($key) {
     //         foreach ($key as $value) {
@@ -1784,7 +1785,7 @@ class ItemController extends Controller
 
         abort_if(Helpers::get_mail_status('product_approval') != 1, 404);
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $sub_category_id = $request->query('sub_category_id', 'all');
         $category_id = $request->query('category_id', 'all');
         $type = $request->query('type', 'all');
@@ -1794,7 +1795,7 @@ class ItemController extends Controller
                 });
             })
             ->where('store_id', Helpers::get_store_id())
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->where('name', 'like', "%{$value}%");
@@ -2182,7 +2183,7 @@ class ItemController extends Controller
 
     public function product_gallery(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $category_id = $request->query('category_id', 'all');
         $type = $request->query('type', 'all');
         $settings = Helpers::get_mail_status('product_gallery');
@@ -2211,13 +2212,13 @@ class ItemController extends Controller
 
     public function flash_sale(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $items = FlashSaleItem::with('flashSale')
             ->wherehas('item', function ($q) {
                 $q->where('store_id', Helpers::get_store_id());
             })
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                 $q->whereHas('item', function ($q) use ($key) {
                     $q->where(function ($q) use ($key) {
                         foreach ($key as $value) {

@@ -71,8 +71,9 @@
                             $breakdownLines[] = translate($t['transaction_type']);
                         }
                     } elseif (!empty($breakdown)) {
-                        if (array_key_exists('trip_commission', $breakdown) || array_key_exists('additional_charge', $breakdown)) {
-                            $breakdownLines[] = translate('Trip Commission') . ': ' . \App\CentralLogics\Helpers::format_currency($breakdown['trip_commission'] ?? 0);
+                        if (array_key_exists('trip_commission', $breakdown) || array_key_exists('booking_commission', $breakdown) || array_key_exists('additional_charge', $breakdown)) {
+                            $isBookingCommission = array_key_exists('booking_commission', $breakdown);
+                            $breakdownLines[] = ($isBookingCommission ? translate('Booking Commission') : translate('Trip Commission')) . ': ' . \App\CentralLogics\Helpers::format_currency($breakdown['trip_commission'] ?? $breakdown['booking_commission'] ?? 0);
                             $breakdownLines[] = $additionalChargeLabel . ': ' . \App\CentralLogics\Helpers::format_currency($breakdown['additional_charge'] ?? 0);
                         } elseif (array_key_exists('order_commission', $breakdown) || array_key_exists('delivery_fee_comission', $breakdown) || array_key_exists('tax_collected', $breakdown) || array_key_exists('packaging_fee_collected', $breakdown)) {
                             $hideOrderCommission = isset($breakdown['hide_order_commission']) && $breakdown['hide_order_commission'];

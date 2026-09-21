@@ -28,8 +28,22 @@ class ItemDetailResource
             $images = collect([asset('public/assets/admin/img/100x100/2.jpg')]);
         }
 
-        $variationCombinations = self::detailVariationCombinations($formatted, $item);
         $pricing = ItemPricing::compute($item);
+
+        // Stock is only meaningful for modules that track it (config/module.php
+        // `stock`) — same gate Admin\OrderController applies before letting a
+        // zero stock mark an item unavailable. `food` does NOT track stock, so
+        // every food row sits at stock = 0; treating that as depleted made the
+        // whole catalog read "Out of Stock" and froze the quantity stepper.
+        $moduleType  = $formatted['module_type'] ?? $item->module?->module_type;
+        $tracksStock = (bool) data_get(config('module.' . $moduleType), 'stock', false);
+        $stock       = (int) ($formatted['stock'] ?? $item->stock ?? 0);
+
+        $variationCombinations = self::detailVariationCombinations($formatted, $item, $tracksStock);
+
+        // Live review average so the detail headline agrees with the card and
+        // the admin panel, rather than the drift-prone stored avg_rating column.
+        $live = self::liveRating($item);
 
         $data = [
             'id' => $item->id,
@@ -41,14 +55,15 @@ class ItemDetailResource
             'discountPercent' => $pricing['discountPercent'],
             'discountType' => $pricing['discountType'],
             'discountSource' => $pricing['discountSource'],
-            'rating' => round((float) ($formatted['avg_rating'] ?? $item->avg_rating ?? 0), 1),
-            'ratingCount' => (int) ($formatted['rating_count'] ?? $item->rating_count ?? 0),
+            'rating' => $live['rating'],
+            'ratingCount' => $live['count'],
             'reviewCount' => (int) ($formatted['review_count'] ?? 0),
             // 5-bucket distribution for the "View All" reviews drawer's
             // summary bars. One GROUP-BY query, status-approved only.
             'ratingDistribution' => self::ratingDistribution($item),
-            'inStock' => ((int) ($formatted['stock'] ?? $item->stock ?? 0)) > 0,
-            'stock' => (int) ($formatted['stock'] ?? $item->stock ?? 0),
+            'tracksStock' => $tracksStock,
+            'inStock' => !$tracksStock || $stock > 0,
+            'stock' => $stock,
             'lowStockThreshold' => 10,
             'maxCartQuantity' => (int) ($item->maximum_cart_quantity ?? 0),
             'moduleType' => $formatted['module_type'] ?? $item->module?->module_type,
@@ -58,6 +73,10 @@ class ItemDetailResource
             'variationCombinations' => $variationCombinations,
             'tags' => $item->tags->pluck('tag')->filter()->values()->all(),
             'description' => (string) ($formatted['description'] ?? ''),
+            // YouTube link stored on the item; the storefront extracts the
+            // video id and embeds it. Non-YouTube/blank values are ignored
+            // client-side, so pass the raw value through.
+            'videoUrl' => $item->video ?: null,
             'reviews' => self::detailReviews($item),
             'isWishlist' => app(WishlistProvider::class)->has((int) $item->id),
             'nutritionsName' => collect($formatted['nutritions_name'] ?? [])->filter()->values()->all(),
@@ -101,11 +120,11 @@ class ItemDetailResource
             ->all();
     }
 
-    private static function detailVariationCombinations($formatted, Item $item): array
+    private static function detailVariationCombinations($formatted, Item $item, bool $tracksStock): array
     {
         return collect($formatted['variations'] ?? [])
             ->filter(fn ($variation) => \filled($variation['type'] ?? null))
-            ->mapWithKeys(function ($variation) use ($item) {
+            ->mapWithKeys(function ($variation) use ($item, $tracksStock) {
                 $originalPrice = (float) ($variation['price'] ?? 0);
                 // Apply the same flash/store/product discount to each
                 // combination's base price so the modal's per-combo display
@@ -119,7 +138,7 @@ class ItemDetailResource
                         'oldPrice' => $pricing['oldPrice'],
                         'discountPercent' => $pricing['discountPercent'],
                         'stock' => $stock,
-                        'inStock' => $stock > 0,
+                        'inStock' => !$tracksStock || $stock > 0,
                     ],
                 ];
             })
@@ -188,6 +207,31 @@ class ItemDetailResource
     private static function normalizeVariationValue(string $value): string
     {
         return \preg_replace('/\s+/', '', \trim($value)) ?? '';
+    }
+
+    /**
+     * Live AVG(rating)/COUNT(*) for a single item from the reviews table (all
+     * reviews, matching how the admin panel counts them). Falls back to the
+     * stored avg_rating/rating_count columns when the item has no reviews.
+     * Public so FoodDetailsResource (the quick-view modal) can reuse it.
+     */
+    public static function liveRating(Item $item): array
+    {
+        $agg = Review::query()
+            ->where('item_id', $item->id)
+            ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as rating_count')
+            ->first();
+
+        $count = (int) ($agg->rating_count ?? 0);
+
+        return [
+            'rating' => $count > 0
+                ? round((float) $agg->avg_rating, 1)
+                : round((float) ($item->avg_rating ?? 0), 1),
+            'count'  => $count > 0
+                ? $count
+                : (int) ($item->rating_count ?? 0),
+        ];
     }
 
     /**

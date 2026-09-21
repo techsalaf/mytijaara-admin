@@ -101,13 +101,13 @@ active
                         <div class="col-lg-4 col-sm-6">
                             <div class="form-group">
                                 <label class="input-label">{{ translate('Package_Price') }} ({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
-                                <input type="number" value="{{ $subscriptionackage->price }}" name="package_price" required  min="0.01" step="0.01" max="999999999" class="form-control" placeholder="{{ translate('Ex: 300') }}">
+                                <input type="number" inputmode="decimal" value="{{ $subscriptionackage->price }}" name="package_price" required min="0.01" step="0.01" max="999999999" class="form-control no-spinner" placeholder="{{ translate('Ex: 300') }}">
                             </div>
                         </div>
                         <div class="col-lg-4 col-sm-6">
                             <div class="form-group">
                                 <label class="input-label">{{ translate('Package_Validity') }} {{ translate('Days') }}</label>
-                                <input type="number"   min="1" max="999999999"  value="{{ $subscriptionackage->validity }}"  required name="package_validity"  class="form-control" placeholder="{{ translate('Ex: 365') }}">
+                                <input type="number" inputmode="numeric"  min="1" step="1" max="999999999"  value="{{ $subscriptionackage->validity }}"  required name="package_validity"  class="form-control no-spinner" placeholder="{{ translate('Ex: 365') }}">
                             </div>
                         </div>
 
@@ -166,7 +166,7 @@ active
                 </div>
                 <div class="card-body">
                     <div class="check--item-wrapper check--item-wrapper-2 mt-0">
-                       @if ($subscriptionackage->module_type !== 'rental')
+                       @if ($subscriptionackage->module_type == 'all')
 
                        <div class="check-item">
                            <label class="form-group form-check form--check">
@@ -213,7 +213,7 @@ active
                                     {{ translate('Set_limit') }}
                                 </div>
                             </h5>
-                            <div class="fz-12px">{{  $subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ? translate('Set_maximum_trip_&_Vehicle_limit_for_this_package') :translate('Set_maximum_order_&_product_limit_for_this_package') }}</div>
+                            <div class="fz-12px">{{  $subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ? translate('Set_maximum_trip_&_Vehicle_limit_for_this_package') : ($subscriptionackage->module_type == 'service' && addon_published_status('Service') ? translate('Set_maximum_booking_&_service_limit_for_this_package') : translate('Set_maximum_order_&_product_limit_for_this_package')) }}</div>
                         </div>
                     </div>
                 </div>
@@ -223,7 +223,7 @@ active
                             <div class="card-body">
                                 <div class="limit-item-card">
                                     <div class="form-group mb-0">
-                                        <label class="form-label text-capitalize">{{$subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ? translate('Maximum_Trip_Limit'):translate('Maximum_Order Limit') }}</label>
+                                        <label class="form-label text-capitalize">{{$subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ? translate('Maximum_Trip_Limit') : ($subscriptionackage->module_type == 'service' && addon_published_status('Service') ? translate('Maximum_Booking_Limit') : translate('Maximum_Order Limit')) }}</label>
                                         <div class="d-flex flex-wrap items-center gap-2">
                                             <div class="resturant-type-group p-0">
                                                 <label class="form-check form--check mr-2 mr-md-4">
@@ -251,7 +251,7 @@ active
                             <div class="card-body">
                                 <div class="limit-item-card">
                                     <div class="form-group mb-0">
-                                        <label class="form-label text-capitalize">{{$subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ?  translate('Maximum_Vehicle_Limit'):translate('Maximum_Item_Limit') }}</label>
+                                        <label class="form-label text-capitalize">{{$subscriptionackage->module_type == 'rental' && addon_published_status('Rental') ?  translate('Maximum_Vehicle_Limit') : ($subscriptionackage->module_type == 'service' && addon_published_status('Service') ? translate('Maximum_Service_Limit') : translate('Maximum_Item_Limit')) }}</label>
                                         <div class="d-flex flex-wrap items-center gap-2">
                                             <div class="resturant-type-group p-0">
                                                 <label class="form-check form--check mr-2 mr-md-4">
@@ -340,6 +340,13 @@ active
     function reset(){
     $('.limit-input').trigger('change');
     }
+
+    // Package validity accepts whole days only — block decimal/exponent characters
+    $(document).on('keydown', 'input[name="package_validity"]', function (event) {
+        if (['.', 'e', 'E', '+', '-'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
 
 </script>
 

@@ -19,10 +19,15 @@ class CouponController extends Controller
 
     public function list(Request $request)
     {
-       Helpers::setZoneIds($request);
         $customer_id=Auth::user()?->id ?? $request->customer_id ?? null;
         $store_id = $request->store_id ?? null;
-        $zone_id= $request->header('zoneId');
+        $zone_id= isset($request->zone_id) ? $request->zone_id : $request->header('zoneId');
+        if (is_array($zone_id)) {
+            $zone_ids = $zone_id;
+        } else {
+            $decoded_zone = json_decode($zone_id, true);
+            $zone_ids = is_array($decoded_zone) ? $decoded_zone : array_filter([$zone_id], fn($value) => $value !== null && $value !== '');
+        }
         $data = [];
         $proOffer = $this->getProCustomerOffer(userId: $customer_id);
         $proCouponEligible = ($proOffer['status'] ?? false) && (($proOffer['benefit']['type'] ?? null) === 'coupon');
@@ -31,7 +36,17 @@ class CouponController extends Controller
             ->when(config('module.current_module_data'), function($query){
                 $query->module(config('module.current_module_data')['id']);
             })
-            ->whereDate('expire_date', '>=', date('Y-m-d'))->whereDate('start_date', '<=', date('Y-m-d'))->get();
+            // Pro Customer coupons carry no start/expire date (their validity is the customer's
+            // subscription window, checked below via $proCouponEligible), so they're exempted from
+            // the date-window filter here instead of being silently dropped by whereDate on a null.
+            ->where(function($query){
+                $query->where('coupon_type', 'pro_customer')
+                    ->orWhere(function($query){
+                        $query->whereDate('expire_date', '>=', date('Y-m-d'))
+                            ->whereDate('start_date', '<=', date('Y-m-d'));
+                    });
+            })
+            ->get();
             foreach($coupons as $key=>$coupon)
             {
                 if($coupon->coupon_type == 'store_wise')
@@ -41,9 +56,9 @@ class CouponController extends Controller
                         continue;
                     }
                     $temp = Store::active()
-                    ->when(config('module.current_module_data'), function($query)use($zone_id){
+                    ->when(config('module.current_module_data'), function($query)use($zone_ids){
                         if(!config('module.current_module_data')['all_zone_service']) {
-                            $query->whereIn('zone_id', json_decode($zone_id, true));
+                            $query->whereIn('zone_id', $zone_ids);
                         }
                     })
                     ->with('storeConfig:id,store_id,verified_seller')
@@ -61,7 +76,7 @@ class CouponController extends Controller
                 }
                 else if($coupon->coupon_type == 'zone_wise')
                 {
-                    if(count(array_intersect(json_decode($zone_id, true), json_decode($coupon->data,true))))
+                    if(count(array_intersect($zone_ids, json_decode($coupon->data,true) ?? [])))
                     {
                         $data[] = $coupon;
                     }
@@ -85,9 +100,9 @@ class CouponController extends Controller
                     if($store_id && $coupon->store_id != $store_id){
                         continue;
                     }
-                    $temp = Store::active()->when(config('module.current_module_data'), function($query)use($zone_id){
+                    $temp = Store::active()->when(config('module.current_module_data'), function($query)use($zone_ids){
                         if(!config('module.current_module_data')['all_zone_service']) {
-                            $query->whereIn('zone_id', json_decode($zone_id, true));
+                            $query->whereIn('zone_id', $zone_ids);
                         }
                     })->where('id', $coupon->store_id)->exists();
 

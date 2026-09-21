@@ -146,7 +146,7 @@ class BannerController extends Controller
         $limit = $request['limite']??25;
         $offset = $request['offset']??1;
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $banners=Banner::where('created_by','store')->where('store_id', $vendor->stores[0]->id)->where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('name', 'like', "%{$value}%");

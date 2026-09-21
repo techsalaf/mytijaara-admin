@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"><i class="tio-notice"></i> {{translate('messages.item_campaign')}} <span class="badge badge-soft-dark ml-2" id="itemCount">{{$campaigns->total()}}</span></h1>
+                    <h1 class="page-header-title"><i class="tio-notice"></i> {{ \App\CentralLogics\Helpers::moduleItemLabel() }} {{ translate('messages.campaign') }} <span class="badge badge-soft-dark ml-2" id="itemCount">{{$campaigns->total()}}</span></h1>
                 </div>
             </div>
         </div>

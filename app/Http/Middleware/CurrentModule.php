@@ -65,6 +65,8 @@ class CurrentModule
             $detailModuleType = 'parcel';
         } elseif (Request::is('admin/transactions/rental/trip/*') || Request::is('admin/rental/*')) {
             $detailModuleType = 'rental';
+        } elseif (Request::is('admin/service/*') || Request::is('admin/service')) {
+            $detailModuleType = 'service';
         } elseif (
             Request::is('admin/ride-share/*')
             || (Request::is('admin/transactions/ride-share/*')

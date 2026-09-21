@@ -25,6 +25,8 @@ class SmartBannerController extends Controller
 {
     private const ALLOWED_POSITIONS = ['top', 'bottom'];
     private const ALLOWED_REDIRECTS = ['category', 'module_home', 'store_page', 'offer_page'];
+    private const MODULE_HOME_ONLY_TYPES = ['parcel', 'ride-share'];
+    private const PROVIDER_MODULE_TYPES = ['rental', 'service'];
     private const IMAGE_DIR = 'smart-banner';
 
     public function index(Request $request, $zone_id): View
@@ -192,14 +194,17 @@ class SmartBannerController extends Controller
             $request->merge(['module_id' => null]);
         }
 
+        $module = $request->module_id ? Module::find($request->module_id) : null;
+        $allowedRedirects = $this->allowedRedirectsForModule($module);
+
         $rules = [
             'module_id' => 'required|exists:modules,id',
             'active_days' => 'required|in:everyday,custom_date',
             'date_range' => 'required_if:active_days,custom_date',
             'time_range' => 'nullable|string',
             'position' => 'required|in:' . implode(',', self::ALLOWED_POSITIONS),
-            'redirect_type' => 'required|in:' . implode(',', self::ALLOWED_REDIRECTS),
-            'redirect_target_id' => 'nullable|integer',
+            'redirect_type' => 'required|in:' . implode(',', $allowedRedirects),
+            'redirect_target_id' => 'nullable|required_if:redirect_type,store_page|integer',
             'title' => 'required|array',
             'title.0' => 'required|string|max:50',
             'subtitle' => 'nullable|array',
@@ -208,6 +213,9 @@ class SmartBannerController extends Controller
 
         $messages = [
             'module_id.required' => translate('messages.please_select_a_module'),
+            'redirect_target_id.required_if' => $this->isProviderModule($module)
+                ? translate('messages.please_select_a_provider')
+                : translate('messages.please_select_a_store'),
             'title.0.required' => translate('messages.default_title_required'),
             'image.required' => translate('messages.banner_image_required'),
         ];
@@ -254,6 +262,26 @@ class SmartBannerController extends Controller
             'redirect_type' => $request->redirect_type,
             'redirect_target_id' => in_array($request->redirect_type, ['module_home', 'offer_page'], true) ? null : ($request->redirect_target_id ?: null),
         ];
+    }
+
+    private function allowedRedirectsForModule(?Module $module): array
+    {
+        if (!$module) {
+            return self::ALLOWED_REDIRECTS;
+        }
+        if (in_array($module->module_type, self::MODULE_HOME_ONLY_TYPES, true)) {
+            return ['module_home'];
+        }
+        if (in_array($module->module_type, self::PROVIDER_MODULE_TYPES, true)) {
+            return ['module_home', 'store_page'];
+        }
+
+        return self::ALLOWED_REDIRECTS;
+    }
+
+    private function isProviderModule(?Module $module): bool
+    {
+        return $module && in_array($module->module_type, self::PROVIDER_MODULE_TYPES, true);
     }
 
     private function applyPayload(SmartBanner $banner, array $payload): void
@@ -372,7 +400,8 @@ class SmartBannerController extends Controller
         $startDateFormatted = $banner->start_date ? Carbon::parse($banner->start_date)->format('m/d/Y') : null;
         $endDateFormatted = $banner->end_date ? Carbon::parse($banner->end_date)->format('m/d/Y') : null;
 
-        $timeRangeFormatted = null;
+
+        $timeRangeFormatted = translate('messages.all_day');
         if ($banner->start_time) {
             $startTime = Carbon::parse($banner->start_time)->format('g:i A');
             $endTime = $banner->end_time
@@ -384,7 +413,9 @@ class SmartBannerController extends Controller
         $redirectTypeLabels = [
             'category' => translate('messages.category'),
             'module_home' => translate('messages.module_home'),
-            'store_page' => translate('messages.store_page'),
+            'store_page' => $this->isProviderModule($banner->module)
+                ? translate('messages.provider_page')
+                : translate('messages.store_page'),
             'offer_page' => translate('messages.offer_page'),
         ];
 

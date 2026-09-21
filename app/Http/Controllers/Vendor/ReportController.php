@@ -32,14 +32,14 @@ class ReportController extends Controller
             $from = $request->from ?? null;
             $to = $request->to ?? null;
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $expense = Expense::with('order')->where('created_by','vendor')->where('store_id',Helpers::get_store_id())->where('amount', '>' ,0)
 
         ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
         })
 
-        ->when(isset($key) && is_array($key), function ($query) use ($key) {
+        ->when($request['search'] && is_array($key), function ($query) use ($key) {
 
             $query->where(function ($q) use ($key) {
 
@@ -102,13 +102,13 @@ class ReportController extends Controller
             $from = $request->from ?? null;
             $to = $request->to ?? null;
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $expense = Expense::with('order')->where('created_by','vendor')->where('store_id',Helpers::get_store_id())->where('amount', '>' ,0)
         ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
         })
 
-        ->when(isset($key) && is_array($key), function ($query) use ($key) {
+        ->when($request['search'] && is_array($key), function ($query) use ($key) {
 
             $query->where(function ($q) use ($key) {
 
@@ -188,7 +188,7 @@ class ReportController extends Controller
             $from = $request->from ?? null;
             $to = $request->to ?? null;
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $store_id = Helpers::get_store_id();
         $withdrawal_methods = WithdrawalMethod::ofStatus(1)->get();
         $status = $request->query('status', 'all');
@@ -206,7 +206,7 @@ class ReportController extends Controller
             ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
             })
-            ->when(isset($key), function ($q) use ($key){
+            ->when($request['search'], function ($q) use ($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('disbursement_id', 'like', "%{$value}%")
@@ -237,7 +237,7 @@ class ReportController extends Controller
             $from = $request->from ?? null;
             $to = $request->to ?? null;
         }
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $store_id = Helpers::get_store_id();
         $withdrawal_methods = WithdrawalMethod::ofStatus(1)->get();
         $status = $request->query('status', 'all');
@@ -255,7 +255,7 @@ class ReportController extends Controller
             ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
             })
-            ->when(isset($key), function ($q) use ($key){
+            ->when($request['search'], function ($q) use ($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('disbursement_id', 'like', "%{$value}%")

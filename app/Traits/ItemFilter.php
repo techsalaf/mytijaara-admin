@@ -54,6 +54,10 @@ trait ItemFilter
 
     protected static function normalizeSortValue($sortBy): string
     {
+        if (is_array($sortBy)) {
+            $sortBy = array_values(array_filter($sortBy, fn ($v) => $v !== null && $v !== '' && ! is_array($v)))[0] ?? null;
+        }
+
         return match ($sortBy) {
             'price_low_high', 'low' => 'price_low_to_high',
             'price_high_low', 'high' => 'price_high_to_low',
@@ -89,6 +93,11 @@ trait ItemFilter
 
     protected static function ratingThreshold($value): float
     {
+        if (is_array($value)) {
+            $thresholds = array_filter(array_map(fn ($v) => self::ratingThreshold($v), $value), fn ($v) => $v > 0);
+
+            return $thresholds ? (float) min($thresholds) : 0;
+        }
         if ($value === null || $value === '') {
             return 0;
         }
@@ -99,5 +108,41 @@ trait ItemFilter
             'two_plus', '2_plus', '2' => 2,
             default => is_numeric($value) ? (float) $value : 0,
         };
+    }
+
+    protected static function ratingIsExact($value): bool
+    {
+        if (is_array($value)) {
+            $values = array_values(array_filter($value, fn ($v) => $v !== null && $v !== ''));
+
+            return count($values) === 1 && self::ratingIsExact($values[0]);
+        }
+
+        return in_array((string) $value, ['only_5', '5'], true);
+    }
+    
+    protected static function categoryIdArray($value): array
+    {
+        if ($value === null || $value === '' || $value === []) {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return array_values(array_filter(array_map(fn ($v) => (int) $v, $value), fn ($v) => $v > 0));
+        }
+
+        $str = trim((string) $value);
+        if ($str === '') {
+            return [];
+        }
+
+        if (str_starts_with($str, '[')) {
+            $decoded = json_decode($str, true);
+            if (is_array($decoded)) {
+                return array_values(array_filter(array_map(fn ($v) => (int) $v, $decoded), fn ($v) => $v > 0));
+            }
+        }
+
+        return array_values(array_filter(array_map(fn ($v) => (int) trim($v), explode(',', $str)), fn ($v) => $v > 0));
     }
 }

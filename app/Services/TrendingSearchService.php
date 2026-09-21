@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Models\Item;
+use App\Models\Module;
 use App\Models\SearchLog;
 use Illuminate\Support\Facades\Cache;
+use Modules\Service\Entities\Service;
 
 class TrendingSearchService
 {
@@ -40,15 +43,7 @@ class TrendingSearchService
                 return $trending;
             }
 
-            $fallback = Category::where('status', 1)
-                ->where('position', 0)
-                ->when($moduleId, function ($q) use ($moduleId) {
-                    $q->where('module_id', $moduleId);
-                })
-                ->orderByDesc('priority')
-                ->limit(10)
-                ->pluck('name')
-                ->toArray();
+            $fallback = $this->fallbackCategories($moduleId, $zoneIds);
 
             shuffle($fallback);
 
@@ -63,6 +58,84 @@ class TrendingSearchService
         }
 
         return Cache::remember($cacheKey, now()->addMinutes(15), $compute);
+    }
+
+    private function fallbackCategories(?int $moduleId, array $zoneIds): array
+    {
+        $moduleType = $moduleId ? Module::where('id', $moduleId)->value('module_type') : null;
+
+        if ($moduleType === 'service' && class_exists(Service::class)) {
+            return $this->serviceFallbackCategories($moduleId, $zoneIds);
+        }
+
+        $itemCategories = $this->itemFallbackCategories($moduleId, $zoneIds);
+
+        if ($moduleId !== null || ! class_exists(Service::class)) {
+            return $itemCategories;
+        }
+
+        $serviceCategories = $this->serviceFallbackCategories(null, $zoneIds);
+
+        return $this->interleave($itemCategories, $serviceCategories, 10);
+    }
+
+    private function interleave(array $first, array $second, int $limit): array
+    {
+        $merged = [];
+        $max = max(count($first), count($second));
+
+        for ($i = 0; $i < $max && count($merged) < $limit; $i++) {
+            foreach ([$first, $second] as $list) {
+                if (isset($list[$i]) && ! in_array($list[$i], $merged, true) && count($merged) < $limit) {
+                    $merged[] = $list[$i];
+                }
+            }
+        }
+
+        return $merged;
+    }
+
+    private function itemFallbackCategories(?int $moduleId, array $zoneIds): array
+    {
+        $hasAvailableItem = function ($itemQuery) use ($zoneIds, $moduleId) {
+            $itemQuery->active(zone_ids: $zoneIds, module_id: $moduleId);
+        };
+
+        return Category::where('status', 1)
+            ->where('position', 0)
+            ->when($moduleId, function ($q) use ($moduleId) {
+                $q->where('module_id', $moduleId);
+            })
+            ->where(function ($q) use ($hasAvailableItem) {
+                $q->whereHas('products', $hasAvailableItem)
+                    ->orWhereHas('childes.products', $hasAvailableItem);
+            })
+            ->orderByDesc('priority')
+            ->limit(10)
+            ->pluck('name')
+            ->toArray();
+    }
+
+    private function serviceFallbackCategories(?int $moduleId, array $zoneIds): array
+    {
+        $categoryIds = Service::active(zone_ids: $zoneIds, module_id: $moduleId)
+            ->get(['category_id', 'sub_category_id'])
+            ->flatMap(fn ($service) => [$service->category_id, $service->sub_category_id])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($categoryIds)) {
+            return [];
+        }
+
+        return Category::where('status', 1)
+            ->whereIn('id', $categoryIds)
+            ->orderByDesc('priority')
+            ->limit(10)
+            ->pluck('name')
+            ->toArray();
     }
 
     public function log(string $keyword, ?int $userId, ?string $guestId, int $moduleId, string $zoneId, int $resultCount): void

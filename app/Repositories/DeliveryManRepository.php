@@ -33,16 +33,16 @@ class DeliveryManRepository implements DeliveryManRepositoryInterface
         return $this->deliveryMan->with($relations)->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->deliveryMan->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         $data = $this->deliveryMan->with($relations)->where($filters)
-            ->when(isset($key), function($query) use($key){
+            ->when($searchValue, function($query) use($key){
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('f_name', 'like', "%{$value}%")
@@ -95,14 +95,14 @@ class DeliveryManRepository implements DeliveryManRepositoryInterface
         return $this->deliveryMan->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getZoneWiseListWhere(string $zoneId = 'all',string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getZoneWiseListWhere(string $zoneId = 'all',?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         $data = $this->deliveryMan->with($relations)->where($filters)
             ->when(is_numeric($zoneId), function($query) use($zoneId){
                 return $query->where('zone_id', $zoneId);
             })
-            ->when(isset($key), function($query) use($key){
+            ->when($searchValue, function($query) use($key){
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('f_name', 'like', "%{$value}%")
@@ -142,11 +142,11 @@ class DeliveryManRepository implements DeliveryManRepositoryInterface
             })->active()->limit(8)->get(['id',DB::raw('CONCAT(f_name, " ", l_name) as text')]);
     }
 
-    public function getActiveFirstWhere(string $searchValue = null, array $filters = [], array $relations = []): ?Model
+    public function getActiveFirstWhere(?string $searchValue = null, array $filters = [], array $relations = []): ?Model
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->deliveryMan->with($relations)->where($filters)
-            ->when(isset($key), function($query) use($key){
+            ->when($searchValue, function($query) use($key){
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('f_name', 'like', "%{$value}%")
@@ -160,9 +160,9 @@ class DeliveryManRepository implements DeliveryManRepositoryInterface
             ->Active()
             ->first();
     }
-    public function getFilterWiseListWhere(string $zoneId = 'all', string $searchValue = null, array $filters = [],  string $additionalFilter = null ,  string $jobType = null ,array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getFilterWiseListWhere(string $zoneId = 'all', ?string $searchValue = null, array $filters = [],  ?string $additionalFilter = null ,  ?string $jobType = null ,array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         $data = $this->deliveryMan->with($relations)
             ->where($filters)
             ->when(is_numeric($zoneId), function($query) use($zoneId){
@@ -186,7 +186,7 @@ class DeliveryManRepository implements DeliveryManRepositoryInterface
             ->when(isset($jobType) && $jobType == 'salary_base', function($query){
                 return $query->Zonewise()->where('earning',0)->where('application_status','approved');
             })
-            ->when(isset($key), function($query) use($key){
+            ->when($searchValue, function($query) use($key){
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('f_name', 'like', "%{$value}%")

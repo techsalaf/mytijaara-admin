@@ -147,13 +147,15 @@ active
                                     href="{{route('admin.store.edit',[$store['id'],'pending'=>1])}}" title="{{translate('messages.edit_store')}}"><i class="tio-edit"></i>
                                     </a>
 
-                                    <form method="post" action="{{route('admin.store.application',[$store['id'],1])}}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="Approve this vendor application?">@csrf<button type="submit" class="btn action-btn btn--primary btn-outline-primary float-right mr-2 " data-toggle="tooltip" data-placement="top"
+                                    <a class="btn action-btn btn--primary btn-outline-primary float-right mr-2 swal_fire_alert" data-toggle="tooltip" data-placement="top"
                                        data-original-title="{{ translate('messages.approve') }}"
                                        data-title="{{translate('messages.are_you_sure_?')}}"
                                        data-image_url="{{ asset('public/assets/admin/img/off-danger.png') }}"
                                        data-confirm_button_text="{{ translate('messages.yes') }}"
                                        data-cancel_button_text="{{ translate('messages.No') }}"
-                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"><i class="tio-done font-weight-bold"></i></button></form>
+                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"
+                                       data-url="{{route('admin.store.application',[$store['id'],1])}}"
+                                    href="javascript:"><i class="tio-done font-weight-bold"></i></a>
                                 @endif
                                  </div>
                             </td>

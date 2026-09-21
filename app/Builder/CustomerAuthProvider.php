@@ -727,14 +727,20 @@ class CustomerAuthProvider implements CustomerAuthProviderContract
 
         $scope = $this->scopeFilter();
 
+        // Field editability is host-configured (config/builder.php →
+        // capabilities.profile). Locked fields are ignored even if a tampered
+        // request carries a changed value, so client + server agree.
+        $phoneEditable = (bool) config('builder.capabilities.profile.phoneEditable', true);
+        $emailEditable = (bool) config('builder.capabilities.profile.emailEditable', true);
+
         $errors = [];
         if ($fName === '') {
             $errors['f_name'] = [__('The first name field is required.')];
         }
-        if ($phone !== null && $phone !== '' && $this->userQuery()->where('phone', $phone)->where($scope)->where('id', '!=', $user->id)->exists()) {
+        if ($phoneEditable && $phone !== null && $phone !== '' && $this->userQuery()->where('phone', $phone)->where($scope)->where('id', '!=', $user->id)->exists()) {
             $errors['phone'] = [__('The phone has already been taken.')];
         }
-        if ($email !== null && $email !== '' && $this->userQuery()->where('email', $email)->where($scope)->where('id', '!=', $user->id)->exists()) {
+        if ($emailEditable && $email !== null && $email !== '' && $this->userQuery()->where('email', $email)->where($scope)->where('id', '!=', $user->id)->exists()) {
             $errors['email'] = [__('The email has already been taken.')];
         }
         if ($password !== null && $password !== '' && \strlen($password) < 6) {
@@ -750,10 +756,10 @@ class CustomerAuthProvider implements CustomerAuthProviderContract
         if ($lName !== null) {
             $user->l_name = $lName;
         }
-        if ($phone !== null && $phone !== '' && $phone !== $user->phone) {
+        if ($phoneEditable && $phone !== null && $phone !== '' && $phone !== $user->phone) {
             $user->phone = $phone;
         }
-        if ($email !== null && $email !== '' && $email !== $user->email) {
+        if ($emailEditable && $email !== null && $email !== '' && $email !== $user->email) {
             $user->email = $email;
             $user->is_email_verified = 0;
         }

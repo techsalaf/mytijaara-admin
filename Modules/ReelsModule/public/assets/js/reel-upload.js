@@ -148,6 +148,7 @@ function updatePreviewVideo(src) {
 
     previewVideoEl.src = src;
     previewVideoEl.style.display = "none";
+    previewVideoEl.load();
     previewVideoEl.pause();
 
     previewBox.classList.add("active");
@@ -320,8 +321,27 @@ function initReelUploader(container = document) {
 
                 const tempVideo = document.createElement("video");
                 const tempVideoUrl = URL.createObjectURL(file);
-                tempVideo.preload = "metadata";
+                tempVideo.muted = true;
+                tempVideo.playsInline = true;
+                tempVideo.preload = "auto";
                 tempVideo.src = tempVideoUrl;
+
+                const captureFrame = () => {
+                    if (!tempVideo.videoWidth || !tempVideo.videoHeight) {
+                        URL.revokeObjectURL(tempVideoUrl);
+                        return;
+                    }
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = tempVideo.videoWidth;
+                    canvas.height = tempVideo.videoHeight;
+                    canvas.getContext("2d").drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                    if (img) {
+                        img.src = canvas.toDataURL("image/png");
+                    }
+
+                    URL.revokeObjectURL(tempVideoUrl);
+                };
 
                 tempVideo.addEventListener("loadedmetadata", () => {
                     if (maxDurationSeconds && tempVideo.duration > maxDurationSeconds) {
@@ -338,19 +358,9 @@ function initReelUploader(container = document) {
                         return;
                     }
 
-                    tempVideo.currentTime = Math.min(1, Math.max(tempVideo.duration / 2, 0));
-                });
-
-                tempVideo.addEventListener("loadeddata", () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = tempVideo.videoWidth;
-                    canvas.height = tempVideo.videoHeight;
-                    canvas.getContext("2d").drawImage(tempVideo, 0, 0);
-                    if (img) {
-                        img.src = canvas.toDataURL("image/png");
-                    }
-
-                    URL.revokeObjectURL(tempVideoUrl);
+                    const duration = isFinite(tempVideo.duration) ? tempVideo.duration : 0;
+                    tempVideo.addEventListener("seeked", captureFrame, { once: true });
+                    tempVideo.currentTime = Math.min(1, Math.max(duration / 2, 0.1));
                 });
 
                 if (title) {
@@ -421,10 +431,17 @@ if (playBtn && previewVideoEl) {
     playBtn.addEventListener("click", function () {
         const src = previewVideoEl.getAttribute("src");
 
-        if (src && previewVideoEl.readyState >= 2) {
-            previewVideoEl.style.display = "block";
-            previewVideoEl.play();
+        if (!src) {
+            return;
         }
+
+        previewVideoEl.style.display = "block";
+
+        if (previewVideoEl.readyState < 2) {
+            previewVideoEl.load();
+        }
+
+        previewVideoEl.play().catch(function () {});
     });
 }
 

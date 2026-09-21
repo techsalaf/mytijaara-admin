@@ -165,7 +165,7 @@
                 return;
             }
 
-            const noneOption = '<option value="">{{ translate('messages.none') }}</option>';
+            const noneOption = '<option value="">{{ translate('messages.select') }} {{ $productLabel ?? translate('messages.Product') }}</option>';
 
             if (!storeId) {
                 $item.html(noneOption);

@@ -392,7 +392,7 @@
                                         <li>
                                             <span><strong>{{ translate('messages.Commission_percentage') }}</strong></span>
                                             <span>:</span> &nbsp;
-                                            {{ $store->comission > 0 ? $store->comission : $admin_commission }} %
+                                            {{ $store->comission ?? $admin_commission }} %
                                         </li>
                                     @elseif ($store->store_business_model == 'subscription')
                                         <li>

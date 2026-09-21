@@ -356,10 +356,11 @@ $site_direction = \App\CentralLogics\Helpers::system_default_direction();
                                                                     </td>
                                                                     <td class="text-right p-2 px-3">
                                                                         <h4>
-                                                                            {{ \App\CentralLogics\Helpers::format_currency($order->delivery_charge) }}
+                                                                            {{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}
                                                                         </h4>
                                                                     </td>
                                                                 </tr>
+                                                                @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'tr'])
                                                             @else
                                                                 @foreach ($order->details as $key => $details)
                                                                     <?php
@@ -424,7 +425,12 @@ $site_direction = \App\CentralLogics\Helpers::system_default_direction();
                                                                                 </div>
                                                                                 @php($total_addon_price += $addon['price'] * $addon['quantity'])
                                                                             @endforeach
-                                                                            <span>x {{ $details->quantity }}</span>
+                                                                            <div style="font-size: 12px; margin-top: 4px;">
+                                                                                <span>{{ translate('messages.unit_price') }}:
+                                                                                    {{ \App\CentralLogics\Helpers::format_currency($details['price']) }}</span>
+                                                                                <span>&nbsp;&times;&nbsp;{{ translate('messages.qty') }}
+                                                                                    {{ $details->quantity }}</span>
+                                                                            </div>
                                                                         </td>
                                                                         <td class="text-right p-2 px-3">
                                                                             <div>
@@ -579,9 +585,10 @@ $site_direction = \App\CentralLogics\Helpers::system_default_direction();
                                                                                     {{ translate('messages.delivery_charge') }}
                                                                                 </td>
                                                                                 <td class="text-right p-1 px-3">
-                                                                                    {{ \App\CentralLogics\Helpers::format_currency($order->delivery_charge) }}
+                                                                                    {{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}
                                                                                 </td>
                                                                             </tr>
+                                                                            @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'tr3'])
                                                                             @include('partials.delivery-type-row', ['order' => $order, 'layout' => 'tr3'])
                                                                         @endif
 

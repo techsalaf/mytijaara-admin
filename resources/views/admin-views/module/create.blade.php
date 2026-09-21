@@ -155,7 +155,7 @@
                             <div class="card-body p-0">
                                 <div class="module-radio-group">
                                 @foreach (config('module.module_type') as $key)
-                                @if($key != 'rental' && $key != 'ride-share')
+                                @if($key != 'rental' && $key != 'ride-share' && $key != 'service')
                                 <label class="form-check form--check">
                                     <input class="form-check-input" type="radio" name="module_type" value="{{$key}}">
                                     <span class="form-check-label">

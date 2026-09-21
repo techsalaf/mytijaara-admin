@@ -57,9 +57,7 @@
                                         </td>
                                         <td>
                                             @if ($review->customer)
-                                            <a href="{{route('vendor.customer.view',[$review->user_id])}}">
                                                 {{$review->customer->f_name}} {{$review->customer?->l_name}}
-                                            </a>
                                             @else
                                                 {{translate('messages.customer_not_found')}}
                                             @endif

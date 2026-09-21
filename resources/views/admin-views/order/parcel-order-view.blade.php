@@ -294,7 +294,7 @@
                                                     @endif
                                                 @endif
                                             </h6>
-                                            <span>{{ \App\CentralLogics\Helpers::format_currency($order['delivery_charge']) }}</span>
+                                            <span>{{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -307,6 +307,8 @@
                         <div class="row justify-content-md-end mb-3 mt-4 mx-0">
                             <div class="col-12">
                                 <dl class="row text-right px-3">
+
+                                    @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'dl', 'dtClass' => 'col-sm-8 p-0 font-regular', 'ddClass' => 'col-sm-4 p-0 text-right'])
 
                                     @if (($order->tax_status == 'excluded' && $order['total_tax_amount'] > 0) || $order->tax_status == null)
                                         <dt class="col-6 col-sm-8 p-0 font-regular">{{ translate('messages.vat/tax') }}:
@@ -1471,7 +1473,7 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="customer-namekey">{{ translate('Name') }}</span>:
                                                     <span class="text-dark"> <a class="text-dark text text-capitalize"
-                                                            href="{{ route('admin.customer.view', [$order['user_id']]) }}">
+                                                            href="{{ route('admin.users.customer.view', [$order['user_id']]) }}">
                                                             {{ $order->customer['f_name'] . ' ' . $order->customer['l_name'] }}
                                                         </a> </span>
                                                 </div>

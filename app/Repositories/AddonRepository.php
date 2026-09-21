@@ -34,14 +34,14 @@ class AddonRepository implements AddonRepositoryInterface
         return $this->addon->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->addon->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->addon->where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('addon', 'like', "%{$value}%");
@@ -74,16 +74,16 @@ class AddonRepository implements AddonRepositoryInterface
         return $this->addon->withoutGlobalScope(StoreScope::class)->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getStoreWiseList(int|string $moduleId ,string $searchValue = null, int|string $storeId = 'all', int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection|LengthAwarePaginator
+    public function getStoreWiseList(int|string $moduleId ,?string $searchValue = null, int|string $storeId = 'all', int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->addon->withoutGlobalScope(StoreScope::class)
             ->when(is_numeric($storeId), function($query)use($storeId){
                 return $query->where('store_id', $storeId);
             })->whereHas('store', function ($q) use ($moduleId) {
                 return $q->where('module_id', $moduleId);
             })
-            ->when(isset($key), function ($q1) use($key){
+            ->when($searchValue, function ($q1) use($key){
                 $q1->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");
@@ -92,16 +92,16 @@ class AddonRepository implements AddonRepositoryInterface
             })
             ->orderBy('name')->paginate($dataLimit);
     }
-    public function getExportList(int|string $moduleId ,string $searchValue = null, int|string $storeId = 'all'): Collection
+    public function getExportList(int|string $moduleId ,?string $searchValue = null, int|string $storeId = 'all'): Collection
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->addon->withoutGlobalScope(StoreScope::class)
             ->when(is_numeric($storeId), function($query)use($storeId){
                 return $query->where('store_id', $storeId);
             })->whereHas('store', function ($q) use ($moduleId) {
                 return $q->where('module_id', $moduleId);
             })
-            ->when(isset($key), function ($q1) use($key){
+            ->when($searchValue, function ($q1) use($key){
                 $q1->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");

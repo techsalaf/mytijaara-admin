@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Module;
 use App\Models\ModuleZoneDeliveryOption;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
@@ -143,9 +144,12 @@ class ZoneService
             }
 
             $extracted[$moduleId] = [
-                'enabled'               => $status,
-                'minimum_delivery_time' => $moduleData[$moduleId]['minimum_delivery_time'],
-                'delivery_types'        => $perType,
+                'enabled'                => $status,
+                'minimum_delivery_time'  => $moduleData[$moduleId]['minimum_delivery_time'],
+                'delivery_types'         => $perType,
+                'delivery_charge_type'   => $entry['delivery_charge_type']    ?? null,
+                'fixed_shipping_charge'  => is_numeric($entry['fixed_shipping_charge'] ?? null) ? (float) $entry['fixed_shipping_charge'] : null,
+                'maximum_shipping_charge' => is_numeric($entry['maximum_shipping_charge'] ?? null) ? (float) $entry['maximum_shipping_charge'] : null,
             ];
         }
 
@@ -172,6 +176,16 @@ class ZoneService
             }
             if ((float) ($delayed['reduce_charge'] ?? 0) <= 0 || (int) ($delayed['add_delivery_time'] ?? 0) <= 0) {
                 $errors[$moduleId] = 'slightly_delay_required';
+                continue;
+            }
+
+            $reduceCharge = (float) ($delayed['reduce_charge'] ?? 0);
+            $cap = $payload['delivery_charge_type'] === 'fixed'
+                ? $payload['fixed_shipping_charge']
+                : $payload['maximum_shipping_charge'];
+
+            if ($cap !== null && $cap > 0 && $reduceCharge > $cap) {
+                $errors[$moduleId] = 'reduce_charge_exceeds_max';
             }
         }
         return $errors;
@@ -206,8 +220,13 @@ class ZoneService
 
     public function checkModuleDeliveryCharge(array $moduleData, array $selectedModules): array
     {
+        $serviceModuleIds = Module::whereIn('id', $selectedModules)
+            ->where('module_type', 'service')
+            ->pluck('id')
+            ->all();
+
         foreach ($moduleData as $moduleId => $data) {
-            if (in_array($moduleId, $selectedModules)) {
+            if (in_array($moduleId, $selectedModules) && !in_array((int) $moduleId, $serviceModuleIds)) {
                 $type = $data['delivery_charge_type'] ?? null;
     
                 if ($type === 'fixed') {

@@ -20,7 +20,7 @@
 
     </td>
     <td>
-        <a href="{{route('admin.customer.view',[$review->user_id])}}">
+        <a href="{{route('admin.users.customer.view',[$review->user_id])}}">
             {{$review->customer?$review->customer->f_name:""}} {{$review->customer?$review->customer->l_name:""}}
         </a>
     </td>

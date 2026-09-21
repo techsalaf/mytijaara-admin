@@ -104,7 +104,7 @@
                         <tr>
                             <th class="border-0">{{translate('messages.#')}}</th>
                             <th class="border-0" >{{translate('messages.title')}}</th>
-                            <th class="border-0" >{{translate('messages.Store')}}</th>
+                            <th class="border-0" >{{ config('module.current_module_type') === 'service' ? translate('messages.Provider') : translate('messages.Store') }}</th>
                             <th class="border-0" >{{translate('messages.date_duration')}}</th>
                             <th class="border-0" >{{translate('messages.time_duration')}}</th>
                             <th class="border-0">{{translate('messages.status')}}</th>

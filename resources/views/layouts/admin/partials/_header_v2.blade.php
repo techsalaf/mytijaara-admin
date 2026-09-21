@@ -38,10 +38,12 @@
     // and are broad to catch all variants — get-tax-export/list/details, vendor-tax-*, *-wise-taxes, etc.
     $is_tax_path = \Illuminate\Support\Str::is('admin/transactions/report/*tax*', $req_path)
         || \Illuminate\Support\Str::is('admin/transactions/rental/report/*tax*', $req_path)
+        || \Illuminate\Support\Str::is('admin/transactions/service/report/*tax*', $req_path)
         || \Illuminate\Support\Str::is('admin/transactions/ride-share/report/*tax*', $req_path);
     $is_reports_path = !$is_tax_path && (
         \Illuminate\Support\Str::is('admin/transactions/report/*', $req_path)
         || \Illuminate\Support\Str::is('admin/transactions/rental/report/*', $req_path)
+        || \Illuminate\Support\Str::is('admin/transactions/service/report/*', $req_path)
         || \Illuminate\Support\Str::is('admin/transactions/ride-share/*', $req_path)
     );
     // Order/trip/ride detail pages live under admin/transactions/ but belong
@@ -68,9 +70,9 @@
     }
 
     // Common-workspace landing routes
-    $url_users    = route('admin.users.dashboard');
-    $url_finance  = route('admin.transactions.store.withdraw_list');
-    $url_reports  = route('admin.transactions.report.day-wise-report');
+    $url_users    = Helpers::users_workspace_landing_url();
+    $url_finance  = Helpers::finance_workspace_landing_url();
+    $url_reports  = Helpers::reports_workspace_landing_url();
     $url_dispatch = route('admin.dispatch.dashboard');
     $url_settings = Helpers::settings_workspace_landing_url();
     $url_module   = route('admin.dashboard') . '?module_id=' . $current_module_id;
@@ -148,7 +150,7 @@
             <span>{{ translate('Reports') }}</span>
         </a>
         @endif
-        @if(Helpers::module_permission_check('order'))
+        @if(Helpers::admin_can_access_workspace('dispatch'))
         <a class="v2-ws-tab {{ $is_dispatch_path ? 'is-active' : '' }}" href="{{ $url_dispatch }}">
             <i data-lucide="route" class="v2-ws-ico"></i>
             <span>{{ translate('Dispatch') }}</span>
@@ -205,7 +207,7 @@
         </a>
         @endif
 
-        @if(addon_published_status('RideShare') && \App\CentralLogics\Helpers::module_permission_check('fleet_view'))
+        @if(addon_published_status('RideShare') && \App\CentralLogics\Helpers::module_permission_check('heat_map'))
             <a id="v2-safety-link" href="{{ route('admin.ride-share.safety-alerts', ['module_id' => \App\Models\Module::where('module_type','ride-share')->first()->id ?? 0]) }}" class="v2-icon-btn @if($latest_safety) safety-alert-header-icon @endif" @if($latest_safety) data-user-id="{{ $latest_safety->sent_by }}" @endif aria-label="{{ translate('Safety alerts') }}">
                 <i data-lucide="shield-alert"></i>
                 @if($safety_count > 0)<span class="v2-badge" id="v2-safety-badge">{{ $safety_count }}</span>@endif

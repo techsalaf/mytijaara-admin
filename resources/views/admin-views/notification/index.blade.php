@@ -67,11 +67,13 @@
                                         <select name="tergat" class="form-control custom-select" id="tergat"
                                             data-placeholder="{{ translate('messages.select_tergat') }}" required>
                                             <option value="customer">{{ translate('messages.customer') }}</option>
-                                            <option value="deliveryman">{{ translate('messages.deliveryman') }}</option>
-                                            @if (addon_published_status('RideShare'))
+                                            @if (config('module.current_module_type') !== 'service')
+                                                <option value="deliveryman">{{ translate('messages.deliveryman') }}</option>
+                                            @endif
+                                            @if (addon_published_status('RideShare') && config('module.current_module_type') === 'ride-share')
                                                 <option value="rider">{{ translate('messages.rider') }}</option>
                                             @endif
-                                            <option value="store">{{ translate('messages.store') }}</option>
+                                            <option value="store">{{ config('module.current_module_type') === 'service' ? translate('messages.provider') : translate('messages.store') }}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -150,13 +152,15 @@
                     </option>
                     <option value="customer" {{ $target == 'customer' ? 'selected' : '' }}>
                         {{ translate('messages.customer') }}</option>
-                    <option value="deliveryman" {{ $target == 'deliveryman' ? 'selected' : '' }}>
-                        {{ translate('messages.deliveryman') }}</option>
-                    @if (addon_published_status('RideShare'))
+                    @if (config('module.current_module_type') !== 'service')
+                        <option value="deliveryman" {{ $target == 'deliveryman' ? 'selected' : '' }}>
+                            {{ translate('messages.deliveryman') }}</option>
+                    @endif
+                    @if (addon_published_status('RideShare') && config('module.current_module_type') === 'ride-share')
                         <option value="rider" {{ $target == 'rider' ? 'selected' : '' }}>
                             {{ translate('messages.rider') }}</option>
                     @endif
-                    <option value="store" {{ $target == 'store' ? 'selected' : '' }}>{{ translate('messages.store') }}
+                    <option value="store" {{ $target == 'store' ? 'selected' : '' }}>{{ config('module.current_module_type') === 'service' ? translate('messages.provider') : translate('messages.store') }}
                     </option>
                 </select>
 
@@ -253,7 +257,7 @@
                                         data-title="{{ $notification['description'] }}">{{ $notification['description'] }}</span>
                                 </td>
                                 <td class="text-capitalize">
-                                    {{ translate($notification['tergat']) }}
+                                    {{ config('module.current_module_type') === 'service' && $notification['tergat'] === 'store' ? translate('messages.provider') : translate($notification['tergat']) }}
                                 </td>
                                 <td>
                                     {{ $notification->zone_id == null ? translate('messages.all') : ($notification->zone ? $notification->zone->name : translate('messages.zone_deleted')) }}
@@ -280,7 +284,7 @@
                                             data-description="{{ $notification['description'] }}"
                                             data-image="{{ $notification['image_full_url'] }}"
                                             data-zone="{{ $notification->zone_id == null ? translate('messages.all') : ($notification->zone ? $notification->zone->name : translate('messages.zone_deleted')) }}"
-                                            data-tergat="{{ $notification['tergat'] }}"><i class="tio-invisible"></i>
+                                            data-tergat="{{ config('module.current_module_type') === 'service' && $notification['tergat'] === 'store' ? translate('messages.provider') : $notification['tergat'] }}"><i class="tio-invisible"></i>
                                         </button>
                                         <button type="button"
                                             class="btn action-btn btn--primary btn-outline-primary offcanvas-trigger edit-btn"
@@ -421,11 +425,13 @@
                                 <select name="tergat" class="form-control custom-select" id="tergat_u"
                                     data-placeholder="{{ translate('messages.select_tergat') }}" required>
                                     <option value="customer">{{ translate('messages.customer') }}</option>
-                                    <option value="deliveryman">{{ translate('messages.deliveryman') }}</option>
-                                    @if (addon_published_status('RideShare'))
+                                    @if (config('module.current_module_type') !== 'service')
+                                        <option value="deliveryman">{{ translate('messages.deliveryman') }}</option>
+                                    @endif
+                                    @if (addon_published_status('RideShare') && config('module.current_module_type') === 'ride-share')
                                         <option value="rider">{{ translate('messages.rider') }}</option>
                                     @endif
-                                    <option value="store">{{ translate('messages.store') }}</option>
+                                    <option value="store">{{ config('module.current_module_type') === 'service' ? translate('messages.provider') : translate('messages.store') }}</option>
                                 </select>
                             </div>
 

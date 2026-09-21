@@ -8,9 +8,7 @@ ini_set('upload_max_filesize','1024M');
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
-use Complex\Exception;
 use Illuminate\Http\Request;
-use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use App\CentralLogics\FileManagerLogic;
 use Brian2694\Toastr\Facades\Toastr;
@@ -21,15 +19,11 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class FileManagerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+
     public function index($folder_path = "cHVibGlj", $storage = 'local')
 {
     $perPage = 50;
-    $page = request()->get('page', 1);
+    $page = request()->integer('page', 1);
     if ($storage == 's3' && Helpers::getDisk() == 's3') {
         try {
             Storage::disk('s3')->exists($folder_path);

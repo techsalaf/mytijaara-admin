@@ -128,6 +128,73 @@ class OrderLogic
         ];
     }
 
+    public static function admin_item_commission($order_transaction): float
+    {
+        $order = $order_transaction?->order;
+        if (! $order) {
+            return 0;
+        }
+
+        if ($order_transaction->is_subscribed) {
+            return 0;
+        }
+
+        $commission_percentage = (float) ($order_transaction->commission_percentage ?? 0);
+        if ($commission_percentage <= 0) {
+            return (float) ($order_transaction->admin_commission ?? 0)
+                + (float) ($order_transaction->admin_expense ?? 0)
+                - (float) ($order_transaction->delivery_fee_comission ?? 0)
+                - (float) ($order_transaction->additional_charge ?? 0)
+                - (float) ($order->flash_admin_discount_amount ?? 0);
+        }
+
+        $item_amount = (float) ($order->order_amount ?? 0)
+            - (float) ($order_transaction->additional_charge ?? 0)
+            - (float) ($order->dm_tips ?? 0)
+            - (float) DeliveryFeeLogic::adjustedFeeForOrder($order)['adjusted']
+            - (float) ($order_transaction->tax ?? 0)
+            + (float) ($order->coupon_discount_amount ?? 0)
+            + (float) ($order->store_discount_amount ?? 0)
+            + (float) ($order->flash_admin_discount_amount ?? 0)
+            + (float) ($order->flash_store_discount_amount ?? 0)
+            + (float) ($order->ref_bonus_amount ?? 0)
+            - (float) ($order->extra_packaging_amount ?? 0)
+            + (float) ($order->extra_discount_amount ?? 0)
+            + (float) ($order_transaction->pro_discount ?? 0);
+
+        return $item_amount * $commission_percentage / 100;
+    }
+
+    public static function pro_discount_total($order): float
+    {
+        $pro = $order->orderProDiscount ?? null;
+
+        if (! $pro) {
+            return 0.0;
+        }
+
+        return (float) ($pro->amount_saved ?? 0)
+            + (float) ($pro->delivery_fee_reduction_amount ?? 0);
+    }
+
+    public static function admin_net_income($order_transaction): float
+    {
+        $order = $order_transaction->order;
+
+        if ($order?->order_type === 'parcel') {
+            return (float) ($order_transaction->admin_commission ?? 0)
+            + (float) $order_transaction->delivery_fee_comission ?? 0
+            + (float) ($order_transaction->additional_charge ?? 0)
+             - (float) ($order_transaction->admin_expense ?? 0);
+        }
+
+        return self::admin_item_commission($order_transaction)
+            + (float) ($order_transaction->delivery_fee_comission ?? 0)
+            + (float) ($order_transaction->additional_charge ?? 0)
+            - (float) ($order_transaction->admin_expense ?? 0)
+            + ($order?->delivery_type === 'express' ? (float) $order->delivery_type_charge : 0);
+    }
+
     public static function create_transaction($order, $received_by = false, $status = null)
     {
         $type = $order->order_type;
@@ -200,12 +267,16 @@ class OrderLogic
         if ($type == 'parcel') {
             $comission = BusinessSetting::where('key', 'parcel_commission_dm')->first()?->value ?? 0;
             $commission_percentage = $comission;
-
+            $delivery_fee_reduction_amount=0;
+            if ($order->orderProDiscount && $order->orderProDiscount?->benefit_type === 'delivery_fee') {
+                $delivery_fee_reduction_amount = $order->orderProDiscount?->delivery_fee_reduction_amount ?? 0;
+            }
             $dm_tips = $dm_tips_manage_status ? $order->dm_tips : 0;
-            $order_amount = $order->order_amount - $dm_tips - $order->additional_charge - $order->extra_packaging_amount - $order->total_tax_amount + $proDiscount;
+            $order_amount = $order->order_amount - $dm_tips - $order->additional_charge - $order->extra_packaging_amount - $order->total_tax_amount + $delivery_fee_reduction_amount;
             $dm_commission = $comission ? ($order_amount / 100) * $comission : 0;
             $comission_amount = $order_amount - $dm_commission;
-        } else {
+
+            } else {
             $comission = isset($order->store->comission) == null ? BusinessSetting::where('key', 'admin_commission')->first()?->value : $order->store->comission;
             $dm_tips = $dm_tips_manage_status ? $order->dm_tips : 0;
             // $order_amount = $order->order_amount - $order->delivery_charge - $order->total_tax_amount - $dm_tips;
@@ -240,7 +311,7 @@ class OrderLogic
                 Helpers::expenseCreate(amount: $extra_discount_amount, type: 'extra_discount', datetime: now(), created_by: 'vendor', order_id: $order->id, store_id: $order->store->id);
             }
 
-            $order_amount = $order->order_amount - $order->additional_charge - $order->extra_packaging_amount - $order->delivery_charge - $order->total_tax_amount - $dm_tips - $order->delivery_type_charge + $flash_admin_discount_amount + $order->coupon_discount_amount + $store_discount_amount + $flash_store_discount_amount + $ref_bonus_amount + $extra_discount_amount + $proDiscount;
+            $order_amount = $order->order_amount - $order->additional_charge - $order->extra_packaging_amount - $order->delivery_charge - $order->total_tax_amount - $dm_tips + $flash_admin_discount_amount + $order->coupon_discount_amount + $store_discount_amount + $flash_store_discount_amount + $ref_bonus_amount + $extra_discount_amount + $proDiscount;
 
             if ($order->delivery_type === 'express') {
                 $order_amount -= $order->delivery_type_charge;
@@ -248,8 +319,7 @@ class OrderLogic
                 $order_amount += $order->delivery_type_charge;
             }
             // comission in delivery charge
-            $delivery_charge_comission = BusinessSetting::where('key', 'delivery_charge_comission')->first();
-            $delivery_charge_comission_percentage = $delivery_charge_comission ? $delivery_charge_comission->value : 0;
+            $delivery_charge_comission_percentage = BusinessSetting::where('key', 'delivery_charge_comission')->first()?->value ?? 0;
             $comission_on_delivery = $delivery_charge_comission_percentage * ($order->original_delivery_charge / 100);
 
             if ($order->store->sub_self_delivery) {
@@ -396,7 +466,7 @@ class OrderLogic
                     }
                 }
                 if ($order->is_guest == 0) {
-                    $ref_status = BusinessSetting::where('key', 'ref_earning_status')->first()->value;
+                    $ref_status = BusinessSetting::where('key', 'ref_earning_status')->first()?->value;
                     // Skip the referrer credit + push + email entirely for
                     // storefront customers when the Builder wallet-features
                     // master switch is off. Loyalty credit a few lines below
@@ -405,7 +475,7 @@ class OrderLogic
                     // notification check is `> 0`.
                     if (isset($order->customer->ref_by) && $order->customer->order_count == 0 && $ref_status == 1
                         && ! storefront_wallet_disabled_for_user($order->user_id)) {
-                        $ref_code_exchange_amt = BusinessSetting::where('key', 'ref_earning_exchange_rate')->first()->value;
+                        $ref_code_exchange_amt = BusinessSetting::where('key', 'ref_earning_exchange_rate')->first()?->value;
                         $referar_user = User::where('id', $order->customer->ref_by)->first();
                         $refer_wallet_transaction = CustomerLogic::create_wallet_transaction($referar_user->id, $ref_code_exchange_amt, 'referrer', $order->customer->phone);
 
@@ -417,14 +487,18 @@ class OrderLogic
                             'type' => 'referral_code',
                         ];
 
-                        if (Helpers::getNotificationStatusData('customer', 'customer_referral_bonus_earning', 'push_notification_status') && $referar_user?->cm_firebase_token) {
-                            Helpers::send_push_notif_to_device($referar_user?->cm_firebase_token, $notification_data);
-                            DB::table('user_notifications')->insert([
-                                'data' => json_encode($notification_data),
-                                'user_id' => $referar_user?->id,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
+                        try {
+                            if (Helpers::getNotificationStatusData('customer', 'customer_referral_bonus_earning', 'push_notification_status') && $referar_user?->cm_firebase_token) {
+                                Helpers::send_push_notif_to_device($referar_user?->cm_firebase_token, $notification_data);
+                                DB::table('user_notifications')->insert([
+                                    'data' => json_encode($notification_data),
+                                    'user_id' => $referar_user?->id,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                            }
+                        } catch (\Throwable $e) {
+                            info('order referral notification failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
                         }
 
                         try {
@@ -447,20 +521,29 @@ class OrderLogic
                             'type' => 'loyalty_point',
                         ];
 
-                        if (Helpers::getNotificationStatusData('customer', 'customer_loyalty_point_earning', 'push_notification_status') && $order->customer?->cm_firebase_token) {
-                            Helpers::send_push_notif_to_device($order->customer?->cm_firebase_token, $notification_data);
-                            DB::table('user_notifications')->insert([
-                                'data' => json_encode($notification_data),
-                                'user_id' => $order->user_id,
-                                'created_at' => now(),
-                                'updated_at' => now(),
-                            ]);
+                        try {
+                            if (Helpers::getNotificationStatusData('customer', 'customer_loyalty_point_earning', 'push_notification_status') && $order->customer?->cm_firebase_token) {
+                                Helpers::send_push_notif_to_device($order->customer?->cm_firebase_token, $notification_data);
+                                DB::table('user_notifications')->insert([
+                                    'data' => json_encode($notification_data),
+                                    'user_id' => $order->user_id,
+                                    'created_at' => now(),
+                                    'updated_at' => now(),
+                                ]);
+                            }
+                        } catch (\Throwable $e) {
+                            info('order loyalty notification failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
                         }
                     }
                 }
             } catch (\Exception $e) {
                 DB::rollBack();
-                info($e->getMessage());
+                info('order completion transaction failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
 
                 return false;
             }
@@ -507,6 +590,8 @@ class OrderLogic
         if ($order->orderProDiscount && $order->orderProDiscount?->benefit_type === 'discount') {
             $proDiscount = $order?->orderProDiscount?->amount_saved ?? 0;
             Helpers::expenseCreate(amount: $proDiscount, type: 'pro_discount_on_product', datetime: now(), order_id: $order->id, created_by: 'admin');
+        }else{
+            $proDiscount = $order->orderProDiscount?->delivery_fee_reduction_amount ?? 0;
         }
 
         $comission = BusinessSetting::where('key', 'parcel_commission_dm')->first();
@@ -835,14 +920,18 @@ class OrderLogic
                 'type' => 'cashback',
             ];
 
-            if ($order->customer?->cm_firebase_token && Helpers::getNotificationStatusData('customer', 'customer_cashback', 'push_notification_status')) {
-                Helpers::send_push_notif_to_device($order->customer?->cm_firebase_token, $notification_data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($notification_data),
-                    'user_id' => $order->customer?->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            try {
+                if ($order->customer?->cm_firebase_token && Helpers::getNotificationStatusData('customer', 'customer_cashback', 'push_notification_status')) {
+                    Helpers::send_push_notif_to_device($order->customer?->cm_firebase_token, $notification_data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($notification_data),
+                        'user_id' => $order->customer?->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                info('order cashback notification failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
             }
         }
 

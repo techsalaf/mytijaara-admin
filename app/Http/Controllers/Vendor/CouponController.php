@@ -29,9 +29,12 @@ class CouponController extends Controller
             'discount' => 'required_if:coupon_type,default',
             'min_purchase' => 'required|numeric|min:1',
             'coupon_type' => 'required|in:free_delivery,default',
+            'max_discount' => 'exclude_unless:discount_type,percent|required|numeric|min:0.01',
             'title.0' => 'required',
         ],[
             'title.0.required'=>translate('default_title_is_required'),
+            'max_discount.required'=>translate('Max discount is required for percentage discount type'),
+            'max_discount.min'=>translate('Max discount can not be 0 for percentage discount type'),
         ]);
         $customer_id  = $request->customer_ids ?? ['all'];
         $data = "";
@@ -77,9 +80,12 @@ class CouponController extends Controller
             'discount' => 'required_if:coupon_type,default',
             'min_purchase' => 'required|numeric|min:1',
             'coupon_type' => 'required|in:free_delivery,default',
+            'max_discount' => 'exclude_unless:discount_type,percent|required|numeric|min:0.01',
             'title.0' => 'required',
         ],[
             'title.0.required'=>translate('default_title_is_required'),
+            'max_discount.required'=>translate('Max discount is required for percentage discount type'),
+            'max_discount.min'=>translate('Max discount can not be 0 for percentage discount type'),
         ]);
 
         $customer_id  = $request->customer_ids ?? ['all'];

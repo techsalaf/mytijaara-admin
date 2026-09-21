@@ -255,8 +255,8 @@
                         aria-label="Close">&times;</button>
             </div>
             <div class="custom-offcanvas-body p-3" id="smart_banner_view_body">
-                <div class="text-center py-5 text-muted" id="smart_banner_view_loading">
-                    {{ translate('messages.loading') }}
+                <div class="text-center py-5" id="smart_banner_view_loading">
+                    <img width="60" src="{{ asset('public/assets/admin/img/loader.gif') }}" alt="{{ translate('messages.loading') }}">
                 </div>
             </div>
         </div>
@@ -308,6 +308,16 @@
             updateAction: "{{ route('admin.business-settings.zone.smart-banner.update', ['id' => 'BANNER_ID']) }}",
             editUrl: "{{ route('admin.business-settings.zone.smart-banner.edit', ['id' => 'BANNER_ID']) }}",
             listUrl: "{{ route('admin.business-settings.zone.smart-banner.list', [$zone['id']]) }}",
+            loaderImg: "{{ asset('public/assets/admin/img/loader.gif') }}",
+            labels: {
+                storePage: "{{ translate('messages.store_page') }}",
+                providerPage: "{{ translate('messages.provider_page') }}",
+                selectStore: "{{ translate('messages.select_store') }}",
+                selectProvider: "{{ translate('messages.select_provider') }}",
+                selectCategory: "{{ translate('messages.select_category') }}",
+                pleaseSelectStore: "{{ translate('messages.please_select_a_store') }}",
+                pleaseSelectProvider: "{{ translate('messages.please_select_a_provider') }}",
+            },
         };
     </script>
     <script src="{{ asset('public/assets/admin/js/view-pages/smart-banner.js') }}"></script>

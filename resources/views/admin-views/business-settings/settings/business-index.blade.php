@@ -1132,6 +1132,17 @@
                                                 </div>
                                             </div>
                                             @endif
+                                            @if (addon_published_status('Service'))
+                                            <div class="form-group m-0">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input system-checkbox" name="serviceman_app" id="serviceman_app"
+                                                        {{ in_array('serviceman_app', $selectedMaintenanceSystem) ? 'checked' : '' }}>
+                                                    <label class="custom-control-label" for="serviceman_app">
+                                                        <h5 class="mb-0 font-light lh-24 text-reset">{{ translate('Serviceman App') }}</h5>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            @endif
                                             @if (addon_published_status('Builder'))
                                             <div class="form-group m-0">
                                                 <div class="custom-control custom-checkbox">
@@ -1290,6 +1301,31 @@
 
 
 @push('script_2')
+
+<script>
+    "use strict";
+    // Numeric business-settings fields with a min (commission rates, decimal digits, charges,
+    // etc.) must never accept negatives. Block the minus/exponent keys and clamp any typed or
+    // pasted value that falls below the field's minimum.
+    (function () {
+        function clampToMin(el) {
+            var min = parseFloat(el.getAttribute('min'));
+            if (!isNaN(min) && el.value !== '' && parseFloat(el.value) < min) {
+                el.value = min;
+            }
+        }
+        $(document).on('keydown', 'input[type="number"][min]', function (e) {
+            if (parseFloat(this.getAttribute('min')) >= 0 && (e.key === '-' || e.key === 'e' || e.key === 'E')) {
+                e.preventDefault();
+            }
+        });
+        $(document).on('input change blur', 'input[type="number"][min]', function () {
+            clampToMin(this);
+        });
+        // Correct any already-saved negative values shown on load.
+        $('input[type="number"][min]').each(function () { clampToMin(this); });
+    })();
+</script>
 
 <script>
     "use strict";

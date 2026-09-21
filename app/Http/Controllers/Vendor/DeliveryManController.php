@@ -25,9 +25,9 @@ class DeliveryManController extends Controller
 
     public function list(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $delivery_men = DeliveryMan::where('store_id', Helpers::get_store_id())
-                 ->when( isset($key) , function($query) use($key){
+                 ->when( $request['search'] , function($query) use($key){
                     $query->where(function ($q) use ($key) {
                         foreach ($key as $value) {
                             $q->orWhere('f_name', 'like', "%{$value}%")
@@ -322,7 +322,7 @@ class DeliveryManController extends Controller
 
 
     public function transaction_search(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $digital_transaction=OrderTransaction::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('order_id', 'like', "%{$value}%");

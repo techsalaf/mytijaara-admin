@@ -319,6 +319,9 @@ class GenerateVendorRoute extends Command
             'vendor-views.business-settings.restaurant-index' => ['vendor-panel/business-settings/store-setup'],
             'vendor-views.order.list' => ['vendor-panel/order/list/all','vendor-panel/order/list/pending','vendor-panel/order/list/confirmed','vendor-panel/order/list/cooking','vendor-panel/order/list/ready_for_delivery','vendor-panel/order/list/item_on_the_way','vendor-panel/order/list/delivered','vendor-panel/order/list/refunded','vendor-panel/order/list/scheduled'],
 
+            // Service module vendor dashboard (excluded from auto-scan because the controller returns response()->json for ajax stats)
+            'service::vendor.dashboard' => ['vendor-panel/service/dashboard'],
+
         ];
 
         foreach ($array as $bladePath => $value) {
@@ -386,7 +389,7 @@ class GenerateVendorRoute extends Command
             }
 
             $uniqueWords = array_filter($uniqueWords, function ($word) {
-                return strtolower($word) !== 'rental';
+                return strtolower($word) !== 'rental' && !str_contains($word, '::');
             });
 
             $routeName = ucwords(implode(' ', $uniqueWords));

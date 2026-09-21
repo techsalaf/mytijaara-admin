@@ -164,7 +164,7 @@ active
                             </label>
                             <select class="js-select form-control w-100 promotion_type" name="advertisement_type">
                                 <option value="video_promotion" {{ $advertisement?->add_type == 'video_promotion' ? 'selected' : '' }}>{{ translate('Video_Promotion') }}</option>
-                                <option value="store_promotion" {{ $advertisement?->add_type == 'store_promotion' ? 'selected' : '' }} >{{ translate('store_promotion') }}</option>
+                                <option value="store_promotion" {{ $advertisement?->add_type == 'store_promotion' ? 'selected' : '' }} >{{ \App\CentralLogics\Helpers::moduleStoreLabel() }} {{ translate('Promotion') }}</option>
                             </select>
                         </div>
                         <div class="mb-20">

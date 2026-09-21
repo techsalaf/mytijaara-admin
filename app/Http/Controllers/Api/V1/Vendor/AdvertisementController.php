@@ -24,7 +24,7 @@ class AdvertisementController extends Controller
         $limit = $request['limit']??25;
         $offset = $request['offset']??1;
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $adds=Advertisement::where('store_id',$store_id)
 
         ->when($request?->ads_type === 'pending',function($query){

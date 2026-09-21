@@ -8,6 +8,10 @@
 
 @section('content')
 
+@php
+    $isProviderContext = addon_published_status('Rental') || addon_published_status('Service');
+    $storeSlashProvider = $isProviderContext ? translate('messages.store') . '/' . translate('messages.provider') : translate('messages.store');
+@endphp
 
 <div class="content container-fluid">
     <div class="page-header">
@@ -41,11 +45,20 @@
                     <span>{{ translate('total_amount') }}</span> <span class="mx-2">:</span> <h3 class="m-0">{{\App\CentralLogics\Helpers::format_currency($disbursement['total_amount'])}}</h3>
                 </div>
                 <div class="w-16rem">
-                    <select name="module_id" class="form-control js-select2-custom set-filter" data-url="{{ url()->full() }}" data-filter="module_id"
+                    <select name="module_id" class="form-control js-select2-custom set-filter" data-url="{{ request()->fullUrlWithQuery(['store_id' => null]) }}" data-filter="module_id"
                             title="{{ translate('messages.select_modules') }}">
                         <option value="" {{ !request('module_id') ? 'selected' : '' }}>
                             {{ translate('messages.all_modules') }}</option>
-                        @foreach (\App\Models\Module::notParcel()->WithoutAdditionalModules()->get(['id', 'module_name']) as $module)
+                        @php
+                            $excludedModuleTypes = ['ride-share'];
+                            if (! addon_published_status('Rental')) {
+                                $excludedModuleTypes[] = 'rental';
+                            }
+                            if (! addon_published_status('Service')) {
+                                $excludedModuleTypes[] = 'service';
+                            }
+                        @endphp
+                        @foreach (\App\Models\Module::notParcel()->whereNotIn('module_type', $excludedModuleTypes)->get(['id', 'module_name']) as $module)
                             <option value="{{ $module->id }}"
                                 {{ request('module_id') == $module->id ? 'selected' : '' }}>
                                 {{ $module['module_name'] }}
@@ -56,12 +69,12 @@
 
                 <div class="w-16rem">
                     <select name="store_id"
-                            data-placeholder="{{ translate('messages.select_store') }}"
+                            data-placeholder="{{ $isProviderContext ? translate('Select_Store') . '/' . translate('provider') : translate('messages.select_store') }}"
                             class="js-data-example-ajax form-control store-filter" data-url="{{ url()->full() }}">
                         @if (isset($store))
                             <option value="{{ $store->id }}" data-verified="{{ (int) $store->verified_seller }}" selected>{{ $store->name }}</option>
                         @else
-                            <option value="all" selected>{{ translate('messages.all_stores') }}</option>
+                            <option value="all" selected>{{ $isProviderContext ? translate('All_Stores') . '/' . translate('provider') : translate('messages.all_stores') }}</option>
                         @endif
                     </select>
 
@@ -143,7 +156,7 @@
                                 </label>
                             </th>
                             <th>{{ translate('sl') }}</th>
-                            <th>{{ translate('Store_Info') }}</th>
+                            <th>{{ $storeSlashProvider }} {{ translate('info') }}</th>
                             <th>{{ translate('Disburse_Amount') }}</th>
                             <th>{{ translate('Payment_method') }}</th>
                             <th>{{ translate('status') }}</th>
@@ -243,7 +256,7 @@
                                                     <div class="card-body">
                                                         <div class="d-flex flex-wrap payment-info-modal-info p-xl-4">
                                                             <div class="item">
-                                                                <h5>{{ translate('Store_Information') }}</h5>
+                                                                <h5>{{ $storeSlashProvider }} {{ translate('information') }}</h5>
                                                                 <ul class="item-list">
                                                                     <li class="d-flex flex-wrap">
                                                                         <span class="name">{{ translate('name') }}</span>
@@ -506,6 +519,7 @@
                         return {
                             q: params.term, // search term
                             all:true,
+                            include_addon_providers: 1, // rental/service providers are disbursed too
                             @if (isset($zone))
                                 zone_ids: [{{ $zone->id }}],
                             @endif

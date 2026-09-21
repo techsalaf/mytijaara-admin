@@ -14,6 +14,9 @@ use Modules\AI\app\Agents\Tools\GetPopularItemsTool;
 use Modules\AI\app\Agents\Tools\GetRentalCategoriesTool;
 use Modules\AI\app\Agents\Tools\GetRentalProvidersTool;
 use Modules\AI\app\Agents\Tools\GetRentalVehiclesTool;
+use Modules\AI\app\Agents\Tools\GetServiceCategoriesTool;
+use Modules\AI\app\Agents\Tools\GetServiceProvidersTool;
+use Modules\AI\app\Agents\Tools\GetServicesTool;
 use Modules\AI\app\Agents\Tools\GetRideCouponsTool;
 use Modules\AI\app\Agents\Tools\GetRideShareInfoTool;
 use Modules\AI\app\Agents\Tools\GetRideVehicleTypesTool;
@@ -280,12 +283,17 @@ INSTRUCTIONS;
         if ($this->moduleType === 'parcel') {
             $tools[] = new GetParcelCategoriesTool($this->context, $this->moduleId);
         }
-        if ($this->moduleType === 'rental') {
+        if ($this->moduleType === 'rental' && addon_published_status('Rental')) {
             $tools[] = new GetRentalVehiclesTool($this->context, $this->moduleId, $this->zoneIds);
             $tools[] = new GetRentalCategoriesTool($this->context);
             $tools[] = new GetRentalProvidersTool($this->context, $this->moduleId, $this->zoneIds);
         }
-        if ($this->moduleType === 'ride-share') {
+        if ($this->moduleType === 'service' && service_addon_active()) {
+            $tools[] = new GetServicesTool($this->context, $this->moduleId, $this->zoneIds);
+            $tools[] = new GetServiceCategoriesTool($this->context, $this->moduleId);
+            $tools[] = new GetServiceProvidersTool($this->context, $this->moduleId, $this->zoneIds);
+        }
+        if ($this->moduleType === 'ride-share' && addon_published_status('RideShare')) {
             $tools[] = new GetRideVehicleTypesTool($this->context, $this->zoneIds);
             $tools[] = new EstimateRideFareTool($this->context, $this->zoneIds);
             $tools[] = new GetMyTripsTool($this->context, $this->user);
@@ -389,10 +397,39 @@ uses its own tools and booking happens elsewhere in the app.
 BLOCK,
 
             'service' => <<<'BLOCK'
-PLATFORM TYPE: Multi-vendor service booking platform (home services, professionals, appointments).
-YOUR ROLE: Help customers find and book skilled service providers — plumbers, electricians, cleaners,
-tutors, beauticians, etc. Understand the job description, suggest appropriate service categories
-and vendors, and highlight ratings, availability, and pricing.
+PLATFORM TYPE: Multi-vendor service booking platform (home & professional services, appointments).
+YOUR ROLE: Help customers explore the service catalogue — providers (companies/professionals),
+service categories (cleaning, plumbing, electrical, beauty, tutoring…), and individual bookable
+services with their real prices, ratings, and booking volume. Understand the job the customer
+needs done, their budget and category preference, and surface the best matches.
+RESPONSE STYLE FOR SERVICE: Plain text replies only — no product cards. Use short bullet
+lines when listing services/providers/categories, e.g.
+  • Deep Home Cleaning (Cleaning) — 1500 — ★4.6 (120 bookings) — by SparkClean
+Always quote real numbers returned by the tools — never invent prices, ratings, or
+provider names.
+TOOL ROUTING — pick the right tool for what the user actually asked:
+  - "find a plumber", "cleaning services", "AC repair", "services under 1000", "best rated
+    services", "cheap tutoring" → GetServicesTool. Extract intent and pass filters: keyword,
+    category_id, max_price, sort (rating | popular | cheapest). For "best/top rated" use
+    sort=rating; for "most booked/popular" use sort=popular; for budget questions use
+    max_price + sort=cheapest.
+  - "categories", "service types", "what services do you offer", "kinds of services"
+    → GetServiceCategoriesTool. Returns category names with active-service counts so you
+      can mention which categories are well stocked.
+  - "show me the <category> services", "services in <category>", or any drill-down into a
+    named category → call GetServicesTool with category="<that category name>" (pass the
+    exact category name the user mentioned). Do NOT call GetServiceCategoriesTool first
+    just to look up an id.
+  - "providers", "top providers", "popular providers", "companies", "vendors", "professionals"
+    → GetServiceProvidersTool. Returns provider name, ★rating, service count, bookings and
+      address. Do NOT list individual service names when the user asked for providers —
+      those are different concepts.
+PRICING CONTEXT: Each service has a base price (some carry a discount). Show the effective
+price and mention the original when discounted. Use the currency block above for formatting.
+When the user gives a budget, pass it as max_price and prefer sort=cheapest.
+NEVER CALL: AddToCartTool, GetCartItemsTool, UpdateCartQuantityTool, RemoveFromCartTool,
+SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, SearchStoresTool. Service uses
+its own tools and booking happens elsewhere in the app.
 BLOCK,
 
             'ride-share' => <<<'BLOCK'

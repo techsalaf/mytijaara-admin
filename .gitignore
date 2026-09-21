@@ -17,7 +17,6 @@ npm-debug.log
 yarn-error.log
 error_log
 /storage/tmp
-/storage/app/public
 .DS_Store
 docker-local/
 /public/.well-known
@@ -34,11 +33,18 @@ PROJECT_CONTEXT.md
 AGENTS.md
 Modules/Builder/AGENTS.md
 Modules/Builder/resources/dist/build.zip
-.agents/
 
-# Feature documentation (local)
-/Documentation/last-orders-store-wise.md
-/Documentation/offer-page-flutter-api.md
-/Documentation/
 
+# Local-only dummy data seeder + its tracking file
+database/seeders/DummyServiceSeeder.php
+storage/app/dummy-service-seed.json
+/Documentation/*
+/Modules/Service/Documentation/
+
+# Ignore all Markdown files
+*.md
+
+# Local credentials, runtime uploads and temporary agent work are never source.
+/.agents/
+/storage/app/public/
 /config/system-addons.php

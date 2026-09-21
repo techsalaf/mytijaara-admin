@@ -302,11 +302,12 @@ class SearchController extends Controller
 
         $store_ids = array_values(array_filter(array_map(fn ($s) => (int) ($s['id'] ?? 0), is_array($stores) ? $stores : iterator_to_array($stores, false))));
         $top_items_by_store = \App\Models\Store::topItemsByIds($store_ids, 5);
+        $categories_by_store = StoreLogic::topCategoriesByStoreIds($store_ids, 5);
 
         $advertised_store_ids = $this->getAdvertisedStoreIds($zone_id, $store_ids);
         $advertised_set = array_flip($advertised_store_ids);
 
-        $formatted = collect($stores)->map(function ($store) use ($top_items_by_store, $advertised_store_ids) {
+        $formatted = collect($stores)->map(function ($store) use ($top_items_by_store, $advertised_store_ids, $categories_by_store) {
             $items = $top_items_by_store[(int) $store->id] ?? collect();
             $top_items = $items->map(function ($item) {
                 return [
@@ -325,6 +326,7 @@ class SearchController extends Controller
                 'advertised_store_ids' => $advertised_store_ids,
                 'top_items' => $top_items,
                 'with_items' => true,
+                'category_data' => $categories_by_store[(int) $store->id] ?? [],
             ]);
         })->values()->all();
 
@@ -469,7 +471,6 @@ class SearchController extends Controller
                 resultCount: (int) $items->total(),
             );
         } catch (\Throwable $e) {
-            // swallow — search response must not break on logging failure
         }
 
         $categories = Category::withCount(['products', 'childes'])->with(['childes' => function ($query) {

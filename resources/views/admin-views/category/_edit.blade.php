@@ -142,7 +142,12 @@
                         <div class="text-center py-1">
                             <div class="mx-auto text-center">
                                 <div class="mb-4">
-                                    <h5 class="mb-1">{{ translate('Main Category Image') }}</h5>
+                                    <h5 class="mb-1">{{ translate('Main Category Image') }}
+                                        <span class="form-label-secondary text-danger" data-toggle="tooltip"
+                                                data-placement="right"
+                                                data-original-title="{{ translate('messages.Required.') }}"> *
+                                            </span>
+                                    </h5>
                                     <p class="mb-0 fs-12 gray-dark">{{ translate('Upload image') }}</p>
                                 </div>
                                 @include('admin-views.partials._image-uploader', [

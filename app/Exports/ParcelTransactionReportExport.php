@@ -41,8 +41,8 @@ class ParcelTransactionReportExport implements FromView, ShouldAutoSize, WithSty
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A2:O4')->getFont()->setBold(true);
-        $sheet->getStyle('A5:O5')->getFill()->applyFromArray([
+        $sheet->getStyle('A2:P4')->getFont()->setBold(true);
+        $sheet->getStyle('A5:P5')->getFill()->applyFromArray([
             'fillType' => 'solid',
             'rotation' => 0,
             'color' => ['rgb' => '9F9F9F'],
@@ -62,7 +62,7 @@ class ParcelTransactionReportExport implements FromView, ShouldAutoSize, WithSty
         $sheet->getStyle('A1:C1')->applyFromArray($styleArray);
 
         return [
-            'A1:O' . ($this->data['order_transactions']->count() + 5) => [
+            'A1:P' . ($this->data['order_transactions']->count() + 5) => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -94,7 +94,7 @@ class ParcelTransactionReportExport implements FromView, ShouldAutoSize, WithSty
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
-                $event->sheet->getStyle('A4:O' . ($this->data['order_transactions']->count() + 5))
+                $event->sheet->getStyle('A4:P' . ($this->data['order_transactions']->count() + 5))
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);

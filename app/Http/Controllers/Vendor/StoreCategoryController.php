@@ -23,7 +23,7 @@ class StoreCategoryController extends Controller
     public function __construct(protected StoreCategoryService $service)
     {
         $this->middleware(function ($request, $next) {
-            if (!Helpers::storeCategoryStatus()) {
+            if (!Helpers::vendorCategoryStatus()) {
                 Toastr::warning(translate('messages.Store_category_feature_is_disabled'));
                 return back();
             }
@@ -173,12 +173,14 @@ class StoreCategoryController extends Controller
         $unassignedCount = $this->queryAssignableItems((int) $category->id)
             ->whereNull('store_category_id')
             ->count();
+        $isService = $this->isServiceModule();
 
         return response()->json([
             'view' => view('vendor-views.store-category._assign_items', compact(
                 'category',
                 'items',
-                'unassignedCount'
+                'unassignedCount',
+                'isService'
             ))->render(),
         ]);
     }
@@ -195,6 +197,7 @@ class StoreCategoryController extends Controller
             'view' => view('vendor-views.store-category._assign_items_list', [
                 'category' => $category,
                 'items' => $items,
+                'isService' => $this->isServiceModule(),
             ])->render(),
         ]);
     }
@@ -221,11 +224,13 @@ class StoreCategoryController extends Controller
             ->values()
             ->all();
 
-        // Only allow assigning items that belong to this vendor's store AND are
+        $model = $this->bindableModel();
+
+        // Only allow assigning records that belong to this vendor's store AND are
         // either uncategorized or already in this category.
         $allowedNewIds = [];
         if (!empty($submittedIds)) {
-            $allowedNewIds = Item::query()
+            $allowedNewIds = $model::query()
                 ->where('store_id', $storeId)
                 ->whereIn('id', $submittedIds)
                 ->where(function ($q) use ($category) {
@@ -237,14 +242,14 @@ class StoreCategoryController extends Controller
         }
 
         if (!empty($allowedNewIds)) {
-            Item::query()
+            $model::query()
                 ->where('store_id', $storeId)
                 ->whereIn('id', $allowedNewIds)
                 ->update(['store_category_id' => $category->id]);
         }
 
-        // Un-assign items previously in this category but unchecked.
-        Item::query()
+        // Un-assign records previously in this category but unchecked.
+        $model::query()
             ->where('store_id', $storeId)
             ->where('store_category_id', $category->id)
             ->when(!empty($allowedNewIds), fn ($q) => $q->whereNotIn('id', $allowedNewIds))
@@ -252,19 +257,39 @@ class StoreCategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => translate('messages.Items_assigned_successfully'),
+            'message' => $this->isServiceModule()
+                ? translate('messages.Services_assigned_successfully')
+                : translate('messages.Items_assigned_successfully'),
             'assigned_count' => count($allowedNewIds),
         ]);
     }
 
     /**
-     * Reusable builder for the items shown in the assign offcanvas.
+     * The vendor's store-category feature binds the store's sellable records. For a Service-module
+     * store that's a Service; for every other module it's an Item. Both tables carry `store_id` +
+     * `store_category_id`, so the assign flow is identical apart from the model.
+     */
+    private function isServiceModule(): bool
+    {
+        return Helpers::get_store_data()?->module_type === 'service' && addon_published_status('Service');
+    }
+
+    /** @return class-string<\Illuminate\Database\Eloquent\Model> */
+    private function bindableModel(): string
+    {
+        return $this->isServiceModule() ? \Modules\Service\Entities\Service::class : Item::class;
+    }
+
+    /**
+     * Reusable builder for the records (items, or services on a service store) shown in the
+     * assign offcanvas — uncategorized OR already in this category, scoped to the vendor's store.
      */
     private function queryAssignableItems(int $categoryId, ?string $search = null)
     {
         $storeId = Helpers::get_store_id();
+        $model = $this->bindableModel();
 
-        return Item::query()
+        return $model::query()
             ->where('store_id', $storeId)
             ->where(function ($q) use ($categoryId) {
                 $q->whereNull('store_category_id')

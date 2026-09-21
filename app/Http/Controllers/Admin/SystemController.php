@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Modules\Rental\Entities\Trips;
+use Modules\Service\Entities\ServiceBooking;
 
 class SystemController extends Controller
 {
@@ -35,6 +36,11 @@ class SystemController extends Controller
             $new_order =1;
             $type='trip';
             $module_id=Trips::where(['checked' => 0])->latest()->first(['module_id'])->module_id;
+        }
+        elseif(addon_published_status('Service') &&  ServiceBooking::where(['notification_checked' => 0])->count() > 0 ){
+            $new_order =1;
+            $type='service_booking';
+            $module_id=ServiceBooking::where(['notification_checked' => 0])->latest()->first(['module_id'])->module_id;
         }
 
         return response()->json([
@@ -178,7 +184,7 @@ class SystemController extends Controller
             }
         }
 
-        $systems = ['vendor_panel', 'user_mobile_app', 'user_web_app', 'react_website', 'deliveryman_app', 'vendor_app', 'rider_app', 'vendor_storefront'];
+        $systems = ['vendor_panel', 'user_mobile_app', 'user_web_app', 'react_website', 'deliveryman_app', 'vendor_app', 'rider_app', 'serviceman_app', 'vendor_storefront'];
         $selectedSystems = array_values(array_filter($systems, fn($s) => $request->has($s)));
 
         if (empty($selectedSystems)) {
@@ -250,6 +256,7 @@ class SystemController extends Controller
             'deliveryman_app' => 'maintenance_mode_deliveryman_app',
             'vendor_app'      => 'maintenance_mode_vendor_app',
             'rider_app'       => 'maintenance_mode_rider_app',
+            'serviceman_app'  => 'maintenance_mode_serviceman_app',
         ];
 
         $payload = array_merge($notification, ['image' => '', 'order_id' => '']);

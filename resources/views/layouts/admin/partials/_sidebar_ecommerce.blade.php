@@ -270,7 +270,7 @@
                         </li>
                         <!-- Order refund End-->
                         <!-- Attributes -->
-                        {{-- @if (\App\CentralLogics\Helpers::module_permission_check('attribute')) --}}
+                        {{-- @if (\App\CentralLogics\Helpers::module_permission_check('category')) --}}
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/flash-sale*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{ route('admin.flash-sale.add-new') }}"
@@ -291,7 +291,7 @@
                         \App\CentralLogics\Helpers::module_permission_check('banner') ||
                         \App\CentralLogics\Helpers::module_permission_check('coupon')||
                         \App\CentralLogics\Helpers::module_permission_check('notification') ||
-                        \App\CentralLogics\Helpers::module_permission_check('advertisement')
+                        \App\CentralLogics\Helpers::module_permission_check('coupon')
                         )
                         <li class="nav-item">
                             <small class="nav-subtitle"
@@ -384,7 +384,7 @@
 
                         <!-- advertisement -->
 
-                        @if (\App\CentralLogics\Helpers::module_permission_check('advertisement'))
+                        @if (\App\CentralLogics\Helpers::module_permission_check('coupon'))
                             <li
                                 class="navbar-vertical-aside-has-menu  @yield('advertisement')">
                                 <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
@@ -451,9 +451,9 @@
 
                     <!-- End marketing section -->
                     @if(\App\CentralLogics\Helpers::module_permission_check('category')||
-                        \App\CentralLogics\Helpers::module_permission_check('attribute')||
-                        \App\CentralLogics\Helpers::module_permission_check('unit')||
-                        \App\CentralLogics\Helpers::module_permission_check('brand')||
+                        \App\CentralLogics\Helpers::module_permission_check('category')||
+                        \App\CentralLogics\Helpers::module_permission_check('category')||
+                        \App\CentralLogics\Helpers::module_permission_check('category')||
                         \App\CentralLogics\Helpers::module_permission_check('item')
                         )
                     <li class="nav-item">
@@ -523,7 +523,7 @@
                     <!-- End Store Category -->
 
                     <!-- Attributes -->
-                    @if (\App\CentralLogics\Helpers::module_permission_check('attribute'))
+                    @if (\App\CentralLogics\Helpers::module_permission_check('category'))
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/attribute*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{ route('admin.attribute.add-new') }}"
@@ -538,7 +538,7 @@
                     <!-- End Attributes -->
 
                     <!-- Unit -->
-                    @if (\App\CentralLogics\Helpers::module_permission_check('unit'))
+                    @if (\App\CentralLogics\Helpers::module_permission_check('category'))
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/unit*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link"
                                href="{{ route('admin.unit.index') }}" title="{{ translate('messages.units') }}">
@@ -551,7 +551,7 @@
                         </li>
                     @endif
                     <!-- End Unit -->
-                    @if(\App\CentralLogics\Helpers::module_permission_check('brand'))
+                    @if(\App\CentralLogics\Helpers::module_permission_check('category'))
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/brand*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.brand.add') }}"
                                title="{{ translate('messages.Brands') }}">

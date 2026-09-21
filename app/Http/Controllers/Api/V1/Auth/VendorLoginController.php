@@ -23,6 +23,8 @@ use Illuminate\Validation\Rules\Password;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Modules\Rental\Emails\ProviderRegistration;
 use Modules\Rental\Emails\ProviderSelfRegistration;
+use Modules\Service\Emails\ProviderRegistration as ServiceProviderRegistration;
+use Modules\Service\Emails\ProviderSelfRegistration as ServiceProviderSelfRegistration;
 
 class VendorLoginController extends Controller
 {
@@ -232,19 +234,25 @@ class VendorLoginController extends Controller
         try{
             $admin= Admin::where('role_id', 1)->first();
             $mail_status = Helpers::get_mail_status('registration_mail_status_store');
-            if($module?->module_type != 'rental' && config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('store','store_registration','mail_status')){
+            if($module?->module_type != 'rental' && $module?->module_type != 'service' && config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('store','store_registration','mail_status')){
                 Mail::to($request['email'])->send(new VendorSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
             elseif($module?->module_type == 'rental' && addon_published_status('Rental')&& config('mail.status') && Helpers::get_mail_status('rental_registration_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_registration','mail_status') ){
                 Mail::to($request['email'])->send(new ProviderSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
+            elseif($module?->module_type == 'service' && addon_published_status('Service')&& config('mail.status') && Helpers::get_mail_status('service_registration_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_registration','mail_status') ){
+                Mail::to($request['email'])->send(new ServiceProviderSelfRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+            }
 
             $mail_status = Helpers::get_mail_status('store_registration_mail_status_admin');
-            if($module?->module_type != 'rental' && config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('admin','store_self_registration','mail_status')){
+            if($module?->module_type != 'rental' && $module?->module_type != 'service' && config('mail.status') && $mail_status == '1' &&  Helpers::getNotificationStatusData('admin','store_self_registration','mail_status')){
                 Mail::to($admin?->getRawOriginal('email'))->send(new StoreRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
             elseif($module?->module_type == 'rental' && addon_published_status('Rental') && config('mail.status') && Helpers::get_mail_status('rental_provider_registration_mail_status_admin') == '1' &&  Helpers::getRentalNotificationStatusData('admin','provider_self_registration','mail_status') ){
                 Mail::to($admin?->getRawOriginal('email'))->send(new ProviderRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
+            }
+            elseif($module?->module_type == 'service' && addon_published_status('Service') && config('mail.status') && Helpers::get_mail_status('service_provider_registration_mail_status_admin') == '1' &&  Helpers::getServiceNotificationStatusData('admin','service_provider_self_registration','mail_status') ){
+                Mail::to($admin?->getRawOriginal('email'))->send(new ServiceProviderRegistration('pending', $vendor->f_name.' '.$vendor->l_name));
             }
         }catch(\Exception $ex){
             info($ex->getMessage());

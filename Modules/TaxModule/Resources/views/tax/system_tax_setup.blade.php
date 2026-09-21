@@ -49,6 +49,13 @@
                                 href="{{ route('taxvat.systemTaxvat', ['type' => 'parcel']) }}"
                                 aria-disabled="true">{{ translate('Parcel Module') }}</a>
                         </li>
+                        @if (addon_published_status('Service'))
+                            <li class="nav-item">
+                                <a class="nav-link {{ Request::is('taxvat/system-taxvat') && request('type') == 'service' ? 'active' : '' }}"
+                                    href="{{ route('taxvat.systemTaxvat', ['type' => 'service']) }}"
+                                    aria-disabled="true">{{ translate('Service Module') }}</a>
+                            </li>
+                        @endif
                     </ul>
                     <!-- End Nav -->
                 </div>
@@ -90,6 +97,7 @@
                     <input type="hidden" name="country_code"
                         value="{{ $country_code ?? ($systemTaxVat?->country_code ?? null) }}">
                     <input type="hidden" id="system_tax_id" name="system_tax_id" value="{{ $systemTaxVat?->id }}">
+                    <input type="hidden" name="tax_payer" value="{{ $tax_payer }}">
                     <div class="card p-20">
                         <div class="bg--secondary p-15 rounded mb-20">
                             <div class="mb-20">
@@ -99,6 +107,8 @@
                                     @php($productType = translate('Ride_Amount'))
                                 @elseif($tax_payer == 'parcel')
                                     @php($productType = translate('Parcel_Amount'))
+                                @elseif($tax_payer == 'service_provider')
+                                    @php($productType = translate('Service_Amount'))
                                 @else
                                     @php($productType = translate('Product Price'))
                                 @endif
@@ -148,7 +158,7 @@
                                 <div class="row g-lg-4 g-md-3 g-2">
                                     <div class="col-md-6">
                                         <h3 class="mb-1">{{ translate('messages.Basic Setup') }}</h3>
-                                        {{-- <p class="mb-0 fz-12">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p> --}}
+                                        <p class="mb-0 fz-12">{{ translate('Choose the tax type and applicable tax rates.') }}</p>
                                         <div class="danger-notes-bg px-2 py-2 rounded fz-11  gap-2 align-items-center mt-10px d-none"
                                             id=tax_type_change_alert>
                                             <svg width="14" height="15" viewBox="0 0 14 15" fill="none"
@@ -165,10 +175,17 @@
                                                     </clipPath>
                                                 </defs>
                                             </svg>
-                                            <span>
+                                            <span id="alert_for_item"
+                                                class="{{ $tax_payer == 'service_provider' && $systemTaxVat?->tax_type == 'service_wise' ? 'd-none' : '' }}">
                                                 {{ translate('messages.When you change') }} <span
                                                     class="font-semibold title-clr">{{ translate('messages.Tax Type') }}</span>
                                                 {{ translate('to product wise.Vendors will have control to setup the taxes of their products.') }}
+                                            </span>
+                                            <span id="alert_for_service"
+                                                class="{{ $tax_payer == 'service_provider' && $systemTaxVat?->tax_type == 'service_wise' ? '' : 'd-none' }}">
+                                                {{ translate('messages.When you change') }} <span
+                                                    class="font-semibold title-clr">{{ translate('messages.Tax Type') }}</span>
+                                                {{ translate('to service wise.Providers will have control to setup the taxes of their services.') }}
                                             </span>
                                         </div>
                                     </div>
@@ -180,6 +197,7 @@
                                                 <select id="tax_type"
                                                     class="custom-select custom-select-color border rounded w-100"
                                                     name="tax_type"
+                                                    data-tax_payer="{{ $tax_payer }}"
                                                     data-current_seclected="{{ $systemTaxVat?->tax_type }}">
 
                                                     @php($tax_calculate_on = $tax_payer == 'vendor' ? 'tax_calculate_on' : 'tax_calculate_on_' . $tax_payer)
@@ -191,7 +209,7 @@
                                                 </select>
                                             </div>
                                             <div id="tax_rate_div"
-                                                class="{{ !$systemTaxVat || in_array($systemTaxVat?->tax_type, ['order_wise', 'trip_wise']) ? '' : 'd-none' }}">
+                                                class="{{ !$systemTaxVat || ($tax_payer == 'service_provider' && in_array($systemTaxVat?->tax_type, ['booking_wise'])) || ($tax_payer != 'service_provider' && in_array($systemTaxVat?->tax_type, ['order_wise', 'trip_wise'])) ? '' : 'd-none' }}">
                                                 <span
                                                     class="mb-2 d-block title-clr fw-normal">{{ translate('Select Tax Rate') }}</span>
                                                 <select
@@ -210,7 +228,7 @@
                                                 </select>
                                             </div>
                                             <div id="info_notes"
-                                                class="info-notes-bg px-2 py-2 rounded fz-11  gap-2 align-items-center {{ in_array($systemTaxVat?->tax_type, ['category_wise', 'product_wise']) ? 'd-flex' : 'd-none' }} ">
+                                                class="info-notes-bg px-2 py-2 rounded fz-11  gap-2 align-items-center {{ ($tax_payer != 'service_provider' && in_array($systemTaxVat?->tax_type, ['category_wise', 'product_wise'])) || ($tax_payer == 'service_provider' && in_array($systemTaxVat?->tax_type, ['category_wise', 'service_wise'])) ? 'd-flex' : 'd-none' }} ">
                                                 <svg width="20" height="21" viewBox="0 0 20 21" fill="none"
                                                     xmlns="http://www.w3.org/2000/svg">
                                                     <g clip-path="url(#clip0_13899_104013)">
@@ -264,6 +282,14 @@
                                                     <span
                                                         class="font-semibold theme-clr text-decoration-underline">{{ translate('Products List') }}.</span>
                                                     {{ translate('If you already created Products without tax then go to edit Product and update tax.') }}
+                                                </span>
+                                                <span
+                                                    class="{{ $tax_payer == 'service_provider' && $systemTaxVat?->tax_type == 'service_wise' ? '' : 'd-none' }}"
+                                                    id="info_for_service">
+                                                    {{ translate('messages.Please specify the tax rate while creating a Service from') }}
+                                                    <span
+                                                        class="font-semibold theme-clr text-decoration-underline">{{ translate('Services List') }}.</span>
+                                                    {{ translate('If you already created Services without tax then go to edit Service and update tax.') }}
                                                 </span>
                                             </div>
                                         </div>
@@ -380,7 +406,7 @@
                                     <div class="row g-lg-4 g-md-3 g-2">
                                         <div class="col-md-6">
                                             <h3 class="mb-1">{{ translate('messages.Additional Setup') }}</h3>
-                                            {{-- <p class="mb-0 fz-12">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p> --}}
+                                            <p class="mb-0 fz-12">{{ translate('Apply tax on additional charges.') }}</p>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="d-flex flex-column gap-lg-4 gap-3">
@@ -427,7 +453,7 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center justify-content-end mt-4 gap-md-3 gap-2">
-                        <button type="button"
+                        <button type="reset"
                             class="btn bg--secondary h--42px title-clr px-4">{{ translate('messages.Reset') }}</button>
                         <button type="{{ getEnvMode() != 'demo' ? 'submit' : 'button' }}" class="btn btn--primary call-demo">{{ translate('Save Information') }}</button>
                     </div>

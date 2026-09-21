@@ -4,7 +4,7 @@
     $alwaysVisible = (int) old('is_always_visible', $reel->is_always_visible ?? 0) === 1;
     $defaultDescription = old('description.0', $reel->getRawOriginal('description') ?? '');
     $existingDateRange = old('dates');
-    $reelVideoMaxSizeMb = max(1, (int) (\App\CentralLogics\Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15));
+    $reelVideoMaxSizeMb = max(1, (int) (\App\CentralLogics\Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15));
     $reelVideoSizeText = str_replace(':size', (string) $reelVideoMaxSizeMb, translate('messages.Size_video_dynamic_9_16_Recommended'));
     $reelMaxDuration = max(1, (int) (\App\CentralLogics\Helpers::get_business_settings('reels_max_duration') ?? 30));
     $reelMaxDurationUnit = \App\CentralLogics\Helpers::get_business_settings('reels_max_duration_unit') ?? 'min';

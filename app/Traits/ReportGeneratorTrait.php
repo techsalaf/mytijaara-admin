@@ -560,7 +560,7 @@ trait ReportGeneratorTrait
             ->NotRefunded()
             ->applyDateFilter($filter, $from, $to, 'order_transactions.created_at')
             ->when($search, function ($query) use ($search) {
-                $keywords = is_array($search) ? $search : explode(' ', $search);
+                $keywords = is_array($search) ? $search : explode(' ', $search ?? '');
                 $keywords = array_filter(array_map('trim', $keywords));
 
                 return $query->where(function ($subQuery) use ($keywords) {
@@ -869,7 +869,7 @@ trait ReportGeneratorTrait
                         ELSE 0
                     END
                 ) AS discount_on_item,
-                
+
                 SUM(CASE WHEN type = 'flash_sale_discount' AND created_by = 'vendor' THEN amount ELSE 0 END) as flash_sale_discount,
                 SUM(CASE WHEN type = 'coupon_discount' AND created_by = 'vendor' THEN amount ELSE 0 END) as coupon_contribution,
                 SUM(CASE WHEN type = 'free_delivery' AND created_by = 'vendor' THEN amount ELSE 0 END) as free_delivery,
@@ -1509,7 +1509,7 @@ trait ReportGeneratorTrait
                 SUM(
                     CASE
                         WHEN orders.order_type != 'parcel' THEN order_transactions.delivery_fee_comission
-                        WHEN orders.order_type = 'parcel' THEN order_transactions.admin_commission - order_transactions.additional_charge
+                        WHEN orders.order_type = 'parcel' THEN order_transactions.admin_commission + order_transactions.admin_expense - order_transactions.delivery_fee_comission - order_transactions.additional_charge
                         ELSE 0
                     END
                 ) as admin_commission
@@ -1657,7 +1657,7 @@ trait ReportGeneratorTrait
                 SUM(
                     CASE
                         WHEN orders.order_type != 'parcel' THEN order_transactions.delivery_fee_comission
-                        WHEN orders.order_type = 'parcel' THEN order_transactions.admin_commission - order_transactions.additional_charge
+                        WHEN orders.order_type = 'parcel' THEN order_transactions.admin_commission + order_transactions.admin_expense - order_transactions.delivery_fee_comission - order_transactions.additional_charge
                         ELSE 0
                     END
                 )
@@ -1752,7 +1752,7 @@ trait ReportGeneratorTrait
                 'delivery_man' => $transaction->delivery_man ? $transaction->delivery_man->f_name.' '.$transaction->delivery_man->l_name : 'Delivery Man',
                 'delivery_charge' => $transaction->order->original_delivery_charge ?? 0,
                 'tips' => $transaction->dm_tips,
-                'commission_paid' => $transaction->order->order_type != 'parcel' ? $transaction->delivery_fee_comission : ($transaction->admin_commission - $transaction->additional_charge),
+                'commission_paid' => $transaction->order->order_type != 'parcel' ? $transaction->delivery_fee_comission : ($transaction->admin_commission + $transaction->admin_expense - $transaction->delivery_fee_comission -$transaction->additional_charge),
                 'net_profit' => $transaction->original_delivery_charge + $transaction->dm_tips,
                 'date' => $transaction->created_at,
             ];

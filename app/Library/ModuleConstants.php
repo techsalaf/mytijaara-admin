@@ -188,6 +188,7 @@ const SOCIAL_LOGIN = "social_login";
 
 const TRIP_SETTINGS = "trip_settings";
 const RIDE_SHARE_BUSINESS_SETTINGS = "ride_share_business_settings";
+const SERVICE_BUSINESS_SETTINGS = "service_business_settings";
 const PARCEL_SETTINGS = "parcel_settings";
 const TRIP_FARE_SETTINGS = "trip_fare_settings";
 

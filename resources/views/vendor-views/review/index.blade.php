@@ -1,3 +1,8 @@
+@php
+    // Services are reviewed, not items: use "Service" wording for the service module.
+    $reviewItemLabel = \App\CentralLogics\Helpers::moduleItemLabel();
+    $isServiceReview = \App\CentralLogics\Helpers::get_store_data()?->module?->module_type === 'service';
+@endphp
 @extends('layouts.vendor.app')
 
 @section('title',translate('messages.Review List'))
@@ -32,7 +37,7 @@
 
                     <form class="search-form">
                         <div class="input-group input--group">
-                            <input name="search" type="search" value="{{ request()?->search }}" class="form-control h--40px" placeholder="{{ translate('Ex : Search by item name') }}" aria-label="Search here">
+                            <input name="search" type="search" value="{{ request()?->search }}" class="form-control h--40px" placeholder="{{ translate('Ex : Search by') }} {{ strtolower($reviewItemLabel) }} {{ translate('name') }}" aria-label="Search here">
                             <button type="submit" class="btn btn--secondary h--40px"><i class="tio-search"></i></button>
                         </div>
                     </form>
@@ -86,7 +91,7 @@
                     <tr>
                         <th class="border-0">{{translate('messages.#')}}</th>
                         <th class="border-0">{{translate('messages.Review_Id')}}</th>
-                        <th class="border-0">{{translate('messages.item')}}</th>
+                        <th class="border-0">{{ $reviewItemLabel }}</th>
                         <th class="border-0">{{translate('messages.reviewer')}}</th>
                         <th class="border-0">{{translate('messages.review')}}</th>
                         <th class="border-0">{{translate('messages.date')}}</th>
@@ -117,7 +122,7 @@
                                         </div>
                                     </div>
                                 @else
-                                    {{translate('messages.Food_deleted!')}}
+                                    {{ $isServiceReview ? translate('messages.Service_deleted!') : translate('messages.Food_deleted!') }}
                                 @endif
                             </td>
                             <td>

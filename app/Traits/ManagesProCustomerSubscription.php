@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\CentralLogics\Helpers;
 use App\Models\DataSetting;
+use App\Models\Module;
 use App\Models\NotificationMessage;
 use App\Models\ProCustomerBenefitSetting;
 use App\Models\OrderProDiscount;
@@ -159,6 +160,9 @@ trait ManagesProCustomerSubscription
             if ($moduleType === 'rental' && !addon_published_status('Rental')) {
                 return $noop('module_addon_unpublished');
             }
+            if ($moduleType === 'service' && !addon_published_status('Service')) {
+                return $noop('module_addon_unpublished');
+            }
         }
 
         $offer    = $this->getProCustomerOffer($userId, false, true, $moduleType);
@@ -250,6 +254,7 @@ trait ManagesProCustomerSubscription
         ?int $orderId = null,
         ?int $tripId = null,
         ?int $rideRequestId = null,
+        ?int $serviceBookingId = null,
         ?float $originalDeliveryCharge = null,
         ?string $moduleType = null,
     ): ?OrderProDiscount {
@@ -257,7 +262,7 @@ trait ManagesProCustomerSubscription
             return null;
         }
 
-        if ($orderId === null && $tripId === null && $rideRequestId === null) {
+        if ($orderId === null && $tripId === null && $rideRequestId === null && $serviceBookingId === null) {
             return null;
         }
 
@@ -288,6 +293,7 @@ trait ManagesProCustomerSubscription
             'order_id'                            => $orderId,
             'trip_id'                             => $tripId,
             'ride_request_id'                     => $rideRequestId,
+            'service_booking_id'                  => $serviceBookingId,
             'user_id'                             => $userId,
             'subscription_id'                     => $benefit['subscription_id'] ?? null,
             'plan_id'                             => $benefit['plan_id'] ?? null,
@@ -404,6 +410,10 @@ trait ManagesProCustomerSubscription
         $price              = (float) $plan->price;
         $paymentMethodInput = $payment['payment_method'] ?? null;
 
+        if ($isFreeTrial && $this->hasUsedFreeTrial($user->id)) {
+            throw new RuntimeException('free_trial_already_used');
+        }
+
         if (!$isFreeTrial && $paymentMethodInput === 'wallet'
             && (float) $user->wallet_balance < $price) {
             throw new RuntimeException('insufficient_wallet_balance');
@@ -510,6 +520,51 @@ trait ManagesProCustomerSubscription
         );
 
         return $subscription;
+    }
+
+    private function hasUsedFreeTrial(int $userId): bool
+    {
+        return ProCustomerTransaction::where('user_id', $userId)
+            ->where('plan_type', 'free_trial')
+            ->exists();
+    }
+
+    public function proActiveModuleTypes(): array
+    {
+        return Module::where('status', 1)->distinct()->pluck('module_type')->all();
+    }
+
+    public function proAddonEnabledDiscountModules(): array
+    {
+        return array_values(array_filter(
+            ProCustomerBenefitSetting::DISCOUNT_MODULE_TYPES,
+            fn ($mod) => match ($mod) {
+                'ride-share' => (bool) addon_published_status('RideShare'),
+                'rental'     => (bool) addon_published_status('Rental'),
+                'service'    => (bool) addon_published_status('Service'),
+                default      => true,
+            }
+        ));
+    }
+
+    public function proVisibleDiscountModules(): array
+    {
+        $active = $this->proActiveModuleTypes();
+
+        return array_values(array_filter(
+            $this->proAddonEnabledDiscountModules(),
+            fn ($mod) => in_array($mod, $active, true)
+        ));
+    }
+
+    public function proVisibleDeliveryFeeModules(): array
+    {
+        $active = $this->proActiveModuleTypes();
+
+        return array_values(array_filter(
+            ProCustomerBenefitSetting::DELIVERY_FEE_MODULE_TYPES,
+            fn ($mod) => in_array($mod, $active, true)
+        ));
     }
 
     public function expireDueSubscriptions(): void

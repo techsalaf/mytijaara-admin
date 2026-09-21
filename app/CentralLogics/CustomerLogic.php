@@ -50,7 +50,7 @@ class CustomerLogic
                     $credit = (int)($amount / BusinessSetting::where('key', 'loyalty_point_exchange_rate')->first()->value);
                 }
             }
-        } else if (in_array($transaction_type, ['order_place','trip_booking','ride_booking'])) {
+        } else if (in_array($transaction_type, ['order_place','trip_booking','ride_booking','service_booking'])) {
             $debit = $amount;
         } else if ($transaction_type == 'partial_payment') {
             $debit = $amount;
@@ -74,7 +74,7 @@ class CustomerLogic
                 Helpers::expenseCreate(amount:$amount,type:'referrer',created_by:'admin',user_id:$user->id,datetime:now());
             }
             DB::commit();
-            if (in_array($transaction_type, ['loyalty_point', 'trip_booking', 'order_place', 'add_fund_by_admin', 'referrer','partial_payment'])) return $wallet_transaction;
+            if (in_array($transaction_type, ['loyalty_point', 'trip_booking', 'order_place', 'add_fund_by_admin', 'referrer','partial_payment','service_booking'])) return $wallet_transaction;
             return true;
         } catch (\Exception $ex) {
             info($ex->getMessage());
@@ -106,10 +106,14 @@ class CustomerLogic
         $loyalty_point_transaction->reference = $reference;
         $loyalty_point_transaction->transaction_type = $transaction_type;
 
-        if ( in_array($transaction_type, ['order_place','trip_booking']) ) {
+        if ( in_array($transaction_type, ['order_place','trip_booking','service_booking']) ) {
             $credit = (int)($amount * $settings['loyalty_point_item_purchase_point'] / 100);
         } else if ($transaction_type == 'point_to_wallet') {
             $debit = $amount;
+        }
+
+        if ($credit <= 0 && $debit <= 0) {
+            return false;
         }
 
         $current_balance = $user->loyalty_point + $credit - $debit;

@@ -307,10 +307,23 @@ class CustomerController extends Controller
 
         $data = $request->user();
         $data['userinfo'] = $data->userinfo;
-        $data['order_count'] = (integer)$request->user()->orders()->count();
+        $core_order_count = (integer)$request->user()->orders()->count();
+
+        // "Total Orders" must also include service bookings (the service-module order equivalent),
+        // otherwise the profile total mismatches the Service tab. Count parent bookings only —
+        // repeat series collapse to one — matching the customer booking list ("All"). The
+        // first-order-discount check below keeps using the core order count so its behavior is unchanged.
+        $data['order_count'] = $core_order_count;
+        if (addon_published_status('Service')) {
+            $data['order_count'] += (integer)\Modules\Service\Entities\ServiceBooking::where('user_id', $request->user()->id)
+                ->where('is_guest', 0)
+                ->whereNull('parent_booking_id')
+                ->where('is_hidden', 0)
+                ->count();
+        }
         $data['member_since_days'] = (integer)$request->user()->created_at->diffInDays();
         $data['selected_modules_for_interest'] = $request->user()?->module_ids ? json_decode($user?->module_ids, true) : [];
-        $discount_data = Helpers::getCusromerFirstOrderDiscount(order_count: $data['order_count'], user_creation_date: $request->user()->created_at, refby: $request->user()->ref_by);
+        $discount_data = Helpers::getCusromerFirstOrderDiscount(order_count: $core_order_count, user_creation_date: $request->user()->created_at, refby: $request->user()->ref_by);
         $data['is_valid_for_discount'] = data_get($discount_data, 'is_valid');
         $data['discount_amount'] = (float)data_get($discount_data, 'discount_amount');
         $data['discount_amount_type'] = data_get($discount_data, 'discount_amount_type');

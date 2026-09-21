@@ -29,14 +29,14 @@ class DmReviewRepository implements DmReviewRepositoryInterface
         return $this->review->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->review->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         $data = $this->review->with($relations)->where($filters)
             ->when($searchValue, function ($query) use ($key) {
                 $query->where(function ($q) use ($key) {
@@ -58,12 +58,12 @@ class DmReviewRepository implements DmReviewRepositoryInterface
         return $data->paginate($dataLimit);
     }
 
-    public function getListWhereOrder(string $searchValue = null, array $filters = [], array $relations = [], array $orderBy = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhereOrder(?string $searchValue = null, array $filters = [], array $relations = [], array $orderBy = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
 
         $data = $this->review->with($relations)->where($filters)
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($searchValue, function ($query) use ($key) {
                 $query->whereHas('delivery_man', function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");

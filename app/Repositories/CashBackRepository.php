@@ -29,19 +29,21 @@ class CashBackRepository implements CashBackRepositoryInterface
         return $this->bonus->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->bonus->paginate($dataLimit);
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
-        return $this->bonus->with($relations)->where($filters)->where(function ($query) use ($key) {
-            foreach ($key as $value) {
-                $query->orWhere('title', 'like', "%{$value}%");
-            }
-        })->latest('end_date')->paginate($dataLimit);
+        $key = explode(' ', $searchValue ?? '');
+        return $this->bonus->with($relations)->where($filters)
+            ->where('is_rental', false)->where('is_service', false)
+            ->where(function ($query) use ($key) {
+                foreach ($key as $value) {
+                    $query->orWhere('title', 'like', "%{$value}%");
+                }
+            })->latest('end_date')->paginate($dataLimit);
     }
 
     public function update(string $id, array $data): bool|string|object
@@ -68,9 +70,9 @@ class CashBackRepository implements CashBackRepositoryInterface
         return $this->bonus->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getSearchedList(string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection
+    public function getSearchedList(?string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->bonus->where(function ($query) use ($key) {
             foreach ($key as $value) {
                 $query->orWhere('title', 'like', "%{$value}%");

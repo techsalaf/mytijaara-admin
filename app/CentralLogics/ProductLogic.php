@@ -8,7 +8,6 @@ use App\Models\Store;
 use App\Models\Category;
 use App\Models\FlashSaleItem;
 use App\Traits\ItemFilter;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 
@@ -18,10 +17,7 @@ class ProductLogic
 
     public static function get_product($id)
     {
-        return Item::active()
-        ->when(config('module.current_module_data'), function($query){
-            $query->module(config('module.current_module_data')['id']);
-        })
+        return Item::active(module_id: config('module.current_module_data')['id'] ?? null)
         ->when(is_numeric($id),function ($qurey) use($id){
             $qurey-> where('id', $id);
         })
@@ -485,24 +481,10 @@ class ProductLogic
             ->when(is_numeric($store_category_id), function ($q) use ($store_category_id) {
                 $q->where('store_category_id', $store_category_id);
             })
-
-            ->when(empty($store_id), function ($q) use ($zones) {
-                $q->whereHas('store', function ($query) use ($zones) {
-
-                    $query->when(config('module.current_module_data'), function ($query) {
-                        $query->where('module_id', config('module.current_module_data')['id'])
-                            ->whereHas('zone.modules', function ($query) {
-                                $query->where('modules.id', config('module.current_module_data')['id']);
-                            });
-                    });
-
-                    $query->when(!empty($zones), function ($query) use ($zones) {
-                        $query->whereIn('zone_id', $zones);
-                    });
-                });
-            })
-
-            ->active()
+            ->active(
+                zone_ids: empty($store_id) ? $zones : null,
+                module_id: empty($store_id) ? (config('module.current_module_data')['id'] ?? null) : null,
+            )
             ->type($type)
             ->Recommended()
 
@@ -551,21 +533,21 @@ class ProductLogic
                 $withCount[] = 'reviews';
             }
 
-            $query = Item::with('store')
-                  ->when(config('module.current_module_data'), function($query){
-                    $query->where('module_id', config('module.current_module_data')['id']);
-                })
+            $zones = self::decodeValidZoneIds($zone_id);
 
-            ->whereHas('store', function($query)use($zone_id){
-                    $query->whereIn('zone_id', json_decode($zone_id, true));
-                })
+            $query = Item::with('store')
             ->select(['items.*'])
             ->selectSub(function ($subQuery) {
                 $subQuery->selectRaw('active as temp_available')
                     ->from('stores')
                     ->whereColumn('stores.id', 'items.store_id');
             }, 'temp_available')
-            ->active()->type($type);
+            ->active(
+                zone_ids: $zones,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zones, fn($q) => $q->whereRaw('0 = 1'))
+            ->type($type);
 
             $query =self::filterQurey($query,$filter,$min??0,$max,$category_ids,$rating_count,$withCount,$search,$store_category_id);
 
@@ -627,20 +609,22 @@ class ProductLogic
         }
 
 
-        $query = Item::with('store')->
-            whereHas('store', function($query)use($zone_id){
-                $query->whereIn('zone_id', json_decode($zone_id, true));
-            })
-            ->when(config('module.current_module_data'), function($query){
-                    $query->where('module_id', config('module.current_module_data')['id']);
-                })
+        $zones = self::decodeValidZoneIds($zone_id);
+
+        $query = Item::with('store')
             ->select(['items.*'])
             ->selectSub(function ($subQuery) {
                 $subQuery->selectRaw('active as temp_available')
                     ->from('stores')
                     ->whereColumn('stores.id', 'items.store_id');
             }, 'temp_available')
-            ->withCount('reviews')->active()->type($type)
+            ->withCount('reviews')
+            ->active(
+                zone_ids: $zones,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zones, fn($q) => $q->whereRaw('0 = 1'))
+            ->type($type)
              ->having('reviews_count' ,'>',0);
 
             $query =self::filterQurey($query,$filter,$min??0,$max,$category_ids,$rating_count,$withCount, $search, $store_category_id);
@@ -693,20 +677,21 @@ class ProductLogic
             $withCount[] = 'whislists';
         }
 
+        $zones = self::decodeValidZoneIds($zone_id);
+
         $query = Item::with('store')
-            ->whereHas('store', function($query)use($zone_id){
-                $query->whereIn('zone_id', json_decode($zone_id, true));
-            })
-            ->when(config('module.current_module_data'), function($query){
-                $query->where('module_id', config('module.current_module_data')['id']);
-            })
             ->select(['items.*'])
             ->selectSub(function ($subQuery) {
                 $subQuery->selectRaw('active as temp_available')
                     ->from('stores')
                     ->whereColumn('stores.id', 'items.store_id');
             }, 'temp_available')
-            ->active()->type($type)
+            ->active(
+                zone_ids: $zones,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zones, fn($q) => $q->whereRaw('0 = 1'))
+            ->type($type)
             ->where('avg_rating', '>', 0);
 
         $query = self::filterQurey($query, $filter, $min ?? 0, $max, $category_ids, $rating_count, $withCount, $search, $store_category_id);
@@ -768,19 +753,19 @@ class ProductLogic
             ->where('visitor_log_type', Item::class)
             ->groupBy('visitor_log_id');
 
+        $zones = self::decodeValidZoneIds($zone_id);
+
         $query = Item::with('store')
             ->joinSub($visitorLogQuery, 'visitor_log_summary', function ($join) {
                 $join->on('visitor_log_summary.visitor_log_id', '=', 'items.id');
             })
-            ->whereHas('store', function($query)use($zone_id){
-                $query->whereIn('zone_id', json_decode($zone_id, true));
-            })
-            ->when(config('module.current_module_data'), function($query){
-                $query->where('items.module_id', config('module.current_module_data')['id']);
-            })
             ->select(['items.*'])
             ->selectRaw('COALESCE(visitor_log_summary.total_view_count, 0) as total_view_count')
-            ->active()
+            ->active(
+                zone_ids: $zones,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zones, fn($q) => $q->whereRaw('0 = 1'))
             ->type($type);
 
         $query = self::filterQurey($query, $filter, $min ?? 0, $max, $category_ids, $rating_count, $withCount, $search, $store_category_id);
@@ -819,12 +804,9 @@ class ProductLogic
         $category_ids = isset($category_ids)?(is_array($category_ids)?$category_ids:json_decode($category_ids)):[];
         $brand_ids = isset($brand_ids)?(is_array($brand_ids)?$brand_ids:json_decode($brand_ids)):[];
 
+            $zones = self::decodeValidZoneIds($zone_id);
+
             $query = Item::with('store')
-            ->when(config('module.current_module_data'), function($query){
-                    $query->where('module_id', config('module.current_module_data')['id']);
-                })
-
-
             ->when(isset($brand_ids) && (count($brand_ids)>0), function($query)use($brand_ids){
                 $query->whereHas('ecommerce_item_details',function($q)use($brand_ids){
                      $q->whereHas('brand',function($q)use($brand_ids){
@@ -832,16 +814,21 @@ class ProductLogic
                     });
                 });
             })
-            ->whereHas('store', function($query)use($zone_id ,$filter){
-                $query->whereIn('zone_id', json_decode($zone_id, true))
-                ->when($filter&&in_array('free_delivery',$filter),function ($qurey){
+            ->whereHas('store', function($query)use($filter){
+                $query->when($filter&&in_array('free_delivery',$filter),function ($qurey){
                     return $qurey->where('free_delivery',1);
                 })
                 ->when($filter&&in_array('coupon',$filter),function ($qurey){
                     return $qurey->has('activeCoupons');
                 });
             })
-            ->Discounted()->active()->type($type);
+            ->Discounted()
+            ->active(
+                zone_ids: $zones,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zones, fn($q) => $q->whereRaw('0 = 1'))
+            ->type($type);
             $query =self::filterQurey($query,$filter,$min??0,$max,$category_ids,$rating_count,$withCount,$search,$store_category_id);
 
 
@@ -878,8 +865,18 @@ class ProductLogic
     }
 
 
+    private static function decodeValidZoneIds($zone_id)
+    {
+        $zones = is_array($zone_id) ? $zone_id : json_decode((string) $zone_id, true);
+        if (!is_array($zones) && is_numeric($zones)) {
+            $zones = [(int) $zones];
+        }
+
+        return is_array($zones) && !empty($zones) ? $zones : null;
+    }
+
     private static function filterQurey($query,$filter,$min,$max,$category_ids,$rating_count,$withCount,$search,$store_category_id = null){
-        $key = $search ? explode(' ', $search):[];
+        $key = $search ? explode(' ', $search ?? ''):[];
 
         $query =  $query->withCount(array_unique($withCount));
 
@@ -1307,31 +1304,27 @@ class ProductLogic
 
             if ($decreaseStock) {
                 $item->sold = max(0, $item->sold - $quantity);
-                $item->available_stock = $item->stock + $item->sold;
             } else {
                 $item->sold += $quantity;
-                $item->available_stock = max(0, $item->stock - $item->sold);
             }
+            $item->available_stock = max(0, $item->stock - $item->sold);
         }
         return $item;
     }
 
     public static function cart_suggest_products($zone_id, $store_id, $limit = null, $offset = null, $type = 'all', $recomended = false, $user_id = null)
     {
-        $zoneIds = is_array($zone_id) ? $zone_id : json_decode((string) $zone_id, true);
-        if (! is_array($zoneIds)) {
-            $zoneIds = $zoneIds === null || $zoneIds === '' ? [] : [(int) $zoneIds];
-        }
+        $zoneIds = self::decodeValidZoneIds($zone_id);
 
         $query = Item::where('store_id', $store_id)
-            ->active()
+            ->active(
+                zone_ids: $zoneIds,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zoneIds, fn($q) => $q->whereRaw('0 = 1'))
             ->type($type)
-            ->whereHas('store', function ($q) use ($zoneIds) {
-                $q->when(config('module.current_module_data'), function ($q) {
-                    $moduleId = config('module.current_module_data')['id'];
-                    $q->where('module_id', $moduleId)
-                        ->whereHas('zone.modules', fn($q) => $q->where('modules.id', $moduleId));
-                })->whereIn('zone_id', $zoneIds)->Weekday();
+            ->whereHas('store', function ($q) {
+                $q->Weekday();
             })
             ->when($recomended, fn($q) => $q->Recommended())
             ->withCount('reviews')
@@ -1477,14 +1470,12 @@ class ProductLogic
             $withCount[] = 'reviews';
         }
 
+        $zones = self::decodeValidZoneIds($zone_id);
+
         $query = Item::with('store')
-            ->when(config('module.current_module_data'), function($query){
-                $query->where('module_id', config('module.current_module_data')['id']);
-            })
             ->where('organic', 1)
-            ->whereHas('store', function($query)use($zone_id , $filter){
-                $query->whereIn('zone_id', json_decode($zone_id, true))
-                    ->when($filter && in_array('free_delivery',$filter),function ($qurey){
+            ->whereHas('store', function($query)use($filter){
+                $query->when($filter && in_array('free_delivery',$filter),function ($qurey){
                         return $qurey->where('free_delivery',1);
                     })
                     ->when($filter && in_array('coupon',$filter),function ($qurey){
@@ -1497,7 +1488,12 @@ class ProductLogic
                     ->from('stores')
                     ->whereColumn('stores.id', 'items.store_id');
             }, 'temp_available')
-            ->active()->type($type);
+            ->active(
+                zone_ids: $zones,
+                module_id: config('module.current_module_data')['id'] ?? null,
+            )
+            ->when(!$zones, fn($q) => $q->whereRaw('0 = 1'))
+            ->type($type);
 
         $query = self::filterQurey($query, $filter, $min ?? 0, $max, $category_ids, $rating_count, $withCount, $search);
 
@@ -1729,29 +1725,27 @@ class ProductLogic
     {
         $zones = self::decodeZones($zoneHeader);
         $term = $q !== null ? trim($q) : '';
-        $like = $term !== '' ? '%'.$term.'%' : null;
+        $filter = $filter ?? [];
+        if ($term !== '' && empty($filter['search'])) {
+            $filter['search'] = $term;
+        }
 
         $query = Store::WithOpenWithDeliveryTime($longitude, $latitude)
             ->Active()
+            ->withCount('reviews')
+            ->withItemRatingAvg('avg_r')
             ->when(is_numeric($moduleId), fn ($qq) => $qq->where('module_id', $moduleId))
             ->when(! empty($zones), fn ($qq) => $qq->whereIn('zone_id', $zones))
-            ->whereHas('items', function ($qq) use ($like) {
-                $qq->where('status', 1)->where('is_approved', 1);
-                if ($like) {
-                    $qq->where('items.name', 'like', $like);
-                }
+            ->whereHas('items', function ($qq) {
+                $qq->active();
             })
-            ->with(['items' => function ($qq) use ($like) {
-                $qq->where('status', 1)->where('is_approved', 1)
+            ->with(['items' => function ($qq) {
+                $qq->active()
                     ->orderByDesc('discount')->orderByDesc('id');
-                if ($like) {
-                    $qq->where('items.name', 'like', $like);
-                }
             }])
             ->whereHas('discount', function ($q) {
                 $q->validate();
             });
-            
 
         if ($filter) {
             $query = $query->applyStoreFilter($filter);

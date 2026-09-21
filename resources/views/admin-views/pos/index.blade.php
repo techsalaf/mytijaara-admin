@@ -192,6 +192,7 @@
                                 'setUrl'            => route('admin.pos.delivery_type.set'),
                                 'zoneId'            => $store?->zone_id ?? '',
                                 'moduleId'          => $module_id ?? \Illuminate\Support\Facades\Config::get('module.current_module_id'),
+                                'storeId'           => $store?->id ?? '',
                                 'storeDeliveryTime' => $store?->delivery_time ?? '',
                             ])
                             <div class='w-100' id="cart">

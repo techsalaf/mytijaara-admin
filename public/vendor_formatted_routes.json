@@ -40,17 +40,17 @@
         "isModified": false
     },
     {
-        "routeName": "Category Add",
+        "routeName": "Main Category",
         "URI": "vendor-panel/category/list",
-        "keywords": "Category Category List Search Categories Ex Categories Export Download Options Excel Csv # Category Id Category Name Priority Normal Medium High No Data Found",
+        "keywords": "Main Category Category Category List Search Categories Ex Categories Export Download Options Excel Csv # Category Id Category Name Priority Normal Medium High No Data Found",
         "bladePath": "vendor-views/category/index",
         "moduleType": null,
         "isModified": true
     },
     {
-        "routeName": "Add Sub Category",
+        "routeName": "Sub Category",
         "URI": "vendor-panel/category/sub-category-list",
-        "keywords": "Sub Category Ex Search Sub Category Search Here Export Download Options Excel Csv Pdf # Category Id Main Category Category Deleted No Data Found",
+        "keywords": "Sub Category Main Sub Category Sub Category Ex Search Sub Category Search Here Export Download Options Excel Csv Pdf # Category Id Main Category Category Deleted No Data Found",
         "bladePath": "vendor-views/category/sub-index",
         "moduleType": null,
         "isModified": false
@@ -638,5 +638,213 @@
         "bladePath": null,
         "moduleType": null,
         "isModified": true
+    },
+    {
+        "routeName": "Reviews List",
+        "URI": "vendor-panel/service/reviews",
+        "keywords": "Review List Service Reviews Review List Ex Search Service Name Rating Search Here Sl Review Id Service Customer Review Date Store Reply Status Service Deleted Customer Not Found Not Replied Yet Edit Reply Reply No Data Found Reply To Review Your Reply Write Your Reply Cancel Submit",
+        "bladePath": "service::vendor/reviews/index",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service Request List",
+        "URI": "vendor-panel/service/service-request/list",
+        "keywords": "Business Setting New Service Request All Service Export Download Options Excel Csv Send Request SL Category Suggested Service Name Service Description Action Pending Review View Feedbackt Feedback Sent No Data Found Service Request Details Title Office Equipment Packaging Category Shifting Subcategory Office Shifting Description Need Professional Service Providers Who Would Give Us The Best AC Repair Service From General Inspection To Changing AC Parts User Could Be Avail Every AC Related Service Within A Few Moments Feedback Request For Service Tell Us More About Your Desired Services Suggest More Services That Are Willing To Book And Help Us Make More Efficient Platform For You Select Category Select Category Example Service Name Reset Submit",
+        "bladePath": "service::vendor/service-request-list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service Request Serviceman Details",
+        "URI": "vendor-panel/service/service-request/serviceman-details",
+        "keywords": "Business Setting Serviceman Details Assigned Bookings Content Need Ongoing Bookings Completed Bookings Canceled Bookings Booking History All Time Years Month Week Today John Doe Phone Email Identity Information Identity Type Identity Number Identity Image",
+        "bladePath": "service::vendor/serviceman-details",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service List",
+        "URI": "vendor-panel/service/list",
+        "keywords": "Service List Search Data All Category All Sub Category Ex Search Name Export Download Options Excel Csv Add Service # Name Category Provider Category Price Recommended Vat/Tax Status Action N/A Recommend To Customers No Tax Edit Want To Delete This Service Delete No Data Found",
+        "bladePath": "service::vendor/service/list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service Add New",
+        "URI": "vendor-panel/service/add",
+        "keywords": "Service Add New Create Service Create Update Service Add Service Update Service Add New Service Basic Setup Set Up The Basic Information Of The Service Default Name Please Provide A Service Name So The AI Can Generate A Suitable Title Service Name Short Description Please Provide A Service Name So The AI Can Generate A Description Long Description General Setup Set Up The Category And Tax Of The Service Please Provide A Service Name So The AI Can Suggest A Category Main Category Select Category Main Sub Category Select Sub Category Provider Category Select Provider Category Search Tag Please Provide A Service Name So The AI Can Generate Tags Search Tags Service Thumbnail JPG JPEG PNG Size Max MB ( ) Service Additional Images Upload Additional Images JPG JPEG PNG Image Size Max MB ( ) Price & Variation Here You Can Setup The Price Information For The Service Please Provide A Service Name So The AI Can Suggest Pricing Unit Price Select Tax Rate Discount Type Amount Percent Discount Add Variation To Specify Your Service By Add More Variation Customer Can Choose Specific Service They Need Add Variation Variation Name Variation Price Percent Amount Meta Data Setup Include Meta Information To Improve Search Engine Visibility And Social Media Sharing Please Provide A Service Name And Description So The AI Can Generate SEO Data Meta Title Ex Type Meta Title Meta Description Type A Short Meta Description Meta Image Upload Your Meta Image Index No Index No Follow No Image Index No Archive No Snippet Max Snippet Max Video Preview Max Image Preview Large Medium Small Reset Update Submit No Data Generated An Unexpected Error Occurred Re Generate No Matching Category Found Discount Percent Cannot Exceed Discount Amount Cannot Exceed Price Something Went Wrong Just A Second Generate Add Product Additional Images Upload Additional Images JPG JPEG PNG Image Size Max MB ( ) Please Only Input Png Or Jpg Type File Too Big AI Assistant Close Hi There I Am Here To Help You Your Personal Assistant For This Long Task Smile Select Below How Give Me Instruction Get Items Data Item Name The Product Upload Image Proper Generate Full Data Try Use Clean & Avoid Blur As Close Drag Drop Browse Preview Remove Description Back Great! Now Tell Which Want Create Just It Simply Like I Need Details Men\u2019s Converse Shoes Add T Shirt Women\u2019s Jeans Feel Free Describe Own Way! Tell About Item Keywords Enter Keywords Separate With Commas Title Suggest Use",
+        "bladePath": "service::vendor/service/index",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service Pending List",
+        "URI": "vendor-panel/service/pending-list",
+        "keywords": "Pending Service List Service List Ex Search Name Search Here # Name Category Price Status Action Category Deleted Rejected Pending Edit Want To Delete This Service Delete No Data Found",
+        "bladePath": "service::vendor/service/pending-list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service Gallery",
+        "URI": "vendor-panel/service/gallery",
+        "keywords": "Service Gallery Service Gallery Search Service And Use Its Info To Create Own Service Filter Select Category All Category Search Search Service Name Reset Submit No Data Found Service Details Category N/A Sub Base Price View Details Use This Service Info",
+        "bladePath": "service::vendor/service/service-gallery",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Service Bulk Import",
+        "URI": "vendor-panel/service/bulk-import",
+        "keywords": "Service Bulk Import Services Bulk Import STEP Download Excel File Match Spread Sheet Data According To Instruction Validate Data And Complete Import Instructions Download The Sample File And Fill It With Proper Data CategoryId And SubCategoryId Must Be Valid Ids From Your Category List (SubCategory Must Belong To The Category) BasePrice Is Required And Must Be A Valid Number Variations Must Be Valid JSON E G [{\"name\" \" Ton\" \"price\" }] Leave Empty If None Tags Must Be Comma Separated E G Ac Repair Cooling Status Must Be Active Or Inactive Image Is The File Name From The Service Gallery Folder Download Spreadsheet Template With Current Data Without Any Data Import Services File Choose File Reset Import",
+        "bladePath": "service::vendor/service/bulk-import",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Campaign List",
+        "URI": "vendor-panel/service/campaign/list",
+        "keywords": "Service Campaign List Service Campaign Search By Name Search Here Sl Service Date Time Price N/A",
+        "bladePath": "service::vendor/campaign/list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Booking List",
+        "URI": "vendor-panel/service/booking/list",
+        "keywords": "Service Module Booking List All Bookings All Booking Regular Booking Repeat Booking Search Here Filter Export Download Options Excel Csv Sl Booking Id Booking Date Schedule Date Service Will Be Provided Customer Info Provider Info Total Amount Payment Status Action Campaign Next Upcoming Instant Provider Place Customer Place Customer Not Found Provider Not Found View Details Invoice Full Invoice Ongoing Booking Invoice No Data Found Filter Zone All Zones Booking Status Payment Type Digital Offline Wallet Cash After Service Partial Reset",
+        "bladePath": "service::admin/booking/list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Booking Customized Request Details",
+        "URI": "vendor-panel/service/booking/customized-request-details",
+        "keywords": "Service Module Customized Request Details Customized Request Details Want To Delete This Item Delete Customer Information Service Information Additional Instruction Service Description PLACED OFFER DETAILS Price Offered Note No Description Available Other Provider Offering View Details Ignore Place Offer Are You Sure You Want To Delete The Post You Will Lost The Customer Booking Request Cancellation Note Enter Cancellation Note Yes Delete Cancel Are You Sure You Want To Ignore This Request Cancel Provider Offer Details Description Need Professional Service Providers Who Would Give Us The Best AC Repair Service From General Inspection To Changing AC Parts User Could Be Avail Every AC Related Service Within A Few Moments New Booking Request Form Service Requirement Create FAQ Offer Price Type Question Add Your Note Write Down The Answer Send Your Offer",
+        "bladePath": "service::vendor/booking/customized-request-details",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Booking Customize Booking Request",
+        "URI": "vendor-panel/service/booking/customize-booking-request",
+        "keywords": "Customised Booking Requests Customized Booking Requests All Booking No Offered By Provider Already Has Offer By Providers Search Here Export Download Options Excel Csv Filter Sl Booking Id Customer Info Booking Request Time Service Date Category Provider Offering Action Not Booked Yet Price Offered View Details Placed Offer Ignore/Reject Filter Status Active Inactive Store Select Store Booking All Upcoming Live Expired Deactivated Sort By Most Viewed Liked Visit Upload Date All This Week Month Custom Start End Reset New Service Request Ok Let Me Check My Offer Details Price Offered Description Need Professional Providers Who Would Give Us The Best AC Repair Service From General Inspection To Changing Parts User Could Be Avail Every Related Within A Few Moments",
+        "bladePath": "service::vendor/booking/customize-booking-request",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Booking Report",
+        "URI": "vendor-panel/service/report/booking-report",
+        "keywords": "Booking Report Search Data All Time This Year Previous Year This Month This Week Custom Start Date End Date Filter Total Bookings In Progress Bookings This Count Includes All The Pending & Confirmed Bookings Ongoing Bookings Completed Bookings Canceled Bookings Total Bookings Search By Booking ID Export Download Options Excel Csv Sl Booking Id Booking Type Customer Info Total Service Amount Discount On Service Coupon Discount Referral Discount Pro Discount Total Discounted Amount Tax Additional Charge Total Booking Amount Total Amount Received By Payment Method Booking Status Action Repeat Regular Invalid Customer Data Paid Unpaid Not Received Yet Pending Confirmed Ongoing Completed On Hold Canceled Refund Request Canceled No Data Found",
+        "bladePath": "service::vendor/report/booking-report",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Earning Report",
+        "URI": "vendor-panel/service/report/earning-report",
+        "keywords": "Earning Report Comprehensive Financial Overview And Analytics Search By Transaction ID Or Provider Expense Source Subscription Type Filter Data Select Select Store All Date Range Time This Week Month Year Previous Custom Start End Reset Filter Earnings Summary Breakdown Of Revenue Sources And Performance Expenses Trend Earning Amount Period Recent Transactions Export Download Options Excel Csv",
+        "bladePath": "service::vendor/report/earning-report/index",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Report ProviderTax",
+        "URI": "vendor-panel/service/report/provider-tax-report",
+        "keywords": "Provider Tax Report Tax Report Date Range Select Date Range Filter Total Bookings Total Booking Amount Total Tax Amount All Taxes Ex Search Selected Export Download Options Excel Csv Sl Booking Id Booking Date Booking Amount Tax Type Tax Amount Action Booking Wise Sum Of Taxes No Data Found Details Payment Status",
+        "bladePath": "service::vendor/report/tax-report/vendor-tax-detail-report",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Serviceman List",
+        "URI": "vendor-panel/service/serviceman/list",
+        "keywords": "Service Man List Service Man Management Total Service Man Active Inactive All Service Man List Search Here Add Service Man Sl Service Man Info Contact Info Provider Status Action You Want To Change This Serviceman Status View Details Edit If You Delete This Service Man All The Data Related To This Service Man Will Be Lost Delete Service Man No Data Found Are You Sure No Yes",
+        "bladePath": "service::admin/serviceman/list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Serviceman Create",
+        "URI": "vendor-panel/service/serviceman/create",
+        "keywords": "Update Serviceman Add New Serviceman Basic Information Here You Setup Serviceman Information First Name Ex Jhone Last Name Ex Doe Email Required Ex Provider Select Provider Serviceman Image Upload Serviceman Image Identity Information Here You Can Add Serviceman Identify Information Identity Type Select Identity Type Passport Driving License Nid Store Id Identity Number Identity Image Jpg Jpeg Png Gif Webp Less Than MB Account Information Setup Your Business Time Zone And Format From Here Phone Password Must Contain At Least One Number And One Uppercase And Lowercase Letter And Symbol And At Least Or More Characters Confirm Password Reset Submit Please Only Input Png Or Jpg Type File File Size Too Big Please Upload At Least One Identity Image Add",
+        "bladePath": "service::admin/serviceman/create",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Business Account",
+        "URI": "vendor-panel/service/business-section/account",
+        "keywords": "Business Setting My Account Service Com Contact Person Information Ashek Elahe Business Info Identity Type BIN Expire Date Identity Image",
+        "bladePath": "service::vendor/business-section/account",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Business Notification Channel",
+        "URI": "vendor-panel/service/business-section/notification-channel",
+        "keywords": "Business Setting Notification Channel Setup From Here You Can Configure Which Types Of Notifications You And Your Serviceman Will Receive From Demandium Notification For You Serviceman Notifications Export Download Options Excel Csv Sl Topics Push Notification Mail SMS Booking Choose How The Providers Will Get Notified Of New Bookings Booking Edits Booking Status Updates Schedule Time Changes And Withdrawal Request N/A",
+        "bladePath": "service::vendor/business-section/notification-channel",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Business My Wallet",
+        "URI": "vendor-panel/service/business-section/my-wallet",
+        "keywords": "Business Setting My Wallet Receivable Balance Cash In Hand Payable Balance Pay Now Pending Withdraw Already Withdrawn Total Earning Withdraw Request Service Payment History Net Payouts Transections Export Download Options Excel Csv SL Amount Request Time Disbursement Method Transaction Type Note Status Action Accepted Denied Completed No Data Found",
+        "bladePath": "service::vendor/business-section/my-wallet",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Business Settings",
+        "URI": "vendor-panel/service/business-section/settings",
+        "keywords": "Settings Service Temporarily Closed Status Basic Settings Approximate Service Time Here You Set Your Minimum & Maximum Delivery Service Provide Time Minimum Delivery Time Maximum Delivery Time Hour Minute Day Choose Your Service Location Select The Option Where You Want To Provide Your Service Go To Customer Location Customer Will Come To My Location Servicemen Permission Can Cancel Booking Can Edit Booking Provider Active Time Reset Submit Create Schedule For Create Schedule Start Time End Time Submit Want To Delete This Schedule If You Select Yes The Time Schedule Will Be Deleted No Yes Schedule Removed Successfully Schedule Added Successfully Schedule Not Found Opening Time Closing Offday",
+        "bladePath": "service::vendor/business-section/settings",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Business My Review",
+        "URI": "vendor-panel/service/business-section/my-review",
+        "keywords": "My Review Rating Reviews Search Here Export Download Options Excel Csv SL Review ID Reviewer Date Ratings Reply Status Action Customer Not Found Booking ID N/A Not Replied Yet You Want To Hide This Review For Customer You Want To Show This Review For Customer Update Reply Give Reply No Data Found Write Your Reply Here Send Reply Are You Sure No Yes View Attachment Review",
+        "bladePath": "service::vendor/business-section/my-review",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Business Promotional Cost",
+        "URI": "vendor-panel/service/business-section/promotional-cost",
+        "keywords": "Business Setting Promotional Cost Bearer Currently You Are Bearing The Mentioned Percentage From The Promotional Cost Discount Cost Percentage Campaign Cost Percentage Coupon Cost Percentage",
+        "bladePath": "service::vendor/business-section/promotional-cost",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Custom Request List",
+        "URI": "vendor-panel/service/custom-request/list",
+        "keywords": "Customized Booking Requests All Booking No Bid Requests My Bids Sl Booking Id Customer Info Booking Request Time Service Date Category Provider Offering Action Not Booked Yet N/A Providers Price Offered View Details My Offer Are You Sure You Want To Withdraw This Offer Your Placed Offer Will Be Removed From This Request Withdraw Place Offer Are You Sure You Want To Ignore This Request You Will Lost The Customer Booking Request Ignore Ignore/Reject No Data Found My Offer Details Description No Description Available Cancel Confirm",
+        "bladePath": "service::vendor/custom-request/list",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Custom Request My Bids",
+        "URI": "vendor-panel/service/custom-request/my-bids",
+        "keywords": "My Bids Back Sl Request Category Service Date Price Offered Note Status Action N/A Selected Denied Active View Details No Data Found",
+        "bladePath": "service::vendor/custom-request/my-bids",
+        "moduleType": "service",
+        "isModified": false
+    },
+    {
+        "routeName": "Dashboard",
+        "URI": "vendor-panel/service/dashboard",
+        "keywords": "Service Module Dashboard Monitor Your On Demand Service Business Earning Statistics All Time This Year This Month This Week Gross Earnings Earnings Top Services View All Recent Activities Bookings No Data Found Booking Pending Confirmed Ongoing Completed Canceled On Hold",
+        "bladePath": "service::vendor.dashboard",
+        "moduleType": "service",
+        "isModified": false
     }
 ]

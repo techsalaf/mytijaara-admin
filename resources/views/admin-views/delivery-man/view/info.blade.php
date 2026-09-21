@@ -662,7 +662,7 @@
                                             <td>
                                                 @if ($review->customer)
                                                     <a class="d-flex align-items-center"
-                                                        href="{{ route('admin.customer.view', [$review['user_id']]) }}">
+                                                        href="{{ route('admin.users.customer.view', [$review['user_id']]) }}">
                                                         <span
                                                             class="text-dark fs-14 line--limit-1 max-w--220px min-w-135px text-wrap">
                                                             {{ $review->customer ? $review->customer['f_name'] . ' ' . $review->customer['l_name'] : '' }}

@@ -24,5 +24,12 @@
                     aria-disabled="true">{{ translate('messages.Ride Share') }}</a>
             </li>
         @endif
+        @if (addon_published_status('Service'))
+            <li class="nav-item">
+                <a class="nav-link {{ request()->tab == 'service' ? 'active' : '' }}"
+                    href="{{ route('admin.transactions.report.admin-earning-report', ['tab' => 'service']) }}"
+                    aria-disabled="true">{{ translate('messages.Service Module') }}</a>
+            </li>
+        @endif
     </ul>
 </div>

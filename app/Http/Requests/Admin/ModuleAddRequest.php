@@ -40,7 +40,10 @@ class ModuleAddRequest extends FormRequest
     {
         return [
             'module_name' => 'required|unique:modules|max:100',
-            'module_type'=>'required',
+            // Addon-managed module types are created via their addon publish
+            // flow, not the manual "Add Module" form. Block them here so a
+            // crafted POST cannot create one.
+            'module_type'=>'required|not_in:rental,ride-share,service',
             'icon'=>'required',
             'thumbnail'=>'required',
             'module_name.0' => 'required',
@@ -54,6 +57,7 @@ class ModuleAddRequest extends FormRequest
         return [
             'module_name.required' => translate('messages.Name is required!'),
             'module_name.0.required'=>translate('default_name_is_required'),
+            'module_type.not_in'=>translate('messages.this_module_type_cannot_be_created_manually'),
             'description.0.required'=>translate('default_description_is_required'),
         ];
     }

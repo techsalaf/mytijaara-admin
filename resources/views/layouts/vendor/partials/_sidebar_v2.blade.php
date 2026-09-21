@@ -1,9 +1,4 @@
-{{--
-    v2 Vendor sidebar.
-    Single workspace tied to the logged-in store's module_type.
-    Sections: Dashboard / Sales / Catalog / Marketing / Operations / Finance / Team / Reports / Settings
-    All items keep the existing employee_module_permission_check gates.
---}}
+
 @php
     use App\CentralLogics\Helpers;
 
@@ -36,7 +31,7 @@
     $can_dm_list    = Helpers::employee_module_permission_check('deliveryman_list');
     $can_wallet     = Helpers::employee_module_permission_check('wallet');
     $can_wal_method = Helpers::employee_module_permission_check('wallet_method');
-    $can_role       = Helpers::employee_module_permission_check('role');
+    $can_role       = Helpers::employee_module_permission_check('employee');
     $can_employee   = Helpers::employee_module_permission_check('employee');
     $can_exp_rep    = Helpers::employee_module_permission_check('expense_report');
     $can_vat_rep    = Helpers::employee_module_permission_check('vat_report');
@@ -53,7 +48,6 @@
         && Helpers::employee_module_permission_check('reels')
         && \Modules\ReelsModule\Support\ReelModuleConfig::isAllowedType($module_type);
 
-    // Counts for sales badges
     $count_all       = \App\Models\Order::where('store_id', $store_id)->where(function ($q) {
         $q->whereNotIn('order_status',
             (config('order_confirmation_model') == 'store' || ($store_data->sub_self_delivery ?? false))
@@ -107,7 +101,7 @@
                 <i data-lucide="package"></i><span class="v2-pin-dot"></span>
             </button>
             @endif
-            @if($can_campaign || $can_coupon || $can_banner || $can_ad || $can_ad_list || $reels_enabled || $needs_catalog_extras)
+            @if($can_campaign || $can_coupon || $can_banner || $can_ad || $can_ad_list || $reels_enabled || ($needs_catalog_extras && $can_item))
             <button class="v2-rail-btn {{ $active_section==='marketing' ? 'is-active' : '' }}" data-section="marketing" data-label="{{ translate('Marketing') }}" aria-label="{{ translate('Marketing') }}">
                 <i data-lucide="megaphone"></i><span class="v2-pin-dot"></span>
             </button>
@@ -146,7 +140,7 @@
     </div>
 
     <aside id="v2-panel" class="v2-panel" aria-label="{{ translate('Section navigation') }}">
-        {{-- Dashboard --}}
+        
         <div class="v2-panel-content" data-panel="dashboard" @if($active_section!=='dashboard') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ $store_data->name ?? translate('messages.dashboard') }}</span></div>
@@ -166,7 +160,6 @@
             </div>
         </div>
 
-        {{-- Sales --}}
         @if($can_pos || $can_order)
         <div class="v2-panel-content" data-panel="sales" @if($active_section!=='sales') hidden @endif>
             <div class="v2-panel-header">
@@ -244,7 +237,6 @@
         </div>
         @endif
 
-        {{-- Catalog --}}
         @if($can_item || $can_addon || $can_category)
         <div class="v2-panel-content" data-panel="catalog" @if($active_section!=='catalog') hidden @endif>
             <div class="v2-panel-header">
@@ -324,7 +316,7 @@
                 </div>
                 @endif
 
-                @if(\App\CentralLogics\Helpers::storeCategoryStatus())
+                @if(\App\CentralLogics\Helpers::storeCategoryStatus() && \App\CentralLogics\Helpers::employee_module_permission_check('category'))
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="ct-mycat"><span>{{ translate('messages.My_Category') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -359,8 +351,7 @@
         </div>
         @endif
 
-        {{-- Marketing --}}
-        @if($can_campaign || $can_coupon || $can_banner || $can_ad || $can_ad_list || $reels_enabled || $needs_catalog_extras)
+        @if($can_campaign || $can_coupon || $can_banner || $can_ad || $can_ad_list || $reels_enabled || ($needs_catalog_extras && $can_item))
         <div class="v2-panel-content" data-panel="marketing" @if($active_section!=='marketing') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Marketing') }}</span></div>
@@ -369,7 +360,7 @@
             <div class="v2-panel-body">
                 @include('layouts.admin.partials._v2_pinned_card', ['key' => 'vendor::marketing'])
 
-                @if($needs_catalog_extras)
+                @if($needs_catalog_extras && $can_item)
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="mk-flash"><span>{{ translate('messages.flash_sales') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
@@ -468,7 +459,6 @@
         </div>
         @endif
 
-        {{-- Operations / Delivery Men --}}
         @if($can_dm || $can_dm_list)
         <div class="v2-panel-content" data-panel="ops" @if($active_section!=='ops') hidden @endif>
             <div class="v2-panel-header">
@@ -498,7 +488,6 @@
         </div>
         @endif
 
-        {{-- Finance / Wallet --}}
         @if($can_wallet || $can_wal_method)
         <div class="v2-panel-content" data-panel="finance" @if($active_section!=='finance') hidden @endif>
             <div class="v2-panel-header">
@@ -528,7 +517,6 @@
         </div>
         @endif
 
-        {{-- Team / Employee --}}
         @if($can_role || $can_employee)
         <div class="v2-panel-content" data-panel="team" @if($active_section!=='team') hidden @endif>
             <div class="v2-panel-header">
@@ -567,7 +555,6 @@
         </div>
         @endif
 
-        {{-- Reports --}}
         @if($can_exp_rep || $can_vat_rep || $can_disb_rep)
         <div class="v2-panel-content" data-panel="reports" @if($active_section!=='reports') hidden @endif>
             <div class="v2-panel-header">
@@ -606,7 +593,6 @@
         </div>
         @endif
 
-        {{-- Settings --}}
         @if($can_store_setup || $can_notif_setup || $can_my_shop || $can_subscription || $can_reviews || $can_chat)
         <div class="v2-panel-content" data-panel="settings" @if($active_section!=='settings') hidden @endif>
             <div class="v2-panel-header">
@@ -642,7 +628,7 @@
                             <button type="button" class="v2-pin" data-pin="st-sub" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
                         @endif
-                        @if($can_reviews)
+                        @if($can_reviews && (\App\CentralLogics\Helpers::get_business_settings('review_section') ?? 1))
                         <a class="v2-nav-item {{ $is('vendor-panel/reviews*') ? 'is-active' : '' }}" href="{{ route('vendor.reviews') }}" data-id="st-rev">
                             <span class="v2-dot v2-dot--rose"></span><span class="v2-label">{{ translate('messages.reviews') }}</span>
                             <button type="button" class="v2-pin" data-pin="st-rev" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>

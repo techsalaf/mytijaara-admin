@@ -7,16 +7,24 @@
 
 @section('content')
     <div class="content container-fluid">
-        <div class="page-header">
+        @php
+            // Rental/Service providers are Stores too; when either addon is published the
+            // "store" tab covers stores + providers, so use inclusive "Vendor" / "Store/Provider" wording.
+            $isProviderContext = addon_published_status('Rental') || addon_published_status('Service');
+            $storeSlashProvider = $isProviderContext ? translate('messages.store') . '/' . translate('messages.provider') : translate('messages.store');
+        @endphp
+        <div class="page-header pb-0">
             <h1 class="page-header-title">
             <span class="page-header-icon">
                 <img src="{{asset('/public/assets/admin/img/report/new/disburstment.png')}}" class="w--22" alt="">
             </span>
                 <span>{{ translate('Disbursement_Report') }}</span>
             </h1>
-            <ul class="nav nav-tabs mb-4 border-0 pt-2">
+        </div>
+        <div class="js-nav-scroller hs-nav-scroller-horizontal mb-20">
+            <ul class="nav mb-0 nav-tabs border-0 nav--tabs nav--pills">
                 <li class="nav-item">
-                    <a class="nav-link {{ $tab=='store'?'active':'' }}" href="{{ route('admin.transactions.report.disbursement_report',  ['tab' => 'store']) }}" >{{ translate('Store_Disbursements') }}</a>
+                    <a class="nav-link {{ $tab=='store'?'active':'' }}" href="{{ route('admin.transactions.report.disbursement_report',  ['tab' => 'store']) }}" >{{ $isProviderContext ? translate('Vendor_Disbursements') : translate('Store_Disbursements') }}</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ $tab=='delivery_man'?'active':'' }}" href="{{ route('admin.transactions.report.disbursement_report',  ['tab' => 'delivery_man']) }}">{{ translate('Delivery_Man_Disbursements') }}</a>
@@ -83,7 +91,17 @@
                                     title="{{ translate('messages.select_modules') }}">
                                 <option value="" {{ !request('module_id') ? 'selected' : '' }}>
                                     {{ translate('messages.all_modules') }}</option>
-                                @foreach (\App\Models\Module::notParcel()->WithoutAdditionalModules()->get(['id', 'module_name']) as $module)
+                                @php
+                                    // ride-share always hidden here; rental/service only shown when their addon is published
+                                    $excludedModuleTypes = ['ride-share'];
+                                    if (! addon_published_status('Rental')) {
+                                        $excludedModuleTypes[] = 'rental';
+                                    }
+                                    if (! addon_published_status('Service')) {
+                                        $excludedModuleTypes[] = 'service';
+                                    }
+                                @endphp
+                                @foreach (\App\Models\Module::notParcel()->whereNotIn('module_type', $excludedModuleTypes)->get(['id', 'module_name']) as $module)
                                     <option value="{{ $module->id }}"
                                         {{ request('module_id') == $module->id ? 'selected' : '' }}>
                                         {{ $module['module_name'] }}
@@ -93,12 +111,12 @@
                         </div>
                         <div class="col-sm-6 col-md-3">
                             <select name="store_id" data-url="{{ url()->full() }}" data-filter="store_id"
-                                    data-placeholder="{{ translate('messages.select_store') }}"
+                                    data-placeholder="{{ $isProviderContext ? translate('Select_Store') . '/' . translate('provider') : translate('messages.select_store') }}"
                                     class="js-data-example-ajax form-control set-filter">
                                 @if (isset($store))
                                     <option value="{{ $store->id }}" data-verified="{{ (int) $store->verified_seller }}" selected>{{ $store->name }}</option>
                                 @else
-                                    <option value="all" selected>{{ translate('messages.all_stores') }}</option>
+                                    <option value="all" selected>{{ $isProviderContext ? translate('All_Stores') . '/' . translate('provider') : translate('messages.all_stores') }}</option>
                                 @endif
                             </select>
                         </div>
@@ -186,6 +204,7 @@
             </div>
         </div>
 
+        <div class="card">
         <div class="card-header border-0 py-2">
             <div class="search--button-wrapper">
                 <h2 class="card-title">
@@ -232,7 +251,7 @@
                         <th>{{ translate('sl') }}</th>
                         <th>{{ translate('id') }}</th>
                         @if($tab=='store')
-                        <th>{{ translate('Store_Info') }}</th>
+                        <th>{{ $storeSlashProvider }} {{ translate('info') }}</th>
                         @else
                         <th>{{ translate('Delivery_Man_Info') }}</th>
                         @endif
@@ -352,7 +371,7 @@
                                                 <div class="card-body">
                                                     <div class="d-flex flex-wrap payment-info-modal-info p-xl-4">
                                                         <div class="item">
-                                                            <h5>{{ translate('Store_Information') }}</h5>
+                                                            <h5>{{ $storeSlashProvider }} {{ translate('information') }}</h5>
                                                             <ul class="item-list">
                                                                 <li class="d-flex flex-wrap">
                                                                     <span class="name">{{ translate('name') }}</span>
@@ -584,6 +603,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
     </div>
 @endsection
@@ -595,7 +615,7 @@
     <script src="{{ asset('public/assets/admin') }}/js/view-pages/admin-reports.js"></script>
     <script>
         "use strict";
-        $(document).on('ready', function() {
+        $(document).ready(function() {
             $('.js-data-example-ajax').select2({
                 ajax: {
                     url: '{{ route('admin.store.get-stores') }}',
@@ -603,6 +623,7 @@
                         return {
                             q: params.term, // search term
                             all:true,
+                            include_addon_providers: 1, // rental/service providers are disbursed too
                             @if (isset($zone))
                                 zone_ids: [{{ $zone->id }}],
                             @endif

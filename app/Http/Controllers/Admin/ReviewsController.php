@@ -15,7 +15,7 @@ class ReviewsController extends Controller
     }
 
     public function search(Request $request){
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $foods=Item::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('name', 'like', "%{$value}%");

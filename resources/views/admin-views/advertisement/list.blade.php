@@ -13,6 +13,10 @@ active
 @endpush
 
 @section('content')
+@php
+    // Rental/Service advertisements refer to "providers" instead of "stores".
+    $isProviderContext = in_array(config('module.current_module_type'), ['rental', 'service'], true);
+@endphp
 <div class="content container-fluid overflow-hidden">
 
 
@@ -35,7 +39,7 @@ active
                 </div> --}}
                 {{-- <hr>
                 <div class="max-w-471 mx-auto fs-12 py-4">
-                    {{ translate('By') }} <strong>{{ translate('Creating Advertisement') }}</strong> {{ translate('you can showcase your items or store to a wider audience through targeted ad campaigns.') }}
+                    {{ translate('By') }} <strong>{{ translate('Creating Advertisement') }}</strong> {{ $isProviderContext ? str_replace('store', 'provider', translate('you can showcase your items or store to a wider audience through targeted ad campaigns.')) : translate('you can showcase your items or store to a wider audience through targeted ad campaigns.') }}
                 </div> --}}
             </div>
         </div>
@@ -67,7 +71,7 @@ active
             <form >
                 <!-- Search -->
                 <div class="input--group input-group input-group-merge input-group-flush">
-                    <input id="datatableSearch" type="search" name="search"  value="{{ request()?->search ?? null }}"  class="form-control" placeholder="{{ translate('Search by ads ID or store name') }}" aria-label="{{translate('messages.search_here')}}">
+                    <input id="datatableSearch" type="search" name="search"  value="{{ request()?->search ?? null }}"  class="form-control" placeholder="{{ $isProviderContext ? str_replace('store', 'provider', translate('Search by ads ID or store name')) : translate('Search by ads ID or store name') }}" aria-label="{{translate('messages.search_here')}}">
                     <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                 </div>
                 <!-- End Search -->
@@ -93,7 +97,7 @@ active
                             <th>{{ translate('sl') }}</th>
                             <th >{{translate('Ads ID')}}</th>
                             <th >{{translate('Ads Title')}}</th>
-                            <th >{{translate('Store Info')}}</th>
+                            <th >{{ $isProviderContext ? translate('Provider Info') : translate('Store Info') }}</th>
                             <th >{{translate('Ads Type')}}</th>
                             <th >{{translate('Duration')}}</th>
                             <th >{{translate('Status')}}</th>
@@ -121,7 +125,7 @@ active
                                 </a>
                             </td>
 
-                            <td>{{ translate($add?->add_type) }}</td>
+                            <td>{{ $isProviderContext && $add?->add_type == 'store_promotion' ? translate('provider') . ' ' . translate('promotion') : translate($add?->add_type) }}</td>
                             <td>
                                 {{  \App\CentralLogics\Helpers::date_format($add->start_date) }} - <br> {{  \App\CentralLogics\Helpers::date_format($add->end_date) }}
                             </td>

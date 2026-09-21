@@ -74,7 +74,7 @@
                                             </a>
                                         </li>
                                     @endif
-                                    @if (\App\CentralLogics\Helpers::module_permission_check('zone'))
+                                    @if (\App\CentralLogics\Helpers::module_permission_check('settings'))
                                         <li>
                                             <a href="{{ route('admin.business-settings.zone.home') }}"
                                                class="next-tour">
@@ -164,7 +164,7 @@
                         </a>
                     </li>
                     @endif
-                    @if(addon_published_status('RideShare') && \App\CentralLogics\Helpers::module_permission_check('fleet_view'))
+                    @if(addon_published_status('RideShare') && \App\CentralLogics\Helpers::module_permission_check('heat_map'))
                         <li class="nav-item max-sm-m-0  mr-lg-3">
                             @php($safetyAlert=\Modules\RideShare\Entities\TripManagement\RideSafetyAlert::where('status', 'pending'))
                             @php($safety=$safetyAlert->count())

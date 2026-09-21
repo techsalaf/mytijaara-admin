@@ -30,13 +30,13 @@
 
                             <div class="col-sm-6 col-md-3">
                             <select name="store_id" data-url="{{ url()->full() }}"  data-filter="store_id"
-                                data-placeholder="{{ translate('messages.select_store') }}"
-                                data-search-placeholder="{{ translate('messages.search_store') }}"
+                                data-placeholder="{{ config('module.current_module_type') === 'service' ? translate('messages.select_provider') : translate('messages.select_store') }}"
+                                data-search-placeholder="{{ config('module.current_module_type') === 'service' ? translate('messages.search_provider') : translate('messages.search_store') }}"
                                 class="js-data-example-ajax form-control set-filter">
                                 @if (isset($store))
                                     <option value="{{ $store->id }}" data-verified="{{ (int) $store->verified_seller }}" selected>{{ $store->name }}</option>
                                 @else
-                                    <option value="all" selected>{{ translate('messages.all_stores') }}</option>
+                                    <option value="all" selected>{{ config('module.current_module_type') === 'service' ? translate('messages.all_providers') : translate('messages.all_stores') }}</option>
                                 @endif
                             </select>
                         </div>
@@ -153,7 +153,7 @@
                                             href="{{route('admin.campaign.edit',['item',$campaign['id']])}}" title="{{translate('messages.edit_campaign')}}"><i class="tio-edit"></i>
                                         </a>
                                         <a class="btn action-btn btn--danger btn-outline-danger form-alert" href="javascript:"
-                                            data-id="campaign-{{$campaign['id']}}" data-message="{{ translate('Want to delete this item ?') }}" title="{{translate('messages.delete_campaign')}}"><i class="tio-delete-outlined"></i>
+                                            data-id="campaign-{{$campaign['id']}}" data-message="{{ config('module.current_module_type') === 'service' ? translate('Want to delete this service ?') : translate('Want to delete this item ?') }}" title="{{translate('messages.delete_campaign')}}"><i class="tio-delete-outlined"></i>
                                         </a>
                                         <form action="{{route('admin.campaign.delete-item',[$campaign['id']])}}"
                                                     method="post" id="campaign-{{$campaign['id']}}">

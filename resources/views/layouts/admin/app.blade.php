@@ -24,7 +24,7 @@ $countryCode = strtolower($country ? $country : 'auto');
     <!-- CSS Implementing Plugins -->
     <link rel="stylesheet" href="{{asset('public/assets/admin/css/vendor.min.css')}}">
     <link rel="stylesheet" href="{{asset('public/assets/admin/vendor/icon-set/style.css')}}">
-    <link rel="stylesheet" href="{{asset('public/assets/admin/css/custom.css')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/custom.css')}}?v=1.1">
     <!-- CSS Front Template -->
     <link rel="stylesheet" href="{{asset('public/assets/admin/css/owl.min.css')}}">
     <link rel="stylesheet" href="{{asset('public/assets/admin/css/bootstrap.min.css')}}">
@@ -41,6 +41,9 @@ $countryCode = strtolower($country ? $country : 'auto');
     @endif
     @if(addon_published_status('RideShare') && in_array($module_type, ['ride-share', 'settings', 'transactions']))
         <link rel="stylesheet" href="{{ asset('Modules/RideShare/public/assets/css/ride-share.css') }}">
+    @endif
+    @if(addon_published_status('Service') && $module_type == 'service')
+        <link rel="stylesheet" href="{{ asset('Modules/Service/public/assets/css/service.css') }}">
     @endif
     @if(addon_published_status('ReelsModule'))
         <link rel="stylesheet" href="{{ asset('Modules/ReelsModule/public/assets/css/reels.css') }}">
@@ -149,10 +152,12 @@ $countryCode = strtolower($country ? $country : 'auto');
                 $req_path_for_dispatch = request()->path();
                 $is_tax_url = \Illuminate\Support\Str::is('admin/transactions/report/*tax*', $req_path_for_dispatch)
                     || \Illuminate\Support\Str::is('admin/transactions/rental/report/*tax*', $req_path_for_dispatch)
+                    || \Illuminate\Support\Str::is('admin/transactions/service/report/*tax*', $req_path_for_dispatch)
                     || \Illuminate\Support\Str::is('admin/transactions/ride-share/report/*tax*', $req_path_for_dispatch);
                 $is_reports_url = !$is_tax_url && (
                     \Illuminate\Support\Str::is('admin/transactions/report/*', $req_path_for_dispatch)
                     || \Illuminate\Support\Str::is('admin/transactions/rental/report/*', $req_path_for_dispatch)
+                    || \Illuminate\Support\Str::is('admin/transactions/service/report/*', $req_path_for_dispatch)
                     || \Illuminate\Support\Str::is('admin/transactions/ride-share/*', $req_path_for_dispatch)
                 );
             @endphp
@@ -169,6 +174,8 @@ $countryCode = strtolower($country ? $country : 'auto');
             @include('rental::admin.partials._sidebar_v2_rental')
         @elseif($module_type === 'ride-share')
             @include('ride-share::admin.partials._sidebar_v2_ride-share')
+        @elseif($module_type === 'service')
+            @include('service::admin.partials._sidebar_v2_service')
         @else
             @include('layouts.admin.partials._sidebar_v2')
         @endif
@@ -178,6 +185,8 @@ $countryCode = strtolower($country ? $country : 'auto');
             @include('rental::admin.partials._sidebar_rental')
         @elseif($module_type === 'ride-share')
             @include('ride-share::admin.partials._sidebar_ride-share')
+        @elseif($module_type === 'service')
+            @include('service::admin.partials._sidebar_service')
         @else
             @include("layouts.admin.partials._sidebar_{$module_type}")
         @endif
@@ -851,6 +860,9 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                         if (new_order_type === 'trip') {
                             document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new trip, Check Please.')}}";
                         }
+                        if (new_order_type === 'service_booking') {
+                            document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new booking, Check Please.')}}";
+                        }
                         @if(addon_published_status('RideShare'))
                             if (new_order_type === 'ride_request') {
                                 document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new ride request, Check Please.')}}";
@@ -959,6 +971,9 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                             if (new_order_type === 'trip') {
                                 document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new trip, Check Please.')}}";
                             }
+                            if (new_order_type === 'service_booking') {
+                                document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new booking, Check Please.')}}";
+                            }
                             if (new_order_type === 'ride_request') {
                                 document.querySelector('.update_notification_text').textContent = "{{translate('You have new ride request, Check Please.')}}";
                             }
@@ -979,6 +994,8 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                     location.href = '{{url('/')}}/admin/parcel/orders/all?module_id=' + new_module_id;
                 } else if (new_order_type === 'trip') {
                     location.href = '{{url('/')}}/admin/rental/trip?module_id=' + new_module_id;
+                } else if (new_order_type === 'service_booking') {
+                    location.href = '{{url('/')}}/admin/service/booking/list?module_id=' + new_module_id;
                 } else if (new_order_type === 'ride_request') {
                     @if(addon_published_status('RideShare') && \App\Models\Module::where('module_type', 'ride-share')->first()?->id)
                         location.href = '{{url('/')}}/admin/ride-share/ride/list/all?module_id=' + {{ \App\Models\Module::where('module_type', 'ride-share')->first()?->id }};
@@ -1178,13 +1195,42 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
             }
 
 
+
+            function searchEscapeHtml(value) {
+                return String(value === null || value === undefined ? '' : value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
             //search option
             $(document).ready(function () {
-                $('#searchForm input[name="search"]').keyup(function () {
+                var searchDebounce = null;
+                var searchRequest = null;
+
+                $('#searchForm input[name="search"]').on('input', function () {
                     var searchKeyword = $(this).val().trim();
 
-                    if (searchKeyword.length >= 1) {
-                        $.ajax({
+                    clearTimeout(searchDebounce);
+                    if (searchRequest) {
+                        searchRequest.abort();
+                        searchRequest = null;
+                    }
+
+                    if (searchKeyword.length < 1) {
+                        getRecentSearch();
+                        return;
+                    }
+
+                    searchDebounce = setTimeout(function () {
+                        runGlobalSearch(searchKeyword);
+                    }, 300);
+                });
+
+                function runGlobalSearch(searchKeyword) {
+                        searchRequest = $.ajax({
                             type: 'POST',
                             url: $('#searchForm').attr('action'),
                             data: { search: searchKeyword, _token: $('input[name="_token"]').val() },
@@ -1209,11 +1255,11 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                                     response.forEach(function (route) {
                                         var separator = route.fullRoute.includes('?') ? '&' : '?';
                                         var fullRouteWithKeyword = route.fullRoute + separator + 'keyword=' + encodeURIComponent(searchKeyword);
-                                        var keywordRegex = searchKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                        var keywordRegex = searchEscapeHtml(searchKeyword).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                                         keywordRegex = new RegExp('(' + keywordRegex + ')', 'gi');
-                                        var highlightedRouteName = route.routeName.replace(keywordRegex, '<mark class="p-0">$1</mark>');
-                                        var highlightedURI = route.URI.replace(keywordRegex, '<mark class="p-0">$1</mark>');
-                                        resultHtml += '<a href="' + fullRouteWithKeyword + '" class="search-list-item d-flex flex-column" data-route-name="' + route.routeName + '" data-route-uri="' + route.URI + '" data-route-full-url="' + route.fullRoute + '" aria-current="true">';
+                                        var highlightedRouteName = searchEscapeHtml(route.routeName).replace(keywordRegex, '<mark class="p-0">$1</mark>');
+                                        var highlightedURI = searchEscapeHtml(route.URI).replace(keywordRegex, '<mark class="p-0">$1</mark>');
+                                        resultHtml += '<a href="' + searchEscapeHtml(fullRouteWithKeyword) + '" class="search-list-item d-flex flex-column" data-route-name="' + searchEscapeHtml(route.routeName) + '" data-route-uri="' + searchEscapeHtml(route.URI) + '" data-route-full-url="' + searchEscapeHtml(route.fullRoute) + '" aria-current="true">';
                                         resultHtml += '<h5>' + highlightedRouteName + '</h5>';
                                         resultHtml += '<p class="text-muted fs-12 mb-0">' + highlightedURI + '</p>';
                                         resultHtml += '</a>';
@@ -1225,6 +1271,10 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                                         htmlContent += '<div class="bg--13 d-inline-block fs-12 fw-500 mb-2 px-2 py-1 rounded text-italic">' + @json(translate('* To get module-specific results, please search within the module.')) + '</div>';
                                     @endif
                                     htmlContent +='<div class="fs-16 fw-500 mb-2">' + @json(translate('Search Result')) + '</div>' + '<div class="search-list d-flex flex-column">' + resultHtml + '</div>';
+
+                                    if (response.length >= {{ config('search.result_limit', 50) }}) {
+                                        htmlContent += '<div class="text-muted fs-12 mt-2 text-italic">' + @json(translate('Showing the closest matches only. Refine your keyword to narrow the list.')) + '</div>';
+                                    }
 
                                     $('#searchResults').html(htmlContent);
                                     $('.search-list-item').click(function () {
@@ -1254,14 +1304,12 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                                 }
                             },
                             error: function (xhr, status, error) {
-                                console.error(xhr.responseText);
+                                if (status !== 'abort') {
+                                    console.error(xhr.responseText);
+                                }
                             }
                         });
-                    }
-                    else {
-                        getRecentSearch()
-                    }
-                });
+                }
             });
 
             document.addEventListener('keydown', function (event) {
@@ -1292,9 +1340,9 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                         } else {
                             var resultHtml = '';
                             response.forEach(function (route) {
-                                resultHtml += '<a href="' + route.route_full_url + '" class="search-list-item d-flex flex-column" data-route-name="' + route.route_name + '" data-route-uri="' + route.route_uri + '" data-route-full-url="' + route.route_full_url + '" aria-current="true">';
-                                resultHtml += '<h5>' + route.route_name + '</h5>';
-                                resultHtml += '<p class="text-muted fs-12  mb-0">' + route.route_uri + '</p>';
+                                resultHtml += '<a href="' + searchEscapeHtml(route.route_full_url) + '" class="search-list-item d-flex flex-column" data-route-name="' + searchEscapeHtml(route.route_name) + '" data-route-uri="' + searchEscapeHtml(route.route_uri) + '" data-route-full-url="' + searchEscapeHtml(route.route_full_url) + '" aria-current="true">';
+                                resultHtml += '<h5>' + searchEscapeHtml(route.route_name) + '</h5>';
+                                resultHtml += '<p class="text-muted fs-12  mb-0">' + searchEscapeHtml(route.route_uri) + '</p>';
                                 resultHtml += '</a>';
                             });
                             $('#searchResults').html('<div class="recent-search fs-16 fw-500 animate">' +
@@ -1432,6 +1480,19 @@ if (in_array(config('module.current_module_type'), config('module.module_type'))
                     }, 100);
                 }
             );
+        </script>
+        <script>
+            $(document).ready(function () {
+
+                $('[data-bg-color]').each(function () {
+                    $(this).css('background-color', $(this).data('bg-color'));
+                });
+
+                $('[data-text-color]').each(function () {
+                    $(this).css('color', $(this).data('text-color'));
+                });
+
+            });
         </script>
 </body>
 

@@ -94,8 +94,9 @@
                             <tr>
                                 <td>{{ translate('messages.delivery_charge') }}</td>
                                 <td class="text-center">1</td>
-                                <td>{{ \App\CentralLogics\Helpers::format_currency($order->delivery_charge) }}</td>
+                                <td>{{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee']) }}</td>
                             </tr>
+                            @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'tr_parcel'])
                         @else
                             @php($sub_total = 0)
                             @php($total_tax = 0)
@@ -232,9 +233,10 @@
                             </dd>
                             <dt class="col-6">{{ translate('messages.delivery_charge') }}:</dt>
                             <dd class="col-6">
-                                @php($del_c = $order['delivery_charge'])
+                                @php($del_c = \App\CentralLogics\DeliveryFeeLogic::proDeliveryBreakdown($order)['original_fee'])
                                 {{ \App\CentralLogics\Helpers::format_currency($del_c) }}
                             </dd>
+                            @include('partials.pro-delivery-discount-row', ['order' => $order, 'layout' => 'dl'])
                             @include('partials.delivery-type-row', ['order' => $order, 'layout' => 'dl'])
                         @else
                             <dt class="col-6">{{ translate('messages.delivery_man_tips') }}:</dt>

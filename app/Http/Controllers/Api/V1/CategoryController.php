@@ -16,6 +16,10 @@ class CategoryController extends Controller
 
     public function get_categories(Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiCategories($request);
+        }
+
         try {
         $category_list_default_status =Helpers::get_business_settings('category_list_default_status') ?? 1;
         $category_list_sort_by_general = Helpers::getPriorityList(name: 'category_list_sort_by_general', type: 'general');
@@ -111,6 +115,10 @@ class CategoryController extends Controller
 
     public function get_childes($id)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiChildes($id);
+        }
+
         try {
             $categories = Category::with('parent')->where(['parent_id' => $id,'status'=>1])->orderBy('priority','desc')->get();
             return response()->json($categories, 200);
@@ -121,6 +129,10 @@ class CategoryController extends Controller
 
     public function get_products($id, Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiServices($id, $request);
+        }
+
         Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
@@ -142,6 +154,10 @@ class CategoryController extends Controller
 
     public function get_category_products(Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiCategoryServices($request);
+        }
+
         Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
@@ -166,6 +182,10 @@ class CategoryController extends Controller
 
     public function get_stores($id, Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiProviders($id, $request);
+        }
+
         Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
@@ -188,6 +208,10 @@ class CategoryController extends Controller
 
     public function get_category_stores(Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiCategoryProviders($request);
+        }
+
         Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
@@ -214,6 +238,10 @@ class CategoryController extends Controller
 
     public function get_all_products($id,Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiAllServices($id, $request);
+        }
+
         Helpers::setZoneIds($request);
         $zone_id= $request->header('zoneId');
 
@@ -226,6 +254,10 @@ class CategoryController extends Controller
 
     public function get_featured_category_products(Request $request)
     {
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiFeaturedServices($request);
+        }
+
         Helpers::setZoneIds($request);
         $validator = Validator::make($request->all(), [
             'limit' => 'required',
@@ -247,6 +279,10 @@ class CategoryController extends Controller
 
     public function get_popular_category_list(){
 
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiPopularCategories();
+        }
+
         $avg_items=Item::where('order_count','>=', 1 )->avg('order_count') ?? 0;
 
         $items= Item::where('order_count','>', $avg_items )->pluck('category_ids');
@@ -263,6 +299,17 @@ class CategoryController extends Controller
 
     public function get_top_categories(Request $request)
     {
+        if (!config('module.current_module_data') && $request->hasHeader('moduleId')) {
+            $resolvedModule = getModule($request->header('moduleId'));
+            if ($resolvedModule) {
+                config(['module.current_module_data' => $resolvedModule]);
+            }
+        }
+
+        if (service_api_module_active()) {
+            return \Modules\Service\Lib\CategoryLogic::apiTopCategories($request);
+        }
+
         try {
             $zone_id = $request->header('zoneId') ? json_decode($request->header('zoneId'), true) : [];
             $zoneIds = is_array($zone_id) ? array_filter($zone_id, 'is_numeric') : [];
@@ -270,6 +317,17 @@ class CategoryController extends Controller
 
             $limit = (int) ($request->query('limit', 20));
             $offset = (int) ($request->query('offset', 1));
+
+            $moduleId = config('module.current_module_data')['id'] ?? null;
+
+            $serviceOrderCount = (!$moduleId && addon_published_status('Service'))
+                ? "+ (SELECT COALESCE(SUM(services.order_count), 0) FROM services
+                                JOIN stores ON stores.id = services.store_id
+                                WHERE services.status = 1
+                                    AND services.is_approved = 1
+                                    AND services.category_id = categories.id
+                                    $zoneCondition )"
+                : '';
 
             $paginator = Category::with(['childes' => function ($query) {
                     $query->where('status', 1)->select('id', 'name', 'image', 'slug', 'parent_id');
@@ -280,8 +338,9 @@ class CategoryController extends Controller
                                 WHERE items.is_approved = 1
                                     AND JSON_CONTAINS(items.category_ids, JSON_OBJECT('id', CAST(categories.id AS CHAR)), '$')
                                     AND JSON_CONTAINS(items.category_ids, JSON_OBJECT('position', 1), '$')
-                                    $zoneCondition ) AS total_order_count")
+                                    $zoneCondition ) $serviceOrderCount AS total_order_count")
                 ->where(['position' => 0, 'status' => 1])
+                ->when($moduleId, fn ($query) => $query->module($moduleId))
                 ->orderByDesc('total_order_count')
                 ->paginate($limit, ['*'], 'page', $offset);
 

@@ -33,6 +33,15 @@ class StoreConfig extends Model
         'verified_seller' => 'boolean',
         'has_seen_verified_badge_popup' => 'boolean',
         'can_edit_order' => 'boolean',
+        'can_edit_booking' => 'boolean',
+        'manage_service_setup' => 'boolean',
+        'show_reviews_provider_panel' => 'boolean',
+        'minimum_booking' => 'float',
+        'instant_booking' => 'boolean',
+        'repeat_booking' => 'boolean',
+        'schedule_booking' => 'boolean',
+        'choose_service_location' => 'array',
+        'serviceman_can_cancel_booking' => 'boolean',
     ];
 
     public function Store()

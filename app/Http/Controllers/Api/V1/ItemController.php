@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Item;
-use App\Models\Module;
 use App\Models\ItemCampaign;
 use App\Models\Order;
 use App\Models\Store;
@@ -25,6 +24,7 @@ use App\Services\TrendingSearchService;
 use App\Traits\ItemFilter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Modules\Service\Lib\ProviderLogic;
 
 class ItemController extends Controller
 {
@@ -736,15 +736,10 @@ class ItemController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $key = explode(' ', $request->name);
-
         $isGlobal = $request->boolean('is_global');
 
         if (!$isGlobal && !config('module.current_module_data') && $request->hasHeader('moduleId')) {
-            $moduleValue = $request->header('moduleId');
-            $resolvedModule = is_numeric($moduleValue)
-                ? Module::where('id', $moduleValue)->first()
-                : Module::where('slug', $moduleValue)->first();
+            $resolvedModule = getModule($request->header('moduleId'));
             if ($resolvedModule) {
                 config(['module.current_module_data' => $resolvedModule]);
             }
@@ -752,7 +747,9 @@ class ItemController extends Controller
 
         $module = $isGlobal ? null : config('module.current_module_data');
 
-        $items = Item::active()->with('module')->whereHas('store', function($query)use($zone_id, $module){
+        $service_scoped = service_api_module_active() && !$isGlobal;
+
+        $items = $service_scoped ? collect() : Item::active()->with('module')->without(['translations', 'storeCategory'])->whereHas('store', function($query)use($zone_id, $module){
             $query->when($module, function($query)use($module){
                 $query->where('module_id', $module['id'])->whereHas('zone.modules',function($query)use($module){
                     $query->where('modules.id', $module['id']);
@@ -762,70 +759,46 @@ class ItemController extends Controller
         ->when($request->store_category_id, function($query) use($request){
             return $query->where('store_category_id', $request->store_category_id);
         })
-        ->where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orwhere('name', 'like', "%{$value}%")->orWhere('description', 'like', "%{$value}%");
-            }
-
-            $relationships = [
-                'translations' => 'value',
-                'tags' => 'tag',
-                'nutritions' => 'nutrition',
-                'allergies' => 'allergy',
-                'category.parent' => 'name',
-                'category' => 'name',
-                'generic' => 'generic_name',
-                'ecommerce_item_details.brand' => 'name',
-                'pharmacy_item_details.common_condition' => 'name',
-            ];
-            $q->applyRelationShipSearch(relationships:$relationships ,searchParameter:$key);
-        })
-        ->orderByRaw("CASE
-                        WHEN LOWER(REPLACE(name, ' ', '')) = LOWER(REPLACE(?, ' ', '')) THEN 1
-                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 2
-                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 3
-                        ELSE 4
-                    END,  LENGTH(name) ASC, name ASC ", [
-                    $request['name'],            // exact match (normalized)
-                    "{$request['name']}%",       // starts with (normalized)
-                    "%{$request['name']}%",      // contains (normalized)
-                ])
-
+        ->search(keywords: $request['name'], relations: [
+            'translations' => 'value',
+            'tags' => 'tag',
+            'nutritions' => 'nutrition',
+            'allergies' => 'allergy',
+            'category.parent' => 'name',
+            'category' => 'name',
+            'generic' => 'generic_name',
+            'ecommerce_item_details.brand' => 'name',
+            'pharmacy_item_details.common_condition' => 'name',
+        ], mainCol: ['name', 'description'])
+        ->applyPriceRange($request)
         ->limit(50)
         ->get(['id','name','image','module_id'])
         ->map(function ($item) {
-            $row = $item->toArray();
             $mod = $item->module;
-            $row['module'] = $mod ? [
-                'id' => $mod->id,
-                'name' => $mod->module_name,
-                'image' => $mod->icon_full_url,
-                'type' => $mod->module_type,
-            ] : null;
-            return $row;
+            return [
+                'id' => $item->id,
+                'name' => $item->name,
+                'image' => $item->image,
+                'image_full_url' => $item->image_full_url,
+                'module_id' => $item->module_id,
+                'module' => $mod ? [
+                    'id' => $mod->id,
+                    'name' => $mod->module_name,
+                    'image' => $mod->icon_full_url,
+                    'type' => $mod->module_type,
+                ] : null,
+            ];
         });
 
-        $stores = Store::
-        withOpen($longitude??0,$latitude??0)
-        ->with(['module', 'discount'=>function($q){
-            return $q->validate();
-        }])->weekday()
-
-        ->where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('name', 'like', "%{$value}%");
-            }
-
-            $relationships = [
-                'translations' => 'value',
-                'items.nutritions' => 'nutrition',
-                'items.allergies' => 'allergy',
-                'items.generic' => 'generic_name',
-                'items.ecommerce_item_details.brand' => 'name',
-                'items.pharmacy_item_details.common_condition' => 'name'
-            ];
-            $q->applyRelationShipSearch(relationships:$relationships ,searchParameter:$key);
-        })
+        $stores = Store::withOpen($longitude ?? 0, $latitude ?? 0)->with('module')->weekday()
+        ->search(keywords: $request['name'], relations: [
+            'translations' => 'value',
+            'items.nutritions' => 'nutrition',
+            'items.allergies' => 'allergy',
+            'items.generic' => 'generic_name',
+            'items.ecommerce_item_details.brand' => 'name',
+            'items.pharmacy_item_details.common_condition' => 'name',
+        ])
         ->when($module, function($query)use($zone_id, $module){
             $query->whereHas('zone.modules', function($q)use($module){
                 $q->where('modules.id', $module['id']);
@@ -838,30 +811,41 @@ class ItemController extends Controller
             $query->whereIn('zone_id', json_decode($zone_id, true));
         })
         ->active()
-                ->orderByRaw("CASE
-                        WHEN LOWER(REPLACE(name, ' ', '')) = LOWER(REPLACE(?, ' ', '')) THEN 1
-                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 2
-                        WHEN LOWER(REPLACE(name, ' ', '')) LIKE LOWER(REPLACE(?, ' ', '')) THEN 3
-                        ELSE 4
-                    END,  LENGTH(name) ASC, name ASC ", [
-                    $request['name'],            // exact match (normalized)
-                    "{$request['name']}%",       // starts with (normalized)
-                    "%{$request['name']}%",      // contains (normalized)
-                ])
+        ->when($request->filled('min_price') || $request->filled('max_price') || $request->filled('price'), function ($query) use ($request) {
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('items', fn ($i) => $i->applyPriceRange($request));
+                if (addon_published_status('Service')) {
+                    $q->orWhereHas('services', fn ($s) => $s->applyPriceRange($request->input('min_price'), $request->input('max_price'), $request->input('price')));
+                }
+            });
+        })
         ->limit(50)
-        ->select(['id','name','logo','module_id'])
         ->get()
         ->map(function ($store) {
-            $row = $store->toArray();
             $mod = $store->module;
-            $row['module'] = $mod ? [
-                'id' => $mod->id,
-                'name' => $mod->module_name,
-                'image' => $mod->icon_full_url,
-                'type' => $mod->module_type,
-            ] : null;
-            return $row;
+            return [
+                'id' => $store->id,
+                'name' => $store->name,
+                'logo' => $store->logo,
+                'logo_full_url' => $store->logo_full_url,
+                'module_id' => $store->module_id,
+                'open' => (int) ($store->open ?? 0),
+                'distance' => isset($store->distance) ? (float) $store->distance : null,
+                'distance_km' => isset($store->distance) ? round(((float) $store->distance) / 1000, 2) : null,
+                'module' => $mod ? [
+                    'id' => $mod->id,
+                    'name' => $mod->module_name,
+                    'image' => $mod->icon_full_url,
+                    'type' => $mod->module_type,
+                ] : null,
+            ];
         });
+
+        if (service_api_module_active() || ($isGlobal && addon_published_status('Service'))) {
+            $service_module_id = $isGlobal ? null : ($module['id'] ?? null);
+            $services = ProviderLogic::searchServices($request->name, json_decode($zone_id, true) ?? [], $service_module_id, request: $request);
+            $items = $items->concat($services);
+        }
 
         if(auth('api')->check()){
             PersonalizationService::recordSearchAction(auth('api')->id(), $request->name, config('module.current_module_data') ? (int)config('module.current_module_data')['id'] : null);
@@ -1130,6 +1114,17 @@ class ItemController extends Controller
 
     public function getOfferStores(Request $request)
     {
+        if (! config('module.current_module_data') && $request->hasHeader('moduleId')) {
+            $resolvedModule = getModule($request->header('moduleId'));
+            if ($resolvedModule) {
+                config(['module.current_module_data' => $resolvedModule]);
+            }
+        }
+
+        if (service_api_module_active()) {
+            return ProviderLogic::apiOffers($request);
+        }
+
         Helpers::setZoneIds($request);
 
         $moduleHeader = $request->header('moduleId');

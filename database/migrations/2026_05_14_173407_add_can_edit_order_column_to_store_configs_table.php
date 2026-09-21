@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('store_configs', function (Blueprint $table) {
-            $table->boolean('can_edit_order')->default(false)->after('website_builder_status');
+            $table->boolean('can_edit_order')->default(false);
         });
     }
 

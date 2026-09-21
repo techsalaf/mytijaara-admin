@@ -12,6 +12,7 @@
     const roundDigit   = parseInt(section.dataset.roundDigit || '2', 10);
     let zoneId         = parseInt(section.dataset.zoneId   || '0', 10);
     let moduleId       = parseInt(section.dataset.moduleId || '0', 10);
+    let storeId        = parseInt(section.dataset.storeId  || '0', 10);
     let storeBaseRange = parseBase(section.dataset.storeDeliveryTime || '');
 
     const optionsEl       = section.querySelector('#delivery_type_options');
@@ -303,7 +304,7 @@
         const fee  = readDeliveryFee();
         const type = readOrderType();
         const has  = readHasAddress();
-        const key  = moduleId + '|' + zoneId + '|' + (fee > 0 ? '1' : '0') + '|' + type + '|' + (has ? '1' : '0');
+        const key  = storeId + '|' + moduleId + '|' + zoneId + '|' + (fee > 0 ? '1' : '0') + '|' + type + '|' + (has ? '1' : '0');
         if (inflightFetch || key === lastFetchedKey) {
             currentDeliveryFee = fee;
             currentOrderType   = type;
@@ -321,7 +322,8 @@
         inflightFetch = true;
         lastFetchedKey = key;
         const url = getUrl + (getUrl.indexOf('?') >= 0 ? '&' : '?')
-            + 'zone_id=' + zoneId + '&module_id=' + moduleId + '&delivery_fee=' + fee;
+            + 'zone_id=' + zoneId + '&module_id=' + moduleId + '&delivery_fee=' + fee
+            + (storeId > 0 ? '&store_id=' + storeId : '');
 
         return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function (r) { return r.ok ? r.json() : { enabled: false, options: [] }; })
@@ -389,9 +391,11 @@
         setContext: function (next) {
             if (next && typeof next.zoneId !== 'undefined')             zoneId   = parseInt(next.zoneId   || '0', 10);
             if (next && typeof next.moduleId !== 'undefined')           moduleId = parseInt(next.moduleId || '0', 10);
+            if (next && typeof next.storeId !== 'undefined')            storeId  = parseInt(next.storeId  || '0', 10);
             if (next && typeof next.storeDeliveryTime !== 'undefined')  storeBaseRange = parseBase(next.storeDeliveryTime || '');
             section.dataset.zoneId   = String(zoneId);
             section.dataset.moduleId = String(moduleId);
+            section.dataset.storeId  = String(storeId);
             lastFetchedKey = '';
             return fetchOptions({ forceServerReset: true });
         },

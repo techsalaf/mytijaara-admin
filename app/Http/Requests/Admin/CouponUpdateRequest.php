@@ -50,12 +50,15 @@ class CouponUpdateRequest extends FormRequest
         return [
             'code' => 'required|max:100|unique:coupons,code,'.$this->id,
             'title' => 'required|max:191',
-            'start_date' => 'required',
-            'expire_date' => 'required',
-            'discount' => 'required',
+            'start_date' => 'required_unless:coupon_type,pro_customer',
+            'expire_date' => 'required_unless:coupon_type,pro_customer',
+            'discount' => 'required|numeric|min:1',
+            'limit' => 'nullable|numeric|min:1',
+            'min_purchase' => 'nullable|numeric|min:1',
             'discount_type' => 'required_unless:coupon_type,free_delivery',
             'zone_ids' => 'required_if:coupon_type,zone_wise',
             'store_ids' => 'required_if:coupon_type,store_wise',
+            'max_discount' => 'exclude_unless:discount_type,percent|required|numeric|min:0.01',
             'title.0' => 'required',
         ];
     }
@@ -64,6 +67,11 @@ class CouponUpdateRequest extends FormRequest
     {
         return [
             'title.0.required'=>translate('default_title_is_required'),
+            'discount.min'=>translate('Discount can not be 0'),
+            'limit.min'=>translate('Limit for same user can not be 0'),
+            'min_purchase.min'=>translate('Min purchase can not be 0'),
+            'max_discount.required'=>translate('Max discount is required for percentage discount type'),
+            'max_discount.min'=>translate('Max discount can not be 0 for percentage discount type'),
         ];
     }
 }

@@ -106,6 +106,36 @@ class Category extends Model
     {
         return $this->morphMany(Storage::class, 'data');
     }
+
+    /**
+     * Sibling-scoped name uniqueness for the shared categories table.
+     * Main categories (parent_id = 0) must be unique within a module; a sub category
+     * must be unique within its parent — but the same sub-category name may be reused
+     * under different parents. Matching is on the default (categories.name) value.
+     */
+    /**
+     * Resolve the default-language name from the submitted name[]/lang[] arrays.
+     */
+    public static function defaultName($names, $langs): ?string
+    {
+        if (! is_array($names)) {
+            return null;
+        }
+        $index = is_array($langs) ? array_search('default', $langs) : false;
+        $name = $index !== false ? ($names[$index] ?? null) : ($names[0] ?? null);
+
+        return ($name === null || trim($name) === '') ? null : $name;
+    }
+
+    public static function isDuplicateName(string $name, int $moduleId, int $parentId, ?int $ignoreId = null): bool
+    {
+        return static::withoutGlobalScopes()
+            ->where('module_id', $moduleId)
+            ->where('parent_id', $parentId)
+            ->where('name', trim($name))
+            ->when($ignoreId !== null, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->exists();
+    }
     public function getImageFullUrlAttribute(){
         $value = $this->image;
         if (count($this->storage) > 0) {
@@ -165,6 +195,14 @@ class Category extends Model
             $builder->with(['translations' => function ($query) {
                 return $query->where('locale', app()->getLocale());
             }]);
+        });
+
+        static::saved(function () {
+            Helpers::deleteCacheData('store_cat_items_');
+        });
+
+        static::deleted(function () {
+            Helpers::deleteCacheData('store_cat_items_');
         });
         return null;
     }

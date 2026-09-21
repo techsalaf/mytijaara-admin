@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
-use App\Models\Module;
 use App\Models\ModuleWiseBanner;
 use App\Models\ModuleWiseWhyChoose;
 use Illuminate\Http\Request;
@@ -13,89 +12,69 @@ class OtherBannerController extends Controller
 {
     public function get_banners(Request $request)
     {
-        $module_id= getModuleId($request->header('moduleId'));
+        $module = config('module.current_module_data');
+        $module_id = $module['id'] ?? null;
 
-        $module = Module::find($module_id);
+        $banners = ModuleWiseBanner::Active()->where('module_id', $module_id)->where('type', 'promotional_banner')->get();
 
-        $banners=ModuleWiseBanner::Active()->where('module_id', $module_id)->where('type','promotional_banner')->get();
+        $bannerData = [];
 
-        $bannerData = null;
-
-        if($module->module_type == 'parcel'){
+        if (($module['module_type'] ?? null) == 'parcel') {
             $bannerData['banners'] = $banners;
-        }else{
+        } else {
             foreach ($banners as $banner) {
                 $key = $banner->key;
                 $value = $banner->value;
                 $bannerData[$key] = $value;
-                $bannerData[$key.'_full_url'] = Helpers::get_full_url('promotional_banner',$value,$banner?->storage[0]?->value??'public');
+                $bannerData[$key.'_full_url'] = Helpers::get_full_url('promotional_banner', $value, $banner?->storage[0]?->value ?? 'public');
             }
         }
 
-//        $awsUrl = config('filesystems.disks.s3.url');
-//        $awsBucket = config('filesystems.disks.s3.bucket');
-//        $awsBaseURL = rtrim($awsUrl, '/').'/'.ltrim($awsBucket.'/');
-
-//        $data =  [
-//            'promotional_banner_url' => asset('storage/app/public/promotional_banner'),
-//            'promotional_banner_s3_url' => $awsBaseURL."promotional_banner",
-//        ];
-//
-//        $data = array_merge($data, $bannerData);
-
         return response()->json($bannerData, 200);
-
     }
 
     public function get_video_content(Request $request)
     {
-        $module_id= getModuleId($request->header('moduleId'));
+        $module_id = config('module.current_module_data')['id'] ?? null;
 
-        $banners=ModuleWiseBanner::Active()->where('module_id', $module_id)->where('type','video_banner_content')->whereIn('key', ['section_title','banner_type','banner_video','banner_image','banner_video_content'])->get();
+        $contentKeys = ['content1_title', 'content1_subtitle', 'content2_title', 'content2_subtitle', 'content3_title', 'content3_subtitle'];
+        $bannerKeys = ['section_title', 'banner_type', 'banner_video', 'banner_image', 'banner_video_content'];
+
+        $banners = ModuleWiseBanner::Active()->where('module_id', $module_id)->where('type', 'video_banner_content')
+            ->whereIn('key', [...$bannerKeys, ...$contentKeys])
+            ->get();
 
         $bannerData = [];
+        $banner_contents = collect();
 
         foreach ($banners as $banner) {
+            if (in_array($banner->key, $contentKeys, true)) {
+                $banner_contents->push($banner);
+                continue;
+            }
+
             $key = $banner->key;
             $value = $banner->value;
             $bannerData[$key] = $value;
-            if($key == 'banner_video_content'){
-                $bannerData[$key.'_full_url'] = Helpers::get_full_url('promotional_banner/video',$value,$banner?->storage[0]?->value??'public');
-            }elseif($key == 'banner_image'){
-                $bannerData[$key.'_full_url'] = Helpers::get_full_url('promotional_banner',$value,$banner?->storage[0]?->value??'public');
+            if ($key == 'banner_video_content') {
+                $bannerData[$key.'_full_url'] = Helpers::get_full_url('promotional_banner/video', $value, $banner?->storage[0]?->value ?? 'public');
+            } elseif ($key == 'banner_image') {
+                $bannerData[$key.'_full_url'] = Helpers::get_full_url('promotional_banner', $value, $banner?->storage[0]?->value ?? 'public');
             }
         }
 
-        $banner_contents=ModuleWiseBanner::Active()->where('module_id', $module_id)->where('type','video_banner_content')->whereIn('key', ['content1_title','content1_subtitle','content2_title','content2_subtitle','content3_title','content3_subtitle'])->get();
-//        $awsUrl = config('filesystems.disks.s3.url');
-//        $awsBucket = config('filesystems.disks.s3.bucket');
-//        $awsBaseURL = rtrim($awsUrl, '/').'/'.ltrim($awsBucket.'/');
-        $data =  [
-//            'banner_video_content_url' => asset('storage/app/public/promotional_banner/video'),
-//            'promotional_banner_url' => asset('storage/app/public/promotional_banner'),
-//            'banner_video_content_s3_url' => $awsBaseURL.'promotional_banner/video',
-//            'promotional_banner_s3_url' => $awsBaseURL.'promotional_banner',
-            'banner_contents' => $banner_contents
-        ];
+        $data = ['banner_contents' => $banner_contents];
         $data = array_merge($data, $bannerData);
-        return response()->json($data, 200);
 
+        return response()->json($data, 200);
     }
 
     public function get_why_choose(Request $request)
     {
-        $module_id= getModuleId($request->header('moduleId'));
+        $module_id = config('module.current_module_data')['id'] ?? null;
 
-        $banners=ModuleWiseWhyChoose::Active()->where('module_id', $module_id)->get();
-//        $awsUrl = config('filesystems.disks.s3.url');
-//        $awsBucket = config('filesystems.disks.s3.bucket');
-//        $awsBaseURL = rtrim($awsUrl, '/').'/'.ltrim($awsBucket.'/');
-        $data =  [
-//            'why_choose_url' => asset('storage/app/public/why_choose'),
-//            'why_choose_s3_url' => $awsBaseURL.'why_choose',
-            'banners' => $banners
-        ];
-        return response()->json($data, 200);
+        $banners = ModuleWiseWhyChoose::Active()->where('module_id', $module_id)->get();
 
+        return response()->json(['banners' => $banners], 200);
     }
 }

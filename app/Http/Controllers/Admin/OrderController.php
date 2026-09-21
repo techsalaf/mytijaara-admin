@@ -47,7 +47,7 @@ class OrderController extends Controller
     use \App\Traits\EditsOrderFromCart;
     public function list($status, Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if (session()->has('zone_filter') == false) {
             session()->put('zone_filter', 0);
         }
@@ -125,7 +125,7 @@ class OrderController extends Controller
             ->when(isset($request->from_date) && isset($request->to_date) && $request->from_date != null && $request->to_date != null, function ($query) use ($request) {
                 return $query->whereBetween('created_at', [$request->from_date . " 00:00:00", $request->to_date . " 23:59:59"]);
             })
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%")
@@ -430,7 +430,7 @@ class OrderController extends Controller
 
     public function search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $parcel_order = $request->parcel_order ?? false;
         $module_section_type = $request->module_section_type ?? false;
         $orders = Order::where(function ($q) use ($key) {
@@ -1568,7 +1568,7 @@ class OrderController extends Controller
 
     public function export_orders($file_type, $status, $type, Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         if (session()->has('zone_filter') == false) {
             session()->put('zone_filter', 0);
@@ -1653,7 +1653,7 @@ class OrderController extends Controller
             ->when($type == 'parcel', function ($query) {
                 $query->ParcelOrder();
             })
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%")
@@ -1687,7 +1687,7 @@ class OrderController extends Controller
 
     public function store_order_search(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $orders = Order::where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('id', 'like', "%{$value}%");
@@ -1700,7 +1700,7 @@ class OrderController extends Controller
     }
     public function store_order_export(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
          $filter = $request?->filter;
         $orders = Order::where('store_id', $request->store_id)->Notpos()
             ->when(isset($key ), function ($q) use ($key){
@@ -2024,11 +2024,11 @@ class OrderController extends Controller
 
     public function offline_verification_list(Request $request, $status)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $orders = Order::with(['customer', 'store'])
         ->where('payment_method', 'offline_payment')
         ->whereHas('offline_payments')
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($request['search'], function ($query) use ($key) {
                 return $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('id', 'like', "%{$value}%")

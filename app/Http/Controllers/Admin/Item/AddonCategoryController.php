@@ -16,14 +16,14 @@ class AddonCategoryController extends Controller
 
     public function index(Request   $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $taxData = Helpers::getTaxSystemType();
         $categoryWiseTax = $taxData['categoryWiseTax'];
         $taxVats = $taxData['taxVats'];
 
         $categories = AddonCategory::where('module_id', Config::get('module.current_module_id'))
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");
@@ -133,9 +133,9 @@ class AddonCategoryController extends Controller
     public function exportAddonCategories(Request $request)
     {
         try {
-            $key = explode(' ', $request['search']);
+            $key = explode(' ', $request['search'] ?? '');
             $categories = AddonCategory::where('module_id', Config::get('module.current_module_id'))
-                ->when(isset($key), function ($q) use ($key) {
+                ->when($request['search'], function ($q) use ($key) {
                     $q->where(function ($q) use ($key) {
                         foreach ($key as $value) {
                             $q->orWhere('name', 'like', "%{$value}%");

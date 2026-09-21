@@ -21,10 +21,6 @@
             @csrf
 
             <div class="row g-3">
-                @php
-                    $default_location = \App\Models\BusinessSetting::where('key', 'default_location')->first();
-                    $default_location = $default_location->value ? json_decode($default_location->value, true) : 0;
-                @endphp
                 <div class="col-lg-12">
                     <div class="card mb-20" id="general_setup_section">
                         <div class="card-body">
@@ -47,8 +43,7 @@
                                 <div class="row g-3 align-items-end">
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $canceled_by_store = \App\Models\BusinessSetting::where('key', 'canceled_by_store')->first();
-                                            $canceled_by_store = $canceled_by_store ? $canceled_by_store->value : 0;
+                                            $canceled_by_store = $data['canceled_by_store'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <label class="input-label text-capitalize d-flex alig-items-center"><span
@@ -89,8 +84,7 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $store_self_registration = \App\Models\BusinessSetting::where('key', 'toggle_store_registration')->first();
-                                            $store_self_registration = $store_self_registration ? $store_self_registration->value : 0;
+                                            $store_self_registration = $data['toggle_store_registration'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -131,7 +125,7 @@
 
                                     <div class="col-sm-6 col-lg-4">
                                         @php
-                                            $product_gallery = \App\Models\BusinessSetting::where('key', 'product_gallery')->first()?->value ?? 0;
+                                            $product_gallery = $data['product_gallery'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -173,7 +167,7 @@
 
                                     <div class="col-sm-6 col-lg-4 {{ $product_gallery == 1 ? ' ' : 'd-none' }}  access_all_products">
                                         @php
-                                            $access_all_products = \App\Models\BusinessSetting::where('key', 'access_all_products')->first()?->value ?? 0;
+                                            $access_all_products = $data['access_all_products'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -213,8 +207,7 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $store_review_reply = \App\Models\BusinessSetting::where('key', 'store_review_reply')->first();
-                                            $store_review_reply = $store_review_reply ? $store_review_reply->value : 0;
+                                            $store_review_reply = $data['store_review_reply'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -255,8 +248,47 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $verified_seller_badge = \App\Models\BusinessSetting::where('key', 'verified_seller_badge')->first();
-                                            $verified_seller_badge = $verified_seller_badge ? $verified_seller_badge->value : 0;
+                                            $review_section = $data['review_section'] ?? 0;
+                                        @endphp
+                                        <div class="form-group mb-0">
+                                            <span class="mb-2 d-flex align-items-center">
+                                                <span class="text-title">
+                                                    {{ translate('Review Section') }}
+                                                </span>
+                                                <span class="form-label-secondary text-danger d-flex align-items-center gap-1"
+                                                        data-toggle="tooltip" data-placement="right"
+                                                        data-original-title="{{ translate('If enabled, the Reviews menu is shown in the vendor panel for non-service modules.') }}"><i class="tio-info text-muted ps--3"></i>
+                                                </span>
+                                            </span>
+                                            <label
+                                                class="toggle-switch h--45px toggle-switch-sm d-flex justify-content-between border rounded px-3 py-0 form-control">
+                                                <span class="pr-1 d-flex align-items-center switch--label">
+                                                    <span class="line--limit-1 text-title">
+                                                        {{ translate('Status') }}
+                                                    </span>
+                                                </span>
+                                                <input type="checkbox" data-id="review_section" data-type="toggle"
+                                                    data-image-on="{{ asset('/public/assets/admin/img/modal/info-warning.png') }}"
+                                                    data-image-off="{{ asset('/public/assets/admin/img/modal/info-warning.png') }}"
+                                                    data-title-on="<strong>{{ translate('Are you sure to enable the Review Section?') }}</strong>"
+                                                    data-title-off="<strong>{{ translate('Are you sure to disable the Review Section?') }}</strong>"
+                                                    data-text-on="{{ translate('If enabled, the Reviews menu is shown in the vendor panel for non-service modules.') }}"
+                                                    data-text-off="{{ translate('If disabled, the Reviews menu is hidden in the vendor panel for non-service modules.') }}"
+                                                    data-footer-text-on="<div class='text-center text-info mt-5'>{{ translate('Note : Don’t forget to save the information before leaving this page ') }}</div>"
+                                                    data-footer-text-off="<div class='text-center text-info mt-5'>{{ translate('Note : Don’t forget to save the information before leaving this page ') }}</div>"
+                                                    class="status toggle-switch-input dynamic-checkbox-toggle"
+                                                    name="review_section" id="review_section" value="1"
+                                                    {{ $review_section ? 'checked' : '' }}>
+                                                <span class="toggle-switch-label text">
+                                                    <span class="toggle-switch-indicator"></span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4 col-sm-6">
+                                        @php
+                                            $verified_seller_badge = $data['verified_seller_badge'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -297,7 +329,7 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $vendor_can_set_low_stock = \App\Models\BusinessSetting::where('key', 'vendor_can_set_low_stock')->first()?->value ?? 0;
+                                            $vendor_can_set_low_stock = $data['vendor_can_set_low_stock'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -338,7 +370,7 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $store_category_status = \App\Models\BusinessSetting::where('key', 'store_category_status')->first()?->value ?? 0;
+                                            $store_category_status = $data['store_category_status'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -379,7 +411,7 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $can_vendor_edit_order = \App\Models\BusinessSetting::where('key', 'can_vendor_edit_order')->first()?->value ?? 0;
+                                            $can_vendor_edit_order = $data['can_vendor_edit_order'] ?? 0;
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -448,9 +480,7 @@
                                     <div class="col-xxl-3 col-lg-4 col-md-5 col-sm-6">
                                         <div class="">
                                             @php
-                                                $admin_website_builder_status = \App\Models\BusinessSetting::where('key', 'admin_website_builder_status')->first()?->value ?? 0;
-                                                $admin_website_builder_datas = \App\Models\BusinessSetting::where('key', 'admin_website_builder_status')->first()?->value ?? '';
-                                                $admin_website_builder_datas = json_decode($admin_website_builder_datas, true);
+                                                $admin_website_builder_status = $data['admin_website_builder_status'] ?? 0;
                                             @endphp
                                             <div class="form-group mb-0">
                                                 <label
@@ -510,9 +540,8 @@
                                     <div class="col-xxl-3 col-lg-4 col-md-5 col-sm-6">
                                         <div class="">
                                             @php
-                                                $product_approval = \App\Models\BusinessSetting::where('key', 'product_approval')->first()?->value ?? 0;
-                                                $product_approval_datas = \App\Models\BusinessSetting::where('key', 'product_approval_datas')->first()?->value ?? '';
-                                                $product_approval_datas = json_decode($product_approval_datas, true);
+                                                $product_approval = $data['product_approval'] ?? 0;
+                                                $product_approval_datas = $data['product_approval_datas'] ?? null;
                                             @endphp
                                             <div class="form-group mb-0">
                                                 <label
@@ -620,8 +649,10 @@
                         <div class="card-body">
                             <div class="mb-20">
                                 <div>
-                                    <h4 class="mb-1">
+                                    <h4 class="mb-1 d-flex align-items-center gap-1">
                                         {{ translate('Cash in Hand Controls') }}
+                                        <i class="tio-info text-muted fs-14" data-toggle="tooltip" data-placement="right"
+                                            data-original-title="{{ translate('Control how much cash vendors can hold from collections before the system automatically suspends them.') }}"></i>
                                     </h4>
                                     <p class="mb-0 fs-12">
                                         {{ translate('Setup your cash collection from here') }}
@@ -632,8 +663,12 @@
                                 <div class="row g-3">
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $cash_in_hand_overflow_store = \App\Models\BusinessSetting::where('key', 'cash_in_hand_overflow_store')->first();
-                                            $cash_in_hand_overflow_store = $cash_in_hand_overflow_store ? $cash_in_hand_overflow_store->value : '';
+                                            // On a validation-failure redisplay (old input is flashed) reflect the
+                                            // submitted toggle state; otherwise fall back to the stored setting. This
+                                            // keeps the toggle and the amount fields' required/readonly state coherent.
+                                            $cash_in_hand_overflow_store = old()
+                                                ? (old('cash_in_hand_overflow_store') ? 1 : 0)
+                                                : ($data['cash_in_hand_overflow_store'] ?? 0);
                                         @endphp
                                         <div class="form-group mb-0">
                                             <span class="mb-2 d-flex align-items-center">
@@ -675,7 +710,7 @@
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $cash_in_hand_overflow_store_amount = \App\Models\BusinessSetting::where('key', 'cash_in_hand_overflow_store_amount')->first();
+                                            $cash_in_hand_overflow_store_amount = $data['cash_in_hand_overflow_store_amount'] ?? '';
                                         @endphp
                                         <div class="form-group mb-0">
                                             <label class=" input-label text-capitalize"
@@ -691,14 +726,14 @@
                                             <input type="number" name="cash_in_hand_overflow_store_amount" class="form-control" data-toggle="tooltip"
                                                 data-placement="top" data-original-title="{{ $cash_in_hand_overflow_store == 1 ? '' : translate('This field is disabled as Cash-in-Hand Overflow suspension is turned OFF') }}"
                                                    id="cash_in_hand_overflow_store_amount" min="0" step="{{ App\CentralLogics\Helpers::getDecimalPlaces() }}"
-                                                   value="{{ $cash_in_hand_overflow_store_amount ? $cash_in_hand_overflow_store_amount->value : '' }}"  {{ $cash_in_hand_overflow_store  == 1 ? 'required' : 'readonly' }} >
+                                                   value="{{ old('cash_in_hand_overflow_store_amount', $cash_in_hand_overflow_store_amount) }}"  {{ $cash_in_hand_overflow_store  == 1 ? 'required' : 'readonly' }} >
                                             <span class="fs-12 text-info mt-1 d-none" id="amount_warning">{{ translate('Amount must be greater then Minimum Payable Amount') }}</span>
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4 col-sm-6">
                                         @php
-                                            $min_amount_to_pay_store = \App\Models\BusinessSetting::where('key', 'min_amount_to_pay_store')->first();
+                                            $min_amount_to_pay_store = $data['min_amount_to_pay_store'] ?? '';
                                         @endphp
                                         <div class="form-group mb-0">
                                             <label class=" input-label text-capitalize"
@@ -714,7 +749,7 @@
                                             </label>
                                             <input type="number" name="min_amount_to_pay_store" class="form-control"
                                                    id="min_amount_to_pay_store" min="0" step="{{ App\CentralLogics\Helpers::getDecimalPlaces() }}"
-                                                   value="{{ $min_amount_to_pay_store ? $min_amount_to_pay_store->value : '' }}"  {{ $cash_in_hand_overflow_store  == 1 ? 'required' : 'readonly' }} >
+                                                   value="{{ old('min_amount_to_pay_store', $min_amount_to_pay_store) }}"  {{ $cash_in_hand_overflow_store  == 1 ? 'required' : 'readonly' }} >
                                         </div>
                                     </div>
                                 </div>

@@ -24,6 +24,7 @@
     --cus-warning-clr: #CC952C;
     --text-light-gray: #A7A7A7;
     --text-title: #334257;
+    --text-title-rgb: 51, 66, 87;
 
 
     --bs-primary: #1455ac;
@@ -140,6 +141,14 @@ body{
 }
 .bg-danger {
     background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity, 1)) !important;
+}
+.text-purple {
+    --bs-purple-rgb: 65, 83, 179 !important;
+    color: rgba(var(--bs-purple-rgb), var(--bs-text-opacity, 1)) !important;
+}
+.bg-purple {
+    --bs-purple-rgb: 65, 83, 179 !important;
+    background-color: rgba(var(--bs-purple-rgb), var(--bs-bg-opacity, 1)) !important;
 }
 
 .bg-opacity-10 {
@@ -11453,6 +11462,10 @@ body > .initial-38-1 {
     font-size: 16px !important;
 }
 
+.fs-18 {
+    font-size: 18px !important;
+}
+
 .fs-20 {
     font-size: 20px !important;
     @media screen and (max-width: 575px) {
@@ -15160,6 +15173,9 @@ ul.address-info .label {
 .overflow-x-auto {
     overflow-x: auto !important;
 }
+.overflow-y-auto {
+    overflow-y: auto !important;
+}
 
 @media (max-width: 575px) {
     #pdf-container .document-wrapper,
@@ -16585,6 +16601,16 @@ img{
 
 .upload-file__video-not-playable{
     max-inline-size: 320px;
+    inline-size: 100%;
+    block-size: 140px;
+    overflow: hidden;
+}
+
+.upload-file__video-not-playable video{
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+    background-color: #000;
 }
 
 .h-100vh-150px{
@@ -16679,6 +16705,9 @@ img{
 }
 .ratio-5-1 {
     aspect-ratio: 5 / 1 !important;
+}
+.ratio-10-4 {
+    aspect-ratio: 10 / 1 !important;
 }
 .ratio-7-1 {
     aspect-ratio: 7 / 1 !important;
@@ -18121,6 +18150,9 @@ a.order--card:hover {
     height: 15px !important;
 }
 
+.border-dark-light{
+    border-color: rgba(var(--text-title-rgb), 0.7) !important;
+}
 .website-builder-btn{
     display:inline-flex;
     align-items:center;

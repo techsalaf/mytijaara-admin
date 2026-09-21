@@ -33,7 +33,7 @@
 
     {{-- Builder button — left-aligned (sits before the flex spacer so it stays
          in the left cluster next to the brand, instead of being pushed right). --}}
-    @if(Helpers::check_website_builder_status())
+    @if(Helpers::check_website_builder_status() && Helpers::employee_module_permission_check('custom_website'))
     <a href="{{ route('vendor.builder.index', ['page' => 'global-settings']) }}"
        class="website-builder-btn v2-builder-btn" id="vendor-dashboard-builder-button">
         <span class="website-builder-icon">

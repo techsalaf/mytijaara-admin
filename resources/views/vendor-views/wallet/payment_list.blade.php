@@ -1,6 +1,12 @@
+@php
+    $vendorData = \App\CentralLogics\Helpers::get_store_data();
+    // Service (and rental) providers are "Providers", not "Stores".
+    $isProviderModule = ($vendorData?->module_type == 'rental' && addon_published_status('Rental')) || $vendorData?->module_type == 'service';
+    $walletTitleKey = $isProviderModule ? 'Provider_wallet' : 'store_wallet';
+@endphp
 @extends('layouts.vendor.app')
 
-@section('title',translate('messages.store_wallet'))
+@section('title',translate('messages.' . $walletTitleKey))
 
 @push('css_or_js')
 
@@ -17,7 +23,7 @@
                             <img src="{{asset('/public/assets/admin/img/image_90.png')}}" alt="public">
                         </div>
                         <span>
-                            {{translate('messages.store_wallet')}}
+                            {{translate('messages.' . $walletTitleKey)}}
                         </span>
                     </h2>
                 </div>

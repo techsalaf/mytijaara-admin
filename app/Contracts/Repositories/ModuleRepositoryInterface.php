@@ -29,5 +29,5 @@ interface ModuleRepositoryInterface extends RepositoryInterface
      * @param int|null $offset
      * @return Collection
      */
-    public function getSearchListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection;
+    public function getSearchListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection;
 }

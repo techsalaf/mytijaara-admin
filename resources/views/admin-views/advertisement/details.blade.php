@@ -17,6 +17,9 @@ active
 @endpush
 
 @section('content')
+@php
+    $isProviderContext = in_array(config('module.current_module_type'), ['rental', 'service'], true);
+@endphp
 <div class="content container-fluid">
 
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
@@ -61,7 +64,7 @@ active
                             <p class="d-flex gap-2 align-items-center mb-0">
                                 <span class="w-80px">{{ translate('Ad Type') }}  </span>
                                 <span class="mx-1">:</span>
-                                <span class="font-medium text-title">{{ translate($advertisement->add_type) }}</span>
+                                <span class="font-medium text-title">{{ $isProviderContext && $advertisement->add_type == 'store_promotion' ? translate('provider') . ' ' . translate('promotion') : translate($advertisement->add_type) }}</span>
                             </p>
                             <p class="d-flex gap-2 align-items-center mb-0">
                                 <span class="w-80px">{{ translate('Duration') }} </span>
@@ -79,7 +82,7 @@ active
                                     id="data-add-{{ $advertisement->id }}"
                                     data-id="data-add-{{ $advertisement->id }}"
                                     data-title="{{translate('Are you sure you want to deny the request?')}}"
-                                    data-text="<p>{{translate('You will lost the Store ads request.')}}</p>"
+                                    data-text="<p>{{ $isProviderContext ? str_replace('Store', 'Provider', translate('You will lost the Store ads request.')) : translate('You will lost the Store ads request.') }}</p>"
                                     data-image="{{asset('public/assets/admin/img/modal/deny.png')}}"
                                     data-type="deny"
                                     data-btn_class = "btn-primary"
@@ -379,7 +382,7 @@ active
                             <span class="card-header-icon">
                                 <i class="tio-shop"></i>
                             </span>
-                            <span>{{ translate('Store info') }}</span>
+                            <span>{{ $isProviderContext ? translate('Provider info') : translate('Store info') }}</span>
                         </h5>
                         <a href="{{route('admin.store.view', $advertisement->store_id)}}" class="media align-items-start deco-none resturant--information-single">
                             <div class="avatar avatar-circle">

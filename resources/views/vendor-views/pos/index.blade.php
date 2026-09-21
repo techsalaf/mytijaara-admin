@@ -32,7 +32,7 @@
                                             <!-- Search -->
                                             <div class="input-group input--group">
                                                 <input id="datatableSearch" type="search"
-                                                    value="{{ $keyword ?? '' }}" name="search"
+                                                    value="{{ $keyword ?? '' }}" name="pos_search"
                                                     class="form-control h--45px"
                                                     placeholder="{{ translate('messages.ex_:_search_here') }}"
                                                     aria-label="{{ translate('messages.search_here') }}">
@@ -145,6 +145,7 @@
                             'setUrl'            => route('vendor.pos.delivery_type.set'),
                             'zoneId'            => \App\CentralLogics\Helpers::get_store_data()?->zone_id ?? '',
                             'moduleId'          => \App\CentralLogics\Helpers::get_store_data()?->module_id ?? '',
+                            'storeId'           => \App\CentralLogics\Helpers::get_store_data()?->id ?? '',
                             'storeDeliveryTime' => \App\CentralLogics\Helpers::get_store_data()?->delivery_time ?? '',
                         ])
 
@@ -456,8 +457,16 @@
             e.preventDefault();
             let keyword = $('#datatableSearch').val();
             let nurl = new URL('{!! url()->full() !!}');
-            nurl.searchParams.set('keyword', keyword);
+            nurl.searchParams.set('pos_keyword', keyword);
             location.href = nurl;
+        });
+
+        $(document).on('input', '#datatableSearch', function () {
+            let nurl = new URL(window.location.href);
+            if (this.value === '' && nurl.searchParams.has('pos_keyword')) {
+                nurl.searchParams.delete('pos_keyword');
+                location.href = nurl;
+            }
         });
 
 

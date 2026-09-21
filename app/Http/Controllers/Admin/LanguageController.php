@@ -378,6 +378,15 @@ class LanguageController extends Controller
     {
         $language = BusinessSetting::where('key', 'system_language')->first();
 
+        // The default language cannot be deleted.
+        foreach (json_decode($language?->value, true) ?? [] as $data) {
+            if (($data['code'] ?? null) == $lang && !empty($data['default'])) {
+                Toastr::error(translate('messages.default_language_cannot_be_deleted'));
+
+                return back();
+            }
+        }
+
         $del_default = false;
         foreach (json_decode($language?->value, true) as $key => $data) {
             if ($data['code'] == $lang && array_key_exists('default', $data) && $data['default'] == true) {

@@ -48,6 +48,7 @@
                 <th>{{ translate('messages.referral_discount') }}</th>
                 <th>{{ translate('messages.Pro_Discount') }}</th>
                 <th>{{ translate('messages.discounted_amount') }}</th>
+                <th>{{ translate('messages.delivery_type') }}</th>
                 <th>{{  \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge')  }}</th>
                 <th>{{ translate('messages.extra_packaging_amount') }}</th>
                 <th>{{ translate('messages.tax') }}</th>
@@ -89,6 +90,7 @@
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['ref_bonus_amount']) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order->orderProDiscount?->amount_saved ?? 0) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['coupon_discount_amount'] + $order['store_discount_amount'] + $order['ref_bonus_amount'] + $order['extra_discount_amount'] + ($order->orderProDiscount?->amount_saved ?? 0) ) }}</td>
+                <td>{{ \App\CentralLogics\Helpers::number_format_short($order->delivery_type_charge ?? 0) }} - {{ translate('messages.'.($order->delivery_type ?? 'standard')) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['additional_charge']) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['extra_packaging_amount']) }}</td>
                 <td>{{ \App\CentralLogics\Helpers::number_format_short($order['total_tax_amount']) }}</td>

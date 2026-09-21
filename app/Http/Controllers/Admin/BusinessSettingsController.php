@@ -132,11 +132,38 @@ class BusinessSettingsController extends Controller
             );
 
         case 'store':
-            return view('admin-views.business-settings.settings.store-index');
+            $keys = [
+                'canceled_by_store',
+                'toggle_store_registration',
+                'product_gallery',
+                'access_all_products',
+                'store_review_reply',
+                'review_section',
+                'verified_seller_badge',
+                'vendor_can_set_low_stock',
+                'store_category_status',
+                'can_vendor_edit_order',
+                'admin_website_builder_status',
+                'product_approval',
+                'cash_in_hand_overflow_store',
+                'cash_in_hand_overflow_store_amount',
+                'min_amount_to_pay_store',
+            ];
+
+            $data = BusinessSetting::whereIn('key', $keys)
+                ->pluck('value', 'key')
+                ->toArray();
+
+            $data['product_approval_datas'] = json_decode(
+                BusinessSetting::where('key', 'product_approval_datas')->value('value') ?? '',
+                true
+            );
+
+            return view('admin-views.business-settings.settings.store-index', compact('data'));
 
         case 'refund-settings':
             $refund_active_status = Helpers::get_business_settings('refund_active_status');
-            $keywords = $search ? explode(' ', $search) : [];
+            $keywords = $search ? explode(' ', $search ?? '') : [];
 
             $reasons = RefundReason::latest()
                 ->when($keywords, function ($query) use ($keywords) {
@@ -171,7 +198,7 @@ class BusinessSettingsController extends Controller
             return view('admin-views.business-settings.settings.priority-index');
 
         case 'automated-message':
-            $keywords = $search ? explode(' ', $search) : [];
+            $keywords = $search ? explode(' ', $search ?? '') : [];
 
             $messages = AutomatedMessage::latest()
                 ->when($keywords, function ($query) use ($keywords) {
@@ -276,6 +303,19 @@ class BusinessSettingsController extends Controller
 
     public function update_store(Request $request)
     {
+        // Amounts are only guarded client-side in the blade, so validate them here too.
+        // The rules apply only when Cash-in-Hand Overflow is on (matching the blade JS):
+        // both amounts are then required + non-negative, and the overflow limit must exceed
+        // the minimum payable amount.
+        if ($request['cash_in_hand_overflow_store']) {
+            $request->validate([
+                'min_amount_to_pay_store' => 'required|numeric|min:0',
+                'cash_in_hand_overflow_store_amount' => 'required|numeric|min:0|gt:min_amount_to_pay_store',
+            ], [
+                'cash_in_hand_overflow_store_amount.gt' => translate('messages.Amount must be greater then Minimum Payable Amount'),
+            ]);
+        }
+
         $reelsSettingsController = $this->getReelsBusinessSettingsController();
         if ($reelsSettingsController) {
             $reelsSettingsController->validateStoreSettings($request);
@@ -298,14 +338,15 @@ class BusinessSettingsController extends Controller
             'cash_in_hand_overflow_store' => $request['cash_in_hand_overflow_store'] ?? 0,
             'cash_in_hand_overflow_store_amount' => $request['cash_in_hand_overflow_store_amount'],
             'min_amount_to_pay_store' => $request['min_amount_to_pay_store'],
-            'store_review_reply' => $request['store_review_reply'],
-            'verified_seller_badge' => $request['verified_seller_badge'],
+            'store_review_reply' => $request['store_review_reply'] ?? 0,
+            'review_section' => $request['review_section'] ?? 0,
+            'verified_seller_badge' => $request['verified_seller_badge'] ?? 0,
             'vendor_can_set_low_stock' => $request['vendor_can_set_low_stock'] ?? 0,
-            'canceled_by_store' => $request['canceled_by_store'],
-            'toggle_store_registration' => $request['store_self_registration'],
-            'product_approval' => $request['product_approval'],
-            'access_all_products' => $request['access_all_products'],
-            'product_gallery' => $request['product_gallery'],
+            'canceled_by_store' => $request['canceled_by_store'] ?? 0,
+            'toggle_store_registration' => $request['store_self_registration'] ?? 0,
+            'product_approval' => $request['product_approval'] ?? 0,
+            'access_all_products' => $request['access_all_products'] ?? 0,
+            'product_gallery' => $request['product_gallery'] ?? 0,
             'admin_website_builder_status' => $request['admin_website_builder_status'] ?? 0,
             'store_category_status' => $request['store_category_status'] ?? 0,
             'can_vendor_edit_order' => $request['can_vendor_edit_order'] ?? 0
@@ -477,6 +518,12 @@ class BusinessSettingsController extends Controller
         {
             Toastr::info(translate('messages.update_option_is_disable_for_demo'));
             return back();
+        }
+
+        foreach (['admin_commission', 'delivery_charge_comission', 'digit_after_decimal_point', 'additional_charge'] as $nonNegativeKey) {
+            if ($request->filled($nonNegativeKey) && is_numeric($request->input($nonNegativeKey)) && $request->input($nonNegativeKey) < 0) {
+                $request->merge([$nonNegativeKey => 0]);
+            }
         }
 
         $this->updateBasicSettings($request);
@@ -992,6 +1039,16 @@ class BusinessSettingsController extends Controller
                 ],
                 'sync_download_links' => true,
             ],
+            'serviceman_app' => [
+                'message' => 'messages.Serviceman_app_settings_updated',
+                'fields' => [
+                    'app_minimum_version_android_serviceman',
+                    'app_url_android_serviceman',
+                    'app_minimum_version_ios_serviceman',
+                    'app_url_ios_serviceman',
+                ],
+                'sync_download_links' => true,
+            ],
         ];
     }
 
@@ -1031,6 +1088,11 @@ class BusinessSettingsController extends Controller
             'apple_store_url' => 'app_url_ios_rider',
         ]);
 
+        $this->syncDownloadLinkSetting('admin_landing_page', 'serviceman_app_earning_links', [
+            'playstore_url' => 'app_url_android_serviceman',
+            'apple_store_url' => 'app_url_ios_serviceman',
+        ]);
+
         $this->syncDownloadLinkSetting('react_landing_page', 'download_seller_app_links', [
             'playstore_url' => 'app_url_android_store',
             'apple_store_url' => 'app_url_ios_store',
@@ -1044,6 +1106,11 @@ class BusinessSettingsController extends Controller
         $this->syncDownloadLinkSetting('react_landing_page', 'download_rider_app_links', [
             'playstore_url' => 'app_url_android_rider',
             'apple_store_url' => 'app_url_ios_rider',
+        ]);
+
+        $this->syncDownloadLinkSetting('react_landing_page', 'download_serviceman_app_links', [
+            'playstore_url' => 'app_url_android_serviceman',
+            'apple_store_url' => 'app_url_ios_serviceman',
         ]);
     }
 
@@ -1239,6 +1306,7 @@ class BusinessSettingsController extends Controller
     {
         abort_if($request?->module_type == 'rental' && !addon_published_status('Rental'), 404);
         abort_if($request?->module_type == 'ride-share' && !addon_published_status('RideShare'), 404);
+        abort_if($request?->module_type == 'service' && !addon_published_status('Service'), 404);
 
         $moduleType = $request->module_type ?? 'grocery';
         if ($moduleType == 'ride-share' && addon_published_status('RideShare')) {
@@ -1274,6 +1342,14 @@ class BusinessSettingsController extends Controller
         $subscription_reminder_enabled = NotificationMessage::where('key', 'subscription_expire_reminder')
             ->where('status', 1)
             ->exists();
+
+        if ($moduleType == 'service' && addon_published_status('Service')) {
+            return view('admin-views.business-settings.fcm-index-service', compact(
+                'subscription_reminder_before_time',
+                'subscription_reminder_before',
+                'subscription_reminder_enabled'
+            ));
+        }
 
         $monthly_order_reminder = NotificationMessage::where('key', 'monthly_order_reminder')->first();
 
@@ -1557,6 +1633,74 @@ class BusinessSettingsController extends Controller
                         ['value' => $request[$requestKey][$index]]
                     );
                 }
+            }
+        }
+
+        Toastr::success(translate('messages.message_updated'));
+
+        return back();
+    }
+
+    public function update_fcm_messages_service(Request $request)
+    {
+        $languages = $request->lang ?? [];
+        $enIndex = array_search('en', $languages);
+
+        $messageKeys = [
+            'booking_place_message',
+            'booking_accepted_message',
+            'booking_ongoing_message',
+            'serviceman_assign_message',
+            'booking_complete_message',
+            'booking_cancel_message',
+            'schedule_booking_time_change_message',
+            'booking_service_location_change_message',
+            'customized_booking_request_message',
+            'customized_booking_delete_message',
+            'provider_bid_offer_message',
+            'provider_bid_withdraw_message',
+            'booking_edit_service_add_message',
+            'booking_edit_service_remove_message',
+        ];
+
+        foreach ($messageKeys as $key) {
+            $notification = NotificationMessage::where('module_type', 'service')->where('key', $key)->first() ?? new NotificationMessage;
+            $notification->key = $key;
+            $notification->module_type = 'service';
+            $this->writeNotificationFields($notification, $request, $key, $key . '_status', $languages, $enIndex);
+        }
+
+        // Subscription notifications (global, not module-scoped)
+        if (Helpers::get_business_settings('pro_member_status') == 1) {
+            if ($request->has('subscription_reminder_before_time')) {
+                DataSetting::updateOrInsert(
+                    ['key' => 'subscription_reminder_before_time', 'type' => 'notification_settings'],
+                    ['value' => $request->subscription_reminder_before_time]
+                );
+            }
+            if ($request->has('subscription_reminder_before')) {
+                DataSetting::updateOrInsert(
+                    ['key' => 'subscription_reminder_before', 'type' => 'notification_settings'],
+                    ['value' => $request->subscription_reminder_before]
+                );
+            }
+
+            $subscriptionKeys = [
+                'subscription_expire_reminder' => 'subscription_expire_reminder_status',
+                'subscription_activated'       => 'subscription_activated_status',
+                'subscription_expired'         => 'subscription_expired_status',
+                'subscription_canceled'        => 'subscription_canceled_status',
+            ];
+
+            foreach ($subscriptionKeys as $msgKey => $statusKey) {
+                if (!$request->has($msgKey)) {
+                    continue;
+                }
+
+                $notification = NotificationMessage::where('key', $msgKey)->first() ?? new NotificationMessage;
+                $notification->key = $msgKey;
+                $notification->module_type = null;
+                $this->writeNotificationFields($notification, $request, $msgKey, $statusKey, $languages, $enIndex);
             }
         }
 
@@ -6926,6 +7070,7 @@ class BusinessSettingsController extends Controller
     {
 
         abort_if(!addon_published_status('Rental') && $request?->module == 'rental', 404);
+        abort_if(!addon_published_status('Service') && $request?->module == 'service', 404);
 
         if (NotificationSetting::count() == 0) {
             Helpers::notificationDataSetup();
@@ -6933,10 +7078,15 @@ class BusinessSettingsController extends Controller
         if (addon_published_status('Rental') && $request?->module == 'rental') {
             Helpers::getRentalAdminNotificationSetupDatasetup();
         }
+        if (addon_published_status('Service') && $request?->module == 'service') {
+            Helpers::getServiceAdminNotificationSetupDatasetup();
+        }
 
         Helpers::addNewAdminNotificationSetupDataSetup();
 
-        $data = NotificationSetting::where('module_type', $request?->module == 'rental' ? 'rental' : 'all')
+        $module_type = $request?->module == 'rental' ? 'rental' : ($request?->module == 'service' ? 'service' : 'all');
+
+        $data = NotificationSetting::where('module_type', $module_type)
             ->when($request?->type == null || $request?->type == 'admin', function ($query) {
                 $query->where('type', 'admin');
             })
@@ -6955,7 +7105,11 @@ class BusinessSettingsController extends Controller
 
         $business_name = BusinessSetting::where('key', 'business_name')->first()?->value;
 
-        return view($request?->module == 'rental' ? 'admin-views.business-settings.notification_setup_rental' : 'admin-views.business-settings.notification_setup', compact('business_name', 'data'));
+        $view = $request?->module == 'rental'
+            ? 'admin-views.business-settings.notification_setup_rental'
+            : ($request?->module == 'service' ? 'admin-views.business-settings.notification_setup_service' : 'admin-views.business-settings.notification_setup');
+
+        return view($view, compact('business_name', 'data'));
     }
 
     public function notification_status_change($key, $user_type, $type)
@@ -7285,7 +7439,7 @@ class BusinessSettingsController extends Controller
         }
 
         if($request->has('search')){
-            $key = explode(' ', $request['search']);
+            $key = explode(' ', $request['search'] ?? '');
             $pages = $pages = collect($pages)->filter(function ($item) use ($key) {
                 foreach ($key as $k) {
                     if (stripos($item, $k) !== false) {

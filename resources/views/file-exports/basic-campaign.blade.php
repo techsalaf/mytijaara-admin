@@ -41,7 +41,7 @@
             <th>{{ translate('End_Date') }}</th>
             <th>{{ translate('Daily_Start_Time') }}</th>
             <th>{{ translate('Daily_End_Time') }}</th>
-            <th>{{ translate('Total_Store_Joined') }} </th>
+            <th>{{ config('module.current_module_type') === 'service' ? translate('Total_Provider_Joined') : translate('Total_Store_Joined') }} </th>
         </thead>
         <tbody>
         @foreach($data as $key => $campaign)

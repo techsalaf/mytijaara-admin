@@ -16,6 +16,8 @@
     $storeLabel = \App\CentralLogics\Helpers::getStoreLabelByModuleType($store?->module_type ?? $store?->module?->module_type);
     $storeInformationLabel = $storeLabel . ' ' . translate('messages.information');
     $deletedStoreLabel = $storeLabel . ' ' . translate('messages.deleted');
+    // Services are booked, not sold: show booking wording for the service module.
+    $isServiceModule = ($store?->module_type ?? $store?->module?->module_type) === 'service';
 @endphp
 
 @section('content')
@@ -301,8 +303,8 @@
                     <div class="bg-light p-3 rounded mb-3">
                         <h4 class="mb-2">{{ translate('messages.Reel_Earning') }}</h4>
                         <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap">
-                            <div>{{ translate('messages.Product') }}: <span class="text-title fw-medium">{{ $reel->productable?->name ?? translate('messages.N/A') }}</span></div>
-                            <div>{{ translate('messages.Order_Now') }}: <span class="text-title fw-medium">{{ $reel->order_now_button ? translate('messages.on') : translate('messages.off') }}</span></div>
+                            <div>{{ $isServiceModule ? translate('messages.Service') : translate('messages.Product') }}: <span class="text-title fw-medium">{{ $reel->productable?->name ?? translate('messages.N/A') }}</span></div>
+                            <div>{{ $isServiceModule ? translate('messages.Book Now') : translate('messages.Order_Now') }}: <span class="text-title fw-medium">{{ $reel->order_now_button ? translate('messages.on') : translate('messages.off') }}</span></div>
                         </div>
                     </div>
 
@@ -334,7 +336,7 @@
                         <div class="col-sm-6">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-shopping-cart fs-16"></i> {{ translate('messages.Total_Sale') }}
+                                    <i class="tio-shopping-cart fs-16"></i> {{ $isServiceModule ? translate('messages.Total Booking') : translate('messages.Total_Sale') }}
                                 </div>
                                 <h5 class="text-info">{{ $reel->order_count ?? 0 }}</h5>
                             </div>
@@ -342,7 +344,7 @@
                         <div class="col-sm-6">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-money fs-16"></i> {{ translate('messages.Total_Sale_Amount') }}
+                                    <i class="tio-money fs-16"></i> {{ $isServiceModule ? translate('messages.Total Booking Amount') : translate('messages.Total_Sale_Amount') }}
                                 </div>
                                 <h5 class="text-info">{{ \App\CentralLogics\Helpers::format_currency($reel->total_sale_amount ?? 0) }}</h5>
                             </div>

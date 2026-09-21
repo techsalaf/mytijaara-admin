@@ -257,6 +257,7 @@ class ZoneController extends BaseController
             $message = match ($reason) {
                 'express_required' => translate('messages.Express delivery requires extra charge and reduce delivery time for module:') . ' ' . $moduleName,
                 'min_time_lt_reduce_time' => translate('messages.Minimum delivery time cannot be less than reduce delivery time for module:') . ' ' . $moduleName,
+                'reduce_charge_exceeds_max' => translate('messages.Reduce charge cannot be greater than the delivery charge for module:') . ' ' . $moduleName,
                 default => translate('messages.Slightly delay delivery requires reduce charge and add delivery time for module:') . ' ' . $moduleName,
             };
             Toastr::error($message);

@@ -76,7 +76,7 @@ class CategoryRepository implements CategoryRepositoryInterface
         return $this->category->withoutGlobalScope('translate')->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->category->get();
     }
@@ -93,9 +93,9 @@ class CategoryRepository implements CategoryRepositoryInterface
     public function getExportList(Request $request): Collection
     {
         $position=$request->position ?? 0;
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->category->with('module')->where(['position' => $position])->module(Config::get('module.current_module_id'))
-            ->when(isset($key), function ($q) use ($key) {
+            ->when($request['search'], function ($q) use ($key) {
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('name', 'like', "%{$value}%");
@@ -106,11 +106,11 @@ class CategoryRepository implements CategoryRepositoryInterface
             ->get();
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->category->with($relations)->where($filters)->module(Config::get('module.current_module_id'))
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($searchValue, function ($query) use ($key) {
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('name', 'like', "%{$value}%");
@@ -142,11 +142,11 @@ class CategoryRepository implements CategoryRepositoryInterface
             });
     }
 
-    public function getMainList(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getMainList(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->category->with($relations)->where($filters)->module(Config::get('module.current_module_id'))
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($searchValue, function ($query) use ($key) {
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('name', 'like', "%{$value}%");

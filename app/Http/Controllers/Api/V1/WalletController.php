@@ -35,7 +35,7 @@ class WalletController extends Controller
 
         $paginator = WalletTransaction::where('user_id', $request->user()->id)
             ->when($request['type'] && $request['type'] == 'order', function ($query) {
-                $query->whereIn('transaction_type', ['order_place', 'order_refund', 'partial_payment']);
+                $query->whereIn('transaction_type', ['order_place', 'order_refund', 'partial_payment', 'service_booking']);
             })
             ->when($request['type'] && $request['type'] == 'loyalty_point', function ($query) {
                 $query->whereIn('transaction_type', ['loyalty_point']);
@@ -48,6 +48,9 @@ class WalletController extends Controller
             })
             ->when($request['type'] && $request['type'] == 'CashBack', function ($query) {
                 $query->whereIn('transaction_type', ['CashBack']);
+            })
+            ->when($request['type'] && $request['type'] == 'pro_subscription', function ($query) {
+                $query->whereIn('transaction_type', ['pro_subscription']);
             })
             ->latest()->paginate($request->limit, ['*'], 'page', $request->offset);
 

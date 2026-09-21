@@ -36,9 +36,11 @@ Route::group(['prefix' => 'customer'], function () {
         // LLM call, so they must be rate-limited to prevent cost abuse / DoS.
         // throttle keys by auth user, else by IP. The group cap covers the cheap
         // read endpoints; `send` gets a tighter per-minute cap below.
-        'middleware' => [AiChatEnabled::class, 'throttle:30,1'],
+        // Named limiters (see AI RouteServiceProvider) — tight in live, OFF in
+        // demo so the controller's 10-message demo cap + message is the gate.
+        'middleware' => [AiChatEnabled::class, 'throttle:ai-chat-group'],
     ], function () {
-        Route::post('send', [AiChatController::class, 'send'])->middleware('throttle:12,1');
+        Route::post('send', [AiChatController::class, 'send'])->middleware('throttle:ai-chat-send');
         Route::get('conversations', [AiChatController::class, 'conversations']);
         Route::get('messages', [AiChatController::class, 'messages']);
         Route::delete('conversations/{id}', [AiChatController::class, 'deleteConversation']);

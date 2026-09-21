@@ -3,6 +3,11 @@
 @section('title',translate('messages.account_transaction'))
 
 @section('content')
+@php
+    // When the Rental/Service addon is published, cash can be collected from providers too.
+    $isProviderContext = addon_published_status('Rental') || addon_published_status('Service');
+    $storeSlashProvider = $isProviderContext ? translate('messages.store') . '/' . translate('messages.provider') : translate('messages.store');
+@endphp
 <div class="content container-fluid">
     <div class="page-header">
         <h1 class="page-header-title">
@@ -27,14 +32,14 @@
                                 @if(addon_published_status('RideShare'))
                                 <option value="rider">{{translate('messages.rider')}}</option>
                                 @endif
-                                <option value="store">{{translate('messages.store')}}</option>
+                                <option value="store">{{ $storeSlashProvider }}</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-lg-4 col-sm-6">
                         <div class="form-group mb-0">
-                            <label class="form-label" for="store">{{translate('messages.store')}}<span class="input-label-secondary"></span></label>
-                            <select id="store" name="store_id" data-placeholder="{{translate('messages.select_store')}}" class="form-control" title="Select Restaurant" disabled>
+                            <label class="form-label" for="store">{{ $storeSlashProvider }}<span class="input-label-secondary"></span></label>
+                            <select id="store" name="store_id" data-placeholder="{{ $isProviderContext ? translate('Select_Store') . '/' . translate('provider') : translate('messages.select_store') }}" class="form-control" title="Select Restaurant" disabled>
 
                             </select>
                         </div>
@@ -170,7 +175,7 @@
                                             {{translate('messages.not_found')}}
                                         @endif
                                     </td>
-                                    <td><label class="text-uppercase">{{translate($at['from_type'])}}</label></td>
+                                    <td><label class="text-uppercase">{{$at['from_type'] == 'store' ? translate('vendor') : translate($at['from_type'])}}</label></td>
                                     <td>{{\App\CentralLogics\Helpers::time_date_format($at->created_at)}}</td>
                                     <td><div class="pl-4">
                                         {{\App\CentralLogics\Helpers::format_currency($at['amount'])}}
@@ -185,7 +190,7 @@
                                             data-ref="{{translate($at['ref'])}}"
                                             data-amount="{{\App\CentralLogics\Helpers::format_currency($at['amount'])}}"
                                             data-date="{{\App\CentralLogics\Helpers::time_date_format($at->created_at)}}"
-                                            data-type="{{ $at->from_type == 'deliveryman' ?  translate('DeliveryMan_Info') : ($at->from_type == 'rider' ? translate('Rider_Info') : translate('Store_Info')) }}"
+                                            data-type="{{ $at->from_type == 'deliveryman' ?  translate('DeliveryMan_Info') : ($at->from_type == 'rider' ? translate('Rider_Info') : ($storeSlashProvider . ' ' . translate('info'))) }}"
                                             data-phone="{{ $at->store ?  $at?->store?->phone : ($at?->deliveryman ? $at?->deliveryman?->phone : $at?->rider?->phone)  }}"
                                             data-address="{{ $at->store ?  $at?->store?->address : ($at?->deliveryman ? $at?->deliveryman?->last_location?->location : $at?->rider?->last_location?->location ?? translate('address_not_found')) }}"
                                             data-latitude="{{ $at->store ?  $at?->store?->latitude : ($at?->deliveryman ? $at?->deliveryman?->last_location?->location : $at?->rider?->last_location?->latitude ?? 0) }}"
@@ -311,7 +316,8 @@
             data: function (params) {
                 return {
                     q: params.term, // search term
-                    page: params.page
+                    page: params.page,
+                    include_addon_providers: 1 // include rental & service providers on collect cash
                 };
             },
             processResults: function (data) {

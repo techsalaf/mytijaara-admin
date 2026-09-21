@@ -18,7 +18,7 @@
             </h1>
             @include('admin-views.business-settings.partials.nav-menu')
         </div>
-        <form action="{{ route('admin.customer.update-settings') }}" method="post" enctype="multipart/form-data"
+        <form action="{{ route('admin.users.customer.update-settings') }}" method="post" enctype="multipart/form-data"
             id="update-settings">
             @csrf
             <div class="row g-3">

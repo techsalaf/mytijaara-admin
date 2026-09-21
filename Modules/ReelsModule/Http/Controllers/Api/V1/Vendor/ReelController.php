@@ -5,7 +5,6 @@ namespace Modules\ReelsModule\Http\Controllers\Api\V1\Vendor;
 use App\CentralLogics\Helpers;
 use App\Exceptions\InvalidUploadException;
 use App\Http\Controllers\Controller;
-use App\Models\Item;
 use App\Models\Translation;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +21,7 @@ use Modules\ReelsModule\Http\Requests\Api\V1\Vendor\ReelUpdateRequest;
 use Modules\ReelsModule\Http\Resources\ReelDetailResource;
 use Modules\ReelsModule\Http\Resources\ReelListResource;
 use Modules\ReelsModule\Support\ReelModuleConfig;
+use Modules\ReelsModule\Support\ReelProductableResolver;
 
 class ReelController extends Controller
 {
@@ -308,7 +308,7 @@ class ReelController extends Controller
             $reel->module_id = ReelModuleConfig::defaultModuleId();
             $reel->module_type = ReelModuleConfig::defaultModuleType();
         }
-        $product = $this->resolveReelProductable($request->input('product_id'), $store);
+        $product = ReelProductableResolver::resolve($store, $request->input('product_id'));
         $reel->productable_type = $product['type'];
         $reel->productable_id = $product['id'];
         $reel->order_now_button = $request->boolean('order_now_button');
@@ -363,39 +363,6 @@ class ReelController extends Controller
 
             Translation::insert($translations);
         }
-    }
-
-    private function resolveReelProductable($productId, $store): array
-    {
-        $productId = (int) $productId;
-        $empty = ['type' => null, 'id' => null];
-
-        if (!$productId) {
-            return $empty;
-        }
-
-        $isRental = ($store->module?->module_type ?? null) === 'rental';
-
-        if ($isRental) {
-            if (!class_exists(\Modules\Rental\Entities\Vehicle::class)) {
-                return $empty;
-            }
-
-            $belongs = \Modules\Rental\Entities\Vehicle::withoutGlobalScopes()
-                ->where('id', $productId)
-                ->where('provider_id', $store->id)
-                ->exists();
-
-            return $belongs ? ['type' => \Modules\Rental\Entities\Vehicle::class, 'id' => $productId] : $empty;
-        }
-
-        $belongs = Item::withoutGlobalScopes()
-            ->where('id', $productId)
-            ->where('store_id', $store->id)
-            ->when(ReelModuleConfig::isMultiModule(), fn ($query) => $query->where('module_id', (int) $store->module_id))
-            ->exists();
-
-        return $belongs ? ['type' => Item::class, 'id' => $productId] : $empty;
     }
 
     private function prepareTranslations(Request $request): array
@@ -557,7 +524,7 @@ class ReelController extends Controller
 
         $maxSizeMb = match ($type) {
             'thumbnail' => 2,
-            'video' => max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?? 15)),
+            'video' => max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15)),
             default => 0,
         };
 

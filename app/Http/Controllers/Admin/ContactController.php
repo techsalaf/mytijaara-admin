@@ -39,9 +39,9 @@ class ContactController extends Controller
 
     public function list(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $contacts = Contact::orderBy('name')
-        ->when(isset($key), function($query) use($key) {
+        ->when($request['search'], function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%")
@@ -57,9 +57,9 @@ class ContactController extends Controller
     }
     public function exportList(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $contacts = Contact::orderBy('name')
-        ->when(isset($key), function($query) use($key) {
+        ->when($request['search'], function($query) use($key) {
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('name', 'like', "%{$value}%")

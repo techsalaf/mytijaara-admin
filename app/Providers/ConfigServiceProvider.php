@@ -281,6 +281,7 @@ class ConfigServiceProvider extends ServiceProvider
                                     'deliveryman_app' => 'maintenance_mode_deliveryman_app',
                                     'vendor_app' => 'maintenance_mode_vendor_app',
                                     'rider_app' => 'maintenance_mode_rider_app',
+                                    'serviceman_app' => 'maintenance_mode_serviceman_app',
                                 ];
                                 $notification=[
                                     'title' => translate('We_are_back'),

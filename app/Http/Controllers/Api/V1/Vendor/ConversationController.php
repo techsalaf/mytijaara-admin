@@ -11,6 +11,7 @@ use App\Models\Message;
 use App\Models\Vendor;
 use App\Models\Order;
 use App\Models\User;
+use Modules\Service\Entities\ServiceBooking;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -333,10 +334,18 @@ class ConversationController extends Controller
 
             if($conversation->sender_type == 'customer' && $conversation->sender){
                 $user = User::find($conversation->sender->user_id);
-                $order = Order::where('store_id',$vnd->stores[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                if($vnd->stores[0]?->module_type == 'service' && addon_published_status('Service')){
+                    $order = ServiceBooking::where('provider_id',$vnd->stores[0]->id)->where('user_id', $user->id)->whereIn('booking_status', ServiceBooking::ACTIVE_STATUSES)->count();
+                } else{
+                    $order = Order::where('store_id',$vnd->stores[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                }
             }else if($conversation->receiver_type == 'customer'  && $conversation->receiver){
                 $user = User::find($conversation->receiver->user_id);
-                $order = Order::where('store_id',$vnd->stores[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                if($vnd->stores[0]?->module_type == 'service' && addon_published_status('Service')){
+                    $order = ServiceBooking::where('provider_id',$vnd->stores[0]->id)->where('user_id', $user->id)->whereIn('booking_status', ServiceBooking::ACTIVE_STATUSES)->count();
+                } else{
+                    $order = Order::where('store_id',$vnd->stores[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                }
             }else if($conversation->sender_type == 'delivery_man'&& $conversation->sender){
                 $user2 = DeliveryMan::find($conversation->sender->deliveryman_id);
                 $order = Order::where('store_id',$vnd->stores[0]->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();

@@ -15,10 +15,10 @@ class FlashSaleController extends Controller
 {
     function index(Request $request)
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $flash_sales = FlashSale::where('module_id', Config::get('module.current_module_id'))->orderBy('title')
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('title', 'like', "%{$value}%");
@@ -143,10 +143,10 @@ class FlashSaleController extends Controller
     {
         $flash_sale = FlashSale::findOrFail($id);
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
 
         $items = FlashSaleItem::where('flash_sale_id', $flash_sale->id)
-        ->when(isset($key) , function($q) use($key){
+        ->when($request['search'] , function($q) use($key){
             $q->whereHas('item', function($q) use ($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {

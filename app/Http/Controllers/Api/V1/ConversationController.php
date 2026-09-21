@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Modules\Rental\Entities\Trips;
+use Modules\Service\Entities\ServiceBooking;
 use Modules\RideShare\Entities\TripManagement\RideRequest;
 
 class ConversationController extends Controller
@@ -386,11 +387,11 @@ class ConversationController extends Controller
                 $vd = Vendor::find($request->vendor_id);
                 $vendor = new UserInfo();
                 $vendor->vendor_id = $vd->id;
-                $vendor->f_name = $vd->stores[0]->name;
+                $vendor->f_name = $vd->store?->name;
                 $vendor->l_name = '';
                 $vendor->phone = $vd->phone;
                 $vendor->email = $vd->email;
-                $vendor->image = $vd->stores[0]->logo;
+                $vendor->image = $vd->store?->logo;
                 $vendor->save();
             }
             $conversation = Conversation::with(['sender','receiver','last_message'])->WhereConversation($user->id,$vendor->id)->first();
@@ -415,6 +416,8 @@ class ConversationController extends Controller
                 $vd = Vendor::find($conversation->sender->vendor_id);
                 if($vd?->store?->module_type == 'rental' && addon_published_status('Rental')){
                     $order = Trips::where('user_id',$request->user()->id)->where('provider_id', $vd->store->id)->whereIn('trip_status',['pending','confirmed','ongoing','completed'])->where('payment_status' ,'unpaid')->count();
+                } else if($vd?->store?->module_type == 'service' && addon_published_status('Service')){
+                    $order = ServiceBooking::where('user_id',$request->user()->id)->where('provider_id', $vd->store->id)->whereIn('booking_status', ServiceBooking::ACTIVE_STATUSES)->count();
                 } else{
                     $order = Order::where('user_id',$request->user()->id)->where('store_id', $vd->stores[0]->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
                 }
@@ -423,6 +426,8 @@ class ConversationController extends Controller
                 $vd = Vendor::find($conversation->receiver->vendor_id);
                 if($vd?->store?->module_type == 'rental' && addon_published_status('Rental')){
                     $order = Trips::where('user_id',$request->user()->id)->where('provider_id', $vd->store->id)->whereIn('trip_status',['pending','confirmed','ongoing','completed'])->where('payment_status' ,'unpaid')->count();
+                } else if($vd?->store?->module_type == 'service' && addon_published_status('Service')){
+                    $order = ServiceBooking::where('user_id',$request->user()->id)->where('provider_id', $vd->store->id)->whereIn('booking_status', ServiceBooking::ACTIVE_STATUSES)->count();
                 } else{
                     $order = Order::where('user_id',$request->user()->id)->where('store_id', $vd->stores[0]->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
                 }

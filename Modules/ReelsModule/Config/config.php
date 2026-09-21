@@ -21,7 +21,7 @@ return [
     | project is running in multi-module mode. Ignored when
     | is_multi_module is false.
     */
-    'allowed_module_types' => ['grocery', 'food', 'ecommerce', 'pharmacy', 'rental'],
+    'allowed_module_types' => ['grocery', 'food', 'ecommerce', 'pharmacy', 'rental', 'service'],
 
     /*
     | Default module attributes used when is_multi_module is false, so

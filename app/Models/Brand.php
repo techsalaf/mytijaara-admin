@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\CentralLogics\Helpers;
+use App\Traits\ReportFilter;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Traits\GeneratesSlug;
@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class Brand extends Model
 {
-    use HasFactory, GeneratesSlug;
+    use HasFactory, GeneratesSlug, ReportFilter;
 
     /**
      * @var string[]

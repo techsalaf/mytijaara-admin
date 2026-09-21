@@ -252,7 +252,7 @@
                         \App\CentralLogics\Helpers::module_permission_check('banner') ||
                         \App\CentralLogics\Helpers::module_permission_check('coupon')||
                         \App\CentralLogics\Helpers::module_permission_check('notification') ||
-                        \App\CentralLogics\Helpers::module_permission_check('advertisement')
+                        \App\CentralLogics\Helpers::module_permission_check('coupon')
                         )
                 <li class="nav-item">
                     <small class="nav-subtitle" title="{{ translate('Promotion Management') }}">{{ translate('Promotion Management') }}</small>
@@ -324,7 +324,7 @@
 
             <!-- advertisement -->
 
-            @if (\App\CentralLogics\Helpers::module_permission_check('advertisement'))
+            @if (\App\CentralLogics\Helpers::module_permission_check('coupon'))
                 <li
                     class="navbar-vertical-aside-has-menu  @yield('advertisement')">
                     <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle" href="javascript:"
@@ -449,7 +449,7 @@
                         <!-- End Store Category -->
 
                         <!-- Attributes -->
-                        {{-- @if (\App\CentralLogics\Helpers::module_permission_check('attribute'))
+                        {{-- @if (\App\CentralLogics\Helpers::module_permission_check('category'))
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/attribute*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.attribute.add-new') }}" title="{{ translate('messages.attributes') }}">
                                 <i class="tio-apps nav-icon"></i>
@@ -462,7 +462,7 @@
                         <!-- End Attributes -->
 
                         <!-- Unit -->
-                        {{-- @if (\App\CentralLogics\Helpers::module_permission_check('unit'))
+                        {{-- @if (\App\CentralLogics\Helpers::module_permission_check('category'))
                         <li class="navbar-vertical-aside-has-menu {{ Request::is('admin/unit*') ? 'active' : '' }}">
                             <a class="js-navbar-vertical-aside-menu-link nav-link" href="{{ route('admin.unit.index') }}" title="{{ translate('messages.units') }}">
                                 <i class="tio-ruler nav-icon"></i>

@@ -95,7 +95,7 @@
                         </td>
                         <td>{{ \App\CentralLogics\Helpers::format_currency($ot->order['ref_bonus_amount']) }}</td>
                         <td>{{ \App\CentralLogics\Helpers::format_currency($ot->tax) }}</td>
-                        <td>{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_charge) }}</td>
+                        <td>{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_charge + ($ot->pro_delivery_discount ?? 0)) }}</td>
                         <td>{{ \App\CentralLogics\Helpers::format_currency($ot->order_amount) }}</td>
                         {{-- admin_discount --}}
                         <td>{{ \App\CentralLogics\Helpers::format_currency($ot->admin_expense) }}</td>
@@ -104,7 +104,7 @@
                         <td>{{ \App\CentralLogics\Helpers::format_currency(($ot->additional_charge)) }}</td>
                         <td>{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_fee_comission) }}</td>
                         {{-- admin_net_income --}}
-                        <td>{{ \App\CentralLogics\Helpers::format_currency($ot->admin_commission) }}</td>
+                        <td>{{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\OrderLogic::admin_net_income($ot)) }}</td>
                         @if ($ot->received_by == 'admin')
                             <td>{{ translate('messages.admin') }}</td>
                         @elseif ($ot->received_by == 'deliveryman')

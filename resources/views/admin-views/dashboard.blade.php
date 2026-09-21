@@ -8,7 +8,7 @@
 
 @section('content')
     <div class="content container-fluid">
-        @if(auth('admin')->user()->role_id == 1)
+        @if(auth('admin')->user()->role_id == 1 || \App\CentralLogics\Helpers::module_permission_check('dashboard'))
         <!-- Page Header -->
         <div class="page-header">
             <div class="row align-items-center py-2">

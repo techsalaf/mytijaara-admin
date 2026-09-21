@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\CentralLogics\Helpers;
+use App\Traits\HandlesMissingAddonRelations;
 use App\Traits\ReportFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\DB;
 use App\Traits\GeneratesSlug;
+use Modules\Service\Entities\Service;
 
 class StoreCategory extends Model
 {
-    use HasFactory, ReportFilter, GeneratesSlug;
+    use HasFactory, ReportFilter, GeneratesSlug, HandlesMissingAddonRelations;
 
     protected $with = ['translations', 'storage'];
 
@@ -51,6 +53,15 @@ class StoreCategory extends Model
     public function items(): HasMany
     {
         return $this->hasMany(Item::class, 'store_category_id');
+    }
+
+    public function services(): HasMany
+    {
+        if (! service_addon_active()) {
+            return $this->missingAddonHasMany();
+        }
+
+        return $this->hasMany(Service::class, 'store_category_id');
     }
 
     public function storage(): MorphMany
@@ -135,6 +146,14 @@ class StoreCategory extends Model
             $builder->with(['translations' => function ($query) {
                 return $query->where('locale', app()->getLocale());
             }]);
+        });
+
+        static::saved(function () {
+            Helpers::deleteCacheData('store_cat_items_');
+        });
+
+        static::deleted(function () {
+            Helpers::deleteCacheData('store_cat_items_');
         });
     }
 }

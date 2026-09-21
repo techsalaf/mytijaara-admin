@@ -40,9 +40,6 @@ class ModuleController extends Controller
                 $zoneIds,
             )->get();
 
-            // top_offer_value / top_offer_type are attached post-fetch via a
-            // portable UNION query — the old scopeWithTopOffer used a lateral
-            // derived-table reference that broke on MariaDB / older MySQL.
             Module::attachTopOffers($modules, $zoneIds);
 
             return response()->json($this->shape($modules));

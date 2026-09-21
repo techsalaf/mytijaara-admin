@@ -39,6 +39,9 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
     <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/theme.minc619.css?v=1.0">
     <link rel="stylesheet" href="{{asset('public/assets/admin/css/emogi-area.css')}}">
+    @if(addon_published_status('Service'))
+        <link rel="stylesheet" href="{{ asset('Modules/Service/public/assets/css/service.css') }}">
+    @endif
     <link rel="stylesheet" href="{{asset('public/assets/admin/css/style.css')}}">
     <link rel="stylesheet" href="{{asset('public/assets/admin/css/app-toast.css')}}">
     <link rel="stylesheet" href="{{asset('public/assets/admin/intltelinput/css/intlTelInput.css')}}">
@@ -101,6 +104,8 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
 
     @if(isset($moduleType) && $moduleType == 'rental')
         @include("rental::provider.partials._sidebar_{$moduleType}")
+    @elseif(isset($moduleType) && $moduleType == 'service')
+        @include('service::vendor.partials._sidebar_service')
     @else
         @include('layouts.vendor.partials._sidebar')
     @endif
@@ -109,6 +114,8 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
         @include('layouts.vendor.partials._header_v2')
         @if($moduleType === 'rental')
             @include('rental::provider.partials._sidebar_v2_rental')
+        @elseif($moduleType === 'service')
+            @include('service::vendor.partials._sidebar_v2_service')
         @else
             @include('layouts.vendor.partials._sidebar_v2')
         @endif
@@ -623,13 +630,26 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
         @php $order_notification_type = \App\CentralLogics\Helpers::get_business_settings('order_notification_type') ?? 'firebase'; @endphp
         let order_type = 'all';
         let is_trip = false;
+        let is_service = false;
+        let is_bid_approved = false;
         messaging.onMessage(function (payload) {
             if (payload.data.order_id && payload.data.type === 'new_order') {
                 @if(\App\CentralLogics\Helpers::employee_module_permission_check('order') && $order_notification_type == 'firebase')
                     order_type = payload.data.order_type
+                    is_trip = false;
+                    is_service = false;
+                    is_bid_approved = false;
                     if (order_type === 'trip') {
                         document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new trip, Check Please.')}}";
                         is_trip = true;
+                    }
+                    if (order_type === 'service_booking') {
+                        document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new booking, Check Please.')}}";
+                        is_service = true;
+                    }
+                    if (order_type === 'bid_approved') {
+                        document.querySelector('.update_notification_text').textContent = "{{translate('messages.Your bid was approved, Check Please.')}}";
+                        is_bid_approved = true;
                     }
                     playAudio();
                     $('#popup-modal').appendTo("body").modal('show');
@@ -667,6 +687,10 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
                         if (data.order_type === 'trip') {
                             document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new trip, Check Please.')}}";
                             is_trip = true;
+                        }
+                        if (data.order_type === 'service_booking') {
+                            document.querySelector('.update_notification_text').textContent = "{{translate('messages.You have new booking, Check Please.')}}";
+                            is_service = true;
                         }
 
                         if (data.new_pending_order > 0) {
@@ -708,6 +732,10 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
             if (order_type) {
                 if (is_trip === true) {
                     location.href = '{{url('/')}}/vendor-panel/trip?status=all';
+                } else if (is_service === true) {
+                    location.href = '{{url('/')}}/vendor-panel/service/booking/list';
+                } else if (is_bid_approved === true) {
+                    location.href = '{{url('/')}}/vendor-panel/service/custom-request/my-bids';
                 } else {
                     location.href = '{{url('/')}}/vendor-panel/order/list/' + order_type;
 
@@ -772,13 +800,42 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
 
         initTelInputs();
 
+
+        function searchEscapeHtml(value) {
+            return String(value === null || value === undefined ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         //search option
         $(document).ready(function () {
-            $('#searchForm input[name="search"]').keyup(function () {
+            var searchDebounce = null;
+            var searchRequest = null;
+
+            $('#searchForm input[name="search"]').on('input', function () {
                 var searchKeyword = $(this).val().trim();
 
-                if (searchKeyword.length >= 1) {
-                    $.ajax({
+                clearTimeout(searchDebounce);
+                if (searchRequest) {
+                    searchRequest.abort();
+                    searchRequest = null;
+                }
+
+                if (searchKeyword.length < 1) {
+                    $('#searchResults').html('<div class="text-center text-muted py-5">{{translate('Write something to search.')}}.</div>');
+                    return;
+                }
+
+                searchDebounce = setTimeout(function () {
+                    runGlobalSearch(searchKeyword);
+                }, 300);
+            });
+
+            function runGlobalSearch(searchKeyword) {
+                    searchRequest = $.ajax({
                         type: 'POST',
                         url: $('#searchForm').attr('action'),
                         data: { search: searchKeyword, _token: $('input[name="_token"]').val() },
@@ -796,16 +853,22 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
                                     var separator = route.fullRoute.includes('?') ? '&' : '?';
                                     var fullRouteWithKeyword = route.fullRoute + separator + 'keyword=' + encodeURIComponent(searchKeyword);
 
-                                    var keywordRegex = searchKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                    var keywordRegex = searchEscapeHtml(searchKeyword).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                                     keywordRegex = new RegExp('(' + keywordRegex + ')', 'gi');
-                                    var highlightedRouteName = route.routeName.replace(keywordRegex, '<mark  class="p-0">$1</mark>');
-                                    var highlightedURI = route.URI.replace(keywordRegex, '<mark  class="p-0">$1</mark>');
-                                    resultHtml += '<a href="' + fullRouteWithKeyword + '" class="search-list-item d-flex flex-column" data-route-name="' + route.routeName + '" data-route-uri="' + route.URI + '" data-route-full-url="' + route.fullRoute + '" aria-current="true">';
+                                    var highlightedRouteName = searchEscapeHtml(route.routeName).replace(keywordRegex, '<mark  class="p-0">$1</mark>');
+                                    var highlightedURI = searchEscapeHtml(route.URI).replace(keywordRegex, '<mark  class="p-0">$1</mark>');
+                                    resultHtml += '<a href="' + searchEscapeHtml(fullRouteWithKeyword) + '" class="search-list-item d-flex flex-column" data-route-name="' + searchEscapeHtml(route.routeName) + '" data-route-uri="' + searchEscapeHtml(route.URI) + '" data-route-full-url="' + searchEscapeHtml(route.fullRoute) + '" aria-current="true">';
                                     resultHtml += '<h5>' + highlightedRouteName + '</h5>';
                                     resultHtml += '<p class="text-muted fs-12 mb-0">' + highlightedURI + '</p>';
                                     resultHtml += '</a>';
                                 });
-                                $('#searchResults').html('<div class="fs-16 fw-500 mb-2">' + @json(translate('Search Result')) + '</div>' + '<div class="search-list d-flex flex-column">' + resultHtml + '</div>');
+                                var htmlContent = '<div class="fs-16 fw-500 mb-2">' + @json(translate('Search Result')) + '</div>' + '<div class="search-list d-flex flex-column">' + resultHtml + '</div>';
+
+                                if (response.length >= {{ config('search.result_limit', 50) }}) {
+                                    htmlContent += '<div class="text-muted fs-12 mt-2 text-italic">' + @json(translate('Showing the closest matches only. Refine your keyword to narrow the list.')) + '</div>';
+                                }
+
+                                $('#searchResults').html(htmlContent);
 
                                 $('.search-list-item').click(function () {
                                     var routeName = $(this).data('route-name');
@@ -833,13 +896,12 @@ $verifiedBadgePopupLabel = isset($moduleType) && $moduleType == 'rental' ? trans
                             }
                         },
                         error: function (xhr, status, error) {
-                            console.error(xhr.responseText);
+                            if (status !== 'abort') {
+                                console.error(xhr.responseText);
+                            }
                         }
                     });
-                } else {
-                    $('#searchResults').html('<div class="text-center text-muted py-5">{{translate('Write something to search.')}}.</div>');
-                }
-            });
+            }
         });
 
         document.addEventListener('keydown', function (event) {

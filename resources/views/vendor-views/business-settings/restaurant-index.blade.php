@@ -1,3 +1,7 @@
+@php
+    // Service providers are "Providers", not "Stores".
+    $isServiceStore = ($store->module_type ?? $store->module?->module_type) === 'service' && service_addon_active();
+@endphp
 @extends('layouts.vendor.app')
 
 @section('title', translate('messages.settings'))
@@ -18,7 +22,7 @@
                     <img src="{{ asset('public/assets/admin/img/config.png') }}" class="w--30" alt="">
                 </span>
                 <span>
-                    {{ translate('messages.store_setup') }}
+                    {{ $isServiceStore ? translate('messages.Provider Setup') : translate('messages.store_setup') }}
                 </span>
             </h1>
         </div>
@@ -28,7 +32,7 @@
                 <div class="d-flex flex-row justify-content-between align-items-center">
                     <h4 class="card-title align-items-center d-flex">
                         <img src="{{ asset('public/assets/admin/img/store.png') }}" class="w--20 mr-1" alt="">
-                        <span>{{ translate('messages.store_temporarily_closed_title') }}</span>
+                        <span>{{ $isServiceStore ? translate('messages.Provider Temporarily Closed') : translate('messages.store_temporarily_closed_title') }}</span>
                     </h4>
                     <label class="switch toggle-switch-lg m-0" for="restaurant-open-status">
                         <input type="checkbox" id="restaurant-open-status"
@@ -42,6 +46,146 @@
         </div>
 
 
+        {{-- Provider Settings — service module only. Mirrors the provider-relevant fields from
+             the admin provider settings page (admin/service/provider/details/{id}/settings).
+             Toggles reuse the existing vendor toggle-settings route; the service-location and
+             serviceman-permission controls reflect the current StoreConfig state. --}}
+        @if ($isServiceStore)
+            @php
+                $providerConfig = $store->storeConfig;
+                $instantBookingEnabled = service_setting_enabled('service_instant_booking');
+                $repeatBookingEnabled = service_setting_enabled('service_repeat_booking');
+                $scheduleBookingEnabled = service_setting_enabled('service_schedule_booking');
+                $atProviderPlaceEnabled = service_setting_enabled('service_at_provider_place');
+                $servicemanCancelEnabled = service_setting_enabled('service_serviceman_cancel_booking_req');
+                $chosenLocations = $providerConfig?->choose_service_location ?: ['customer'];
+            @endphp
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <span class="card-header-icon">
+                            <i class="tio-settings-outlined"></i>
+                        </span>
+                        <span>
+                            {{ translate('messages.Provider Settings') }}
+                        </span>
+                    </h5>
+                </div>
+                <form action="{{ route('vendor.service.business.provider-settings.update') }}" method="post">
+                    @csrf
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @if ($instantBookingEnabled)
+                                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12">
+                                    <label
+                                        class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control"
+                                        for="instant_booking">
+                                        <span class="pr-2">{{ translate('messages.Instant Booking') }}</span>
+                                        <input type="checkbox" class="toggle-switch-input" name="instant_booking" value="1"
+                                            id="instant_booking" {{ $providerConfig?->instant_booking ? 'checked' : '' }}>
+                                        <span class="toggle-switch-label">
+                                            <span class="toggle-switch-indicator"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                            @endif
+                            @if ($repeatBookingEnabled)
+                                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12">
+                                    <label
+                                        class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control"
+                                        for="repeat_booking">
+                                        <span class="pr-2">{{ translate('messages.Repeat Booking') }}</span>
+                                        <input type="checkbox" class="toggle-switch-input" name="repeat_booking" value="1"
+                                            id="repeat_booking" {{ $providerConfig?->repeat_booking ? 'checked' : '' }}>
+                                        <span class="toggle-switch-label">
+                                            <span class="toggle-switch-indicator"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                            @endif
+                            @if ($scheduleBookingEnabled)
+                                <div class="col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12">
+                                    <label
+                                        class="toggle-switch toggle-switch-sm d-flex justify-content-between border border-secondary rounded px-4 form-control"
+                                        for="schedule_booking">
+                                        <span class="pr-2">{{ translate('messages.Schedule Booking') }}</span>
+                                        <input type="checkbox" class="toggle-switch-input" name="schedule_booking" value="1"
+                                            id="schedule_booking" {{ $providerConfig?->schedule_booking ? 'checked' : '' }}>
+                                        <span class="toggle-switch-label">
+                                            <span class="toggle-switch-indicator"></span>
+                                        </span>
+                                    </label>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="card-body pt-0">
+                        <div class="bg-light rounded p-3">
+                        <input type="hidden" name="choose_service_location_present" value="1">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-lg-5 col-xl-6">
+                                <h5 class="mb-1 font-weight-bold text-dark">{{ translate('messages.Choose Your Service Location') }}</h5>
+                                <p class="fs-12 mb-0 text-muted">{{ translate('messages.Select the option where you want to provide your service') }}</p>
+                            </div>
+                            <div class="col-lg-7 col-xl-6">
+                                <div class="border rounded bg-white px-3 py-2">
+                                    <div class="row g-2">
+                                        <div class="col-12 col-sm-6">
+                                            <label class="custom_checkbox d-flex align-items-center m-0 py-1">
+                                                <input type="checkbox" class="service-location-option" name="choose_service_location[]" value="customer"
+                                                    {{ in_array('customer', $chosenLocations) ? 'checked' : '' }}>
+                                                <span class="label-text text-dark">{{ translate('messages.Go to Customer Location') }}</span>
+                                            </label>
+                                        </div>
+                                        @if ($atProviderPlaceEnabled)
+                                            <div class="col-12 col-sm-6">
+                                                <label class="custom_checkbox d-flex align-items-center m-0 py-1">
+                                                    <input type="checkbox" class="service-location-option" name="choose_service_location[]" value="provider"
+                                                        {{ in_array('provider', $chosenLocations) ? 'checked' : '' }}>
+                                                    <span class="label-text text-dark">{{ translate('messages.Customer Will Come to My Location') }}</span>
+                                                </label>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @if ($servicemanCancelEnabled)
+                        <div class="bg-light rounded p-3 mt-3">
+                            <input type="hidden" name="serviceman_permission_present" value="1">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-lg-5 col-xl-6">
+                                    <h5 class="mb-1 font-weight-bold text-dark">{{ translate('messages.Servicemen Permission') }}</h5>
+                                    <p class="fs-12 mb-0 text-muted">{{ translate('messages.Manage what this providers servicemen are allowed to do') }}</p>
+                                </div>
+                                <div class="col-lg-7 col-xl-6">
+                                    <div class="border rounded bg-white px-3 py-2">
+                                        <div class="row g-2">
+                                            <div class="col-12 col-sm-6">
+                                                <label class="custom_checkbox d-flex align-items-center m-0 py-1">
+                                                    <input type="checkbox" name="serviceman_can_cancel_booking" value="1"
+                                                        {{ $providerConfig?->serviceman_can_cancel_booking ? 'checked' : '' }}>
+                                                    <span class="label-text text-dark">{{ translate('messages.Can Cancel Booking') }}</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    <div class="btn--container mt-3 justify-content-end">
+                        <button type="reset" class="btn btn--reset">{{ translate('messages.reset') }}</button>
+                        <button type="submit" class="btn btn--primary">{{ translate('messages.update') }}</button>
+                    </div>
+                </div>
+                </form>
+            </div>
+        @endif
+        {{-- Service providers get their own provider settings block above; the generic
+             store settings/basic settings toggles are hidden for the service module. --}}
+        @if (!$isServiceStore)
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title">
@@ -241,6 +385,8 @@
                 </div>
             </form>
         </div>
+        @endif
+        @if (!$isServiceStore)
         <div class="card mb-3">
             <div class="card-header">
                 <h5 class="card-title">
@@ -375,7 +521,7 @@
 
                         @php($extra_packaging_data = \App\Models\BusinessSetting::where('key', 'extra_packaging_data')->first()?->value ?? '')
                         @php($extra_packaging_data = json_decode($extra_packaging_data, true))
-                        @if (!empty($extra_packaging_data) && $extra_packaging_data[$store->module->module_type] == '1')
+                        @if (!empty($extra_packaging_data) && ($extra_packaging_data[$store->module->module_type] ?? '0') == '1')
                             <div class="col-sm-{{ $store->module->module_type != 'food' ? '4' : '6' }}">
                                 <div class="">
                                     <label class="d-flex justify-content-between switch toggle-switch-sm text-dark"
@@ -420,7 +566,9 @@
                 </form>
             </div>
         </div>
-        @if ($store->module->module_type != 'food')
+        @endif
+        {{-- Stock Setup is not applicable to service providers. --}}
+        @if (!$isServiceStore && $store->module->module_type != 'food')
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title">
@@ -478,7 +626,8 @@
                 </div>
             </div>
         @endif
-        @if(addon_published_status('Builder') && $admin_website_builder_status == 1)
+        {{-- Website Builder is not offered to service providers. --}}
+        @if(!$isServiceStore && addon_published_status('Builder') && $admin_website_builder_status == 1)
 
             <div class="card mt-3" id="admin_website_builder_section">
                 <div class="card-body">
@@ -536,7 +685,7 @@
                     <span class="card-header-icon">
                         <img class="w--22" src="{{ asset('public/assets/admin/img/store.png') }}" alt="">
                     </span>
-                    <span class="p-md-1"> {{ translate('messages.store_meta_data') }}</span>
+                    <span class="p-md-1"> {{ $isServiceStore ? translate('messages.Provider Meta Data') : translate('messages.store_meta_data') }}</span>
                 </h5>
             </div>
             @php($language = \App\Models\BusinessSetting::where('key', 'language')->first())
@@ -788,6 +937,26 @@
                     $('#loading').hide();
                 },
             });
+        });
+
+        // Provider Settings guards (service module) — mirror the admin provider settings page.
+        // At least one of Instant / Schedule booking must stay enabled when both are available.
+        $(document).on('change', '#instant_booking, #schedule_booking', function() {
+            let $instant = $('#instant_booking');
+            let $schedule = $('#schedule_booking');
+            if ($instant.length && $schedule.length && !$instant.is(':checked') && !$schedule.is(':checked')) {
+                $(this).prop('checked', true); // revert the toggle just switched off
+                toastr.warning('{{ translate('At least one of Instant Booking or Schedule Booking must be enabled.') }}');
+            }
+        });
+
+        // Choose Service Location — at least one option must stay selected.
+        $(document).on('change', '.service-location-option', function() {
+            let $options = $('.service-location-option');
+            if ($options.filter(':checked').length === 0) {
+                $(this).prop('checked', true); // revert the option just unchecked
+                toastr.warning('{{ translate('At least one service location must be selected.') }}');
+            }
         });
     </script>
 @endpush

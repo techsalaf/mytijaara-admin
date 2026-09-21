@@ -26,7 +26,7 @@ class ReportController extends Controller
             'to' => 'required',
         ]);
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
@@ -39,7 +39,7 @@ class ReportController extends Controller
         $expense = Expense::where('created_by', 'vendor')->where('store_id', $store_id)->where('amount', '>', 0)
             ->when(isset($from) &&  isset($to), function ($query) use ($from, $to) {
                 $query->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:29']);
-            })->when(isset($key), function ($query) use ($key) {
+            })->when($request['search'], function ($query) use ($key) {
                 $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('order_id', 'like', "%{$value}%");
@@ -103,7 +103,7 @@ class ReportController extends Controller
             'to' => 'required',
         ]);
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }

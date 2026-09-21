@@ -1265,8 +1265,8 @@ class DeliverymanController extends Controller
         $offset = $request['offset'] ?? 1;
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->firstOrFail();
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
-        $paginator = AccountTransaction::when(isset($key), function ($query) use ($key) {
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
+        $paginator = AccountTransaction::when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('ref', 'like', "%{$value}%");
@@ -1305,8 +1305,8 @@ class DeliverymanController extends Controller
         $offset = $request['offset'] ?? 1;
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->firstOrFail();
 
-        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
-        $paginator = ProvideDMEarning::when(isset($key), function ($query) use ($key) {
+        $key = isset($request['search']) ? explode(' ', $request['search'] ?? '') : [];
+        $paginator = ProvideDMEarning::when(isset($request['search']), function ($query) use ($key) {
             return $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
                     $q->orWhere('ref', 'like', "%{$value}%");
@@ -1351,13 +1351,13 @@ class DeliverymanController extends Controller
 
         $dm = DeliveryMan::where(['auth_token' => $request['token']])->first();
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $paginator = DisbursementWithdrawalMethod::where('delivery_man_id', $dm['id'])
             ->whereHas('withdraw_method', function ($query) {
                 $query->where('is_active', 1);
             })
             ->when(
-                isset($key),
+                $request['search'],
                 function ($query) use ($key) {
                     $query->where(function ($q) use ($key) {
                         foreach ($key as $value) {

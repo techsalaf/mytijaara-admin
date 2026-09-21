@@ -164,47 +164,9 @@ class StoreLogic
             ? Store::topItemsByIds($store_ids, 5)
             : collect();
 
+        self::attachStoreCategoryIds($paginator);
+
         $paginator->each(function ($store) use ($top_items_by_store) {
-            $category_ids = DB::table('items')
-                ->join('categories', 'items.category_id', '=', 'categories.id')
-                ->join('order_details', 'order_details.item_id', '=', 'items.id')
-                ->join('orders', 'orders.id', '=', 'order_details.order_id')
-                ->selectRaw('
-                CAST(categories.id AS UNSIGNED) as id,
-                categories.parent_id,
-                categories.name,
-                COUNT(order_details.id) as order_count
-            ')
-                ->where('items.store_id', $store->id)
-                ->where('categories.status', 1)
-                ->whereNotIn('orders.order_status', ['failed', 'canceled'])
-                ->groupBy('id', 'categories.parent_id', 'categories.name')
-                ->orderByDesc('order_count')
-                ->limit(5)
-                ->get();
-
-            $data = json_decode($category_ids, true);
-
-            $mergedIds = [];
-            $mergedCategoryNames = [];
-
-            foreach ($data as $item) {
-                if ($item['id'] != 0) {
-                    $mergedIds[] = $item['id'];
-                    $mergedCategoryNames[] = $item['name'];
-                }
-                if ($item['parent_id'] != 0) {
-                    $mergedIds[] = $item['parent_id'];
-                    $mergedCategoryNames[] = $item['name'];
-                }
-            }
-
-            $category_ids = array_values(array_unique($mergedIds));
-            $category_names = array_values(array_unique($mergedCategoryNames));
-
-            $store->category_ids = $category_ids;
-            $store->category_names = $category_names;
-
             $items = $top_items_by_store[(int) $store->id] ?? collect();
             $store->top_items = $items->map(function ($item) use ($store) {
                 $discountData = Helpers::product_discount_calculate($item, $item->price, $store, true);
@@ -338,12 +300,60 @@ class StoreLogic
 
         $paginator = $query->paginate($limit ?? 50, ['*'], 'page', $offset ?? 1);
 
+        self::attachStoreCategoryIds($paginator);
+
         return [
             'total_size' => $paginator->total(),
             'limit' => $limit ?? 50,
             'offset' => $offset ?? 1,
             'stores' => $paginator->items()
         ];
+    }
+
+    private static function attachStoreCategoryIds($paginator): void
+    {
+        $store_ids = collect($paginator->items())->pluck('id')->all();
+        if (empty($store_ids)) {
+            return;
+        }
+
+        $categoriesByStore = DB::table('items')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->join('order_details', 'order_details.item_id', '=', 'items.id')
+            ->join('orders', 'orders.id', '=', 'order_details.order_id')
+            ->selectRaw('
+                items.store_id as store_id,
+                CAST(categories.id AS UNSIGNED) as id,
+                categories.parent_id,
+                categories.name,
+                COUNT(order_details.id) as order_count
+            ')
+            ->whereIn('items.store_id', $store_ids)
+            ->where('categories.status', 1)
+            ->whereNotIn('orders.order_status', ['failed', 'canceled'])
+            ->groupBy('items.store_id', 'id', 'categories.parent_id', 'categories.name')
+            ->orderByDesc('order_count')
+            ->get()
+            ->groupBy('store_id');
+
+        $paginator->each(function ($store) use ($categoriesByStore) {
+            $mergedIds = [];
+            $mergedCategoryNames = [];
+
+            foreach (($categoriesByStore[$store->id] ?? collect())->take(5) as $item) {
+                if ($item->id != 0) {
+                    $mergedIds[] = $item->id;
+                    $mergedCategoryNames[] = $item->name;
+                }
+                if ($item->parent_id != 0) {
+                    $mergedIds[] = $item->parent_id;
+                    $mergedCategoryNames[] = $item->name;
+                }
+            }
+
+            $store->category_ids = array_values(array_unique($mergedIds));
+            $store->category_names = array_values(array_unique($mergedCategoryNames));
+        });
     }
 
     public static function get_distance_wise_stores($zone_id, $limit = 50, $offset = 1, $type='all',$longitude=0,$latitude=0,$name=null,$user_id=null)
@@ -706,6 +716,11 @@ class StoreLogic
             ->applyPriceRange($request)
             ->search(keywords: $key, relations: [
                 'translations' => 'value',
+                'items' => 'name',
+                'items.translations' => 'value',
+                'items.tags' => 'tag',
+                'items.category' => 'name',
+                'items.category.parent' => 'name',
                 'items.nutritions' => 'nutrition',
                 'items.allergies' => 'allergy',
                 'items.generic' => 'generic_name',
@@ -932,7 +947,7 @@ class StoreLogic
                 }
             })
             ->type($type)
-            ->when($shuffle == 1 && $recommended_store_default_status != '1', function($q){
+            ->when($shuffle == 1 && $recommended_store_default_status == 1, function($q){
                 $q->inRandomOrder();
             })
             ->withCount('reviews')
@@ -1130,7 +1145,7 @@ class StoreLogic
             ->all();
 
         $query = Store::WithOpenWithDeliveryTime($longitude ?? 0, $latitude ?? 0)
-            ->withCount(['items', 'campaigns'])
+            ->withCount(['items', 'campaigns', 'reviews'])
             ->with(['discount' => function ($q) {
                 return $q->validate();
             }])
@@ -1181,7 +1196,11 @@ class StoreLogic
             ? Store::topItemsByIds($stores->pluck('id')->all(), 5)
             : collect();
 
-        $formatted = $stores->map(function ($store) use ($advertised_store_ids, $new_threshold, $withItems, $top_items_by_store) {
+        $categories_by_store = $stores->isNotEmpty()
+            ? self::topCategoriesByStoreIds($stores->pluck('id')->all(), 5)
+            : collect();
+
+        $formatted = $stores->map(function ($store) use ($advertised_store_ids, $new_threshold, $withItems, $top_items_by_store, $categories_by_store) {
             $top_items = null;
             if ($withItems) {
                 $top_items = ($top_items_by_store[$store->id] ?? collect())->map(function ($item) {
@@ -1203,6 +1222,7 @@ class StoreLogic
                 'new_threshold' => $new_threshold,
                 'top_items' => $top_items,
                 'with_items' => $withItems,
+                'category_data' => $categories_by_store[$store->id] ?? [],
             ]);
         })->values()->all();
 
@@ -1235,7 +1255,7 @@ class StoreLogic
             ->when(is_numeric($moduleId), fn ($q) => $q->where('module_id', $moduleId))
             ->when(! empty($zones), fn ($q) => $q->whereIn('zone_id', $zones))
             ->whereHas('discount', fn ($q) => $q->validate())
-            ->with(['discount' => fn ($q) => $q->validate()])
+            ->with(['discount' => fn ($q) => $q->validate(), 'schedules'])
             ->withCount('reviews')
             ->selectSub(function ($q) {
                 $q->selectRaw('AVG(reviews.rating)')
@@ -1271,9 +1291,14 @@ class StoreLogic
         $new_store_days = (int) (Helpers::get_business_settings('new_store_tag_days') ?? 30);
         $new_threshold = now()->subDays($new_store_days);
 
+        $categories_by_store = $stores->isNotEmpty()
+            ? self::topCategoriesByStoreIds($stores->pluck('id')->all(), 5)
+            : collect();
+
         $formatted = $stores->map(fn ($s) => self::format_store_for_listing($s, [
             'advertised_store_ids' => $advertised_store_ids,
             'new_threshold' => $new_threshold,
+            'category_data' => $categories_by_store[$s->id] ?? [],
         ]))->values()->all();
 
         return [
@@ -1295,32 +1320,14 @@ class StoreLogic
             $new_threshold = now()->subDays($days);
         }
 
-        $category_rows = DB::table('items')
-            ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->join('order_details', 'order_details.item_id', '=', 'items.id')
-            ->join('orders', 'orders.id', '=', 'order_details.order_id')
-            ->selectRaw('CAST(categories.id AS UNSIGNED) as id, categories.parent_id, categories.name, COUNT(order_details.id) as order_count')
-            ->where('items.store_id', $store->id)
-            ->where('categories.status', 1)
-            ->whereNotIn('orders.order_status', ['failed', 'canceled'])
-            ->groupBy('id', 'categories.parent_id', 'categories.name')
-            ->orderByDesc('order_count')
-            ->limit(5)
-            ->get();
-
-        $category_ids = [];
-        $category_names = [];
-        foreach ($category_rows as $row) {
-            if ($row->id != 0) {
-                $category_ids[] = (int) $row->id;
-                $category_names[] = $row->name;
-            }
-            if ($row->parent_id != 0) {
-                $category_ids[] = (int) $row->parent_id;
-            }
+        if (array_key_exists('category_data', $opts)) {
+            $category_data = is_array($opts['category_data']) ? $opts['category_data'] : [];
+        } else {
+            $category_data = self::topCategoriesByStoreIds([$store->id], 5)[$store->id] ?? [];
         }
-        $category_ids = array_values(array_unique($category_ids));
-        $category_names = array_values(array_unique($category_names));
+
+        $category_ids = $category_data['ids'] ?? [];
+        $category_names = $category_data['names'] ?? [];
 
         $delivery_time = $store->delivery_time;
         $delivery_parts = $delivery_time ? explode('-', $delivery_time) : [];
@@ -1364,8 +1371,9 @@ class StoreLogic
             'cover_photo_full_url' => $store->cover_photo_full_url,
             'module_id' => (int) ($store->module_id ?? 0),
             'module_type' => $store->module_type ?? null,
-            'avg_rating' => (float) ($store->avg_r ?? 0),
+            'avg_rating' => (float) ($store->avg_r ?? $store->top_rated_avg ?? $store->avg_rating_all ?? $store->store_rating_avg ?? 0),
             'reviews_count' => $reviews_count,
+            'items_count' => (int) ($opts['items_count'] ?? $store->items_count ?? 0),
             'category_ids' => $category_ids,
             'category_names' => $category_names,
             'delivery_time' => $delivery_time,
@@ -1374,6 +1382,7 @@ class StoreLogic
             'distance' => (float) ($store->distance ?? 0),
             'distance_km' => $distance_km,
             'open' => (int) ($store->open ?? 0),
+            'current_opening_time' => Helpers::getNextOpeningTime($store->schedules) ?? 'closed',
             'active' => (int) $store->active,
             'free_delivery' => (int) ($store->free_delivery ?? 0),
             'is_new' => (int) ($store->created_at && $store->created_at->greaterThanOrEqualTo($new_threshold)),
@@ -1389,6 +1398,49 @@ class StoreLogic
         }
 
         return $row;
+    }
+
+    public static function topCategoriesByStoreIds(array $storeIds, int $limit = 5): \Illuminate\Support\Collection
+    {
+        $storeIds = array_values(array_unique(array_filter(array_map('intval', $storeIds))));
+        if (empty($storeIds)) {
+            return collect();
+        }
+
+        $rows = DB::table('items')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->join('order_details', 'order_details.item_id', '=', 'items.id')
+            ->join('orders', 'orders.id', '=', 'order_details.order_id')
+            ->selectRaw('items.store_id, CAST(categories.id AS UNSIGNED) as id, categories.parent_id, categories.name, COUNT(order_details.id) as order_count')
+            ->whereIn('items.store_id', $storeIds)
+            ->where('categories.status', 1)
+            ->whereNotIn('orders.order_status', ['failed', 'canceled'])
+            ->groupBy('items.store_id', 'id', 'categories.parent_id', 'categories.name')
+            ->orderByDesc('order_count')
+            ->get();
+
+        return $rows->groupBy('store_id')
+            ->map(fn ($group) => self::extract_top_category_data($group->take(max(1, $limit))));
+    }
+
+    private static function extract_top_category_data($rows): array
+    {
+        $category_ids = [];
+        $category_names = [];
+        foreach ($rows as $row) {
+            if ($row->id != 0) {
+                $category_ids[] = (int) $row->id;
+                $category_names[] = $row->name;
+            }
+            if ($row->parent_id != 0) {
+                $category_ids[] = (int) $row->parent_id;
+            }
+        }
+
+        return [
+            'ids' => array_values(array_unique($category_ids)),
+            'names' => array_values(array_unique($category_names)),
+        ];
     }
 
     public static function collect_store_offers($store): array

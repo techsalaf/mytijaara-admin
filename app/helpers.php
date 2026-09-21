@@ -44,6 +44,19 @@ if (! function_exists('storefront_wallet_disabled_for_user')) {
     }
 }
 
+if (! function_exists('getDisallowedExtensionsListArray')) {
+    function getDisallowedExtensionsListArray(): array
+    {
+        return [
+            'php', 'php3', 'php4', 'php5', 'php7', 'phtml', 'pht', 'phar',
+            'exe', 'com', 'bat', 'cmd', 'msi', 'scr', 'cpl', 'jar', 'app',
+            'sh', 'bash', 'bin', 'run', 'csh', 'ksh', 'ps1',
+            'vbs', 'vbe', 'js', 'jse', 'wsf', 'wsh', 'hta',
+            'dll', 'so', 'sys', 'html', 'htm', 'shtml', 'svg', 'htaccess',
+        ];
+    }
+}
+
 if (! function_exists('translate')) {
     function translate($key, $replace = [])
     {
@@ -246,6 +259,60 @@ if (! function_exists('order_failed')) {
     }
 }
 
+if (! function_exists('service_booking_success')) {
+    function service_booking_success($data) {
+        $booking = \Modules\Service\Entities\ServiceBooking::find($data->attribute_id);
+        if (! $booking) {
+            return;
+        }
+        $is_partial = $booking->payment_method === 'partial_payment';
+        $booking->payment_method = $is_partial ? 'partial_payment' : $data->payment_method;
+        $booking->transaction_reference = $data->transaction_id;
+        $booking->payment_status = 'paid';
+        $booking->markStatus('confirmed');
+        $booking->save();
+
+        if ($is_partial) {
+            \Modules\Service\Entities\ServicePartialPayment::where('booking_id', $booking->id)
+                ->where('payment_status', 'unpaid')
+                ->update([
+                    'payment_status' => 'paid',
+                    'payment_method' => $data->payment_method,
+                    'transaction_ref' => $data->transaction_id,
+                ]);
+        } else {
+            // Full gateway payment — recognize the captured amount in the admin digital ledger now
+            // (reversed on refund) instead of at completion, so pre-completion cancels stay balanced.
+            // Partial remainders keep the 'partial_payment' method and are recognized at completion.
+            \Modules\Service\Services\BookingTransactionService::credit_admin_digital_received($data->payment_amount);
+        }
+
+        try {
+            $provider = $booking->provider;
+            if ($provider?->is_valid_subscription == 1 && $provider?->store_sub?->max_order != 'unlimited' && $provider?->store_sub?->max_order > 0) {
+                $provider?->store_sub?->decrement('max_order', 1);
+            }
+            // Fan out to the admin panel + provider panel/app (mirrors core order notification).
+            \Modules\Service\Lib\BookingNotificationService::sendNewBookingNotification($booking);
+        } catch (\Throwable $exception) {
+            info($exception->getMessage());
+        }
+    }
+}
+
+if (! function_exists('service_booking_failed')) {
+    function service_booking_failed($data) {
+        $booking = \Modules\Service\Entities\ServiceBooking::find($data->attribute_id);
+        if (! $booking) {
+            return;
+        }
+        $booking->payment_method = $data->payment_method;
+        $booking->payment_status = 'unpaid';
+        $booking->markStatus('payment_failed');
+        $booking->save();
+    }
+}
+
 if (! function_exists('wallet_success')) {
     function wallet_success($data) {
         $order = WalletPayment::find($data->attribute_id);
@@ -355,13 +422,19 @@ if (!function_exists('config_settings')) {
     }
 
 
+    if (! function_exists('getModule')) {
+         function getModule($value)
+            {
+                return is_numeric($value)
+                ? Module::where('id', $value)->first()
+                : Module::where('slug', $value)->first();
+            }
+    }
+
     if (! function_exists('getModuleId')) {
          function getModuleId($value)
             {
-                $module = is_numeric($value)
-                ? Module::where('id', $value)->first()
-                : Module::where('slug', $value)->first();
-                return $module?->id;
+                return getModule($value)?->id;
             }
     }
 }

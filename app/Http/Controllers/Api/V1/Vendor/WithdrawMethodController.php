@@ -26,9 +26,9 @@ class WithdrawMethodController extends Controller
         $vendor = $request['vendor'];
         $store=  $vendor->stores[0];
 
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         $paginator = DisbursementWithdrawalMethod::where('store_id', $store['id'])
-            ->when( isset($key) , function($query) use($key){
+            ->when( $request['search'] , function($query) use($key){
                 $query->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('method_name', 'like', "%{$value}%");

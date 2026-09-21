@@ -92,7 +92,7 @@
                                     whereHas('zones', function ($query) use ($zone) {
                                 $query->where('zone_id', $zone->id);
                             })
-                            ->whereNotIn('module_type',['rental','parcel'])->get())
+                            ->whereNotIn('module_type',['rental','parcel','ride-share','service'])->get())
                             <select name="module_ids[]" id="module_selected" class="form-control h--45px js-select2-custom" multiple="multiple" placeholder="Module Select" data-placeholder="Module">
                                 <option></option>
                                 @foreach($modules as $module)

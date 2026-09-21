@@ -31,10 +31,8 @@ class PaytmController extends Controller
             $this->config_values = json_decode($config->live_values);
         } elseif (!is_null($config) && $config->mode == 'test') {
             $this->config_values = json_decode($config->test_values);
-        } else {
-            $this->config_values = null;
         }
-        if (isset($config) && $this->config_values) {
+        if (isset($config)) {
 
             $PAYTM_STATUS_QUERY_NEW_URL = 'https://securestage.paytmpayments.com/theia/api/v1/showPaymentPage';
             $PAYTM_TXN_URL = 'https://securestage.paytmpayments.com/theia/api/v1/initiateTransaction';

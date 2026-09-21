@@ -22,6 +22,13 @@ class DeliveryFeeLogic
             return $amount;
         }
 
+        $isSaverType = in_array($order->delivery_type, [ModuleZoneDeliveryOption::TYPE_EXPRESS, ModuleZoneDeliveryOption::TYPE_SLIGHTLY_DELAY], true);
+        if ($isSaverType && (int) ($order->store?->sub_self_delivery ?? 0) === 1) {
+            $order->delivery_type = ModuleZoneDeliveryOption::TYPE_STANDARD;
+            $order->delivery_type_charge = 0;
+            return $amount;
+        }
+
         if ($order->delivery_type === ModuleZoneDeliveryOption::TYPE_EXPRESS) {
             return round($amount + (float) $order->delivery_type_charge, $rounding);
         }
@@ -125,6 +132,25 @@ class DeliveryFeeLogic
             'is_free'     => $isFree,
             'free_by'     => $freeBy,
             'suffix'      => $suffix,
+        ];
+    }
+
+    public static function proDeliveryBreakdown($order): array
+    {
+        $pro = $order->orderProDiscount ?? null;
+
+        $reduction = 0.0;
+        if ($pro && ($pro->benefit_type ?? null) === 'delivery_fee') {
+            $reduction = (float) ($pro->delivery_fee_reduction_amount ?? 0);
+        }
+
+        $charged = (float) ($order->delivery_charge ?? 0);
+
+        return [
+            'has_reduction' => $reduction > 0,
+            'reduction'     => $reduction,
+            'charged_fee'   => $charged,
+            'original_fee'  => $charged + $reduction,
         ];
     }
 

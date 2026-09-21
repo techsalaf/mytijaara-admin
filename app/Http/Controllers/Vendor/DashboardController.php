@@ -11,6 +11,7 @@ use App\CentralLogics\Helpers;
 use App\Models\OrderTransaction;
 use Illuminate\Support\Facades\DB;
 use Modules\Rental\Entities\Trips;
+use Modules\Service\Entities\ServiceBooking;
 use App\Http\Controllers\Controller;
 
 class DashboardController extends Controller
@@ -24,6 +25,9 @@ class DashboardController extends Controller
         if(Helpers::get_store_data()->module_type == 'rental'){
             return to_route('vendor.providerDashboard');
 
+        }
+        if(Helpers::get_store_data()->module_type == 'service' && service_addon_active()){
+            return to_route('vendor.service.dashboard');
         }
         $params = [
             'statistics_type' => $request['statistics_type'] ?? 'overall'
@@ -84,6 +88,10 @@ class DashboardController extends Controller
         if($store->module_type == 'rental'){
             $type='trip';
             $new_pending_order=Trips::where(['checked' => 0])->where('provider_id', $store->id)->count();
+
+        } elseif($store->module_type == 'service' && service_addon_active()){
+            $type='service_booking';
+            $new_pending_order=ServiceBooking::where(['notification_checked' => 0])->where('provider_id', $store->id)->count();
 
         } else{
             $new_pending_order = DB::table('orders')->where(['checked' => 0])->where('store_id', $store->id)->where('order_status','pending');

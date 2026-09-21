@@ -1,8 +1,8 @@
 {{--
     v2 Settings workspace sidebar.
     Section structure mirrors the prototype's 12 settings categories.
-    All items stay gated by Helpers::module_permission_check('settings'|'zone'|'module'|'subscription'|'addon')
-    and addon_published_status() where the legacy sidebar applies them.
+    Each section/subsection is gated by its own Helpers::module_permission_check() key
+    (see custom-role form for the full key list) plus addon_published_status() where applicable.
 --}}
 @php
     use App\CentralLogics\Helpers;
@@ -12,13 +12,26 @@
     $admin_user = auth('admin')->user();
 
     $can_settings = Helpers::module_permission_check('settings');
-    $can_zone     = Helpers::module_permission_check('zone');
+    $can_zone     = Helpers::module_permission_check('settings');
     $can_module   = Helpers::module_permission_check('module');
     $can_sub      = Helpers::module_permission_check('subscription');
     $can_pro      = Helpers::module_permission_check('pro_customer_subscription');
     $can_customer = Helpers::module_permission_check('customer_management');
+    $can_sys_tax  = Helpers::module_permission_check('system_tax');
+    $can_pages    = (Helpers::module_permission_check('social_media') || Helpers::module_permission_check('landing_pages') || Helpers::module_permission_check('business_pages') || Helpers::module_permission_check('seo'));
+    $can_sys_cfg  = Helpers::module_permission_check('system_config');
+    $can_apps     = Helpers::module_permission_check('system_config');
+    $can_sys_addons = Helpers::module_permission_check('system_config');
+    $can_login    = Helpers::module_permission_check('login_setup');
+    $can_email    = (Helpers::module_permission_check('email_setups') || Helpers::module_permission_check('notification_setup'));
+    $can_3rd_party = Helpers::module_permission_check('third_party-ms');
+    $can_ride_settings = Helpers::module_permission_check('ride_settings');
+    $can_service_mgmt = Helpers::module_permission_check('service_settings');
+    $can_gallery  = Helpers::module_permission_check('gallery');
+    $can_clean_db = Helpers::module_permission_check('clean_database');
     $rental_on    = addon_published_status('Rental');
     $ride_on      = addon_published_status('RideShare');
+    $service_on   = addon_published_status('Service');
     $tax_on       = addon_published_status('TaxModule');
 
     $active_section = 'biz';
@@ -28,9 +41,10 @@
     elseif ($is('admin/business-settings/pages/*') || $is('admin/business-settings/seo-settings*')) $active_section = 'pages';
     elseif ($is('admin/business-settings/file-manager*'))         $active_section = 'media';
     elseif ($is('admin/business-settings/login-settings*') || $is('admin/business-settings/login-url-setup*'))       $active_section = 'auth';
-    elseif ($is('admin/business-settings/email-setup*') || $is('admin/business-settings/rental-email-setup*') || $is('admin/business-settings/notification-setup*') || $is('admin/business-settings/fcm*')) $active_section = 'comm';
+    elseif ($is('admin/business-settings/email-setup*') || $is('admin/business-settings/rental-email-setup*') || $is('admin/business-settings/service-email-setup*') || $is('admin/business-settings/notification-setup*') || $is('admin/business-settings/fcm*')) $active_section = 'comm';
     elseif ($is('admin/business-settings/third-party*') || $is('admin/business-settings/offline-payment*') || $is('admin/business-settings/marketing*') || $is('admin/business-settings/open-ai*') || $is('admin/payment/configuration*') || $is('admin/sms/configuration*')) $active_section = 'int';
     elseif ($is('admin/business-settings/safety-precaution*') || $is('admin/business-settings/ride-fare*') || $is('admin/business-settings/ride-share*')) $active_section = 'safety';
+    elseif ($is('admin/business-settings/service*'))             $active_section = 'service';
     elseif ($is('admin/business-settings/db-index*'))             $active_section = 'maint';
     elseif ($is('admin/business-settings/language*') || $is('admin/business-settings/app-settings*') || $is('admin/business-settings/websocket*') || $is('admin/business-settings/addon-activation*') || $is('admin/business-settings/system-addon*')) $active_section = 'sys';
 @endphp
@@ -54,35 +68,52 @@
                 <i data-lucide="credit-card"></i><span class="v2-pin-dot"></span>
             </button>
             @endif
-            @if($can_settings && $tax_on)
+            @if($can_sys_tax && $tax_on)
             <button class="v2-rail-btn {{ $active_section==='fin' ? 'is-active' : '' }}" data-section="fin" data-label="{{ translate('Finance & Tax') }}" aria-label="{{ translate('Finance & Tax') }}">
                 <i data-lucide="receipt"></i><span class="v2-pin-dot"></span>
             </button>
             @endif
-            @if($can_settings)
+            @if($can_pages)
             <button class="v2-rail-btn {{ $active_section==='pages' ? 'is-active' : '' }}" data-section="pages" data-label="{{ translate('Website, Pages & Content') }}" aria-label="{{ translate('Website, Pages & Content') }}">
                 <i data-lucide="file-text"></i><span class="v2-pin-dot"></span>
             </button>
+            @endif
+            @if($can_sys_cfg || $can_apps || $can_sys_addons)
             <button class="v2-rail-btn {{ $active_section==='sys' ? 'is-active' : '' }}" data-section="sys" data-label="{{ translate('System Configuration') }}" aria-label="{{ translate('System Configuration') }}">
                 <i data-lucide="cog"></i><span class="v2-pin-dot"></span>
             </button>
+            @endif
+            @if($can_login)
             <button class="v2-rail-btn {{ $active_section==='auth' ? 'is-active' : '' }}" data-section="auth" data-label="{{ translate('Authentication & Access') }}" aria-label="{{ translate('Authentication & Access') }}">
                 <i data-lucide="lock"></i><span class="v2-pin-dot"></span>
             </button>
+            @endif
+            @if($can_email)
             <button class="v2-rail-btn {{ $active_section==='comm' ? 'is-active' : '' }}" data-section="comm" data-label="{{ translate('Communication Setup') }}" aria-label="{{ translate('Communication Setup') }}">
                 <i data-lucide="mail"></i><span class="v2-pin-dot"></span>
             </button>
+            @endif
+            @if($can_3rd_party)
             <button class="v2-rail-btn {{ $active_section==='int' ? 'is-active' : '' }}" data-section="int" data-label="{{ translate('Integrations & Third-Party') }}" aria-label="{{ translate('Integrations & Third-Party') }}">
                 <i data-lucide="plug"></i><span class="v2-pin-dot"></span>
             </button>
-            @if($ride_on)
+            @endif
+            @if($ride_on && $can_ride_settings)
             <button class="v2-rail-btn {{ $active_section==='safety' ? 'is-active' : '' }}" data-section="safety" data-label="{{ translate('Ride Share Settings') }}" aria-label="{{ translate('Ride Share Settings') }}">
                 <i data-lucide="car-front"></i><span class="v2-pin-dot"></span>
             </button>
             @endif
+            @if($service_on && $can_service_mgmt)
+            <button class="v2-rail-btn {{ $active_section==='service' ? 'is-active' : '' }}" data-section="service" data-label="{{ translate('Service Module Settings') }}" aria-label="{{ translate('Service Module Settings') }}">
+                <i data-lucide="wrench"></i><span class="v2-pin-dot"></span>
+            </button>
+            @endif
+            @if($can_gallery)
             <button class="v2-rail-btn {{ $active_section==='media' ? 'is-active' : '' }}" data-section="media" data-label="{{ translate('Media & File Management') }}" aria-label="{{ translate('Media & File Management') }}">
                 <i data-lucide="image"></i><span class="v2-pin-dot"></span>
             </button>
+            @endif
+            @if($can_clean_db)
             <button class="v2-rail-btn {{ $active_section==='maint' ? 'is-active' : '' }}" data-section="maint" data-label="{{ translate('Maintenance & Database') }}" aria-label="{{ translate('Maintenance & Database') }}">
                 <i data-lucide="database"></i><span class="v2-pin-dot"></span>
             </button>
@@ -160,18 +191,22 @@
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="sub-vendor"><span>{{ translate('Vendor Subscription') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
+                        @if($can_sub)
                         <a class="v2-nav-item {{ $is('admin/business-settings/subscription/subscriptionackage*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.index') }}" data-id="sub-pkg">
                             <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('Subscription Packages') }}</span>
                             <button type="button" class="v2-pin" data-pin="sub-pkg" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
-                        <a class="v2-nav-item {{ $is('admin/business-settings/subscription/subscriber-list*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.subscriberList') }}" data-id="sub-list">
+                        <a class="v2-nav-item {{ $is('admin/business-settings/subscription/subscriber*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.subscriberList') }}" data-id="sub-list">
                             <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('Subscribers') }}</span>
                             <button type="button" class="v2-pin" data-pin="sub-list" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
+                        @if($can_sub)
                         <a class="v2-nav-item {{ $is('admin/business-settings/subscription/settings*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.subscriptionackage.settings') }}" data-id="sub-set">
                             <span class="v2-dot v2-dot--gray"></span><span class="v2-label">{{ translate('Subscription Settings') }}</span>
                             <button type="button" class="v2-pin" data-pin="sub-set" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
                     </div>
                 </div>
                 @endif
@@ -211,7 +246,7 @@
         </div>
         @endif
 
-        @if($can_settings && $tax_on)
+        @if($can_sys_tax && $tax_on)
         <div class="v2-panel-content" data-panel="fin" @if($active_section!=='fin') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Finance & Tax') }}</span></div>
@@ -238,7 +273,7 @@
         </div>
         @endif
 
-        @if($can_settings)
+        @if($can_pages)
         <div class="v2-panel-content" data-panel="pages" @if($active_section!=='pages') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Website, Pages & Content') }}</span></div>
@@ -322,7 +357,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($can_sys_cfg || $can_apps || $can_sys_addons)
         <div class="v2-panel-content" data-panel="sys" @if($active_section!=='sys') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('System Configuration') }}</span></div>
@@ -332,14 +369,19 @@
                 @include('layouts.admin.partials._v2_pinned_card', ['key' => 'settings::sys'])
                 <div class="v2-group">
                     <div class="v2-group-items">
+                        @if($can_sys_cfg)
                         <a class="v2-nav-item {{ $is('admin/business-settings/language*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.language.index') }}" data-id="sys-lang">
                             <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('Language Management') }}</span>
                             <button type="button" class="v2-pin" data-pin="sys-lang" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
+                        @if($can_apps)
                         <a class="v2-nav-item {{ $is('admin/business-settings/app-settings*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.app-settings') }}" data-id="sys-app">
                             <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('App Settings') }}</span>
                             <button type="button" class="v2-pin" data-pin="sys-app" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
+                        @if($can_sys_cfg)
                         <a class="v2-nav-item {{ $is('admin/business-settings/websocket*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.websocket') }}" data-id="sys-ws">
                             <span class="v2-dot v2-dot--violet"></span><span class="v2-label">{{ translate('WebSocket Configuration') }}</span>
                             <button type="button" class="v2-pin" data-pin="sys-ws" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
@@ -348,15 +390,20 @@
                             <span class="v2-dot v2-dot--amber"></span><span class="v2-label">{{ translate('Addon Activation') }}</span>
                             <button type="button" class="v2-pin" data-pin="sys-add" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
+                        @if($can_sys_addons)
                         <a class="v2-nav-item {{ $is('admin/business-settings/system-addon*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.system-addon.index') }}" data-id="sys-sa">
                             <span class="v2-dot v2-dot--gray"></span><span class="v2-label">{{ translate('System Addons') }}</span>
                             <button type="button" class="v2-pin" data-pin="sys-sa" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($can_login)
         <div class="v2-panel-content" data-panel="auth" @if($active_section!=='auth') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Authentication & Access') }}</span></div>
@@ -374,7 +421,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($can_email)
         <div class="v2-panel-content" data-panel="comm" @if($active_section!=='comm') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Communication Setup') }}</span></div>
@@ -396,13 +445,19 @@
                             <button type="button" class="v2-pin" data-pin="em-ren" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
                         @endif
+                        @if($service_on)
+                        <a class="v2-nav-item {{ $is('admin/business-settings/service-email-setup*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.service-email-setup', ['admin', 'provider-registration']) }}" data-id="em-serv">
+                            <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('Service Module Email Setup') }}</span>
+                            <button type="button" class="v2-pin" data-pin="em-serv" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                        </a>
+                        @endif
                     </div>
                 </div>
 
                 <div class="v2-group">
                     <button type="button" class="v2-group-header" data-group-toggle="comm-notif"><span>{{ translate('Notifications') }}</span><i data-lucide="chevron-down" class="v2-chev"></i></button>
                     <div class="v2-group-items">
-                        <a class="v2-nav-item {{ ($is('admin/business-settings/notification-setup*') && !str_contains(request()->fullUrl(), 'module=rental')) ? 'is-active' : '' }}" href="{{ route('admin.business-settings.notification_setup') }}" data-id="sn-all">
+                        <a class="v2-nav-item {{ ($is('admin/business-settings/notification-setup*') && !str_contains(request()->fullUrl(), 'module=rental') && !str_contains(request()->fullUrl(), 'module=service')) ? 'is-active' : '' }}" href="{{ route('admin.business-settings.notification_setup') }}" data-id="sn-all">
                             <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('All Modules Notifications') }}</span>
                             <button type="button" class="v2-pin" data-pin="sn-all" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
@@ -410,6 +465,12 @@
                         <a class="v2-nav-item {{ ($is('admin/business-settings/notification-setup*') && str_contains(request()->fullUrl(), 'module=rental')) ? 'is-active' : '' }}" href="{{ route('admin.business-settings.notification_setup', ['module' => 'rental']) }}" data-id="sn-rental">
                             <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('Rental Module Notifications') }}</span>
                             <button type="button" class="v2-pin" data-pin="sn-rental" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                        </a>
+                        @endif
+                        @if($service_on)
+                        <a class="v2-nav-item {{ ($is('admin/business-settings/notification-setup*') && str_contains(request()->fullUrl(), 'module=service')) ? 'is-active' : '' }}" href="{{ route('admin.business-settings.notification_setup', ['module' => 'service']) }}" data-id="sn-service">
+                            <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('Service Module Notifications') }}</span>
+                            <button type="button" class="v2-pin" data-pin="sn-service" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
                         @endif
                         <a class="v2-nav-item {{ $is('admin/business-settings/fcm*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.fcm-index') }}" data-id="fcm">
@@ -420,7 +481,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($can_3rd_party)
         <div class="v2-panel-content" data-panel="int" @if($active_section!=='int') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Integrations & Third-Party') }}</span></div>
@@ -463,8 +526,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
-        @if($ride_on)
+        @if($ride_on && $can_ride_settings)
         <div class="v2-panel-content" data-panel="safety" @if($active_section!=='safety') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Ride Share Settings') }}</span></div>
@@ -490,6 +554,31 @@
         </div>
         @endif
 
+        @if($service_on && $can_service_mgmt)
+        <div class="v2-panel-content" data-panel="service" @if($active_section!=='service') hidden @endif>
+            <div class="v2-panel-header">
+                <div class="v2-panel-title"><span class="name">{{ translate('Service Module Settings') }}</span></div>
+                <div class="v2-panel-subtitle">{{ translate('Booking, provider and serviceman configurations') }}</div>
+            </div>
+            <div class="v2-panel-body">
+                @include('layouts.admin.partials._v2_pinned_card', ['key' => 'settings::service'])
+                <div class="v2-group">
+                    <div class="v2-group-items">
+                        <a class="v2-nav-item {{ $is('admin/business-settings/service/booking*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.service.booking') }}" data-id="svc-booking">
+                            <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('Bookings') }}</span>
+                            <button type="button" class="v2-pin" data-pin="svc-booking" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                        </a>
+                        <a class="v2-nav-item {{ $is('admin/business-settings/service/provider-serviceman*') ? 'is-active' : '' }}" href="{{ route('admin.business-settings.service.provider-serviceman') }}" data-id="svc-provider">
+                            <span class="v2-dot v2-dot--blue"></span><span class="v2-label">{{ translate('Providers & Serviceman') }}</span>
+                            <button type="button" class="v2-pin" data-pin="svc-provider" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($can_gallery)
         <div class="v2-panel-content" data-panel="media" @if($active_section!=='media') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Media & File Management') }}</span></div>
@@ -507,7 +596,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($can_clean_db)
         <div class="v2-panel-content" data-panel="maint" @if($active_section!=='maint') hidden @endif>
             <div class="v2-panel-header">
                 <div class="v2-panel-title"><span class="name">{{ translate('Maintenance & Database') }}</span></div>

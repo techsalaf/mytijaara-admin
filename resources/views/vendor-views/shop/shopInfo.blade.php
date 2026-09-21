@@ -1,11 +1,12 @@
 @php
     $vendorData = \App\CentralLogics\Helpers::get_store_data();
-    $title = $vendorData?->module_type == 'rental' && addon_published_status('Rental') ? 'Provider' : 'Store';
+    // Service (and rental) vendors are "Providers", not "Stores".
+    $title = (($vendorData?->module_type == 'rental' && addon_published_status('Rental')) || $vendorData?->module_type == 'service') ? 'Provider' : 'Store';
     $verified_seller_badge = \App\CentralLogics\Helpers::get_business_settings('verified_seller_badge');
     $admin_commission = \App\CentralLogics\Helpers::get_business_settings('admin_commission');
 @endphp
 @extends('layouts.vendor.app')
-@section('title', translate('messages.store_view'))
+@section('title', translate('messages.' . $title . '_view'))
 @push('css_or_js')
     <!-- Custom styles for this page -->
 @endpush

@@ -2,6 +2,7 @@
 
 namespace App\Builder;
 
+use App\CentralLogics\Helpers;
 use Modules\Builder\Contracts\CapabilityProvider as CapabilityProviderContract;
 use Modules\Builder\ValueObjects\HostCapabilities;
 use Modules\Builder\ValueObjects\StorefrontScope;
@@ -31,6 +32,11 @@ class CapabilityProvider implements CapabilityProviderContract
         $config['features']['wallet'] = $walletOn;
         $config['payment']['wallet']  = $walletOn;
         $config['payment']['partial'] = $walletOn;
+
+        // Guest checkout reflects the operator's live Business Settings toggle
+        // (the same flag the place-order pipeline enforces), so the storefront's
+        // checkout-page guard + Proceed-to-Checkout CTA stay in sync with it.
+        $config['features']['guestCheckout'] = (bool) Helpers::get_mail_status('guest_checkout_status');
 
         // Derivation hook — more data-driven flags get merged here as later
         // phases land (location rails, payment buckets, currency, …), UNDER the

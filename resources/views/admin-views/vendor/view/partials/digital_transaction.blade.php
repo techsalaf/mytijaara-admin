@@ -22,7 +22,7 @@
                     <td>{{\App\CentralLogics\Helpers::format_currency($dt->order_amount)}}</td>
                     <td>{{\App\CentralLogics\Helpers::format_currency($dt->store_amount - $dt->tax)}}</td>
                     <td>{{\App\CentralLogics\Helpers::format_currency($dt->admin_commission)}}</td>
-                    <td>{{\App\CentralLogics\Helpers::format_currency($dt->delivery_charge)}}</td>
+                    <td>{{\App\CentralLogics\Helpers::format_currency($dt->delivery_charge + ($dt->pro_delivery_discount ?? 0))}}</td>
                     <td>{{\App\CentralLogics\Helpers::format_currency($dt->tax)}}</td>
                 </tr>
             @endforeach

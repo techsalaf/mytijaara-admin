@@ -20,6 +20,6 @@ interface DmReviewRepositoryInterface extends RepositoryInterface
      * @param int|null $offset
      * @return Collection|LengthAwarePaginator
      */
-    public function getListWhereOrder(string $searchValue = null, array $filters = [], array $relations = [], array $orderBy = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator;
+    public function getListWhereOrder(?string $searchValue = null, array $filters = [], array $relations = [], array $orderBy = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator;
 
 }

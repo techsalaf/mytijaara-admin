@@ -66,7 +66,7 @@
                             <td>{{{$surge['surge_price_name']}}}</td>
                             <td>
                                 @php($names = \App\models\Module::whereIn('id', $surge->module_ids)->pluck('module_name')->implode(', '))
-                                <span class="d-block text-limit-2 max-w-220px">
+                                <span class="line--limit-2 max-w-220px" style="white-space: normal; word-break: break-word;" title="{{ $names }}">
                                     {{$names}}
                                 </span>
                             </td>

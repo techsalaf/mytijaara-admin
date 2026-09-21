@@ -30,18 +30,18 @@ class EmployeeRepository implements EmployeeRepositoryInterface
         return $this->employee->where($params)->first();
     }
 
-    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         return $this->employee->get();
     }
 
-    public function getListWhere(string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
 
         return $this->employee->zone()->where('role_id', '!=','1')
         ->where($filters)
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($searchValue, function ($query) use ($key) {
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('f_name', 'like', "%{$value}%");
@@ -53,15 +53,15 @@ class EmployeeRepository implements EmployeeRepositoryInterface
             })->latest()->paginate($dataLimit);
     }
 
-    public function getZoneWiseListWhere(string $zoneId = 'all', string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, int $offset = null): Collection|LengthAwarePaginator
+    public function getZoneWiseListWhere(string $zoneId = 'all', ?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $searchValue);
+        $key = explode(' ', $searchValue ?? '');
         return $this->employee->zone()->where('role_id', '!=','1')->with($relations)
         ->where($filters)
         ->when(is_numeric($zoneId), function($query) use($zoneId){
             return $query->where('zone_id', $zoneId);
         })
-            ->when(isset($key), function ($query) use ($key) {
+            ->when($searchValue, function ($query) use ($key) {
                 $query->where(function ($query) use ($key) {
                     foreach ($key as $value) {
                         $query->orWhere('f_name', 'like', "%{$value}%");
@@ -93,7 +93,7 @@ class EmployeeRepository implements EmployeeRepositoryInterface
 
     public function getSearchList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->employee->zone()->where('role_id', '!=','1')
             ->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -117,7 +117,7 @@ class EmployeeRepository implements EmployeeRepositoryInterface
 
     public function getExportList(Request $request): Collection
     {
-        $key = explode(' ', $request['search']);
+        $key = explode(' ', $request['search'] ?? '');
         return $this->employee->zone()->where('role_id', '!=','1')
             ->where(function ($q) use ($key) {
                 foreach ($key as $value) {
