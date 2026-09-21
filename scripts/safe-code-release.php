@@ -65,7 +65,7 @@ function runCodeRelease(array $argv): void
         $obsolete = json_decode(file_get_contents(__DIR__.'/obsolete-core-files.json'), true, flags: JSON_THROW_ON_ERROR);
         foreach ($obsolete as $relative => $expectedHash) {
             $destination = releasePath($target, $relative);
-            if (isset($entries[$relative])) throw new RuntimeException('Obsolete file also exists in incoming package');
+            if (is_file(releasePath($incoming, $relative))) throw new RuntimeException('Obsolete file also exists in incoming package');
             if (!is_file($destination)) continue;
             if (!hash_equals($expectedHash, hash_file('sha256', $destination))) throw new RuntimeException('Obsolete file differs from reviewed version: '.$relative);
             $entries[$relative] = ['old' => $expectedHash, 'new' => null];

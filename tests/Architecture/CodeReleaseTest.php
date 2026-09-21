@@ -82,6 +82,10 @@ final class CodeReleaseTest extends TestCase
             $this->assertSame('operator-customization', file_get_contents($obsolete));
             $this->assertSame('old', file_get_contents($root.'/target/artisan'));
             $this->assertFileDoesNotExist($root.'/journal/release.json');
+            mkdir($root.'/incoming/app/Services', 0755, true);
+            file_put_contents($root.'/incoming/app/Services/ProductMutationService.php', 'operator-customization');
+            try { runCodeRelease(['test', 'prepare', $root.'/target', $root.'/journal', $root.'/incoming']); $this->fail('Identical obsolete file in package accepted'); }
+            catch (\RuntimeException $e) { $this->assertStringContainsString('Obsolete file also exists', $e->getMessage()); }
         } finally { $this->removeFixture($root); }
     }
 
