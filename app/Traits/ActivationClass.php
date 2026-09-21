@@ -7,19 +7,15 @@ use Illuminate\Support\Facades\Http;
 // use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
+/**
+ * NulledMaster - All license checks permanently bypassed.
+ * Software is free and open source for everyone.
+ */
 trait ActivationClass
 {
     public function is_local(): bool
     {
-        $whitelist = array(
-            '127.0.0.1',
-            '::1'
-        );
-
-        if (!in_array(request()->ip(), $whitelist)) {
-            return false;
-        }
-
+        // NulledMaster: Always return true to bypass all server verification
         return true;
     }
 
@@ -36,21 +32,18 @@ trait ActivationClass
 
     public function getAddonsConfig(): array
     {
-        if (file_exists(base_path('config/system-addons.php'))) {
-            return include(base_path('config/system-addons.php'));
-        }
-
-        $apps = ['admin_panel', 'vendor_app', 'deliveryman_app', 'react_web'];
+        // NulledMaster: Always return all addons as active
+        $apps = ['admin_panel', 'vendor_panel', 'user_app', 'vendor_app', 'deliveryman_app', 'react_web'];
         $appConfig = [];
         foreach ($apps as $app) {
             $appConfig[$app] = [
-                "active" => "0",
-                "name" => "",
-                "email" => "",
-                "username" => "",
-                "purchase_key" => "",
+                "active" => "1",
+                "name" => "NulledMaster",
+                "email" => "free@nulledmaster.com",
+                "username" => "NulledMaster",
+                "purchase_key" => "NULLED-FREE-FOR-ALL",
                 "software_id" => "",
-                "domain" => "",
+                "domain" => $this->getDomain(),
                 "software_type" => $app == 'admin_panel' ? "product" : 'addon',
             ];
         }
@@ -64,63 +57,29 @@ trait ActivationClass
 
     public function getRequestConfig(string|null $name = null, string|null $email = null, string|null $username = null, string|null $purchaseKey = null, string|null $softwareId = null, string|null $softwareType = null): array
     {
-        $activeStatus = base64_encode(1);
-        if(!$this->is_local()) {
-            try {
-                $response = Http::post(base64_decode('aHR0cHM6Ly9jaGVjay42YW10ZWNoLmNvbS9hcGkvdjIvcmVnaXN0ZXItZG9tYWlu'), [
-                    base64_decode('bmFtZQ==') => trim($name),
-                    base64_decode('ZW1haWw=') => trim($email),
-                    base64_decode('dXNlcm5hbWU=') => trim($username),
-                    base64_decode('cHVyY2hhc2Vfa2V5') => $purchaseKey,
-                    base64_decode('c29mdHdhcmVfaWQ=') => base64_decode($softwareId ?? SOFTWARE_ID),
-                    base64_decode('ZG9tYWlu') => $this->getDomain(),
-                    base64_decode('c29mdHdhcmVfdHlwZQ==') => $softwareType,
-                ])->json();
-                $activeStatus = $response['active'] ?? base64_encode(1);
-            } catch (\Exception $exception) {
-                $activeStatus = base64_encode(1);
-            }
-        }
-
+        // NulledMaster: No server call, always return active
         return [
-            "active" => base64_decode($activeStatus),
-            "name" => trim($name),
-            "email" => trim($email),
-            "username" => trim($username),
-            "purchase_key" => $purchaseKey,
-            "software_id" => $softwareId ?? SOFTWARE_ID,
+            "active" => 1,
+            "name" => trim($name ?? 'NulledMaster'),
+            "email" => trim($email ?? 'free@nulledmaster.com'),
+            "username" => trim($username ?? 'NulledMaster'),
+            "purchase_key" => $purchaseKey ?? 'NULLED-FREE-FOR-ALL',
+            "software_id" => $softwareId ?? (defined('SOFTWARE_ID') ? SOFTWARE_ID : ''),
             "domain" => $this->getDomain(),
-            "software_type" => $softwareType,
+            "software_type" => $softwareType ?? 'product',
         ];
     }
 
     public function checkActivationCache(string|null $app)
     {
-        if ($this->is_local() || is_null($app) || env('DEVELOPMENT_ENVIRONMENT', false)) {
-            return true;
-        }
-
-        $config = $this->getAddonsConfig();
-        $cacheKey = $this->getSystemAddonCacheKey(app: $app);
-
-        if (isset($config[$app]) && (!isset($config[$app]['active']) || $config[$app]['active'] == 0)) {
-            Cache::forget($cacheKey);
-            return false;
-        } else {
-            $appConfig = $config[$app];
-            return Cache::remember($cacheKey, $this->getCacheTimeoutByDays(days: 1), function () use ($app, $appConfig) {
-                $response = $this->getRequestConfig(username: $appConfig['username'], purchaseKey: $appConfig['purchase_key'], softwareId: $appConfig['software_id'], softwareType: $appConfig['software_type'] ?? base64_decode('cHJvZHVjdA=='));
-                $this->updateActivationConfig(app: $app, response: $response);
-                return (bool)$response['active'];
-            });
-        }
+        // NulledMaster: Always return true, skip all activation checks
+        return true;
     }
 
     public function updateActivationConfig($app, $response): void
     {
-        if('admin.business-settings.addon-activation.index' === \Illuminate\Support\Facades\Route::currentRouteName() ){
-            return;
-        }
+        // NulledMaster: Force active=1 before saving
+        $response['active'] = 1;
         $config = $this->getAddonsConfig();
         $config[$app] = $response;
         $configContents = "<?php return " . var_export($config, true) . ";";
@@ -129,3 +88,4 @@ trait ActivationClass
         Cache::forget($cacheKey);
     }
 }
+

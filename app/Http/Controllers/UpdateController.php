@@ -48,12 +48,13 @@ class UpdateController extends Controller
             $filesystem->cleanDirectory('database/migrations');
         }
 
-        Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username']);
-        Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key']);
+        // NulledMaster: Set default values for update, no purchase code needed
+        Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username'] ?? 'NulledMaster');
+        Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key'] ?? 'NULLED-FREE-FOR-ALL');
         Helpers::setEnvironmentValue('APP_MODE', 'live');
         Helpers::setEnvironmentValue('SOFTWARE_VERSION', '4.1');
         Helpers::setEnvironmentValue('REACT_APP_KEY', '45370351');
-        Helpers::setEnvironmentValue('APP_NAME', '6amMart' . time());
+        Helpers::setEnvironmentValue('APP_NAME', 'MyTijaara' . time());
 
         $hostDomain = parse_url(env('APP_URL', ''), PHP_URL_HOST) ?: '';
         if (!env('APP_HOST_DOMAIN') && $hostDomain !== '') {
@@ -90,7 +91,7 @@ class UpdateController extends Controller
             "app_url_ios_status" => "0",
             "app_url_ios" => "https://www.apple.com/app-store",
             "web_app_url_status" => "0",
-            "web_app_url" => "https://6ammart-web.6amtech.com/"
+            "web_app_url" => "https://app.mytijaara.com/"
         ]));
 
         //version 1.5.0

@@ -111,10 +111,6 @@ class AddonController extends Controller
             $this->rideSharePublish($full_data['is_published']);
         }
 
-        if ($full_data['name'] == 'Service') {
-            $this->servicePublish($full_data['is_published']);
-        }
-
         if ($full_data['name'] == 'Builder') {
             $ok = $this->builderPublish($full_data['is_published']);
             // If the runtime file copy fails (rare — preflight already
@@ -150,19 +146,19 @@ class AddonController extends Controller
         $url = str_replace($remove, "", url('/'));
         $full_data = include($request['path'] . '/Addon/info.php');
 
-        // $post = [
-        //     base64_decode('bmFtZQ==') => $request['name'],
-        //     base64_decode('ZW1haWw=') => $request['email'],
-        //     base64_decode('dXNlcm5hbWU=') => $request['username'],
-        //     base64_decode('cHVyY2hhc2Vfa2V5') => $request['purchase_code'],
-        //     base64_decode('c29mdHdhcmVfaWQ=') => $full_data['software_id'],
-        //     base64_decode('ZG9tYWlu') => $url,
-        // ];
+        $post = [
+            base64_decode('bmFtZQ==') => $request['name'],
+            base64_decode('ZW1haWw=') => $request['email'],
+            base64_decode('dXNlcm5hbWU=') => $request['username'],
+            base64_decode('cHVyY2hhc2Vfa2V5') => $request['purchase_code'],
+            base64_decode('c29mdHdhcmVfaWQ=') => $full_data['software_id'],
+            base64_decode('ZG9tYWlu') => $url,
+        ];
 
-        // $response = Http::post(base64_decode('aHR0cHM6Ly9jaGVjay42YW10ZWNoLmNvbS9hcGkvdjEvYWN0aXZhdGlvbi1jaGVjaw=='), $post)->json();
-        // $status = $response['active'] ?? base64_encode(1);
+        // NulledMaster: Always return success, skip remote server verification
+        $status = base64_encode(1);
 
-        // if ($full_data['name'] == 'Builder' || $full_data['name'] == 'Rental') {
+        if ($full_data['name'] == 'Builder' || $full_data['name'] == 'Rental') {
             $response= $this->getRequestConfig(
                         name:  $request['name'],
                         email:  $request['email'],
@@ -173,7 +169,7 @@ class AddonController extends Controller
                     );
             $status =  base64_encode(data_get($response, 'active', 1));
 
-        // }
+        }
 
         if ((int)base64_decode($status)) {
             // Builder server pre-flight runs BEFORE info.php is written
@@ -200,10 +196,6 @@ class AddonController extends Controller
             if ($full_data['name'] == 'RideShare') {
                 $this->rideSharePublish($full_data['is_published']);
             }
-            if ($full_data['name'] == 'Service') {
-                $this->servicePublish($full_data['is_published']);
-            }
-
 
             if ($full_data['name'] == 'Builder') {
                 $ok = $this->builderPublish($full_data['is_published']);
@@ -377,28 +369,15 @@ class AddonController extends Controller
         }
     }
 
-    private function servicePublish(int|bool $is_published): bool
-    {
-        try {
-            $module = Module::firstOrNew(
-                ['module_type' => 'service'],
-                ['module_name' => 'Service']
-            );
-
-            if ($is_published) {
-                Artisan::call('migrate', ['--force' => true]);
-                $module->status = 1;
-            } else {
-                $module->status = 0;
-            }
-
-            $module->save();
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
+    /**
+     * Server-side pre-flight check for Builder activation. Returns an
+     * array of blocker issues (empty = good to go). Each entry has:
+     *   ['key' => 'short_id', 'message' => 'human', 'fix' => 'how-to']
+     *
+     * Called from `publish()` / `activation()` BEFORE info.php is flipped
+     * so a failure leaves the state untouched. NOT called for deactivate
+     * — only activate requires the environment to support the swap.
+     */
     private function checkBuilderRequirements(): array
     {
         $issues = [];
@@ -505,6 +484,20 @@ class AddonController extends Controller
         return $issues;
     }
 
+    /**
+     * Activate / deactivate Builder. The addon zip ships a pre-built JS
+     * bundle as a single archive at `Modules/Builder/resources/dist/build.zip`.
+     * The customer's core install does NOT ship `public/build/` — that
+     * directory only exists while Builder is active.
+     *
+     *   activate   → extract build.zip → public/build/
+     *   deactivate → delete public/build/ (the `build` symlink at project
+     *                root dangles, which is harmless because no non-Builder
+     *                blade template loads Vite assets)
+     *
+     * `Resources/dist/build.zip` is never touched by this method — it
+     * stays put across activate / deactivate / re-activate cycles.
+     */
     private function builderPublish(int|bool $is_published): bool
     {
         try {
