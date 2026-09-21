@@ -97,6 +97,6 @@
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/StoreAvailabilityService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/SubscriptionLifecycleService.php"
   ],
-  "platform_baseline": "d76e3efcd7ded59f15c4dce180483cd18b959d1e",
-  "platform_baseline_reason": "User-authorized platform import, separate from the WhatsApp core patches. Only exact unchanged file content at this commit is accepted; new edits remain gated."
+  "platform_baseline": "e4b06059540745c83dc38a9862dc71964ad7ec52",
+  "platform_baseline_reason": "User-authored and explicitly pushed updater revision, following platform import d76e3efc. Includes installer, updater and activation behavior changes; this records the accepted source snapshot, not license validity or upstream certification. Only exact unchanged file content at this commit is accepted; new edits remain gated."
 }
