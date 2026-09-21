@@ -217,6 +217,11 @@ jobs:
 
           chmod 600 ~/.ssh/config
 
+          # These runs failed before journal preparation completed, so they never
+          # applied code. Refuse cleanup if a completed journal is present.
+          # Stream the script: recovery must work even when disk quota is full.
+          ssh mytijaara-deploy "php /dev/stdin '$DEPLOY_PATH' '35657862645-1' '35658551620-1'" < scripts/cleanup-incomplete-release.php
+
           RELEASE_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           RELEASE_ROOT="$(dirname "$DEPLOY_PATH")/.mytijaara-releases/$RELEASE_ID"
           INCOMING="$RELEASE_ROOT/incoming"
