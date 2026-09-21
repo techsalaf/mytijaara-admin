@@ -24,8 +24,18 @@ if ($code !== 0) throw new RuntimeException('Cannot compare Git baseline');
 exec('git ls-files --others --exclude-standard -- app routes resources config database bootstrap', $newCoreFiles, $code);
 if ($code !== 0) throw new RuntimeException('Cannot inventory untracked core files');
 $changed = array_unique(array_merge($changed, $newCoreFiles));
+$platformBaseline = $manifest['platform_baseline'] ?? null;
+if ($platformBaseline !== null && !preg_match('/^[a-f0-9]{40}$/D', $platformBaseline)) throw new RuntimeException('Platform baseline must be an immutable commit');
+// An explicitly accepted platform import is not a blanket path exemption.
+// Only files still identical to that snapshot qualify; all dependency scans run.
+$platformChanges = [];
+if ($platformBaseline !== null) {
+    exec('git diff --name-only '.escapeshellarg($platformBaseline).' -- app routes resources config database bootstrap', $platformChanges, $code);
+    if ($code !== 0) throw new RuntimeException('Cannot compare platform baseline');
+}
 foreach ($changed as $path) {
     if (isset($manifest['patches'][$path]) || in_array($path, $manifest['separate_addon_changes'], true)) continue;
+    if ($platformBaseline !== null && !in_array($path, $platformChanges, true) && !in_array($path, $newCoreFiles, true)) continue;
     // Permit restoration only when the complete file matches the recorded import.
     exec('git diff --quiet '.escapeshellarg($manifest['baseline']).' -- '.escapeshellarg($path), $unused, $different);
     if ($different !== 0 || in_array($path, $newCoreFiles, true)) $failures[] = "Unapproved core patch: $path";

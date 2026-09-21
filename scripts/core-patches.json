@@ -96,5 +96,7 @@
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/OrderMutationService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/StoreAvailabilityService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/SubscriptionLifecycleService.php"
-  ]
+  ],
+  "platform_baseline": "d76e3efcd7ded59f15c4dce180483cd18b959d1e",
+  "platform_baseline_reason": "User-authorized platform import, separate from the WhatsApp core patches. Only exact unchanged file content at this commit is accepted; new edits remain gated."
 }

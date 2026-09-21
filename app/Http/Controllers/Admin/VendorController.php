@@ -1005,6 +1005,11 @@ class VendorController extends Controller
 
     public function status(Store $store, Request $request)
     {
+        $request->validate(['status' => 'required|in:0,1']);
+        if ((int) $store->status === (int) $request->status) {
+            Toastr::success(translate('messages.store_status_updated'));
+            return back();
+        }
         $store->status = $request->status;
         $store->save();
         $vendor = $store->vendor;
@@ -1058,6 +1063,19 @@ class VendorController extends Controller
 
         } catch (\Exception $e) {
             Toastr::warning(translate('messages.push_notification_faild'));
+        }
+
+        // Optional integrations observe a completed host status transition.
+        try {
+            if ($store && $store->vendor) {
+                event(new \App\Events\VendorApplicationStatusChanged(
+                    $store,
+                    $store->vendor,
+                    $request->status == 0 ? 'suspended' : 'unsuspended'
+                ));
+            }
+        } catch (\Throwable $ex) {
+            info('Vendor application status event dispatch failed: ' . $ex->getMessage());
         }
 
         Toastr::success(translate('messages.store_status_updated'));
@@ -1226,6 +1244,8 @@ class VendorController extends Controller
 
     public function update_application(Request $request)
     {
+        // Route parameters are authoritative; query/body filters cannot reverse the decision.
+        $request->merge(['id' => $request->route('id'), 'status' => $request->route('status')]);
         $this->updateVendorApplication($request);
         Toastr::success(translate('messages.application_status_updated_successfully'));
 
@@ -1235,28 +1255,14 @@ class VendorController extends Controller
 
      private function updateVendorApplication($request)
     {
-        $store = Store::findOrFail($request->id);
-        $store->vendor->status = $request->status;
-        $store->vendor->rejection_note = $request->rejection_note;
-        $store->vendor->save();
-        if ($request->status) {
-            $store->status = 1;
-        }
-
-        $add_days = 1;
-        if ($store?->store_sub_update_application) {
-            if ($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1) {
-                $add_days = BusinessSetting::where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
-            } elseif ($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0) {
-                $add_days = $store?->store_sub_update_application->validity;
-            }
-            $store?->store_sub_update_application->update([
-                'expiry_date' => Carbon::now()->addDays((int) $add_days)->format('Y-m-d'),
-                'status' => 1,
-            ]);
-            $store->store_business_model = 'subscription';
-        }
-        $store->save();
+        $request->validate([
+            'id' => 'required|integer', 'status' => 'required|in:0,1',
+            'rejection_note' => 'required_if:status,0|nullable|string|max:1000',
+        ]);
+        $store = app(\App\Services\VendorApplicationDecisionService::class)->decide(
+            (int) $request->id, (int) $request->status, $request->rejection_note
+        );
+        if (!$store) return true; // A refresh/repeated submission is a no-op.
         try {
             if ($request->status == 1) {
                 if (config('mail.status') && Helpers::get_mail_status('approve_mail_status_store') == '1' && Helpers::getNotificationStatusData('store', 'store_registration_approval', 'mail_status')) {

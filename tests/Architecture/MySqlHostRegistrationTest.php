@@ -43,7 +43,7 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
             ['key' => 'recaptcha', 'value' => '{"status":0}'],
             ['key' => 'subscription_business_model', 'value' => '1'],
         ]);
-        DB::table('zones')->insert(['id' => 1, 'name' => 'Test zone', 'coordinates' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))',4326)")]);
+        DB::table('zones')->insert(['id' => 1, 'name' => 'Test zone', 'coordinates' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))',".POINT_SRID.")")]);
         DB::table('modules')->insert(['id' => 1, 'module_name' => 'Groceries', 'module_type' => 'grocery']);
         DB::table('module_zone')->insert(['module_id' => 1, 'zone_id' => 1]);
         session(['six_captcha' => 'fixture']);

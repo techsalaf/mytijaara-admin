@@ -4,7 +4,7 @@
         "dev": "vite",
         "build": "vite build && npm run ensure:symlink",
         "build:prod": "rm -f public/hot 'public/hot 2' && vite build && npm run ensure:symlink",
-        "ensure:symlink": "test -L build || ln -s public/build build",
+        "ensure:symlink": "node scripts/ensure-build-link.cjs",
         "package:addon": "./scripts/package-builder-addon.sh",
         "dev:mix": "mix",
         "watch:mix": "mix watch",

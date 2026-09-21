@@ -52,7 +52,7 @@ final class RegistrationSchema {
         Schema::create('zones', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->geometry('coordinates', subtype: 'polygon', srid: 4326)->nullable();
+            $table->geometry('coordinates', subtype: 'polygon', srid: POINT_SRID)->nullable();
             $table->tinyInteger('status')->default(1);
             $table->string('restaurant_wise_topic')->nullable();
             $table->string('customer_wise_topic')->nullable();

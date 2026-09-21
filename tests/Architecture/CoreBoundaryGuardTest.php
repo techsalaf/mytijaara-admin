@@ -33,6 +33,21 @@ final class CoreBoundaryGuardTest extends TestCase
             file_put_contents($root.'/app/Unapproved.php', '<?php // new core dependency');
             $this->assertStringContainsString('Unapproved core patch', $this->guard($root)->getErrorOutput());
             unlink($root.'/app/Unapproved.php');
+            file_put_contents($root.'/app/Host.php', '<?php // accepted platform update');
+            $this->runCommand(['git', 'add', 'app/Host.php'], $root);
+            $this->runCommand(['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '--quiet', '-m', 'platform'], $root);
+            $manifest = json_decode(file_get_contents($root.'/scripts/core-patches.json'), true);
+            $manifest['platform_baseline'] = trim($this->runCommand(['git', 'rev-parse', 'HEAD'], $root)->getOutput());
+            file_put_contents($root.'/scripts/core-patches.json', json_encode($manifest));
+            $this->assertSame(0, $this->guard($root)->getExitCode());
+            file_put_contents($root.'/app/Host.php', '<?php // unreviewed subsequent edit');
+            $this->assertStringContainsString('Unapproved core patch', $this->guard($root)->getErrorOutput());
+            file_put_contents($root.'/app/Host.php', '<?php use Modules\\WhatsAppVendorConcierge\\app\\Models\\WhatsAppContact;');
+            $this->assertStringContainsString('Forbidden core dependency', $this->guard($root)->getErrorOutput());
+            file_put_contents($root.'/app/Host.php', '<?php // accepted platform update');
+            file_put_contents($root.'/app/Unapproved.php', '<?php // still prohibited');
+            $this->assertStringContainsString('Unapproved core patch', $this->guard($root)->getErrorOutput());
+            unlink($root.'/app/Unapproved.php');
             file_put_contents($root.'/Modules/WhatsAppVendorConcierge/app/Bypass.php', '<?php $item->save();');
             $this->assertStringContainsString('Protected write outside reviewed adapter', $this->guard($root)->getErrorOutput());
             foreach ([
