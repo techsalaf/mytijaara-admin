@@ -19,7 +19,10 @@ function releaseCopy(string $from, string $to): void
     // back against the journal's old/new hashes.
     $temporary = dirname($to).'/.release-'.bin2hex(random_bytes(12));
     try {
-        if (!copy($from, $temporary)) throw new RuntimeException('Cannot copy code file');
+        if (!@copy($from, $temporary)) {
+            $reason = error_get_last()['message'] ?? 'unknown filesystem error';
+            throw new RuntimeException('Cannot copy code file '.$from.' to '.$to.': '.$reason);
+        }
         if (PHP_OS_FAMILY !== 'Windows' && !chmod($temporary, fileperms($from) & 0777)) throw new RuntimeException('Cannot preserve code permissions');
         if (!rename($temporary, $to)) throw new RuntimeException('Cannot replace code file');
     } finally {
@@ -52,7 +55,12 @@ function runCodeRelease(array $argv): void
             if (!$file->isFile() || $file->isLink()) throw new RuntimeException('Only regular package files are allowed');
             $relative = str_replace('\\', '/', substr($file->getPathname(), strlen($incoming)+1));
             $destination = releasePath($target, $relative);
-            $entries[$relative] = ['new' => hash_file('sha256', $file->getPathname()), 'old' => is_file($destination) ? hash_file('sha256', $destination) : null];
+            $entry = ['new' => hash_file('sha256', $file->getPathname()), 'old' => is_file($destination) ? hash_file('sha256', $destination) : null];
+            // Unchanged code needs neither replacement nor a rollback copy.
+            // Keeping it out of the journal avoids duplicating the full vendor
+            // tree on every small release on quota-limited shared hosting.
+            if ($entry['new'] === $entry['old']) continue;
+            $entries[$relative] = $entry;
         }
         $obsolete = json_decode(file_get_contents(__DIR__.'/obsolete-core-files.json'), true, flags: JSON_THROW_ON_ERROR);
         foreach ($obsolete as $relative => $expectedHash) {

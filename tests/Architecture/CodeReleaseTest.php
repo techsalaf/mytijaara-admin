@@ -14,12 +14,18 @@ final class CodeReleaseTest extends TestCase
         file_put_contents($root.'/target/.env', 'preserve');
         file_put_contents($root.'/incoming/artisan', 'new');
         file_put_contents($root.'/incoming/new.php', '<?php // new');
+        file_put_contents($root.'/target/unchanged.php', '<?php // unchanged');
+        file_put_contents($root.'/incoming/unchanged.php', '<?php // unchanged');
         ob_start();
         try {
             runCodeRelease(['test', 'prepare', $root.'/target', $root.'/journal', $root.'/incoming']);
+            $journal = json_decode(file_get_contents($root.'/journal/release.json'), true);
+            $this->assertArrayNotHasKey('unchanged.php', $journal['entries']);
+            $this->assertFileDoesNotExist($root.'/journal/before/unchanged.php');
             runCodeRelease(['test', 'apply', $root.'/target', $root.'/journal']);
             $this->assertSame('new', file_get_contents($root.'/target/artisan'));
             $this->assertSame('preserve', file_get_contents($root.'/target/.env'));
+            $this->assertSame('<?php // unchanged', file_get_contents($root.'/target/unchanged.php'));
             runCodeRelease(['test', 'rollback', $root.'/target', $root.'/journal']);
             $this->assertSame('old', file_get_contents($root.'/target/artisan'));
             $this->assertFileDoesNotExist($root.'/target/new.php');
