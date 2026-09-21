@@ -1,10 +1,37 @@
 # Core isolation remediation — implementation evidence
 
-Status: **in progress; not a production GO**. This report supersedes earlier blanket completion/readiness statements for the architectural remediation. Passing preflight is not proof of workflow parity.
+Status: **local implementation and regression gates passed; production qualification outstanding**. This report supersedes earlier blanket completion/readiness statements for the architectural remediation. Production remains NO-GO until the staging checks below are observed.
 
-## Requested wrap-up checkpoint
+## Resumed verification — 2026-09-21
 
-The user requested a quick wrap-up because of the remaining token budget. This is a saved implementation checkpoint, **not completion of every requirement**.
+The delivery-accounting failure was a disposable-fixture omission: the host helper requires referral and loyalty settings. Those settings are now seeded without modifying host financial rules. Real delivery, rollback after accounting, and a competing PHP cancellation process are covered.
+
+The resumed implementation also connects the photo-to-product message handler to owned-media validation and explicit confirmation; enforces required descriptions, non-food photos, owned store categories and the host price range; rejects arbitrary product-image paths; preserves category ancestry and default module detail records; handles replacement images across storage disks; rejects missing secure credentials; selects Rental provider decision emails and preferences; and keeps submission persistence independent of confirmation transport failure. None of these changes adds a dependency from the core to WhatsApp.
+
+Worker releases now drain the old worker lock and hold an exclusive code-release lock through apply, migration, cache and recovery operations. New worker invocations take a shared lease. Source enforcement also checks literal query-builder writes and imported model aliases.
+
+Verified evidence after the earlier checkpoint:
+
+| Evidence | Result |
+| --- | --- |
+| `module-final-complete.*` | **134 tests, 758 assertions; 0 failures, 0 errors, 0 skips**; 50 PHPUnit deprecations; final combined run including MySQL-family financial cases |
+| `module-final.*` | 130 tests, 655 assertions; no failures/errors/skips; 50 PHPUnit deprecations |
+| `architecture-verified.*` | 35 tests, 174 assertions; no failures/errors/skips; 1 PHPUnit deprecation |
+| `rental-registration.*` | 1 test, 12 assertions; no failures/errors/skips; 1 PHPUnit deprecation |
+| `product-review-final.*` | 20 tests, 98 assertions; verifies the final product-detail and image-disk corrections |
+| `decision-mail-final.*` | 1 test, 84 assertions; store/Rental approve/deny, preferences and repeat suppression |
+| `module-release-complete.*` | 132 tests, 749 assertions; no failures/errors/skips; predates the final mandatory product-field validation |
+| `canonical-product-validation.*` | 26 tests, 212 assertions; no failures/errors/skips; final product requirements and registration/mail regressions |
+
+The final combined concierge run completed successfully. The 35-test architecture suite and the subsequently added one-test Rental case were run separately; together they cover 36 tests and 186 assertions, not an unobserved combined run. Earlier failed logs remain as history and are superseded by successful runs of the same cases. The intermediate mail-test failure came from host business-setting memoization surviving between test applications; the fixture now uses the host's supported per-key configuration override. See [the adapter trace](whatsapp-core-adapter-parity.md) and [staging acceptance record](whatsapp-staging-release-qualification.md) for tested behavior, remaining operational gates and the worker/rollback protocol. Production has not been accessed, pushed to, or deployed.
+
+Final application code is committed locally as `af39f831`, following release/isolation commit `8e8bd23e`. Eighteen changed module PHP files pass syntax checks. The final boundary scan passes and the explicit core-reference search returns zero matches. No application migration was added; generated test translations were removed. The complete change inventory is recorded in `final-diff-stat.txt` and `final-diff-names.txt`, and the eight retained generic core paths are captured in `retained-core-patch.diff` and `scripts/core-patches.json`.
+
+The final module command was `php vendor/phpunit/phpunit/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit docs/remediation-evidence/module-final-complete.xml`, with `APP_ENV=testing`, `APP_DEBUG=false`, `DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`, `CACHE_STORE=array`, `LOG_CHANNEL=single` and `ISOLATION_MYSQL=1`. The architecture run used the same environment with `tests/Architecture`; the subsequent Rental run selected its new published-registration test. These tests use disposable fixtures and do not read or change production data.
+
+## Historical requested wrap-up checkpoint
+
+The following paragraphs preserve an earlier checkpoint and its then-unresolved failures. They are **historical**, not the current test verdict; the resumed evidence above supersedes them.
 
 Additional verified evidence: `mysql-orders.*` passed one real MySQL-family cancellation test with 9 assertions, covering variant stock, admin/customer wallet balances and repeat suppression. The final focused product run (`product-final-check.*`) passed 13 tests with 62 assertions, including media ownership/storage and review relation/translation preservation. All 22 checked adapter/tool PHP files passed syntax checks (`adapter-lint.txt`). `mysql-delivery.*` failed its delivery test after one assertion because the canonical accounting helper returned failure; the local log reports a missing setting value. The precise missing prerequisite and a successful delivery-accounting run remain unresolved. Do not remove or weaken that failing gate.
 
@@ -33,7 +60,7 @@ The ordinary mobile and web store-active methods have been restored to their pre
 
 Generic approval safety remains in the host: POST decisions, route-authoritative identifiers, reasons, transactional decisions, repeat suppression and approval-only subscription activation. Normal vendor model events run; a scoped decision context lets the optional module observer defer to the explicit domain event without silencing unrelated observers. Optional module listener failures are contained. Notification jobs are queued after commit and reject superseded decisions.
 
-Product/order adapters are module-owned maintained ports. They are **not certified equivalents of every upstream workflow yet**. Added protections include ownership rechecks under locks, stale-preview rejection, subscription product limits, explicit variation-stock validation, moderation staging, cancellation configuration, delivery verification, and calls to existing stock/refund/accounting helpers. Financial and module-specific parity still requires the checks listed below.
+Product/order adapters are module-owned maintained ports. They are **not certified equivalents of every upstream workflow**. Added protections include ownership rechecks under locks, stale-preview rejection, subscription product limits, explicit variation-stock validation, moderation staging, cancellation configuration, delivery verification, and calls to existing stock/refund/accounting helpers. Local tests verify representative financial and module-specific effects; the remaining staging combinations are listed in the adapter coverage document.
 
 ## Retained core patches
 
@@ -85,14 +112,8 @@ The proposed workflow uploads into a sibling incoming directory, then prepares a
 
 If apply or a later step fails, the workflow attempts file rollback and leaves maintenance enabled. A code rollback does **not** undo a database migration. Inspect journal/source hashes and schema compatibility before clearing caches, restarting workers and bringing the host back up. Keep the incoming package and journal until verification and rollback retention have expired. This mechanism has local fixture coverage; production permissions/process supervision remain untested by design.
 
-## Outstanding completion gates
+## Remaining release qualification
 
-- Complete full module rerun after final edits; report exact pass/fail/skip/risky counts.
-- Complete product media ownership/copy handling, relation and module-specific product parity, and remaining order financial/stock/rider side-effect checks, including concurrent MySQL mutations.
-- Runtime host ordinary product/order workflows without module classes; broader HTTP authentication/CSRF behavior and optional-listener failure cases.
-- Published Rental/provider branches without altering Rental ownership or production configuration.
-- Final Flutter/React endpoint comparison with file/line evidence, complete diff inventory and exact retained patch explanation.
-- Final migration-impact inventory (no new application migration has been introduced by the isolation work so far).
-- Exact official-source upgrade rehearsal once the matching licensed release exists locally.
+The prior local gaps have additional implementation and test evidence above. An unconditional production GO is still withheld: staging Meta/payment and installed-client smoke tests, the real Linux worker lifecycle/rollback exercise, and the target PHP 8.3/MySQL 8 CI run have not been observed. The exact licensed upstream archive is unavailable; no official-source upgrade rehearsal is claimed.
 
-Do not infer a production GO from any one passing row above. The report will be updated as the remaining implementation and evidence are completed.
+See [the release qualification checklist](whatsapp-core-adapter-parity.md#remaining-release-qualification). Production deployment and SSH remain outside the authorized scope. Local tests cannot establish that the configured production workers, Meta account, gateway callbacks and installed applications work perfectly.

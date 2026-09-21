@@ -1,0 +1,89 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+.................EEEE.............                                34 / 34 (100%)
+
+Time: 06:02.573, Memory: 24.00 MB
+
+There were 4 errors:
+
+1) Tests\Architecture\MySqlHostOperationsTest::test_host_boots_and_registers_client_routes_without_module_classes
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_bed28a2915527086, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29
+
+2) Tests\Architecture\MySqlHostOperationsTest::test_public_registration_validation_does_not_load_module_classes_or_tables
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_0a1b2918bbc525dc, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29
+
+3) Tests\Architecture\MySqlHostOperationsTest::test_existing_host_controllers_can_be_resolved_without_module_classes
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_560867d8f69c0883, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29
+
+4) Tests\Architecture\MySqlHostOperationsTest::test_product_stock_status_and_order_transitions_without_optional_classes
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_c3961617ef10835b, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:30
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:30
+
+ERRORS!
+Tests: 34, Assertions: 139, Errors: 4, PHPUnit Deprecations: 1.

@@ -1,0 +1,1 @@
+rg source scan: no forbidden core-to-module references. Exit 1 means zero matches.

@@ -1,0 +1,2 @@
+warning: in the working copy of 'resources/lang/en/messages.php', LF will be replaced by CRLF the next time Git touches it
+Core boundary passed: no forbidden host dependencies; changed core paths and protected write owners checked.

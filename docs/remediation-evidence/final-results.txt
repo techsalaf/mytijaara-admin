@@ -1,0 +1,7 @@
+Application code commit: af39f831cc8f2752d55b98cc8de4e9360a9f9519
+Local runtime: PHP 8.5.9 / MariaDB 10.4.32.
+module-final-complete: tests=134, assertions=758, errors=0, failures=0, skipped=0
+architecture-verified: tests=35, assertions=174, errors=0, failures=0, skipped=0
+rental-registration: tests=1, assertions=12, errors=0, failures=0, skipped=0
+canonical-product-validation: tests=26, assertions=212, errors=0, failures=0, skipped=0
+Module PHPUnit deprecations: 50; architecture: 1.

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Modules\WhatsAppVendorConcierge\tests\Unit\ApplicationDecisionMailTest" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApplicationDecisionMailTest.php" tests="1" assertions="84" errors="0" failures="0" skipped="0" time="18.471783">
+    <testcase name="test_store_and_rental_decision_mail_preferences_and_repeats" file="C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApplicationDecisionMailTest.php" line="16" class="Modules\WhatsAppVendorConcierge\tests\Unit\ApplicationDecisionMailTest" classname="Modules.WhatsAppVendorConcierge.tests.Unit.ApplicationDecisionMailTest" assertions="84" time="18.471783"/>
+  </testsuite>
+</testsuites>

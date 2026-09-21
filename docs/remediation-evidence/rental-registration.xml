@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="1" assertions="12" errors="0" failures="0" skipped="0" time="9.662757">
+    <testsuite name="Tests\Architecture\MySqlHostRegistrationTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" tests="1" assertions="12" errors="0" failures="0" skipped="0" time="9.662757">
+      <testcase name="test_published_rental_registration_requires_pickup_and_honours_provider_mail_preferences" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="192" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="12" time="9.662757"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

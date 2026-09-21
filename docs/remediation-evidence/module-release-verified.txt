@@ -1,0 +1,23 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+...............................................................  63 / 132 ( 47%)
+..........F.................................................... 126 / 132 ( 95%)
+......                                                          132 / 132 (100%)
+
+Time: 04:59.501, Memory: 126.00 MB
+
+There was 1 failure:
+
+1) Modules\WhatsAppVendorConcierge\tests\Unit\ApplicationDecisionMailTest::test_store_and_rental_decision_mail_preferences_and_repeats
+The total number of mailables sent was 0 instead of 1.
+Failed asserting that 0 is identical to 1.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Testing\Fakes\MailFake.php:296
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApplicationDecisionMailTest.php:42
+
+FAILURES!
+Tests: 132, Assertions: 674, Failures: 1, PHPUnit Deprecations: 50.

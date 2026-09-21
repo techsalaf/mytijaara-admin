@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="34" assertions="139" errors="4" failures="0" skipped="0" time="76.924305">
+    <testsuite name="Tests\Architecture\ApprovalIsolationTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" tests="8" assertions="32" errors="0" failures="0" skipped="0" time="22.409265">
+      <testcase name="test_host_boots_and_registers_client_routes_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="55" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="6" time="4.711716"/>
+      <testcase name="test_public_registration_validation_does_not_load_module_classes_or_tables" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="67" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="2" time="3.527295"/>
+      <testcase name="test_existing_host_controllers_can_be_resolved_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="77" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="6" time="1.900299"/>
+      <testcase name="test_approval_keeps_model_observers_and_emits_only_one_domain_event" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="43" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="6" time="4.416868"/>
+      <testcase name="test_rejection_is_consistent_repeat_safe_and_does_not_activate_subscription" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="57" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="5" time="2.438301"/>
+      <testcase name="test_missing_rejection_reason_cannot_mutate_state" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="70" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="1" time="1.533175"/>
+      <testcase name="test_subscription_activates_on_approval_only" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="76" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="2" time="2.352811"/>
+      <testcase name="test_legacy_get_application_route_is_not_a_decision_handler" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\ApprovalIsolationTest.php" line="84" class="Tests\Architecture\ApprovalIsolationTest" classname="Tests.Architecture.ApprovalIsolationTest" assertions="4" time="1.528801"/>
+    </testsuite>
+    <testsuite name="Tests\Architecture\CodeReleaseTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CodeReleaseTest.php" tests="5" assertions="27" errors="0" failures="0" skipped="0" time="0.301831">
+      <testcase name="test_deployment_and_rollback_preserve_runtime_files_and_restore_code" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CodeReleaseTest.php" line="7" class="Tests\Architecture\CodeReleaseTest" classname="Tests.Architecture.CodeReleaseTest" assertions="5" time="0.166297"/>
+      <testcase name="test_runtime_paths_and_traversal_are_rejected" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CodeReleaseTest.php" line="33" class="Tests\Architecture\CodeReleaseTest" classname="Tests.Architecture.CodeReleaseTest" assertions="8" time="0.000954"/>
+      <testcase name="test_changed_code_is_refused_before_any_apply_or_rollback_writes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CodeReleaseTest.php" line="42" class="Tests\Architecture\CodeReleaseTest" classname="Tests.Architecture.CodeReleaseTest" assertions="6" time="0.080330"/>
+      <testcase name="test_unreviewed_obsolete_class_is_preserved_and_blocks_preparation" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CodeReleaseTest.php" line="64" class="Tests\Architecture\CodeReleaseTest" classname="Tests.Architecture.CodeReleaseTest" assertions="4" time="0.049521"/>
+      <testcase name="test_release_roots_cannot_overlap" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CodeReleaseTest.php" line="82" class="Tests\Architecture\CodeReleaseTest" classname="Tests.Architecture.CodeReleaseTest" assertions="4" time="0.004729"/>
+    </testsuite>
+    <testsuite name="Tests\Architecture\CoreBoundaryGuardTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CoreBoundaryGuardTest.php" tests="1" assertions="7" errors="0" failures="0" skipped="0" time="8.514769">
+      <testcase name="test_guard_rejects_reverse_dependencies_unlisted_core_files_and_bypassed_adapters" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\CoreBoundaryGuardTest.php" line="9" class="Tests\Architecture\CoreBoundaryGuardTest" classname="Tests.Architecture.CoreBoundaryGuardTest" assertions="7" time="8.514769"/>
+    </testsuite>
+    <testsuite name="Tests\Architecture\HostWithoutConciergeTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" tests="3" assertions="14" errors="0" failures="0" skipped="0" time="5.608878">
+      <testcase name="test_host_boots_and_registers_client_routes_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="55" class="Tests\Architecture\HostWithoutConciergeTest" classname="Tests.Architecture.HostWithoutConciergeTest" assertions="6" time="1.874442"/>
+      <testcase name="test_public_registration_validation_does_not_load_module_classes_or_tables" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="67" class="Tests\Architecture\HostWithoutConciergeTest" classname="Tests.Architecture.HostWithoutConciergeTest" assertions="2" time="2.222037"/>
+      <testcase name="test_existing_host_controllers_can_be_resolved_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="77" class="Tests\Architecture\HostWithoutConciergeTest" classname="Tests.Architecture.HostWithoutConciergeTest" assertions="6" time="1.512398"/>
+    </testsuite>
+    <testsuite name="Tests\Architecture\MySqlHostOperationsTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php" tests="4" assertions="0" errors="4" failures="0" skipped="0" time="0.000000">
+      <testcase name="test_host_boots_and_registers_client_routes_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="55" class="Tests\Architecture\MySqlHostOperationsTest" classname="Tests.Architecture.MySqlHostOperationsTest" assertions="0" time="0.000000">
+        <error type="Illuminate\Database\QueryException">Tests\Architecture\MySqlHostOperationsTest::test_host_boots_and_registers_client_routes_without_module_classes&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_bed28a2915527086, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29</error>
+      </testcase>
+      <testcase name="test_public_registration_validation_does_not_load_module_classes_or_tables" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="67" class="Tests\Architecture\MySqlHostOperationsTest" classname="Tests.Architecture.MySqlHostOperationsTest" assertions="0" time="0.000000">
+        <error type="Illuminate\Database\QueryException">Tests\Architecture\MySqlHostOperationsTest::test_public_registration_validation_does_not_load_module_classes_or_tables&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_0a1b2918bbc525dc, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29</error>
+      </testcase>
+      <testcase name="test_existing_host_controllers_can_be_resolved_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="77" class="Tests\Architecture\MySqlHostOperationsTest" classname="Tests.Architecture.MySqlHostOperationsTest" assertions="0" time="0.000000">
+        <error type="Illuminate\Database\QueryException">Tests\Architecture\MySqlHostOperationsTest::test_existing_host_controllers_can_be_resolved_without_module_classes&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_560867d8f69c0883, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:29</error>
+      </testcase>
+      <testcase name="test_product_stock_status_and_order_transitions_without_optional_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php" line="40" class="Tests\Architecture\MySqlHostOperationsTest" classname="Tests.Architecture.MySqlHostOperationsTest" assertions="0" time="0.000000">
+        <error type="Illuminate\Database\QueryException">Tests\Architecture\MySqlHostOperationsTest::test_product_stock_status_and_order_transitions_without_optional_classes&#13;
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'phone' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_c3961617ef10835b, SQL: insert into `stores` (`id`, `vendor_id`, `module_id`, `name`, `status`, `active`, `item_section`, `store_business_model`, `delivery_time`) values (1, 1, 1, Fixture, 1, 1, 1, commission, 20-30))
+&#13;
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostOperationsTest.php:30</error>
+      </testcase>
+    </testsuite>
+    <testsuite name="Tests\Architecture\MySqlHostRegistrationTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" tests="10" assertions="56" errors="0" failures="0" skipped="0" time="40.078379">
+      <testcase name="test_host_boots_and_registers_client_routes_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="55" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="6" time="3.538969"/>
+      <testcase name="test_existing_host_controllers_can_be_resolved_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\HostWithoutConciergeTest.php" line="77" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="6" time="2.650525"/>
+      <testcase name="test_valid_web_registration_retains_distinct_translations_without_module_classes" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="83" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="7" time="4.438637"/>
+      <testcase name="test_outside_zone_rejects_without_creating_vendor" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="95" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="2" time="2.840283"/>
+      <testcase name="test_vendor_api_registration_preserves_response_and_translations_without_module" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="102" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="6" time="4.768228"/>
+      <testcase name="test_vendor_login_and_mobile_and_web_availability_work_without_module" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="120" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="16" time="5.034066"/>
+      <testcase name="test_subscription_requires_package_before_persistence" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="153" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="2" time="3.246146"/>
+      <testcase name="test_subscription_selection_stays_unactivated" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="160" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="4" time="4.381280"/>
+      <testcase name="test_registration_email_preferences_are_honoured" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="169" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="6" time="5.380017"/>
+      <testcase name="test_public_registration_validation_does_not_load_module_classes_or_tables" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\MySqlHostRegistrationTest.php" line="193" class="Tests\Architecture\MySqlHostRegistrationTest" classname="Tests.Architecture.MySqlHostRegistrationTest" assertions="1" time="3.800227"/>
+    </testsuite>
+    <testsuite name="Tests\Architecture\RegistrationSourceContractTest" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" tests="3" assertions="3" errors="0" failures="0" skipped="0" time="0.011183">
+      <testcase name="test_public_registration_matches_the_reviewed_pre_extraction_workflow" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="10" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.003764"/>
+      <testcase name="test_store_app_availability_contract_is_unchanged" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="15" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.002512"/>
+      <testcase name="test_vendor_panel_availability_contract_is_unchanged" file="C:\xampp\htdocs\mytijaara-admin\tests\Architecture\RegistrationSourceContractTest.php" line="20" class="Tests\Architecture\RegistrationSourceContractTest" classname="Tests.Architecture.RegistrationSourceContractTest" assertions="1" time="0.004906"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

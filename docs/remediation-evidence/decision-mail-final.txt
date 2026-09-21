@@ -1,0 +1,11 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+.                                                                   1 / 1 (100%)
+
+Time: 00:19.044, Memory: 54.00 MB
+
+OK, but there were issues!
+Tests: 1, Assertions: 84, PHPUnit Deprecations: 1.

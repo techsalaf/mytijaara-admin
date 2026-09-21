@@ -1,0 +1,41 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+...............F......                                            22 / 22 (100%)
+
+Time: 04:03.652, Memory: 88.00 MB
+
+There was 1 failure:
+
+1) Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest::test_paid_cancellation_restores_variant_stock_and_refunds_wallet_once
+PHP Fatal error:  Uncaught InvalidArgumentException: Database connection [core_fixture] not configured. in C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php:221
+Stack trace:
+#0 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php(187): Illuminate\Database\DatabaseManager->configuration('core_fixture')
+#1 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php(102): Illuminate\Database\DatabaseManager->makeConnection('core_fixture')
+#2 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(1984): Illuminate\Database\DatabaseManager->connection('core_fixture')
+#3 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(1950): Illuminate\Database\Eloquent\Model::resolveConnection('core_fixture')
+#4 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(1713): Illuminate\Database\Eloquent\Model->getConnection()
+#5 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(1611): Illuminate\Database\Eloquent\Model->newBaseQueryBuilder()
+#6 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(1647): Illuminate\Database\Eloquent\Model->newModelQuery()
+#7 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(1600): Illuminate\Database\Eloquent\Model->newQueryWithoutScopes()
+#8 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasRelationships.php(370): Illuminate\Database\Eloquent\Model->newQuery()
+#9 C:\xampp\htdocs\mytijaara-admin\app\Models\Order.php(204): Illuminate\Database\Eloquent\Model->belongsTo('App\\Models\\Stor...', 'store_id')
+#10 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php(623): App\Models\Order->store()
+#11 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php(575): Illuminate\Database\Eloquent\Model->getRelationshipFromMethod('store')
+#12 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Concerns\HasAttributes.php(494): Illuminate\Database\Eloquent\Model->getRelationValue('store')
+#13 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(2455): Illuminate\Database\Eloquent\Model->getAttribute('store')
+#14 C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php(2508): Illuminate\Database\Eloquent\Model->offsetExists('store')
+#15 C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService.php(199): Illuminate\Database\Eloquent\Model->__isset('store')
+#16 C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService.php(24): Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService->authorizeOrderOwnership(Object(App\Models\Order), 1)
+#17 Command line code(13): Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService->transitionStatus(Object(App\Models\Order), 1, 'canceled', Array)
+#18 {main}
+  thrown in C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\DatabaseManager.php on line 221
+
+Failed asserting that 255 is identical to 0.
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Integration\MySqlOrderParityTest.php:102
+
+FAILURES!
+Tests: 22, Assertions: 134, Failures: 1, PHPUnit Deprecations: 50.

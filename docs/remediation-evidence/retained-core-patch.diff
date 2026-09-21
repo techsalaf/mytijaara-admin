@@ -1,0 +1,215 @@
+diff --git a/app/Events/VendorApplicationStatusChanged.php b/app/Events/VendorApplicationStatusChanged.php
+new file mode 100644
+index 00000000..e17f77dc
+--- /dev/null
++++ b/app/Events/VendorApplicationStatusChanged.php
+@@ -0,0 +1,28 @@
++<?php
++
++namespace App\Events;
++
++use App\Models\Store;
++use App\Models\Vendor;
++use Illuminate\Broadcasting\InteractsWithSockets;
++use Illuminate\Foundation\Events\Dispatchable;
++use Illuminate\Queue\SerializesModels;
++
++class VendorApplicationStatusChanged
++{
++    use Dispatchable, InteractsWithSockets, SerializesModels;
++
++    public string $version;
++
++    public function __construct(
++        public Store $store,
++        public Vendor $vendor,
++        public string $status, // 'approved', 'denied', 'suspended', 'unsuspended'
++        public ?string $rejectionNote = null,
++        ?string $version = null
++    ) {
++        // An event identifies one transition, including repeated status cycles in
++        // the same database timestamp second. Retries serialize this same ID.
++        $this->version = $version ?? (string) \Illuminate\Support\Str::uuid();
++    }
++}
+diff --git a/app/Http/Controllers/Admin/VendorController.php b/app/Http/Controllers/Admin/VendorController.php
+index 1d3f8f84..957db94c 100644
+--- a/app/Http/Controllers/Admin/VendorController.php
++++ b/app/Http/Controllers/Admin/VendorController.php
+@@ -987,0 +988,5 @@ class VendorController extends Controller
++        $request->validate(['status' => 'required|in:0,1']);
++        if ((int) $store->status === (int) $request->status) {
++            Toastr::success(translate('messages.store_status_updated'));
++            return back();
++        }
+@@ -1042,0 +1048,13 @@ class VendorController extends Controller
++        // Optional integrations observe a completed host status transition.
++        try {
++            if ($store && $store->vendor) {
++                event(new \App\Events\VendorApplicationStatusChanged(
++                    $store,
++                    $store->vendor,
++                    $request->status == 0 ? 'suspended' : 'unsuspended'
++                ));
++            }
++        } catch (\Throwable $ex) {
++            info('Vendor application status event dispatch failed: ' . $ex->getMessage());
++        }
++
+@@ -1208,0 +1227,2 @@ class VendorController extends Controller
++        // Route parameters are authoritative; query/body filters cannot reverse the decision.
++        $request->merge(['id' => $request->route('id'), 'status' => $request->route('status')]);
+@@ -1218,22 +1238,8 @@ class VendorController extends Controller
+-        $store = Store::findOrFail($request->id);
+-        $store->vendor->status = $request->status;
+-        $store->vendor->rejection_note = $request->rejection_note;
+-        $store->vendor->save();
+-        if ($request->status) {
+-            $store->status = 1;
+-        }
+-
+-        $add_days = 1;
+-        if ($store?->store_sub_update_application) {
+-            if ($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1) {
+-                $add_days = BusinessSetting::where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
+-            } elseif ($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0) {
+-                $add_days = $store?->store_sub_update_application->validity;
+-            }
+-            $store?->store_sub_update_application->update([
+-                'expiry_date' => Carbon::now()->addDays((int) $add_days)->format('Y-m-d'),
+-                'status' => 1,
+-            ]);
+-            $store->store_business_model = 'subscription';
+-        }
+-        $store->save();
++        $request->validate([
++            'id' => 'required|integer', 'status' => 'required|in:0,1',
++            'rejection_note' => 'required_if:status,0|nullable|string|max:1000',
++        ]);
++        $store = app(\App\Services\VendorApplicationDecisionService::class)->decide(
++            (int) $request->id, (int) $request->status, $request->rejection_note
++        );
++        if (!$store) return true; // A refresh/repeated submission is a no-op.
+diff --git a/app/Services/VendorApplicationDecisionService.php b/app/Services/VendorApplicationDecisionService.php
+new file mode 100644
+index 00000000..230a9725
+--- /dev/null
++++ b/app/Services/VendorApplicationDecisionService.php
+@@ -0,0 +1,58 @@
++<?php
++
++namespace App\Services;
++
++use App\Events\VendorApplicationStatusChanged;
++use App\Models\BusinessSetting;
++use App\Models\Store;
++use App\Models\Vendor;
++use Illuminate\Support\Facades\DB;
++use Illuminate\Validation\ValidationException;
++
++class VendorApplicationDecisionService
++{
++    private static array $deciding = [];
++
++    /** Optional integrations can defer to the explicit application decision event. */
++    public static function isDeciding(int $vendorId): bool
++    {
++        return isset(self::$deciding[$vendorId]);
++    }
++
++    public function decide(int $storeId, int $status, ?string $reason = null): ?Store
++    {
++        if (!in_array($status, [0, 1], true) || ($status === 0 && trim($reason ?? '') === '')) {
++            throw ValidationException::withMessages(['status' => 'Choose approval or provide a rejection reason.']);
++        }
++        return DB::transaction(function () use ($storeId, $status, $reason) {
++            $store = Store::lockForUpdate()->findOrFail($storeId);
++            $vendor = Vendor::lockForUpdate()->findOrFail($store->vendor_id);
++            if ($vendor->status !== null && (int) $vendor->status === $status) return null;
++
++            $vendor->status = $status;
++            $vendor->rejection_note = $status === 0 ? trim($reason) : null;
++            // Preserve all ordinary model observers. Optional status observers may
++            // defer to the complete decision event rather than the intermediate save.
++            self::$deciding[$vendor->id] = true;
++            try {
++                $vendor->save();
++            } finally {
++                unset(self::$deciding[$vendor->id]);
++            }
++            $store->setRelation('vendor', $vendor);
++            $store->status = $status;
++            if ($status === 1 && ($subscription = $store->store_sub_update_application)) {
++                $days = $subscription->is_trial
++                    ? (BusinessSetting::where('key', 'subscription_free_trial_days')->value('value') ?? 1)
++                    : $subscription->validity;
++                $subscription->update(['expiry_date' => now()->addDays((int) $days)->format('Y-m-d'), 'status' => 1]);
++                $store->store_business_model = 'subscription';
++            }
++            $store->save();
++            // Dispatch while the transaction is open: the listener queues after commit.
++            // Provider requests run in the worker, never inside the admin HTTP request.
++            event(new VendorApplicationStatusChanged($store, $vendor, $status === 1 ? 'approved' : 'denied', $vendor->rejection_note));
++            return $store;
++        });
++    }
++}
+diff --git a/resources/lang/en/messages.php b/resources/lang/en/messages.php
+index f462b05e..f50535c6 100644
+--- a/resources/lang/en/messages.php
++++ b/resources/lang/en/messages.php
+@@ -12681,0 +12682,2 @@ Smartly or Earn. ',
++  'Short_description' => 'Short description',
++  'an_approved_store_already_exists_for_this_phone' => 'An approved store already exists for this phone',
+diff --git a/resources/views/admin-views/vendor/deny_requests.blade.php b/resources/views/admin-views/vendor/deny_requests.blade.php
+index a8604fa4..3d35e907 100644
+--- a/resources/views/admin-views/vendor/deny_requests.blade.php
++++ b/resources/views/admin-views/vendor/deny_requests.blade.php
+@@ -150 +150 @@ active
+-                                    <a class="btn action-btn btn--primary btn-outline-primary float-right mr-2 swal_fire_alert" data-toggle="tooltip" data-placement="top"
++                                    <form method="post" action="{{route('admin.store.application',[$store['id'],1])}}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="Approve this vendor application?">@csrf<button type="submit" class="btn action-btn btn--primary btn-outline-primary float-right mr-2 " data-toggle="tooltip" data-placement="top"
+@@ -156,3 +156 @@ active
+-                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"
+-                                       data-url="{{route('admin.store.application',[$store['id'],1])}}"
+-                                    href="javascript:"><i class="tio-done font-weight-bold"></i></a>
++                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"><i class="tio-done font-weight-bold"></i></button></form>
+diff --git a/resources/views/admin-views/vendor/pending_requests.blade.php b/resources/views/admin-views/vendor/pending_requests.blade.php
+index 3597faa5..658c447f 100644
+--- a/resources/views/admin-views/vendor/pending_requests.blade.php
++++ b/resources/views/admin-views/vendor/pending_requests.blade.php
+@@ -181 +181 @@
+-                                        <a class="btn action-btn btn--primary btn-outline-primary float-right swal_fire_alert" data-toggle="tooltip" data-placement="top"
++                                        <form method="post" action="{{route('admin.store.application',[$store['id'],1])}}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="Approve this vendor application?">@csrf<button type="submit" class="btn action-btn btn--primary btn-outline-primary float-right " data-toggle="tooltip" data-placement="top"
+@@ -187,3 +187 @@
+-                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"
+-                                        data-url="{{route('admin.store.application',[$store['id'],1])}}"
+-                                            href="javascript:"><i class="tio-done font-weight-bold"></i></a>
++                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"><i class="tio-done font-weight-bold"></i></button></form>
+@@ -206 +204 @@
+-                <form action="{{ route('admin.store.application', [$store['id'], 0]) }}" method="get">
++                <form action="{{ route('admin.store.application', [$store['id'], 0]) }}" method="post">@csrf
+diff --git a/resources/views/admin-views/vendor/view/partials/_header.blade.php b/resources/views/admin-views/vendor/view/partials/_header.blade.php
+index 26233fc3..54007cba 100644
+--- a/resources/views/admin-views/vendor/view/partials/_header.blade.php
++++ b/resources/views/admin-views/vendor/view/partials/_header.blade.php
+@@ -37,2 +37 @@
+-                    <a class="btn btn--primary border-0   py-1 d-center h-35px m-0 text-capitalize font-weight-bold float-right swal_fire_alert"
+-                        data-url="{{ route('admin.store.application', [$store['id'], 1]) }}"
++                    <form method="post" action="{{ route('admin.store.application', [$store['id'], 1]) }}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="Approve this vendor application?">@csrf<button type="submit" class="btn btn--primary border-0   py-1 d-center h-35px m-0 text-capitalize font-weight-bold float-right "
+@@ -43,3 +42,2 @@
+-                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"
+-                        href="javascript:"><i
+-                            class="tio-done font-weight-bold pr-1"></i>{{ translate('messages.approve') }}</a>
++                                       data-message="{{translate('messages.you_want_to_approve_the_vendor_joining_request.')}}"><i
++                            class="tio-done font-weight-bold pr-1"></i>{{ translate('messages.approve') }}</button></form>
+@@ -193 +191 @@
+-                <form action="{{ route('admin.store.application', [$store['id'], 0]) }}" method="get">
++                <form action="{{ route('admin.store.application', [$store['id'], 0]) }}" method="post">@csrf
+diff --git a/routes/admin.php b/routes/admin.php
+index 6a0ef53e..b57072fc 100644
+--- a/routes/admin.php
++++ b/routes/admin.php
+@@ -237 +237,2 @@ Route::group(['namespace' => 'Admin', 'as' => 'admin.'], function () {
+-                Route::get('update-application/{id}/{status}', 'VendorController@update_application')->name('application');
++                Route::get('update-application/{id}/{status}', fn () => redirect()->route('admin.store.pending-requests'));
++                Route::post('update-application/{id}/{status}', 'VendorController@update_application')->whereIn('status', ['0', '1'])->name('application');

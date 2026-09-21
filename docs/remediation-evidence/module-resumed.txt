@@ -1,0 +1,24 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+..............................................FF...............  63 / 125 ( 50%)
+..............................................................  125 / 125 (100%)
+
+Time: 04:51.648, Memory: 124.00 MB
+
+There were 2 failures:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest::test_vendor_readiness_score_calculation
+Failed asserting that 50 matches expected 55.
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php:201
+
+2) Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest::test_vendor_wallet_read_masks_pii
+Failed asserting that false is true.
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorCommandCentreTest.php:251
+
+FAILURES!
+Tests: 125, Assertions: 608, Failures: 2, PHPUnit Deprecations: 50.
