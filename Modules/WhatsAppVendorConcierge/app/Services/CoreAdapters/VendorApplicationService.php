@@ -82,7 +82,7 @@ class VendorApplicationService
                 $vendor->phone = $dto->phone;
                 $vendor->password = !empty($dto->password)
                     ? bcrypt($dto->password)
-                    : (!empty($dto->password_hash) ? $dto->password_hash : bcrypt(\Illuminate\Support\Str::random(16)));
+                    : $dto->password_hash;
                 $vendor->status = null; // null = pending admin approval
                 $vendor->save();
             }
@@ -148,6 +148,30 @@ class VendorApplicationService
      */
     protected function validateDto(VendorApplicationDTO $dto): void
     {
+        validator(get_object_vars($dto), [
+            'f_name' => 'required|string|max:100',
+            'l_name' => 'nullable|string|max:100',
+            'business_name' => 'required|string|max:191',
+            'address' => 'required|string',
+            'phone' => ['required', 'string', 'min:10', 'max:30', 'regex:/^([0-9\s\-\+\(\)]*)$/'],
+            'email' => 'required|email|max:191',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
+            'minimum_delivery_time' => 'required|numeric|min:0',
+            'maximum_delivery_time' => 'required|numeric|gte:minimum_delivery_time',
+            'delivery_time_type' => 'required|in:min,hours,days',
+            'business_plan' => 'required|in:commission-base,subscription-base',
+        ])->validate();
+        if ($dto->source === 'whatsapp' || empty($dto->password)) {
+            if (empty($dto->password_hash) || (password_get_info($dto->password_hash)['algo'] ?? null) === null) {
+                throw ValidationException::withMessages(['password' => ['Complete secure password setup before submitting.']]);
+            }
+            if ($dto->source === 'whatsapp' && !empty($dto->password)) {
+                throw ValidationException::withMessages(['password' => ['Use secure password setup, not a chat password.']]);
+            }
+        } else {
+            validator(['password' => $dto->password], ['password' => [\Illuminate\Validation\Rules\Password::min(8)->mixedCase()->letters()->numbers()->symbols()]])->validate();
+        }
         $messages = [];
 
         if (empty(trim($dto->business_name))) {

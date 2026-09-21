@@ -26,6 +26,7 @@ final class MySqlOrderParityTest extends \Tests\TestCase
         DB::table('business_settings')->insert([
             ['key' => 'dm_tips_status', 'value' => '0'], ['key' => 'wallet_add_refund', 'value' => '1'],
             ['key' => 'wallet_status', 'value' => '1'], ['key' => 'admin_commission', 'value' => '10'],
+            ['key' => 'ref_earning_status', 'value' => '0'], ['key' => 'loyalty_point_status', 'value' => '0'],
         ]);
         DB::table('admins')->insert(['id' => 1, 'role_id' => 1, 'f_name' => 'Fixture', 'email' => 'admin@example.test', 'password' => bcrypt('Fixture-Only!123')]);
         DB::table('vendors')->insert(['id' => 1, 'f_name' => 'Vendor', 'phone' => '2348000000001', 'email' => 'vendor@example.test', 'status' => 1, 'password' => bcrypt('Fixture-Only!123')]);
@@ -62,6 +63,52 @@ final class MySqlOrderParityTest extends \Tests\TestCase
         $this->assertEquals(10, DB::table('items')->where('id', 1)->value('stock'));
         $this->assertEquals(200, DB::table('users')->where('id', 1)->value('wallet_balance'));
         $this->assertSame(1, DB::table('wallet_transactions')->where('user_id', 1)->count());
+
+        // A second PHP process reaches the same row while the first transaction
+        // owns its lock. Once released, it must observe cancellation and do no work.
+        DB::table('orders')->insert(['id' => 100003, 'store_id' => 1, 'module_id' => 1, 'user_id' => 1,
+            'order_type' => 'delivery', 'order_status' => 'pending', 'payment_method' => 'digital_payment',
+            'payment_status' => 'paid', 'order_amount' => 200, 'is_guest' => 0]);
+        DB::table('order_details')->insert(['order_id' => 100003, 'item_id' => 1, 'quantity' => 2, 'price' => 100,
+            'variation' => '[{"type":"Small","price":100,"stock":10}]']);
+        $code = <<<'PHP'
+        require 'vendor/autoload.php';
+        $app = require 'bootstrap/app.php';
+        $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        config(['database.connections.core_fixture' => json_decode(getenv('ISOLATION_CONNECTION'), true),
+            'database.default' => 'core_fixture', 'cache.default' => 'array', 'mail.status' => false,
+            'canceled_by_store' => true, 'module.grocery.stock' => true]);
+        Illuminate\Support\Facades\Http::preventStrayRequests();
+        Illuminate\Support\Facades\Queue::fake();
+        Illuminate\Support\Facades\Mail::fake();
+        $order = App\Models\Order::findOrFail(100003);
+        echo "READY\n"; flush();
+        app(Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\OrderMutationService::class)
+            ->transitionStatus($order, 1, 'canceled', ['reason' => 'Unavailable']);
+        echo "DONE\n";
+        PHP;
+        $child = new \Symfony\Component\Process\Process([PHP_BINARY, '-r', $code], base_path(),
+            ['ISOLATION_CONNECTION' => json_encode(DB::connection()->getConfig(), JSON_THROW_ON_ERROR)], timeout: 60);
+        DB::beginTransaction();
+        try {
+            Order::whereKey(100003)->lockForUpdate()->firstOrFail();
+            $child->start();
+            $this->assertTrue($child->waitUntil(fn ($type, $output) => str_contains($output, 'READY')));
+            usleep(100000);
+            $this->assertTrue($child->isRunning(), 'Competing mutation must wait for the existing row lock');
+            $service->transitionStatus(Order::findOrFail(100003), 1, 'canceled', ['reason' => 'Unavailable']);
+            DB::commit();
+            $child->wait();
+            $this->assertSame(0, $child->getExitCode(), $child->getErrorOutput());
+            $this->assertStringContainsString('DONE', $child->getOutput());
+            $this->assertEquals(12, DB::table('items')->where('id', 1)->value('stock'));
+            $this->assertEquals(400, DB::table('users')->where('id', 1)->value('wallet_balance'));
+            $this->assertEquals(600, DB::table('admin_wallets')->where('admin_id', 1)->value('digital_received'));
+            $this->assertSame(2, DB::table('wallet_transactions')->where('user_id', 1)->count());
+        } finally {
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            if ($child->isRunning()) $child->stop();
+        }
     }
 
     public function test_verified_delivery_creates_accounting_and_counts_once(): void
@@ -78,6 +125,22 @@ final class MySqlOrderParityTest extends \Tests\TestCase
         try { $service->transitionStatus(Order::findOrFail(100002), 1, 'delivered', ['otp' => '0000']); $this->fail('Invalid OTP accepted'); }
         catch (\Illuminate\Validation\ValidationException) {
             $this->assertSame(0, DB::table('order_transactions')->where('order_id', 100002)->count());
+        }
+        // Fail after accounting and counters have run: the enclosing adapter must
+        // roll everything back, including nested transactions in host helpers.
+        DB::unprepared("CREATE TRIGGER reject_fixture_delivery BEFORE UPDATE ON orders FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture delivery persistence failure'");
+        try {
+            $service->transitionStatus(Order::findOrFail(100002), 1, 'delivered', ['otp' => '4821']);
+            $this->fail('Injected persistence failure was swallowed');
+        } catch (\Illuminate\Database\QueryException $error) {
+            $this->assertStringContainsString('fixture delivery persistence failure', $error->getMessage());
+            $this->assertSame(0, DB::table('order_transactions')->count());
+            $this->assertSame(0, DB::table('store_wallets')->count());
+            $this->assertDatabaseHas('orders', ['id' => 100002, 'order_status' => 'handover', 'payment_status' => 'unpaid']);
+            $this->assertEquals(0, DB::table('stores')->where('id', 1)->value('order_count'));
+            $this->assertEquals(1, DB::table('delivery_men')->where('id', 1)->value('current_orders'));
+        } finally {
+            DB::unprepared('DROP TRIGGER reject_fixture_delivery');
         }
         $service->transitionStatus(Order::findOrFail(100002), 1, 'delivered', ['otp' => '4821']);
         $this->assertDatabaseHas('orders', ['id' => 100002, 'order_status' => 'delivered', 'payment_status' => 'paid']);

@@ -869,9 +869,14 @@ class WhatsAppVendorConciergeTest extends ApplicationFixtureTestCase
         $this->completeSubmissionFixture($session);
 
         $gateway = $this->createMock(WhatsAppGateway::class);
-        $gateway->expects($this->once())
+        $sendAttempts = 0;
+        $gateway->expects($this->exactly(2))
             ->method('sendTextMessage')
-            ->with($contact->phone_number, $this->stringContains('Application Has Been Submitted'));
+            ->with($contact->phone_number, $this->stringContains('Application Has Been Submitted'))
+            ->willReturnCallback(function () use (&$sendAttempts): array {
+                if (++$sendAttempts === 1) throw new \RuntimeException('Fixture transport outage');
+                return ['messages' => [['id' => 'fixture-confirmation']]];
+            });
 
         $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
         $service->submitApplication($conversation, $contact, $session, $gateway);
@@ -893,6 +898,13 @@ class WhatsAppVendorConciergeTest extends ApplicationFixtureTestCase
         $this->assertEquals('Canonical Shop Test', $store->name);
         $this->assertEquals(0, $store->status);
         $this->assertEquals('commission', $store->store_business_model);
+        $vendorCount = \App\Models\Vendor::count();
+        $storeCount = \App\Models\Store::count();
+        $service->submitApplication($conversation, $contact, $session, $gateway);
+        $this->assertSame($vendorCount, \App\Models\Vendor::count());
+        $this->assertSame($storeCount, \App\Models\Store::count());
+        $this->assertSame('submitted', $session->fresh()->status);
+        $this->assertSame('onboarding_completed', $conversation->fresh()->state);
     }
 
     /** @test */

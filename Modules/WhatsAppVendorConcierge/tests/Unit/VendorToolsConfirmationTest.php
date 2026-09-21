@@ -30,8 +30,8 @@ class VendorToolsConfirmationTest extends OperationsFixtureTestCase
     public function test_ai_confirm_flag_cannot_create_product_without_vendor_confirmation(): void
     {
         $tool = new CreateProductTool($this->context(), $this->vendor, $this->store);
-        $result = $tool->handle(new ToolRequest(['name' => 'Rice', 'price' => 3500,
-            'category_id' => $this->category->id, 'confirm' => true]));
+        $result = $tool->handle(new ToolRequest($this->productData(['name' => 'Rice', 'price' => 3500,
+            'category_id' => $this->category->id, 'confirm' => true])));
         $this->assertStringContainsString('confirmation preview', $result);
         $this->assertDatabaseMissing('items', ['name' => 'Rice']);
         $action = $this->confirmLatest();

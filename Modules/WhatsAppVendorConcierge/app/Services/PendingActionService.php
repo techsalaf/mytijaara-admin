@@ -107,6 +107,7 @@ class PendingActionService
 
         $store = Store::whereKey($storeId)->where('vendor_id', $contact->vendor_id)->firstOrFail();
         $category = Category::findOrFail($productData['category_id']);
+        $this->productMutationService->validateCreationRequirements($store, $productData);
 
         $payload = [
             'store_id' => $store->id,
@@ -114,6 +115,11 @@ class PendingActionService
         ];
         $priceFormatted = number_format($productData['price'], 2);
         $preview = "Add *{$productData['name']}* (₦{$priceFormatted}, Category: {$category->name}, Stock: {$productData['stock']}) to your catalog?";
+        $preview .= "\nDescription: ".\Illuminate\Support\Str::limit($productData['description'], 200);
+        if (!empty($productData['store_category_id'])) {
+            $storeCategory = \App\Models\StoreCategory::where('store_id', $store->id)->findOrFail($productData['store_category_id']);
+            $preview .= "\nStore category: ".\Illuminate\Support\Str::limit($storeCategory->name, 80);
+        }
 
         return $this->createAndDispatchAction($contact, $conversation, 'product_create', $payload, $preview);
     }

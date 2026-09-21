@@ -27,17 +27,94 @@ use Modules\WhatsAppVendorConcierge\app\Services\PhotoToProductService;
 
 class VendorOperationsTest extends OperationsFixtureTestCase
 {
+    public function test_creation_rejects_missing_host_required_description_and_nonfood_photo(): void
+    {
+        $service = app(ProductMutationService::class);
+        $base = ['name' => 'Incomplete', 'price' => 100, 'category_id' => $this->category->id];
+        foreach ([$base, $base + ['description' => 'Described product'],
+            $base + ['description' => str_repeat('a', 1001)]] as $data) {
+            try { $service->createProduct($this->store, $this->vendor->id, $data); $this->fail('Incomplete listing published'); }
+            catch (ValidationException) { $this->assertSame(0, Item::count()); }
+        }
+        $this->module->update(['module_type' => 'food']);
+        $item = $service->createProduct($this->store->fresh(), $this->vendor->id, $base + ['description' => 'Food without optional photo']);
+        $this->assertSame('def.png', $item->image);
+    }
+
+    public function test_store_category_is_required_when_enabled_and_cannot_belong_to_another_store(): void
+    {
+        config(['store_category_status_conf' => ['value' => '1']]);
+        DB::table('store_categories')->insert([
+            ['id' => 700, 'store_id' => $this->store->id, 'name' => 'Our shelf'],
+            ['id' => 701, 'store_id' => 999, 'name' => 'Other shelf'],
+        ]);
+        $data = $this->productData(['name' => 'Shelf product', 'price' => 100, 'category_id' => $this->category->id]);
+        foreach ([null, 701] as $id) {
+            try {
+                app(ProductMutationService::class)->createProduct($this->store, $this->vendor->id, $data + ['store_category_id' => $id]);
+                $this->fail('Unowned or missing store category accepted');
+            } catch (ValidationException $error) {
+                $this->assertArrayHasKey('store_category_id', $error->errors());
+                $this->assertSame(0, Item::count());
+            }
+        }
+        $item = app(ProductMutationService::class)->createProduct($this->store, $this->vendor->id, $data + ['store_category_id' => 700]);
+        $this->assertSame(700, (int) $item->store_category_id);
+    }
+
+    public function test_new_products_have_the_host_module_detail_records(): void
+    {
+        foreach (['grocery', 'ecommerce', 'pharmacy'] as $moduleType) {
+            $this->module->update(['module_type' => $moduleType]);
+            $item = app(ProductMutationService::class)->createProduct($this->store->fresh(), $this->vendor->id,
+                $this->productData(['name' => 'Default '.$moduleType, 'price' => 100, 'category_id' => $this->category->id]));
+            if ($moduleType === 'pharmacy') {
+                $this->assertDatabaseHas('pharmacy_item_details', ['item_id' => $item->id,
+                    'is_basic' => 0, 'is_prescription_required' => 0]);
+            } else {
+                $this->assertDatabaseHas('ecommerce_item_details', ['item_id' => $item->id, 'brand_id' => null]);
+            }
+            $this->assertSame(0, (int) $item->stock);
+        }
+    }
+
+    public function test_subcategory_products_retain_the_customer_visible_parent_path(): void
+    {
+        $child = Category::forceCreate(['name' => 'Leaf', 'parent_id' => $this->category->id, 'module_id' => $this->module->id]);
+        $item = app(ProductMutationService::class)->createProduct($this->store, $this->vendor->id,
+            $this->productData(['name' => 'Leaf product', 'price' => 100, 'category_id' => $child->id]));
+        $this->assertEquals($child->id, $item->category_id);
+        $this->assertSame([
+            ['id' => (string) $this->category->id, 'position' => 1],
+            ['id' => (string) $child->id, 'position' => 2],
+        ], json_decode($item->category_ids, true));
+    }
+
+    public function test_product_details_cannot_publish_an_arbitrary_image_path(): void
+    {
+        $item = Item::forceCreate(['name' => 'Owned item', 'price' => 100, 'image' => 'existing.png',
+            'store_id' => $this->store->id, 'module_id' => $this->module->id]);
+        foreach (['../private/document.pdf', 'https://example.test/image.png', 'other-store.png'] as $path) {
+            try {
+                app(ProductMutationService::class)->updateBasicDetails($item, $this->vendor->id, ['image' => $path]);
+                $this->fail('Unowned image accepted');
+            } catch (ValidationException) {
+                $this->assertSame('existing.png', $item->fresh()->image);
+            }
+        }
+    }
+
     public function test_product_mutation_service_creates_product_with_canonical_rules(): void
     {
         $service = app(ProductMutationService::class);
 
-        $item = $service->createProduct($this->store, $this->vendor->id, [
+        $item = $service->createProduct($this->store, $this->vendor->id, $this->productData([
             'name' => 'Bag of Ofada Rice (5kg)',
             'price' => 12500.00,
             'category_id' => $this->category->id,
             'stock' => 25,
             'description' => 'Locally grown premium Ofada rice',
-        ]);
+        ]));
 
         $this->assertNotNull($item->id);
         $this->assertEquals('Bag of Ofada Rice (5kg)', $item->name);
@@ -45,6 +122,7 @@ class VendorOperationsTest extends OperationsFixtureTestCase
         $this->assertEquals(25, $item->stock);
         $this->assertEquals(1, $item->status);
         $this->assertEquals($this->store->id, $item->store_id);
+        $this->assertDatabaseHas('ecommerce_item_details', ['item_id' => $item->id, 'brand_id' => null]);
 
         $this->assertDatabaseHas('translations', [
             'translationable_type' => Item::class,
@@ -110,9 +188,6 @@ class VendorOperationsTest extends OperationsFixtureTestCase
     public function test_product_moderation_stages_creation_and_price_without_publishing_changes(): void
     {
         config(['product_approval_conf' => ['value' => '1']]);
-        Schema::create('ecommerce_item_details', function (Blueprint $t) {
-            $t->id(); $t->integer('item_id')->nullable(); $t->integer('temp_product_id')->nullable(); $t->integer('brand_id')->nullable();
-        });
         Schema::create('taxables', function (Blueprint $t) {
             $t->id(); $t->string('taxable_type'); $t->integer('taxable_id');
             $t->integer('system_tax_setup_id'); $t->integer('tax_id'); $t->timestamps();
@@ -134,7 +209,7 @@ class VendorOperationsTest extends OperationsFixtureTestCase
             ['key' => 'product_approval_datas', 'value' => json_encode(['Add_new_product' => 1, 'Update_product_price' => 1])],
         ]);
         $service = app(ProductMutationService::class);
-        $item = $service->createProduct($this->store, $this->vendor->id, ['name' => 'Review me', 'price' => 100, 'category_id' => $this->category->id]);
+        $item = $service->createProduct($this->store, $this->vendor->id, $this->productData(['name' => 'Review me', 'price' => 100, 'category_id' => $this->category->id]));
         $this->assertEquals(0, $item->is_approved);
         $this->assertTrue($item->relationLoaded('conciergeReview'));
         $draft = $item->getRelation('conciergeReview');
@@ -169,6 +244,17 @@ class VendorOperationsTest extends OperationsFixtureTestCase
         $this->assertNotSame('gallery.png', $staged->images[0]['img']);
         Storage::disk('public')->assertExists(['product/existing.png', 'product/gallery.png',
             'product/'.$staged->image, 'product/'.$staged->images[0]['img']]);
+        // A replacement is uploaded to today's configured disk, even when the
+        // live product still records a different historical disk.
+        DB::table('storages')->where('data_type', Item::class)->where('data_id', $existing->id)
+            ->where('key', 'image')->update(['value' => 'local']);
+        Storage::disk('public')->put('product/replacement.png', 'replacement image bytes');
+        $proposal = $existing->fresh();
+        $proposal->image = 'replacement.png';
+        $review = app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ProductReview::class)->stage($proposal, 'Update_product_price');
+        Storage::disk('public')->assertExists('product/'.$review->image);
+        $this->assertSame('replacement image bytes', Storage::disk('public')->get('product/'.$review->image));
+        $this->assertSame('existing.png', $existing->fresh()->image);
     }
 
     public function test_pending_action_updates_product_price_with_explicit_confirmation(): void
@@ -330,31 +416,19 @@ class VendorOperationsTest extends OperationsFixtureTestCase
             'whatsapp_message_id' => 'photo-product-inbound',
         ]);
 
-        $photoService = app(PhotoToProductService::class);
-
-        // Step 1: Ingest media with AI suggestion
-        $startResult = $photoService->startDraftFromMedia(
-            $this->contact,
-            $this->conversation,
-            $media,
-            [
-                'name' => 'Yam Tubers (Medium)',
-                'category_id' => $this->category->id,
-                'category_name' => $this->category->name,
-                'description' => 'Fresh harvest yam tubers',
-            ]
-        );
-
-        $this->assertTrue($startResult['success']);
-        $this->assertStringContainsString('Yam Tubers (Medium)', $startResult['prompt']);
-
-        // Step 2: Vendor provides price and confirms details
-        $context = $this->conversation->fresh()->context;
-        $context['photo_to_product_draft']['price'] = 3500.00;
-        $this->conversation->update(['context' => $context]);
-
-        // Step 3: Prepare Confirmation PendingAction
-        $action = $photoService->prepareConfirmation($this->contact, $this->conversation, $this->store);
+        $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $gateway = $this->createMock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        $gateway->expects($this->once())->method('sendTextMessage');
+        $manager->handleAiMessage($this->conversation, $this->contact,
+            new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type' => 'image', 'media_id' => $media->id]), $gateway);
+        $this->assertSame($media->id, $this->conversation->fresh()->context['last_product_media_id']);
+        $manager->handleAiMessage($this->conversation, $this->contact,
+            new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type' => 'text',
+                'raw_text' => "Name: Yam Tubers (Medium)\nDescription: Fresh harvest yam\nPrice: 3500\nCategory: ".$this->category->name]), $gateway);
+        $action = PendingAction::where('conversation_id', $this->conversation->id)->sole();
+        $this->assertArrayNotHasKey('last_product_media_id', $this->conversation->fresh()->context);
+        $this->assertSame(0, Item::count(), 'Photo and details must only prepare a preview');
+        \Illuminate\Support\Facades\Queue::assertNotPushed(\Modules\WhatsAppVendorConcierge\app\Jobs\RunVendorAiConversation::class);
 
         $this->assertEquals('product_create', $action->action_type);
         $this->assertStringContainsString('Yam Tubers (Medium)', $action->preview);

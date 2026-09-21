@@ -13,6 +13,31 @@ use Modules\WhatsAppVendorConcierge\tests\Hardening\ApplicationFixtureTestCase;
 
 class AdminApprovalNotificationTest extends ApplicationFixtureTestCase
 {
+    public function test_missing_optional_tables_do_not_abort_a_host_denial(): void
+    {
+        $vendor = Vendor::forceCreate(['f_name' => 'Applicant', 'phone' => '2348000000991',
+            'email' => 'missing-table@example.test', 'status' => null]);
+        $store = Store::forceCreate(['name' => 'Applicant', 'phone' => '2348000000991',
+            'vendor_id' => $vendor->id, 'status' => 0]);
+        \Illuminate\Support\Facades\Schema::drop('whatsapp_contacts');
+        app(\App\Services\VendorApplicationDecisionService::class)->decide($store->id, 0, 'Required document missing');
+        $this->assertSame(0, (int) $vendor->fresh()->status);
+        $this->assertSame('Required document missing', $vendor->fresh()->rejection_note);
+        $this->assertSame(0, (int) $store->fresh()->status);
+    }
+
+    public function test_queue_failure_does_not_abort_a_host_denial(): void
+    {
+        $vendor = Vendor::forceCreate(['f_name' => 'Applicant', 'phone' => '2348000000992',
+            'email' => 'queue-outage@example.test', 'status' => null]);
+        $store = Store::forceCreate(['name' => 'Applicant', 'phone' => '2348000000992',
+            'vendor_id' => $vendor->id, 'status' => 0]);
+        Queue::shouldReceive('connection')->once()->andThrow(new \RuntimeException('Fixture queue outage'));
+        app(\App\Services\VendorApplicationDecisionService::class)->decide($store->id, 0, 'Required document missing');
+        $this->assertSame(0, (int) $vendor->fresh()->status);
+        $this->assertSame('Required document missing', $vendor->fresh()->rejection_note);
+        $this->assertSame(0, (int) $store->fresh()->status);
+    }
 
     /** @test */
     public function it_dispatches_whatsapp_message_when_vendor_is_approved()

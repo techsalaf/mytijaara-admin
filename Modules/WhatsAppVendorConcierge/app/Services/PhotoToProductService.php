@@ -68,10 +68,11 @@ class PhotoToProductService
             $prompt .= "*Please provide the product details:*\n";
         }
         $prompt .= "• Name: (e.g. Fresh Mangoes)\n";
+        $prompt .= "• Description: (describe the product, up to 1000 characters)\n";
         $prompt .= "• Price in ₦: (e.g. ₦1,500)\n";
         $prompt .= "• Category: (from your shop categories)\n";
         $prompt .= "• Stock: (default 0 units)\n\n";
-        $prompt .= "Reply with: *Name*, *Price*, and *Category*.";
+        $prompt .= "Reply with: *Name*, *Description*, *Price*, and *Category*. Include *Store category* if your shop uses its own categories.";
 
         return [
             'success' => true,
@@ -105,7 +106,7 @@ class PhotoToProductService
         }
 
         // Match Category
-        if (preg_match('/(?:category|cat)[:\s]*([^\n,]+)/i', $text, $matches)) {
+        if (preg_match('/(?:^|\n)\s*(?:category|cat)[:\s]*([^\n,]+)/i', $text, $matches)) {
             $catSearch = trim($matches[1]);
             $category = Category::where('name', 'like', "%{$catSearch}%")
                 ->where(function ($q) use ($store) {
@@ -115,6 +116,14 @@ class PhotoToProductService
                 $data['category_id'] = $category->id;
                 $data['category_name'] = $category->name;
             }
+        }
+
+        if (preg_match('/(?:^|\n)\s*description\s*:\s*([^\n]+)/i', $text, $matches)) {
+            $data['description'] = trim($matches[1]);
+        }
+        if (preg_match('/(?:^|\n)\s*store category\s*:\s*([^\n]+)/i', $text, $matches)) {
+            $category = \App\Models\StoreCategory::where('store_id', $store->id)->where('name', trim($matches[1]))->first();
+            if ($category) $data['store_category_id'] = $category->id;
         }
 
         return $data;
@@ -139,9 +148,9 @@ class PhotoToProductService
             ]);
         }
 
-        if (empty($draft['name']) || empty($draft['price']) || empty($draft['category_id'])) {
+        if (empty($draft['name']) || empty($draft['description']) || empty($draft['price']) || empty($draft['category_id'])) {
             throw ValidationException::withMessages([
-                'draft' => ['Please provide Name, Price, and Category before confirming the product.'],
+                'draft' => ['Please provide Name, Description, Price, and Category before confirming the product.'],
             ]);
         }
 
@@ -149,6 +158,7 @@ class PhotoToProductService
             'name' => $draft['name'],
             'price' => (float) $draft['price'],
             'category_id' => (int) $draft['category_id'],
+            'store_category_id' => $draft['store_category_id'] ?? null,
             'stock' => (int) ($draft['stock'] ?? 0),
             'description' => $draft['description'] ?? null,
             'media_id' => $draft['media_id'],

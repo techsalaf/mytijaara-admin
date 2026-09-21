@@ -166,7 +166,9 @@ class VendorCommandCentreTest extends HardeningTestCase
             $table->timestamps();
         });
 
-        $this->vendor = Vendor::create([
+        // Other fixture schemas omit payout columns; avoid Eloquent's process-wide
+        // guardable-column cache when constructing this deliberately wider fixture.
+        $this->vendor = Vendor::forceCreate([
             'f_name' => 'Bolaji',
             'l_name' => 'Tinubu',
             'phone' => '+2348055551122',

@@ -35,7 +35,8 @@ class ProductReview
             if (!$draft->exists) $draft->$field = json_encode($item->$relation()->allRelatedIds()->all(), JSON_THROW_ON_ERROR);
         }
         if ($item->image && ($newDraft || $item->isDirty('image'))) {
-            $disk = $item->storage->firstWhere('key', 'image')?->value ?? $item->storage->first()?->value ?? Helpers::getDisk();
+            $disk = $item->isDirty('image') ? Helpers::getDisk()
+                : ($item->storage->firstWhere('key', 'image')?->value ?? $item->storage->first()?->value ?? Helpers::getDisk());
             $draft->image = $item->image === 'def.png' ? 'def.png' : $this->copyImage($item->image, $disk);
         }
         if ($newDraft && array_key_exists('images', $item->getAttributes())) {

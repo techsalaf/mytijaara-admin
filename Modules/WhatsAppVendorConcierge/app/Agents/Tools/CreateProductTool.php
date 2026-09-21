@@ -11,7 +11,7 @@ class CreateProductTool extends BaseVendorTool
 {
     public function description(): string
     {
-        return 'Create a new product for the vendor\'s store. Requires product name, price, and category. Optional: description, stock, discount, image.';
+        return 'Prepare a product listing for vendor confirmation. Collect name, description, price and category; non-food listings require an uploaded photo. Supply an owned store category when the vendor uses store categories.';
     }
 
     public function schema(JsonSchema $schema): array
@@ -20,7 +20,8 @@ class CreateProductTool extends BaseVendorTool
             'name' => $schema->string()->description('Product name (required)')->required(),
             'price' => $schema->number()->description('Product price in Naira (required)')->required(),
             'category_id' => $schema->number()->description('Category ID from your store module')->required(),
-            'description' => $schema->string()->description('Product description')->required()->nullable(),
+            'description' => $schema->string()->description('Required product description, at most 1000 characters')->required(),
+            'store_category_id' => $schema->number()->description('Owned store-category ID when the store uses this feature')->required()->nullable(),
             'stock' => $schema->number()->description('Initial stock quantity (default 0)')->required()->nullable(),
             'discount' => $schema->number()->description('Discount amount')->required()->nullable(),
             'discount_type' => $schema->string()->description('Discount type: "percent" or "amount"')->required()->nullable(),
@@ -39,6 +40,7 @@ class CreateProductTool extends BaseVendorTool
             'price' => (float) $request['price'],
             'category_id' => (int) $request['category_id'],
             'description' => $request['description'] ?? null,
+            'store_category_id' => isset($request['store_category_id']) ? (int) $request['store_category_id'] : null,
             'stock' => isset($request['stock']) ? (int) $request['stock'] : 0,
             'discount' => isset($request['discount']) ? (float) $request['discount'] : 0,
             'discount_type' => $request['discount_type'] ?? 'percent',

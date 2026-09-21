@@ -20,15 +20,17 @@ class ProductMutationService
     public function createProduct(Store $store, int $vendorId, array $data): Item
     {
         $this->authorizeStoreOwnership($store, $vendorId);
+        $this->validateCreationRequirements($store, $data);
 
         $validator = validator($data, [
             'name' => 'required|string|max:191',
-            'price' => 'required|numeric|min:0.01',
+            'price' => 'required|numeric|between:'.Helpers::getDecimalPlaces().',999999999999.999',
             'category_id' => 'required|integer',
+            'store_category_id' => 'nullable|integer',
             'stock' => 'nullable|integer|min:0',
             'discount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:percent,amount',
-            'description' => 'nullable|string',
+            'description' => 'required|string|max:1000',
             'image' => 'nullable|string',
             'media_id' => 'nullable|integer|min:1',
             'veg' => 'nullable|boolean',
@@ -66,9 +68,10 @@ class ProductMutationService
             $item->name = $validated['name'];
             $item->price = $validated['price'];
             $item->category_id = $category->id;
-            $item->category_ids = json_encode([['id' => (string) $category->id, 'position' => 1]]);
+            $item->category_ids = $this->categoryPath($category, (int) $store->module_id);
             $item->store_id = $store->id;
             $item->module_id = $store->module_id;
+            $item->store_category_id = $validated['store_category_id'] ?? null;
             $item->stock = $validated['stock'] ?? 0;
             $item->discount = $validated['discount'] ?? 0;
             $item->discount_type = $validated['discount_type'] ?? 'percent';
@@ -84,6 +87,21 @@ class ProductMutationService
             $item->available_time_starts = '00:00:00';
             $item->available_time_ends = '23:59:59';
             $item->save();
+
+            // The host creates these rows even when optional detail inputs are empty.
+            $moduleType = $store->module->module_type;
+            if (in_array($moduleType, ['grocery', 'ecommerce'], true)) {
+                $details = new \App\Models\EcommerceItemDetails();
+                $details->item_id = $item->id;
+                $details->brand_id = null;
+                $details->save();
+            } elseif ($moduleType === 'pharmacy') {
+                $details = new \App\Models\PharmacyItemDetails();
+                $details->item_id = $item->id;
+                $details->is_basic = 0;
+                $details->is_prescription_required = 0;
+                $details->save();
+            }
 
             // Save default translation
             Translation::updateOrCreate([
@@ -123,9 +141,9 @@ class ProductMutationService
     {
         $this->authorizeItemOwnership($item, $vendorId);
 
-        if ($newPrice <= 0) {
+        if ($newPrice < (float) Helpers::getDecimalPlaces() || $newPrice > 999999999999.999) {
             throw ValidationException::withMessages([
-                'price' => ['Product price must be greater than zero.'],
+                'price' => ['Product price must be within the configured host price range.'],
             ]);
         }
 
@@ -213,12 +231,13 @@ class ProductMutationService
         $this->authorizeItemOwnership($item, $vendorId);
 
         $validator = validator($data, [
-            'name' => 'nullable|string|max:191',
-            'description' => 'nullable|string',
+            'name' => 'sometimes|required|string|max:191',
+            'description' => 'sometimes|required|string|max:1000',
             'category_id' => 'nullable|integer',
             'discount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:percent,amount',
             'image' => 'nullable|string',
+            'media_id' => 'nullable|integer|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -226,6 +245,12 @@ class ProductMutationService
         }
 
         $validated = array_filter($validator->validated(), fn ($val) => $val !== null);
+        if (isset($validated['image'])) {
+            if (!ctype_digit($validated['image'])) {
+                throw ValidationException::withMessages(['image' => ['Use an image uploaded in your WhatsApp conversation.']]);
+            }
+            $validated['media_id'] = (int) $validated['image'];
+        }
 
         if (isset($validated['category_id'])) {
             $category = Category::where('id', $validated['category_id'])
@@ -258,7 +283,7 @@ class ProductMutationService
 
             if (isset($validated['category_id'])) {
                 $locked->category_id = $validated['category_id'];
-                $locked->category_ids = json_encode([['id' => (string) $validated['category_id'], 'position' => 1]]);
+                $locked->category_ids = $this->categoryPath(Category::findOrFail($validated['category_id']), (int) $locked->module_id);
             }
 
             if (isset($validated['discount'])) {
@@ -267,8 +292,8 @@ class ProductMutationService
             if (isset($validated['discount_type'])) {
                 $locked->discount_type = $validated['discount_type'];
             }
-            if (isset($validated['image'])) {
-                $locked->image = $validated['image'];
+            if (isset($validated['media_id'])) {
+                $locked->image = app(ProductMedia::class)->publish($validated['media_id'], $vendorId);
             }
 
             $this->validateDiscount((float) $locked->price, (float) $locked->discount, $locked->discount_type);
@@ -286,6 +311,45 @@ class ProductMutationService
 
             return $locked->fresh(['translations']);
         });
+    }
+
+    public function validateCreationRequirements(Store $store, array $data): void
+    {
+        // Match the host's conditional store-category rule without memoizing a
+        // per-request result for the lifetime of a queue worker.
+        $needsStoreCategory = Helpers::storeCategoryStatus()
+            && \App\Models\StoreCategory::where('store_id', $store->id)->exists();
+        validator($data, [
+            'name' => 'required|string|max:191',
+            'price' => 'required|numeric|between:'.Helpers::getDecimalPlaces().',999999999999.999',
+            'description' => 'required|string|max:1000',
+            'store_category_id' => [
+                $needsStoreCategory ? 'required' : 'nullable', 'integer',
+                \Illuminate\Validation\Rule::exists('store_categories', 'id')->where('store_id', $store->id),
+            ],
+        ])->validate();
+        $mediaId = $data['media_id'] ?? (ctype_digit((string) ($data['image'] ?? '')) ? (int) $data['image'] : null);
+        if ($store->module->module_type !== 'food' && !$mediaId) {
+            throw ValidationException::withMessages(['image' => ['Upload a product photo before creating this listing.']]);
+        }
+        if ($mediaId) app(ProductMedia::class)->owned((int) $mediaId, (int) $store->vendor_id);
+    }
+
+    private function categoryPath(Category $category, int $moduleId): string
+    {
+        $ids = [];
+        while ($category) {
+            if (isset($ids[$category->id]) || ($category->module_id !== null && (int) $category->module_id !== $moduleId)) {
+                throw ValidationException::withMessages(['category_id' => ['The category hierarchy is invalid for this module.']]);
+            }
+            $ids[$category->id] = (string) $category->id;
+            if (!$category->parent_id) break;
+            $category = Category::find($category->parent_id);
+            if (!$category) throw ValidationException::withMessages(['category_id' => ['The parent category is unavailable.']]);
+        }
+        $path = [];
+        foreach (array_reverse(array_values($ids)) as $index => $id) $path[] = ['id' => $id, 'position' => $index + 1];
+        return json_encode($path, JSON_THROW_ON_ERROR);
     }
 
     private function authorizeStoreOwnership(Store $store, int $vendorId): void

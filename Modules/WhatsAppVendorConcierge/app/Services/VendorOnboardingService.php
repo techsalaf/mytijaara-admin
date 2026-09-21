@@ -1396,8 +1396,7 @@ class VendorOnboardingService
             }
             Log::error('Application submission failed', [
                 'contact_id' => $contact->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception' => $e::class,
             ]);
 
             $gateway->sendTextMessage(

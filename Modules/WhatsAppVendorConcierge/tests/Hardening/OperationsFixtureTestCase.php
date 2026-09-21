@@ -34,6 +34,24 @@ abstract class OperationsFixtureTestCase extends HardeningTestCase
     protected Category $category;
     protected WhatsAppContact $contact;
     protected WhatsAppConversation $conversation;
+    private ?int $productMediaId = null;
+
+    protected function productData(array $overrides): array
+    {
+        if (!$this->productMediaId) {
+            $image = imagecreatetruecolor(400, 400);
+            ob_start(); imagepng($image); $bytes = ob_get_clean(); imagedestroy($image);
+            Storage::disk('public')->put('fixture/product.png', $bytes);
+            $media = WhatsAppMedia::create(['whatsapp_media_id' => 'fixture-'.bin2hex(random_bytes(8)),
+                'mime_type' => 'image/png', 'file_size' => strlen($bytes), 'storage_disk' => 'public',
+                'file_path' => 'fixture/product.png', 'status' => 'downloaded']);
+            \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage::create([
+                'conversation_id' => $this->conversation->id, 'media_id' => $media->id, 'direction' => 'inbound',
+                'type' => 'image', 'content' => [], 'whatsapp_message_id' => 'fixture-image-'.$media->id]);
+            $this->productMediaId = $media->id;
+        }
+        return array_replace(['description' => 'Fixture product description', 'image' => (string) $this->productMediaId, 'stock' => 0], $overrides);
+    }
 
     protected function setUp(): void
     {
@@ -119,6 +137,7 @@ abstract class OperationsFixtureTestCase extends HardeningTestCase
             $table->text('description')->nullable();
             $table->string('image')->nullable();
             $table->unsignedBigInteger('category_id')->nullable();
+            $table->unsignedBigInteger('store_category_id')->nullable();
             $table->string('category_ids')->nullable();
             $table->text('variations')->nullable();
             $table->text('add_ons')->nullable();
@@ -202,6 +221,20 @@ abstract class OperationsFixtureTestCase extends HardeningTestCase
             $table->string('key')->nullable();
             $table->string('value')->nullable();
             $table->timestamps();
+        });
+
+        Schema::create('store_categories', function (Blueprint $t) {
+            $t->id(); $t->integer('store_id'); $t->string('name');
+        });
+        Schema::create('ecommerce_item_details', function (Blueprint $t) {
+            $t->id(); $t->integer('item_id')->nullable(); $t->integer('temp_product_id')->nullable();
+            $t->integer('brand_id')->nullable(); $t->timestamps();
+        });
+        Schema::create('pharmacy_item_details', function (Blueprint $t) {
+            $t->id(); $t->integer('item_id')->nullable(); $t->integer('temp_product_id')->nullable();
+            $t->integer('common_condition_id')->nullable(); $t->boolean('is_basic')->default(false);
+            $t->boolean('is_prescription_required')->default(false); $t->string('unit_value')->nullable();
+            $t->string('manufacturer')->nullable(); $t->timestamps();
         });
 
         // Seed basic operational fixtures

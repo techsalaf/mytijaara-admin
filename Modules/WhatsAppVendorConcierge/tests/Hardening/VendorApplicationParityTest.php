@@ -17,6 +17,23 @@ use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 
 class VendorApplicationParityTest extends ApplicationFixtureTestCase
 {
+    public function test_adapter_cannot_create_an_account_without_secure_credentials(): void
+    {
+        $dto = new VendorApplicationDTO(f_name: 'Applicant', l_name: 'Owner', phone: '2348000000999',
+            email: 'fixture@example.test', business_name: 'Fixture', address: 'Fixture address',
+            latitude: 5, longitude: 5, zone_id: 1, module_id: 1, source: 'whatsapp');
+        foreach ([null, 'not-a-password-hash'] as $hash) {
+            $dto->password_hash = $hash;
+            try {
+                app(VendorApplicationService::class)->submit($dto);
+                $this->fail('Account created without secure credentials');
+            } catch (\Illuminate\Validation\ValidationException $error) {
+                $this->assertArrayHasKey('password', $error->errors());
+                $this->assertSame(0, Vendor::count());
+            }
+        }
+    }
+
     public function test_web_and_whatsapp_dto_produce_identical_canonical_outcomes(): void
     {
         $zone = Zone::create([
