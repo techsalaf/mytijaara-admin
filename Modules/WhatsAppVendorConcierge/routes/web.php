@@ -78,4 +78,10 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::post('/models/{model}/toggle', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggleModel'])->name('models.toggle');
         Route::post('/models/{model}/update', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'updateModel'])->name('models.update');
     });
+
+    Route::group(['prefix' => 'admin/whatsapp/ai-routing', 'as' => 'admin.whatsapp.ai-routing.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiRoutingDashboardController::class, 'index'])->name('index');
+        Route::put('/policy/{policy}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiRoutingDashboardController::class, 'updatePolicy'])->name('policy.update');
+        Route::post('/simulate', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiRoutingDashboardController::class, 'simulate'])->name('simulate');
+    });
 });
