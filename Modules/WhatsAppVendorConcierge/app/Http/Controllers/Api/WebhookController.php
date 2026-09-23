@@ -82,23 +82,17 @@ class WebhookController extends \App\Http\Controllers\Controller
                     // Process each message async
                     foreach ($value['messages'] ?? [] as $message) {
                         $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($message);
-                        ProcessIncomingWhatsAppMessage::dispatch($message, array_intersect_key($value, array_flip(['contacts', 'metadata'])))
-                            ->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
-                            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
+                        ProcessIncomingWhatsAppMessage::dispatchAfterResponse($message, array_intersect_key($value, array_flip(['contacts', 'metadata'])));
                     }
 
                     // Process status updates async
                     foreach ($value['statuses'] ?? [] as $status) {
-                        \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppStatus::dispatch($status)
-                            ->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
-                            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
+                        \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppStatus::dispatchAfterResponse($status);
                     }
 
                     // Process flow responses async
                     if (isset($value['flow'])) {
-                        ProcessIncomingWhatsAppMessage::dispatchFlow($value['flow'], $value)
-                            ->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
-                            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming'));
+                        dispatch(ProcessIncomingWhatsAppMessage::dispatchFlow($value['flow'], $value))->afterResponse();
                     }
                 }
             }
@@ -130,3 +124,5 @@ class WebhookController extends \App\Http\Controllers\Controller
         return hash_equals($expectedHash, $providedHash);
     }
 }
+
+

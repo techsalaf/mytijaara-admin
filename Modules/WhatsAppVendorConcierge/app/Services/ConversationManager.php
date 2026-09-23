@@ -204,8 +204,7 @@ class ConversationManager
         }
 
         // Queue AI processing
-        RunVendorAiConversation::dispatch($conversation, $contact, $message)
-            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
+        RunVendorAiConversation::dispatchSync($conversation, $contact, $message);
     }
 
     /**
@@ -608,10 +607,10 @@ class ConversationManager
     protected function handleViewOrders(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         // This would call an AI tool to fetch orders
-        RunVendorAiConversation::dispatch($conversation, $contact, new WhatsAppMessage([
+        RunVendorAiConversation::dispatchSync($conversation, $contact, new WhatsAppMessage([
             'content' => ['text' => 'Show me my orders today'],
             'type' => 'text',
-        ]))->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
+        ]));
     }
 
     /**
@@ -619,10 +618,10 @@ class ConversationManager
      */
     protected function handleViewSales(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        RunVendorAiConversation::dispatch($conversation, $contact, new WhatsAppMessage([
+        RunVendorAiConversation::dispatchSync($conversation, $contact, new WhatsAppMessage([
             'content' => ['text' => 'How much did I sell today?'],
             'type' => 'text',
-        ]))->onQueue(config('whatsapp-vendor-concierge.queue.jobs.run_ai_conversation'));
+        ]));
     }
 
     /**
@@ -816,3 +815,4 @@ class ConversationManager
         }
     }
 }
+
