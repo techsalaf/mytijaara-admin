@@ -22,7 +22,7 @@ class WhatsAppGateway
     public function __construct()
     {
         $this->apiVersion = config('whatsapp-vendor-concierge.api.version', 'v21.0');
-        $this->baseUrl = config('whatsapp-vendor-concierge.api.base_url', 'https://graph.facebook.com/') . $this->apiVersion;
+        $this->baseUrl = rtrim(config('whatsapp-vendor-concierge.api.base_url', 'https://graph.facebook.com/'), '/') . '/' . $this->apiVersion . '/';
         $this->phoneNumberId = config('whatsapp-vendor-concierge.api.phone_number_id');
         $this->accessToken = config('whatsapp-vendor-concierge.api.access_token');
 
@@ -364,7 +364,7 @@ class WhatsAppGateway
         ];
 
         try {
-            $response = $this->client->post("/{$this->phoneNumberId}/messages", ['json' => $payload]);
+            $response = $this->client->post("{$this->phoneNumberId}/messages", ['json' => $payload]);
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             Log::error('Failed to mark message as read', [
@@ -381,7 +381,7 @@ class WhatsAppGateway
     protected function sendMessage(array $payload): array
     {
         try {
-            $response = $this->client->post("/{$this->phoneNumberId}/messages", ['json' => $payload]);
+            $response = $this->client->post("{$this->phoneNumberId}/messages", ['json' => $payload]);
             $result = json_decode($response->getBody()->getContents(), true);
 
             Log::info('WhatsApp message sent', [
@@ -420,7 +420,7 @@ class WhatsAppGateway
     public function uploadMedia(string $filePath, string $mimeType): array
     {
         try {
-            $response = $this->client->post("/{$this->phoneNumberId}/media", [
+            $response = $this->client->post("{$this->phoneNumberId}/media", [
                 'multipart' => [
                     [
                         'name' => 'file',
@@ -465,7 +465,7 @@ class WhatsAppGateway
     public function getMediaUrl(string $mediaId): array
     {
         try {
-            $response = $this->client->get("/{$mediaId}");
+            $response = $this->client->get("{$mediaId}");
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
@@ -522,7 +522,7 @@ class WhatsAppGateway
     public function createFlow(array $flowData): array
     {
         try {
-            $response = $this->client->post("/{$this->phoneNumberId}/flows", ['json' => $flowData]);
+            $response = $this->client->post("{$this->phoneNumberId}/flows", ['json' => $flowData]);
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
@@ -542,7 +542,7 @@ class WhatsAppGateway
     public function updateFlow(string $flowId, array $flowData): array
     {
         try {
-            $response = $this->client->post("/{$flowId}", ['json' => $flowData]);
+            $response = $this->client->post("{$flowId}", ['json' => $flowData]);
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
@@ -563,7 +563,7 @@ class WhatsAppGateway
     public function publishFlow(string $flowId): array
     {
         try {
-            $response = $this->client->post("/{$flowId}/publish");
+            $response = $this->client->post("{$flowId}/publish");
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
@@ -584,7 +584,7 @@ class WhatsAppGateway
     public function getFlow(string $flowId): array
     {
         try {
-            $response = $this->client->get("/{$flowId}");
+            $response = $this->client->get("{$flowId}");
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
@@ -643,7 +643,7 @@ class WhatsAppGateway
     public function getBusinessProfile(): array
     {
         try {
-            $response = $this->client->get("/{$this->phoneNumberId}/whatsapp_business_profile", [
+            $response = $this->client->get("{$this->phoneNumberId}/whatsapp_business_profile", [
                 'query' => ['fields' => 'about,address,description,email,profile_picture_url,websites,vertical'],
             ]);
             return json_decode($response->getBody()->getContents(), true);
@@ -665,7 +665,7 @@ class WhatsAppGateway
     public function updateBusinessProfile(array $data): array
     {
         try {
-            $response = $this->client->post("/{$this->phoneNumberId}/whatsapp_business_profile", ['json' => $data]);
+            $response = $this->client->post("{$this->phoneNumberId}/whatsapp_business_profile", ['json' => $data]);
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
@@ -699,7 +699,7 @@ class WhatsAppGateway
     public function getPhoneNumberInfo(): array
     {
         try {
-            $response = $this->client->get("/{$this->phoneNumberId}");
+            $response = $this->client->get("{$this->phoneNumberId}");
             return json_decode($response->getBody()->getContents(), true);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;

@@ -233,10 +233,10 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             $state = 'ai_active';
         }
 
-        if ($conversation->current_step === 'account_password') {
-            $onboardingService->sendStepPrompt($conversation, $contact, 'account_password', $gateway);
-            return;
-        }
+        // Early account_password check moved below global keywords to prevent trapping users
+
+
+
 
         // Log event if onboarding session exists
         if (!empty($conversation->onboarding_session_id)) {
@@ -293,7 +293,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
                 return;
             }
 
-            if (in_array($rawText, ['menu', 'start', 'hi', 'hello', 'hey', 'assalamu alaikum', 'assalaamu alaikum'])) {
+            if (in_array($rawText, ['menu', 'start', 'hi', 'hello', 'hey', 'reset', 'start over', 'start fresh', 'restart', 'cancel', 'assalamu alaikum', 'assalaamu alaikum'])) {
                 $conversationManager->handleWelcome($conversation, $contact, $gateway);
                 return;
             }

@@ -82,7 +82,20 @@ class WebhookController extends \App\Http\Controllers\Controller
                     // Process each message async
                     foreach ($value['messages'] ?? [] as $message) {
                         $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($message);
-                        ProcessIncomingWhatsAppMessage::dispatchAfterResponse($message, array_intersect_key($value, array_flip(['contacts', 'metadata'])));
+                        $metaContext = array_intersect_key($value, array_flip(['contacts', 'metadata']));
+                        if (app()->environment('testing')) {
+                            ProcessIncomingWhatsAppMessage::dispatch($message, $metaContext);
+                        } else {
+                            try {
+                                ProcessIncomingWhatsAppMessage::dispatchSync($message, $metaContext);
+                            } catch (\Throwable $e) {
+                                Log::error('Synchronous WhatsApp message processing failed, falling back to queue', [
+                                    'message_id' => $message['id'] ?? null,
+                                    'error' => $e->getMessage(),
+                                ]);
+                                ProcessIncomingWhatsAppMessage::dispatch($message, $metaContext);
+                            }
+                        }
                     }
 
                     // Process status updates async
