@@ -118,7 +118,7 @@ class NotificationConcurrencyTest extends HardeningTestCase
         );
 
         Queue::assertPushed(SendWhatsAppMessage::class, fn ($job) => $job->type === 'text'
-            && str_contains($job->payload['body'], 'temporarily unavailable'));
+            && str_contains($job->payload['body'], 'trouble processing'));
     }
 
     public function test_decision_state_is_synchronized_when_delivery_fails(): void
