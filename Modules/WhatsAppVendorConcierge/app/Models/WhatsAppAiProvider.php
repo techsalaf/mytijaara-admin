@@ -10,6 +10,8 @@ class WhatsAppAiProvider extends Model
 {
     use HasFactory;
 
+    protected $table = 'whatsapp_ai_providers';
+
     /**
      * The attributes that are mass assignable.
      */
