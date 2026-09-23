@@ -82,7 +82,12 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             if (isset($this->messageData['id'])) {
                 try {
                     $gateway->markAsRead($this->messageData['id']);
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to mark WhatsApp message as read', [
+                        'message_id' => $this->messageData['id'],
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             // Handle media if present

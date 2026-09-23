@@ -25,9 +25,6 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(module_path($this->moduleName, 'routes/web.php'));
         $this->loadRoutesFrom(module_path($this->moduleName, 'routes/api.php'));
 
-        // Inject admin sidebar menu without modifying core files
-        $this->app['router']->pushMiddlewareToGroup('web', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\InjectAdminSidebarMenu::class);
-
         // Register vendor approval/denial observer for WhatsApp notifications
         \App\Models\Vendor::observe(\Modules\WhatsAppVendorConcierge\app\Observers\VendorApprovalObserver::class);
 
@@ -156,3 +153,4 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         return $paths;
     }
 }
+
