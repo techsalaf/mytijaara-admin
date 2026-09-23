@@ -107,4 +107,32 @@ class AiFallbackServiceTest extends TestCase
         $this->assertEquals($mockResponse, $result['response']);
         $this->assertEquals('Provider 2', $result['provider']->name);
     }
+
+    public function test_it_throws_when_all_providers_fail()
+    {
+        $provider1 = Mockery::mock(WhatsAppAiProvider::class)->makePartial();
+        $provider1->fill([
+            'name' => 'Provider 1',
+            'driver' => 'openai',
+            'api_key' => 'key1',
+            'model' => 'gpt-4o',
+            'priority' => 1,
+            'is_active' => true,
+            'status' => 'working',
+        ]);
+        $provider1->shouldReceive('update')->once()->with(Mockery::on(function ($args) {
+            return $args['status'] === 'failed';
+        }));
+
+        $service = Mockery::mock(AiFallbackService::class)->makePartial()->shouldAllowMockingProtectedMethods();
+        $service->shouldReceive('getProviders')->andReturn(collect([$provider1]));
+
+        $agent = Mockery::mock(Agent::class);
+        $agent->shouldReceive('prompt')->once()->andThrow(new Exception('OpenAI Down'));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('All configured AI providers failed.');
+
+        $service->promptAgent($agent, 'Hello');
+    }
 }
