@@ -522,13 +522,6 @@
                             <button type="button" class="v2-pin" data-pin="int-ai" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
                         </a>
                         @endif
-
-                        @if(Route::has('admin.whatsapp.ai-providers.index'))
-                        <a class="v2-nav-item {{ $is('admin/whatsapp/ai-providers*') ? 'is-active' : '' }}" href="{{ route('admin.whatsapp.ai-providers.index') }}" data-id="int-wa-ai">
-                            <span class="v2-dot v2-dot--green"></span><span class="v2-label">{{ translate('WhatsApp AI Providers') }}</span>
-                            <button type="button" class="v2-pin" data-pin="int-wa-ai" title="{{ translate('Pin') }}">@include('layouts.admin.partials._v2_pin_icon')</button>
-                        </a>
-                        @endif
                     </div>
                 </div>
             </div>
