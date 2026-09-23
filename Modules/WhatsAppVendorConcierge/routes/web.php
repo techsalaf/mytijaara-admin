@@ -73,5 +73,9 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::put('/update/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'update'])->name('update');
         Route::delete('/destroy/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'destroy'])->name('destroy');
         Route::get('/toggle/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggle'])->name('toggle');
+        Route::post('/test/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'test'])->name('test');
+        Route::post('/sync-models/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'syncModels'])->name('sync-models');
+        Route::post('/models/{model}/toggle', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggleModel'])->name('models.toggle');
+        Route::post('/models/{model}/update', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'updateModel'])->name('models.update');
     });
 });
