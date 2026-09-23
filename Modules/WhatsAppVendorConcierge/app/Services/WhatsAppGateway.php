@@ -355,13 +355,17 @@ class WhatsAppGateway
     /**
      * Mark message as read
      */
-    public function markAsRead(string $messageId): array
+    public function markAsRead(string $messageId, bool $typing = false): array
     {
         $payload = [
             'messaging_product' => 'whatsapp',
             'status' => 'read',
             'message_id' => $messageId,
         ];
+
+        if ($typing) {
+            $payload['typing_indicator'] = ['type' => 'text'];
+        }
 
         try {
             $response = $this->client->post("{$this->phoneNumberId}/messages", ['json' => $payload]);

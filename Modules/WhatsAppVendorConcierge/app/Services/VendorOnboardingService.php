@@ -1471,7 +1471,7 @@ class VendorOnboardingService
         $session = OnboardingSession::where('contact_id', $contact->id)
             ->where('status', '!=', 'submitted')
             ->where('status', '!=', 'approved')
-            ->where('status', '!=', 'rejected')
+            ->whereNotIn('status', ['rejected', 'abandoned', 'expired'])
             ->where('expires_at', '>', now())
             ->latest()
             ->first();

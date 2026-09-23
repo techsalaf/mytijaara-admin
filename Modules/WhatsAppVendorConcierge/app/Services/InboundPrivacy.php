@@ -14,15 +14,18 @@ class InboundPrivacy
         }
         if ($conversation && ($conversation->current_step === 'account_password'
             || $conversation->onboardingSession?->current_step === 'account_password')) {
-            // Allow only a backend-known button ID. Titles, captions and flow data
-            // can carry a pasted password and must not reach storage or job payloads.
+            // Preserve only exact navigation commands and known button IDs.
+            // Never retain arbitrary text, titles, captions, or flow data.
             $button = $message['interactive']['button_reply']['id'] ?? null;
+            $text = ConversationCommands::normalize((string) ($message['text']['body'] ?? $message['button']['payload'] ?? $message['button']['text'] ?? ''));
+            $command = ConversationCommands::action($text);
             $message = array_intersect_key($message, array_flip(['id', 'from', 'timestamp']));
             $message['type'] = 'text';
-            $message['text'] = ['body' => '[redacted: credential step]'];
-            if ($button === 'resend_password_link') {
+            $message['text'] = ['body' => $command ? $text : '[redacted: credential step]'];
+            if (in_array($button, ['resend_password_link', 'resume_onboarding', 'start_fresh', 'open_shop', 'start_onboarding', 'talk_support', 'check_status', 'learn_selling', 'faq'], true)) {
+                unset($message['text']);
                 $message['type'] = 'interactive';
-                $message['interactive'] = ['button_reply' => ['id' => $button, 'title' => 'Resend link']];
+                $message['interactive'] = ['button_reply' => ['id' => $button, 'title' => $button]];
             }
         }
         return $message;

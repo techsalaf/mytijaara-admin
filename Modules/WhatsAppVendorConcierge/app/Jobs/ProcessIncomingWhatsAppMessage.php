@@ -17,6 +17,7 @@ use Modules\WhatsAppVendorConcierge\app\Models\OnboardingEvent;
 use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 use Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService;
 use Modules\WhatsAppVendorConcierge\app\Services\ConversationManager;
+use Modules\WhatsAppVendorConcierge\app\Services\ConversationCommands;
 
 class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contracts\Queue\ShouldBeEncrypted
 {
@@ -81,7 +82,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             // Mark as read
             if (isset($this->messageData['id'])) {
                 try {
-                    $gateway->markAsRead($this->messageData['id']);
+                    $gateway->markAsRead($this->messageData['id'], $conversation->state !== 'human_handoff');
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to mark WhatsApp message as read', [
                         'message_id' => $this->messageData['id'],
@@ -217,7 +218,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             ?? $this->messageData['button']['text']
             ?? $this->messageData['interactive']['button_reply']['id']
             ?? $message->raw_text ?? '')));
-        if (in_array($supportReply, ['support', 'human', 'agent', 'help desk', 'talk to support', 'talk_support'], true)) {
+        if (ConversationCommands::action($supportReply) === 'support') {
             $conversationManager->initiateHumanHandoff($conversation, $contact, $gateway);
             return;
         }
@@ -232,11 +233,6 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             $contact->update(['contact_type' => 'vendor']);
             $state = 'ai_active';
         }
-
-        // Early account_password check moved below global keywords to prevent trapping users
-
-
-
 
         // Log event if onboarding session exists
         if (!empty($conversation->onboarding_session_id)) {
@@ -269,39 +265,20 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             return;
         }
 
-        // 3. Handle global keyword commands from text
-        $rawText = strtolower(trim((string) ($message->raw_text ?? '')));
-
-        if ($rawText !== '') {
-            if (in_array($rawText, ['support', 'human', 'agent', 'help desk', 'talk to support', 'talk_support'])) {
-                $conversationManager->initiateHumanHandoff($conversation, $contact, $gateway);
-                return;
-            }
-
-            if (in_array($rawText, ['faq', 'info', 'learn', 'how to sell', 'learn about selling'])) {
-                $conversationManager->showSellingInfo($conversation, $contact, $gateway);
-                return;
-            }
-
-            if (in_array($rawText, ['register', 'open shop', 'create shop', 'sell', 'start onboarding', 'become a vendor', 'i want to sell on mytijaara', 'i want to create a shop', 'open_shop'])) {
-                $conversationManager->startOnboarding($conversation, $contact, $gateway);
-                return;
-            }
-
-            if (in_array($rawText, ['help'])) {
-                $conversationManager->showHelp($conversation, $contact, $gateway);
-                return;
-            }
-
-            if (in_array($rawText, ['menu', 'start', 'hi', 'hello', 'hey', 'reset', 'start over', 'start fresh', 'restart', 'cancel', 'assalamu alaikum', 'assalaamu alaikum'])) {
-                $conversationManager->handleWelcome($conversation, $contact, $gateway);
-                return;
-            }
-
-            if (in_array($rawText, ['status', 'check status', 'my application', 'application status'])) {
-                $conversationManager->checkApplicationStatus($conversation, $contact, $gateway);
-                return;
-            }
+        // Route navigation before onboarding validation or AI, including at credentials.
+        $command = ConversationCommands::action((string) ($message->raw_text ?? ''));
+        if ($command !== null) {
+            match ($command) {
+                'restart', 'register' => $conversationManager->startFreshOnboarding($conversation, $contact, $gateway),
+                'welcome' => $conversationManager->handleWelcome($conversation, $contact, $gateway),
+                'support' => $conversationManager->initiateHumanHandoff($conversation, $contact, $gateway),
+                'info' => $conversationManager->showSellingInfo($conversation, $contact, $gateway),
+                'help' => $conversationManager->showHelp($conversation, $contact, $gateway),
+                'status' => $conversationManager->checkApplicationStatus($conversation, $contact, $gateway),
+                'resume' => $conversationManager->resumeOnboarding($conversation, $contact, $gateway),
+                'resend' => $conversationManager->handleButtonResponse($conversation, $contact, 'resend_password_link', $gateway),
+            };
+            return;
         }
 
         // 4. State-based routing

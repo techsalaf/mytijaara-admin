@@ -15,6 +15,8 @@ use App\Models\Store;
 use App\Models\Module;
 use App\Models\Zone;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Modules\WhatsAppVendorConcierge\app\Models\CredentialToken;
 
 class ConversationManager
 {
@@ -111,7 +113,7 @@ class ConversationManager
             "Assalaamu Alaikum 👋\n\nWelcome to *MyTijaara* — Nigeria's trusted marketplace for local businesses.\n\nWhat would you like to do?\n\n_(Reply 'Help' or 'FAQ' anytime for info)_",
             [
                 ['id' => 'open_shop', 'title' => '🛍️ Open My Shop'],
-                ['id' => 'manage_shop', 'title' => '🏪 Manage My Shop'],
+                ['id' => 'learn_selling', 'title' => 'Learn About Selling'],
                 ['id' => 'talk_support', 'title' => '👨‍💬 Talk to Support'],
             ],
             'MyTijaara'
@@ -123,24 +125,46 @@ class ConversationManager
      */
     public function startOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        // Create onboarding session
-        $session = OnboardingSession::create([
-            'contact_id' => $contact->id,
-            'flow_version' => config('whatsapp-vendor-concierge.onboarding.flow_version', '1.0'),
-            'status' => 'started',
-            'current_step' => 'business_basics',
-            'started_at' => now(),
-            'last_activity_at' => now(),
-            'expires_at' => now()->addMinutes(config('whatsapp-vendor-concierge.onboarding.session_ttl_minutes', 10080)),
-            'source' => 'whatsapp',
-        ]);
+        // Navigation must never replace a submitted application or an existing shop.
+        if ($contact->vendor_id || OnboardingSession::where('contact_id', $contact->id)
+            ->whereIn('status', ['submitted', 'approved'])->exists()) {
+            $this->checkApplicationStatus($conversation, $contact, $gateway);
+            return;
+        }
 
-        // Link session to conversation
-        $conversation->update([
-            'onboarding_session_id' => $session->id,
-            'state' => 'onboarding_active',
-            'current_step' => 'business_basics',
-        ]);
+        $session = DB::transaction(function () use ($conversation, $contact) {
+            $oldSessions = OnboardingSession::where('contact_id', $contact->id)
+                ->whereIn('status', array_merge(OnboardingSession::getSteps(), ['started', 'onboarding_paused', 'documents']))
+                ->lockForUpdate()->get();
+            foreach ($oldSessions as $oldSession) {
+                $oldSession->update(['status' => 'abandoned']);
+                CredentialToken::where('onboarding_session_id', $oldSession->id)
+                    ->whereNull('consumed_at')->whereNull('revoked_at')->update(['revoked_at' => now()]);
+            }
+            // Create onboarding session
+            $session = OnboardingSession::create([
+                'contact_id' => $contact->id,
+                'flow_version' => config('whatsapp-vendor-concierge.onboarding.flow_version', '1.0'),
+                'status' => 'started',
+                'current_step' => 'business_basics',
+                'started_at' => now(),
+                'last_activity_at' => now(),
+                'expires_at' => now()->addMinutes(config('whatsapp-vendor-concierge.onboarding.session_ttl_minutes', 10080)),
+                'source' => 'whatsapp',
+            ]);
+
+            // Link session to conversation
+            $conversation->update([
+                'onboarding_session_id' => $session->id,
+                'state' => 'onboarding_active',
+                'current_step' => 'business_basics',
+                'collected_data' => [],
+                'context' => [],
+            ]);
+
+            return $session;
+        });
+        $conversation->unsetRelation('onboardingSession');
 
         // Log event
         OnboardingEvent::log($session->id, $contact->id, 'onboarding_started', 'welcome');
@@ -325,6 +349,9 @@ class ConversationManager
         }
 
         match ($buttonId) {
+            'resend_password_link' => $conversation->current_step === 'account_password'
+                ? $this->onboardingService->sendStepPrompt($conversation, $contact, 'account_password', $gateway)
+                : $this->handleWelcome($conversation, $contact, $gateway),
             'resume_onboarding' => $this->resumeOnboarding($conversation, $contact, $gateway),
             'start_fresh' => $this->startFreshOnboarding($conversation, $contact, $gateway),
             'open_shop', 'start_onboarding' => $this->startOnboarding($conversation, $contact, $gateway),
@@ -432,7 +459,7 @@ class ConversationManager
             ?? OnboardingSession::where('contact_id', $contact->id)
                 ->where('status', '!=', 'submitted')
                 ->where('status', '!=', 'approved')
-                ->where('status', '!=', 'rejected')
+                ->whereNotIn('status', ['rejected', 'abandoned', 'expired'])
                 ->where('expires_at', '>', now())
                 ->latest()
                 ->first();
@@ -466,11 +493,6 @@ class ConversationManager
      */
     public function startFreshOnboarding(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        // Expire old sessions
-        OnboardingSession::where('contact_id', $contact->id)
-            ->where('status', '!=', 'submitted')
-            ->update(['status' => 'abandoned']);
-
         $this->startOnboarding($conversation, $contact, $gateway);
     }
 
