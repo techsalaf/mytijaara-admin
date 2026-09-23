@@ -58,3 +58,20 @@ Route::middleware(['web', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\S
 Route::get('/whatsapp/onboarding/subscription-payment/{session}', \Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\SubscriptionPaymentController::class)
     ->middleware(['web', 'signed', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\SecureCredentialPage::class, 'throttle:20,1'])
     ->name('whatsapp.onboarding.subscription-payment');
+
+/*
+|--------------------------------------------------------------------------
+| Admin UI Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['web', 'admin'])->group(function () {
+    Route::group(['prefix' => 'admin/whatsapp/ai-providers', 'as' => 'admin.whatsapp.ai-providers.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'index'])->name('index');
+        Route::get('/create', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'create'])->name('create');
+        Route::post('/store', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'store'])->name('store');
+        Route::get('/edit/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'edit'])->name('edit');
+        Route::put('/update/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'update'])->name('update');
+        Route::delete('/destroy/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'destroy'])->name('destroy');
+        Route::get('/toggle/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggle'])->name('toggle');
+    });
+});

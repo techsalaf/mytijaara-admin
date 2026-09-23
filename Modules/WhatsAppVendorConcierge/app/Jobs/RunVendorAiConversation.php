@@ -149,29 +149,13 @@ class RunVendorAiConversation implements ShouldQueue
                 language: $language,
             );
 
-            // Configure AI provider & model
-            $provider = config('whatsapp-vendor-concierge.ai.provider', 'openai');
-            $model = config('whatsapp-vendor-concierge.ai.model', 'gpt-4o');
+            // Instead of hardcoded config, use AiFallbackService
+            $fallbackService = app(\Modules\WhatsAppVendorConcierge\app\Services\AiFallbackService::class);
 
-            // Fallback: If using OpenAI and no key in config/env, check core business settings
-            if ($provider === 'openai' && empty(config('ai.providers.openai.key'))) {
-                $openAiConfig = \App\CentralLogics\Helpers::get_business_settings('openai_config');
-                if (!empty($openAiConfig['OPENAI_API_KEY'])) {
-                    config(['ai.providers.openai.key' => $openAiConfig['OPENAI_API_KEY']]);
-                }
-            }
-
-            if (empty(config("ai.providers.{$provider}.key"))) {
-                Log::error('Vendor AI provider is not configured', [
-                    'provider' => $provider,
-                    'conversation_id' => $this->conversation->id,
-                ]);
-                $this->sendReply("The vendor assistant is temporarily unavailable.\n\nReply *MENU* to use the shop options, or *SUPPORT* to reach our team.");
-                return;
-            }
-
-            // Send to AI and get response
-            $response = $agent->prompt($sanitizedUserText, provider: $provider, model: $model, timeout: 60);
+            // Send to AI via fallback service and get response
+            $result = $fallbackService->promptAgent($agent, $sanitizedUserText);
+            $response = $result['response'];
+            $model = $result['model'];
 
             $replyText = (string) $response->text;
 
