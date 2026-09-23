@@ -19,43 +19,72 @@ class InjectAdminSidebarMenu
         if (
             $request->is('admin*') &&
             $response instanceof \Illuminate\Http\Response &&
-            str_contains($response->headers->get('Content-Type'), 'text/html')
+            str_contains(strtolower((string) $response->headers->get('Content-Type')), 'text/html')
         ) {
             $content = $response->getContent();
 
-            // The URL for the AI providers
-            $url = route('admin.whatsapp.ai-providers.index');
-            $isActive = request()->routeIs('admin.whatsapp.ai-providers.*') ? 'is-active' : '';
+            try {
+                $url = route('admin.whatsapp.ai-providers.index');
+            } catch (\Throwable $e) {
+                $url = url('/admin/whatsapp/ai-providers');
+            }
+            $isActive = request()->is('admin/whatsapp/ai-providers*') ? 'is-active' : '';
 
             $script = <<<HTML
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Look for the Integrations & Third-Party panel using the active section layout
-    let intPanel = document.querySelector('.v2-panel-content[data-panel="int"] .v2-group-items');
-    
-    // Also try alternative selectors if they changed the layout slightly
-    if (!intPanel) {
-        intPanel = document.querySelector('[data-panel="int"] .v2-group-items');
-    }
+(function() {
+    function injectWhatsAppNav() {
+        if (document.getElementById('wa-ai-nav-item')) return;
 
-    if (intPanel) {
-        // Avoid duplicate injections
-        if (!document.getElementById('wa-ai-nav-item')) {
-            let link = document.createElement('a');
+        // Try targeting AI Configuration link directly
+        const aiLink = document.querySelector('a[data-id="int-ai"]');
+        let targetContainer = null;
+
+        if (aiLink && aiLink.parentElement) {
+            targetContainer = aiLink.parentElement;
+        } else {
+            targetContainer = document.querySelector('.v2-panel-content[data-panel="int"] .v2-group-items')
+                || document.querySelector('[data-panel="int"] .v2-group-items');
+        }
+
+        if (targetContainer && !document.getElementById('wa-ai-nav-item')) {
+            const link = document.createElement('a');
             link.id = 'wa-ai-nav-item';
             link.className = 'v2-nav-item {$isActive}';
             link.href = '{$url}';
             link.setAttribute('data-id', 'int-wa-ai');
             link.innerHTML = '<span class="v2-dot v2-dot--green"></span><span class="v2-label">WhatsApp AI Providers</span>';
-            intPanel.appendChild(link);
+            
+            if (aiLink && aiLink.nextSibling) {
+                targetContainer.insertBefore(link, aiLink.nextSibling);
+            } else {
+                targetContainer.appendChild(link);
+            }
         }
     }
-});
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectWhatsAppNav);
+    } else {
+        injectWhatsAppNav();
+    }
+
+    // Backup polling in case sidebar loads asynchronously or via PJAX/Livewire
+    let attempts = 0;
+    const interval = setInterval(function() {
+        attempts++;
+        injectWhatsAppNav();
+        if (document.getElementById('wa-ai-nav-item') || attempts > 20) {
+            clearInterval(interval);
+        }
+    }, 250);
+})();
 </script>
 HTML;
-            // Inject right before the closing body tag
-            $content = str_replace('</body>', $script . "\n</body>", $content);
-            $response->setContent($content);
+            if (str_contains($content, '</body>')) {
+                $content = str_replace('</body>', $script . "\n</body>", $content);
+                $response->setContent($content);
+            }
         }
 
         return $response;
