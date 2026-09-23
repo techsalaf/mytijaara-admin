@@ -47,6 +47,7 @@ class WhatsAppAiProvider extends Model
     public function scopeActiveAndWorking($query)
     {
         return $query->where('is_active', true)
+                     ->whereNotNull('api_key')
                      ->orderBy('priority', 'asc');
     }
 }

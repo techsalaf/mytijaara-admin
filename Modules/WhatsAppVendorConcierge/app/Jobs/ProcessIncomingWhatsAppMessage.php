@@ -78,6 +78,13 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             // Log the message
             $message = WhatsAppMessage::logInbound($conversation->id, $this->messageData, $this->metaValue);
 
+            // Mark as read
+            if (isset($this->messageData['id'])) {
+                try {
+                    $gateway->markAsRead($this->messageData['id']);
+                } catch (\Throwable $e) {}
+            }
+
             // Handle media if present
             if (in_array($this->messageData['type'] ?? '', ['image', 'document', 'video', 'audio'])) {
                 $this->handleMedia($message, $this->messageData, $gateway);
@@ -317,3 +324,4 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         };
     }
 }
+

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name'); // e.g. "OpenAI", "DeepSeek", "Groq"
             $table->string('driver')->default('openai'); // Usually 'openai' or 'anthropic' for laravel/ai
             $table->string('base_url')->nullable(); // For OpenAI compatible APIs (DeepSeek, etc)
-            $table->string('api_key'); // The provider API key
+            $table->string('api_key')->nullable(); // The provider API key
             $table->string('model'); // e.g. "gpt-4o", "deepseek-chat"
             $table->integer('priority')->default(0); // Lower number = higher priority
             $table->boolean('is_active')->default(true); // Can toggle on/off
@@ -25,6 +25,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+        // Seed default providers
+        \Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => 'Modules\WhatsAppVendorConcierge\database\seeders\WhatsAppAiProvidersTableSeeder'
+        ]);
     }
 
     /**

@@ -24,7 +24,6 @@
                         <h5 class="card-title">
                             {{translate('AI_Providers_List')}} <span class="badge badge-soft-dark ml-2">{{$providers->count()}}</span>
                         </h5>
-                        <a href="{{ route('admin.whatsapp.ai-providers.create') }}" class="btn btn--primary"><i class="tio-add-circle"></i> {{translate('Add_New_Provider')}}</a>
                     </div>
                 </div>
                 <!-- Table -->
@@ -66,12 +65,6 @@
                                         <a class="btn action-btn btn--primary btn-outline-primary" href="{{route('admin.whatsapp.ai-providers.edit', [$provider['id']])}}">
                                             <i class="tio-edit"></i>
                                         </a>
-                                        <a class="btn action-btn btn--danger btn-outline-danger" href="javascript:" onclick="form_alert('provider-{{$provider['id']}}','Want to delete this provider?')">
-                                            <i class="tio-delete-outlined"></i>
-                                        </a>
-                                        <form action="{{route('admin.whatsapp.ai-providers.destroy', [$provider['id']])}}" method="post" id="provider-{{$provider['id']}}">
-                                            @csrf @method('delete')
-                                        </form>
                                     </div>
                                 </td>
                             </tr>

@@ -23,16 +23,13 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="input-label" for="name">{{translate('Name')}}</label>
-                                    <input type="text" name="name" class="form-control" value="{{$aiProvider->name}}" required>
+                                    <input type="text" name="name" class="form-control" value="{{$aiProvider->name}}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="input-label" for="driver">{{translate('Driver')}}</label>
-                                    <select name="driver" class="form-control" required>
-                                        <option value="openai" {{$aiProvider->driver === 'openai' ? 'selected' : ''}}>OpenAI Compatible</option>
-                                        <option value="anthropic" {{$aiProvider->driver === 'anthropic' ? 'selected' : ''}}>Anthropic</option>
-                                    </select>
+                                    <input type="text" name="driver" class="form-control" value="{{$aiProvider->driver}}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -44,13 +41,13 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="input-label" for="base_url">{{translate('Base URL')}}</label>
-                                    <input type="url" name="base_url" class="form-control" value="{{$aiProvider->base_url}}">
+                                    <input type="url" name="base_url" class="form-control" value="{{$aiProvider->base_url}}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="input-label" for="model">{{translate('Model Name')}}</label>
-                                    <input type="text" name="model" class="form-control" value="{{$aiProvider->model}}" required>
+                                    <input type="text" name="model" class="form-control" value="{{$aiProvider->model}}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -71,3 +68,4 @@
     </div>
 </div>
 @endsection
+
