@@ -14,7 +14,7 @@ class AiProviderController extends Controller
     public function index()
     {
         $providers = WhatsAppAiProvider::orderBy('priority', 'asc')->get();
-        return view('whatsappvendorconcierge::admin.ai_providers.index', compact('providers'));
+        return view('whatsapp-vendor-concierge::admin.ai_providers.index', compact('providers'));
     }
 
     /**
@@ -22,7 +22,7 @@ class AiProviderController extends Controller
      */
     public function create()
     {
-        return view('whatsappvendorconcierge::admin.ai_providers.create');
+        return view('whatsapp-vendor-concierge::admin.ai_providers.create');
     }
 
     /**
@@ -54,7 +54,7 @@ class AiProviderController extends Controller
      */
     public function edit(WhatsAppAiProvider $aiProvider)
     {
-        return view('whatsappvendorconcierge::admin.ai_providers.edit', compact('aiProvider'));
+        return view('whatsapp-vendor-concierge::admin.ai_providers.edit', compact('aiProvider'));
     }
 
     /**

@@ -125,6 +125,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         if (is_dir($sourcePath)) {
             $this->publishes([$sourcePath => $viewPath], ['views', $this->moduleNameLower.'-module-views']);
             $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->moduleNameLower);
+            $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), 'whatsappvendorconcierge');
         }
 
         $componentNamespace = str_replace('/', '\\', config('modules.namespace').'\\'.$this->moduleName.'\\'.config('modules.paths.generator.component-class.path'));

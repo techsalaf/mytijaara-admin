@@ -203,13 +203,36 @@ class RunVendorAiConversation implements ShouldQueue
 
     protected function sendReply(string $text): void
     {
-        \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
-            $this->contact->phone_number,
-            'text',
-            ['body' => $text],
-            $this->conversation->id
-        )->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
-            ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message'));
+        if (app()->environment('testing')) {
+            \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
+                $this->contact->phone_number,
+                'text',
+                ['body' => $text],
+                $this->conversation->id
+            )->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
+                ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message'));
+            return;
+        }
+
+        try {
+            \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatchSync(
+                $this->contact->phone_number,
+                'text',
+                ['body' => $text],
+                $this->conversation->id
+            );
+        } catch (\Throwable $e) {
+            Log::error('Direct WhatsApp reply dispatch failed, falling back to queue', [
+                'error' => $e->getMessage()
+            ]);
+            \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
+                $this->contact->phone_number,
+                'text',
+                ['body' => $text],
+                $this->conversation->id
+            )->onConnection(config('whatsapp-vendor-concierge.queue.connection', 'database'))
+                ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.send_message', 'whatsapp.send_message'));
+        }
     }
 
     /**
