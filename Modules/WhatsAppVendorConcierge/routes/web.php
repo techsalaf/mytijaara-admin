@@ -94,4 +94,11 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::put('/policy/{policy}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiRoutingDashboardController::class, 'updatePolicy'])->name('policy.update');
         Route::post('/simulate', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiRoutingDashboardController::class, 'simulate'])->name('simulate');
     });
+
+    Route::group(['prefix' => 'admin/whatsapp/inbox', 'as' => 'admin.whatsapp.inbox.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'index'])->name('index');
+        Route::get('/{conversation}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'show'])->name('show');
+        Route::post('/{conversation}/send', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'sendMessage'])->name('send');
+        Route::post('/{conversation}/toggle-state', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'toggleState'])->name('toggle-state');
+    });
 });

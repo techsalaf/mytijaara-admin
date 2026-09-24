@@ -25,8 +25,10 @@ class InjectAdminSidebarMenu
 
             try {
                 $url = route('admin.whatsapp.ai-dashboard.index');
+                $inboxRoute = route('admin.whatsapp.inbox.index');
             } catch (\Throwable $e) {
                 $url = url('/admin/whatsapp/ai-dashboard');
+                $inboxRoute = url('/admin/whatsapp/inbox');
             }
             $isActive = request()->is('admin/whatsapp/ai-dashboard*') ? 'is-active' : '';
 
@@ -67,6 +69,19 @@ class InjectAdminSidebarMenu
                 vlink.href = url;
                 vlink.innerHTML = '<span class="v2-dot v2-dot--green"></span><span class="v2-label">WhatsApp Concierge AI</span>';
                 vendorContainer.appendChild(vlink);
+
+                // Add Inbox Link
+                let inboxUrl = '';
+                try {
+                    inboxUrl = '{$inboxRoute}';
+                } catch(e) {}
+                const isInboxActive = window.location.href.includes('admin/whatsapp/inbox') ? 'is-active' : '';
+                const ilink = document.createElement('a');
+                ilink.id = 'wa-inbox-nav-item';
+                ilink.className = 'v2-nav-item ' + isInboxActive;
+                ilink.href = inboxUrl;
+                ilink.innerHTML = '<span class="v2-dot v2-dot--blue"></span><span class="v2-label">WhatsApp Inbox</span>';
+                vendorContainer.appendChild(ilink);
             }
         }
 
