@@ -121,4 +121,71 @@ class ConversationOrchestrator
             return false;
         }
     }
+
+    public function handleOnboardingExtraction(
+        WhatsAppConversation $conversation,
+        WhatsAppContact $contact,
+        WhatsAppMessage $message,
+        WhatsAppGateway $gateway,
+        string $currentStep,
+        array $validationErrors
+    ): bool {
+        $text = (string) ($message->raw_text ?? '');
+        if (trim($text) === '') {
+            return false;
+        }
+
+        try {
+            $agent = new \Modules\WhatsAppVendorConcierge\app\Agents\OnboardingExtractionAgent($currentStep, $validationErrors);
+            $result = $this->aiService->promptAgent($agent, $text);
+            $response = $result['response'];
+            
+            $content = (string) $response->text;
+            Log::info('AI Onboarding Extraction response', ['content' => $content, 'step' => $currentStep]);
+            
+            if (preg_match('/```json\s*(\{.*?\})\s*```/s', $content, $matches)) {
+                $content = $matches[1];
+            } else if (preg_match('/(\{.*?\})/s', $content, $matches)) {
+                $content = $matches[1];
+            }
+
+            $decision = json_decode($content, true);
+            
+            if (is_array($decision) && isset($decision['requested_tool'])) {
+                $tool = $decision['requested_tool'];
+                
+                if ($tool === 'submit_current_field' && isset($decision['extracted_value'])) {
+                    // Update the message raw_text with the cleanly extracted value
+                    $message->raw_text = $decision['extracted_value'];
+                    $message->is_ai_extracted = true;
+                    
+                    // Re-run processStep with the clean message
+                    $onboardingService = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+                    $onboardingService->processStep($conversation, $contact, $message, $gateway);
+                    return true;
+                }
+
+                if ($tool === 'explain_current_question' && isset($decision['clarification_question'])) {
+                    $gateway->sendTextMessage($contact->phone_number, $decision['clarification_question']);
+                    // Resend the actual prompt
+                    $onboardingService = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+                    $onboardingService->sendStepPrompt($conversation, $contact, $currentStep, $gateway);
+                    return true;
+                }
+
+                if ($tool === 'unrelated_question' && isset($decision['clarification_question'])) {
+                    $gateway->sendTextMessage($contact->phone_number, $decision['clarification_question']);
+                    $onboardingService = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
+                    $onboardingService->sendStepPrompt($conversation, $contact, $currentStep, $gateway);
+                    return true;
+                }
+            }
+            
+            return false;
+            
+        } catch (\Exception $e) {
+            Log::error('AI Onboarding Extraction failed', ['error' => $e->getMessage()]);
+            return false;
+        }
+    }
 }
