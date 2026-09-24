@@ -121,7 +121,7 @@ class GeminiAdapter extends BaseProviderAdapter
 
         $driver = $aiManager->createGeminiDriver([
             'key' => $connection->getApiKey(),
-            'base_url' => $connection->getBaseUrl(),
+            'url' => $connection->getBaseUrl(),
         ]);
 
         if (Ai::hasFakeGatewayFor($agent::class)) {

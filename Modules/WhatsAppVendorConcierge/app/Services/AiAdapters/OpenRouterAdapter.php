@@ -147,7 +147,7 @@ class OpenRouterAdapter extends BaseProviderAdapter
 
         $driver = $aiManager->createOpenrouterDriver([
             'key' => $connection->getApiKey(),
-            'base_url' => $connection->getBaseUrl(),
+            'url' => $connection->getBaseUrl(),
         ]);
 
         if (Ai::hasFakeGatewayFor($agent::class)) {

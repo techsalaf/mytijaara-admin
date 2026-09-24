@@ -44,12 +44,19 @@ class AiFallbackService
         }
 
         if ($hasModernConnections) {
-            $routed = $this->router->routeAndPrompt($agent, $userText);
-            return [
-                'response' => $routed['response'],
-                'provider' => $routed['connection'],
-                'model' => is_string($routed['model']) ? $routed['model'] : $routed['model']->model_id,
-            ];
+            try {
+                $routed = $this->router->routeAndPrompt($agent, $userText);
+                return [
+                    'response' => $routed['response'],
+                    'provider' => $routed['connection'],
+                    'model' => is_string($routed['model']) ? $routed['model'] : $routed['model']->model_id,
+                    'is_modern' => true,
+                ];
+            } catch (\Throwable $e) {
+                Log::warning('Modern AI routing failed completely. Falling back to legacy providers.', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         // 2. Legacy fallback path for backwards compatibility
@@ -78,6 +85,7 @@ class AiFallbackService
                     'response' => $response,
                     'provider' => $provider,
                     'model' => $provider->model,
+                    'is_modern' => false,
                 ];
 
             } catch (\Throwable $e) {

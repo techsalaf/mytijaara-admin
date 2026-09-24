@@ -63,6 +63,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\Preflight::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\CheckTemplates::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\MigrateLegacyAiProviders::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\AiHealthCommand::class,
         ]);
     }
 

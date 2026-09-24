@@ -10,13 +10,12 @@ use Laravel\Ai\Prompts\AgentPrompt;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderConnection;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderModel;
 
-class NvidiaNimAdapter extends BaseProviderAdapter
+class DeepSeekAdapter extends BaseProviderAdapter
 {
     public function supportsCapability(string $capability): bool
     {
         return match ($capability) {
-            'tools', 'streaming', 'discovery' => true,
-            'vision' => false,
+            'tools', 'vision', 'streaming', 'discovery' => true,
             default => false,
         };
     }
@@ -24,13 +23,13 @@ class NvidiaNimAdapter extends BaseProviderAdapter
     public function testConnection(AiProviderConnection $connection): array
     {
         $start = microtime(true);
-        $baseUrl = rtrim($connection->getBaseUrl() ?: 'https://integrate.api.nvidia.com/v1', '/');
+        $baseUrl = rtrim($connection->getBaseUrl() ?: 'https://api.deepseek.com', '/');
         $apiKey = $connection->getApiKey();
 
         if (empty($apiKey)) {
             return [
                 'success' => false,
-                'message' => 'NVIDIA API key is missing or empty.',
+                'message' => 'API key is missing or empty.',
                 'latency_ms' => 0,
             ];
         }
@@ -46,14 +45,14 @@ class NvidiaNimAdapter extends BaseProviderAdapter
                 $count = count($response->json('data') ?? []);
                 return [
                     'success' => true,
-                    'message' => "NVIDIA NIM verified ({$count} models).",
+                    'message' => "Connection successful ({$count} models available).",
                     'latency_ms' => $latency,
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => "NVIDIA error: " . ($response->json('error.message') ?? $response->body()),
+                'message' => "HTTP {$response->status()}: " . ($response->json('error.message') ?? $response->body()),
                 'latency_ms' => $latency,
             ];
         } catch (\Throwable $e) {
@@ -67,7 +66,7 @@ class NvidiaNimAdapter extends BaseProviderAdapter
 
     public function discoverModels(AiProviderConnection $connection): array
     {
-        $baseUrl = rtrim($connection->getBaseUrl() ?: 'https://integrate.api.nvidia.com/v1', '/');
+        $baseUrl = rtrim($connection->getBaseUrl() ?: 'https://api.deepseek.com', '/');
         $apiKey = $connection->getApiKey();
 
         if (empty($apiKey)) {
@@ -88,17 +87,24 @@ class NvidiaNimAdapter extends BaseProviderAdapter
 
             foreach ($rawModels as $item) {
                 $id = $item['id'] ?? '';
-                if (empty($id) || str_contains($id, 'embed') || str_contains($id, 'rerank')) continue;
+                if (empty($id)) continue;
 
-                $supportsTools = (bool) preg_match('/(llama|mistral|nemotron)/i', $id);
+                // Exclude embedding, audio, tts, moderation, image generators
+                if (preg_match('/(embedding|whisper|tts|moderation|dall-e|realtime)/i', $id)) {
+                    continue;
+                }
+
+                $supportsTools = (bool) preg_match('/(gpt-4|gpt-3\.5-turbo|o1|o3|llama|deepseek|mistral|claude|qwen)/i', $id);
+                $supportsVision = (bool) preg_match('/(vision|gpt-4o|gpt-4-turbo|gemini)/i', $id);
+                $isFree = (bool) str_ends_with($id, ':free');
 
                 $discovered[] = [
                     'id' => $id,
                     'name' => ucwords(str_replace(['-', '_', '/'], ' ', $id)),
                     'supports_tool_calling' => $supportsTools,
-                    'supports_vision' => false,
-                    'is_free_tier' => true,
-                    'context_window' => 128000,
+                    'supports_vision' => $supportsVision,
+                    'is_free_tier' => $isFree,
+                    'context_window' => str_contains($id, '128k') ? 128000 : 16384,
                     'cost_per_million_input' => 0.0,
                     'cost_per_million_output' => 0.0,
                 ];
@@ -120,9 +126,9 @@ class NvidiaNimAdapter extends BaseProviderAdapter
         $start = microtime(true);
         $aiManager = app(AiManager::class);
 
-        $driver = $aiManager->createOpenaiDriver([
+        $driver = $aiManager->createDeepseekDriver([
             'key' => $connection->getApiKey(),
-            'url' => $connection->getBaseUrl() ?: 'https://integrate.api.nvidia.com/v1',
+            'url' => $connection->getBaseUrl(),
         ]);
 
         if (Ai::hasFakeGatewayFor($agent::class)) {

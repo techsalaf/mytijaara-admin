@@ -128,7 +128,7 @@ class OpenAiCompatibleAdapter extends BaseProviderAdapter
 
         $driver = $aiManager->createOpenaiDriver([
             'key' => $connection->getApiKey(),
-            'base_url' => $connection->getBaseUrl(),
+            'url' => $connection->getBaseUrl(),
         ]);
 
         if (Ai::hasFakeGatewayFor($agent::class)) {

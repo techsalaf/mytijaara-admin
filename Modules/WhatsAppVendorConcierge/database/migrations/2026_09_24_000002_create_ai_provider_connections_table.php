@@ -8,11 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('ai_provider_connections')) {
-            Schema::dropIfExists('ai_provider_connections');
-        }
-
-        Schema::create('ai_provider_connections', function (Blueprint $table) {
+        if (!Schema::hasTable('ai_provider_connections')) {
+            Schema::create('ai_provider_connections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('definition_id')->constrained('ai_provider_definitions')->cascadeOnDelete();
             $table->string('name');
@@ -37,6 +34,7 @@ return new class extends Migration
 
             $table->index(['status', 'is_active']);
         });
+        }
     }
 
     public function down(): void

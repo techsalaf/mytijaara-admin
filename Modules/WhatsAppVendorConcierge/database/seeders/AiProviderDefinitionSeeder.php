@@ -113,7 +113,7 @@ class AiProviderDefinitionSeeder extends Seeder
             [
                 'slug' => 'deepseek',
                 'name' => 'DeepSeek',
-                'adapter_class' => 'Modules\\WhatsAppVendorConcierge\\app\\Services\\AiAdapters\\OpenAiCompatibleAdapter',
+                'adapter_class' => 'Modules\\WhatsAppVendorConcierge\\app\\Services\\AiAdapters\\DeepSeekAdapter',
                 'default_base_url' => 'https://api.deepseek.com/v1',
                 'auth_type' => 'api_key',
                 'supports_model_discovery' => true,

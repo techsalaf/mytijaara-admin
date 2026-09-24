@@ -13,8 +13,11 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Connection Details</h5>
+                </div>
                 <div class="card-body">
                     <form action="{{route('admin.whatsapp.ai-providers.update', $connection->id)}}" method="POST">
                         @csrf
@@ -75,10 +78,103 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-3 mt-4">
-                            <a href="{{route('admin.whatsapp.ai-providers.index')}}" class="btn btn-secondary mr-2">{{translate('Cancel')}}</a>
+                            <a href="{{route('admin.whatsapp.ai-dashboard.index')}}" class="btn btn-secondary mr-2">{{translate('Back to Dashboard')}}</a>
                             <button type="submit" class="btn btn-primary"><i class="tio-save"></i> {{translate('Update Settings')}}</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0"><i class="tio-settings"></i> Lifecycle & Diagnostics</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            State
+                            <span class="badge badge-soft-{{ $connection->isAvailable() ? 'success' : 'danger' }}">{{ strtoupper($connection->status) }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Last Tested
+                            <span class="text-muted">{{ $connection->last_tested_at ? $connection->last_tested_at->diffForHumans() : 'Never' }}</span>
+                        </li>
+                    </ul>
+
+                    <h6>Run Diagnostic Tests</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-block text-left mb-2" onclick="runDiagnostic('credentials')">
+                            <i class="tio-key"></i> 1. Test Authentication
+                        </button>
+                        <button class="btn btn-outline-primary btn-block text-left mb-2" onclick="runDiagnostic('discovery')">
+                            <i class="tio-search"></i> 2. Test Model Discovery
+                        </button>
+                        
+                        <div class="input-group mb-2">
+                            <select class="form-control" id="diag-model">
+                                @foreach($connection->models as $m)
+                                    <option value="{{ $m->model_id }}">{{ $m->model_id }}</option>
+                                @endforeach
+                            </select>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" onclick="runDiagnostic('inference')">
+                                    <i class="tio-chat"></i> 3. Test Inference
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="diag-result" class="mt-3 p-3 bg-light rounded" style="display:none; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Models List -->
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="tio-layers"></i> Discovered Models</h5>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runDiagnostic('discovery')">
+                        <i class="tio-sync"></i> Sync
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless table-align-middle mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>On</th>
+                                    <th>Model ID</th>
+                                    <th>Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($connection->models as $m)
+                                <tr>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="model-toggle-{{$m->id}}" onchange="toggleModel({{$m->id}})" {{$m->is_enabled ? 'checked' : ''}}>
+                                            <label class="custom-control-label" for="model-toggle-{{$m->id}}"></label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="font-weight-bold" style="font-size: 12px; word-break: break-all;">{{$m->model_id}}</div>
+                                        @if($m->supports_tool_calling)
+                                            <span class="badge badge-soft-success" style="font-size: 10px;">Tools</span>
+                                        @endif
+                                        @if($m->is_free_tier)
+                                            <span class="badge badge-soft-info" style="font-size: 10px;">Free</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm py-0" value="{{$m->priority}}" style="width: 60px;" onchange="updateModelPriority({{$m->id}}, this.value)">
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,6 +182,27 @@
 </div>
 
 <script>
+function toggleModel(modelId) {
+    fetch('{{url("admin/whatsapp/ai-providers/models")}}/' + modelId + '/toggle', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{csrf_token()}}',
+            'Accept': 'application/json'
+        }
+    });
+}
+
+function updateModelPriority(modelId, priority) {
+    fetch('{{url("admin/whatsapp/ai-providers/models")}}/' + modelId + '/update', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{csrf_token()}}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ priority: priority })
+    });
+}
 function togglePasswordVisibility(fieldId) {
     const field = document.getElementById(fieldId);
     const icon = document.getElementById(fieldId + '_icon');
@@ -96,6 +213,43 @@ function togglePasswordVisibility(fieldId) {
         field.type = 'password';
         icon.className = 'tio-hidden-outlined';
     }
+}
+
+function runDiagnostic(type) {
+    let url = '{{ url("admin/whatsapp/diagnostics") }}/{{ $connection->id }}/' + type;
+    let body = {};
+    
+    if (type === 'inference') {
+        let model = document.getElementById('diag-model');
+        if (!model || !model.value) {
+            alert('No models available. Please run model discovery first.');
+            return;
+        }
+        body.model_id = model.value;
+    }
+
+    const resBox = document.getElementById('diag-result');
+    resBox.style.display = 'block';
+    resBox.innerHTML = '<span class="spinner-border spinner-border-sm text-primary" role="status"></span> Running ' + type + ' test...';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+        let color = data.success ? 'green' : 'red';
+        resBox.innerHTML = '<div style="color:' + color + '; margin-bottom:10px;"><strong>' + (data.success ? 'PASS' : 'FAIL') + '</strong> - ' + (data.message || '') + '</div>';
+        resBox.innerHTML += '<pre style="white-space: pre-wrap; word-wrap: break-word;">' + JSON.stringify(data, null, 2) + '</pre>';
+    })
+    .catch(e => {
+        resBox.innerHTML = '<div style="color:red;"><strong>ERROR</strong></div><pre>' + e.message + '</pre>';
+    });
 }
 </script>
 @endsection

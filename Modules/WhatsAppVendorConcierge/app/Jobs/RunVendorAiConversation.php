@@ -156,23 +156,26 @@ class RunVendorAiConversation implements ShouldQueue
             $result = $fallbackService->promptAgent($agent, $sanitizedUserText);
             $response = $result['response'];
             $model = $result['model'];
+            $isModern = $result['is_modern'] ?? false;
 
             $replyText = (string) $response->text;
 
-            // Log AI token usage and estimated cost
-            $promptTokens = (int) ($response->usage->promptTokens ?? 0);
-            $completionTokens = (int) ($response->usage->completionTokens ?? 0);
-            $estimatedCost = ($promptTokens * 0.000005) + ($completionTokens * 0.000015);
+            if (!$isModern) {
+                // Log AI token usage and estimated cost for legacy routes
+                $promptTokens = (int) ($response->usage->promptTokens ?? 0);
+                $completionTokens = (int) ($response->usage->completionTokens ?? 0);
+                $estimatedCost = ($promptTokens * 0.000005) + ($completionTokens * 0.000015);
 
-            $budgetService->logAiUsage(
-                contact: $this->contact,
-                vendor: $vendor,
-                model: $model,
-                promptTokens: $promptTokens,
-                completionTokens: $completionTokens,
-                cost: $estimatedCost,
-                isFallback: false
-            );
+                $budgetService->logAiUsage(
+                    contact: $this->contact,
+                    vendor: $vendor,
+                    model: $model,
+                    promptTokens: $promptTokens,
+                    completionTokens: $completionTokens,
+                    cost: $estimatedCost,
+                    isFallback: true
+                );
+            }
 
             // Send the response via WhatsApp
             $this->sendReply($replyText);

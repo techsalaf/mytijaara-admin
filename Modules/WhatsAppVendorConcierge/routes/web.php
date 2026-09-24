@@ -65,6 +65,10 @@ Route::get('/whatsapp/onboarding/subscription-payment/{session}', \Modules\Whats
 |--------------------------------------------------------------------------
 */
 Route::middleware(['web', 'admin'])->group(function () {
+    Route::group(['prefix' => 'admin/whatsapp/ai-dashboard', 'as' => 'admin.whatsapp.ai-dashboard.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDashboardController::class, 'index'])->name('index');
+    });
+
     Route::group(['prefix' => 'admin/whatsapp/ai-providers', 'as' => 'admin.whatsapp.ai-providers.'], function () {
         Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'index'])->name('index');
         Route::get('/create', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'create'])->name('create');
@@ -72,8 +76,13 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::get('/edit/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'edit'])->name('edit');
         Route::put('/update/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'update'])->name('update');
         Route::delete('/destroy/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'destroy'])->name('destroy');
-        Route::get('/toggle/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggle'])->name('toggle');
+        Route::post('/toggle/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggle'])->name('toggle');
         Route::post('/test/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'test'])->name('test');
+        
+        // Diagnostic endpoints
+        Route::post('/diagnostics/{aiProvider}/credentials', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'testCredentials'])->name('diagnostics.credentials');
+        Route::post('/diagnostics/{aiProvider}/discovery', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'testDiscovery'])->name('diagnostics.discovery');
+        Route::post('/diagnostics/{aiProvider}/inference', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'testInference'])->name('diagnostics.inference');
         Route::post('/sync-models/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'syncModels'])->name('sync-models');
         Route::post('/models/{model}/toggle', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggleModel'])->name('models.toggle');
         Route::post('/models/{model}/update', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'updateModel'])->name('models.update');

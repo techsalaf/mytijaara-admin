@@ -30,6 +30,7 @@ class AdapterFactory
 
         return match ($slug) {
             'gemini' => app(GeminiAdapter::class),
+            'deepseek' => app(DeepSeekAdapter::class),
             'groq' => app(GroqAdapter::class),
             'openrouter' => app(OpenRouterAdapter::class),
             'nvidia_nim' => app(NvidiaNimAdapter::class),

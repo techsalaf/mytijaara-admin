@@ -24,11 +24,11 @@ class InjectAdminSidebarMenu
             $content = $response->getContent();
 
             try {
-                $url = route('admin.whatsapp.ai-providers.index');
+                $url = route('admin.whatsapp.ai-dashboard.index');
             } catch (\Throwable $e) {
-                $url = url('/admin/whatsapp/ai-providers');
+                $url = url('/admin/whatsapp/ai-dashboard');
             }
-            $isActive = request()->is('admin/whatsapp/ai-providers*') ? 'is-active' : '';
+            $isActive = request()->is('admin/whatsapp/ai-dashboard*') ? 'is-active' : '';
 
             $script = <<<HTML
 <script>

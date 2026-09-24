@@ -75,7 +75,7 @@ class AiProviderController extends Controller
             'daily_budget_usd' => $validated['daily_budget_usd'] ?? null,
             'monthly_budget_usd' => $validated['monthly_budget_usd'] ?? null,
             'is_active' => $request->boolean('is_active', true),
-            'status' => 'healthy',
+            'status' => 'unverified',
         ]);
 
         // Auto-discover models immediately upon connection
@@ -124,7 +124,7 @@ class AiProviderController extends Controller
             $updates['credentials'] = [
                 'api_key' => trim($validated['api_key']),
             ];
-            $updates['status'] = 'healthy';
+            $updates['status'] = 'unverified';
             $updates['consecutive_failures'] = 0;
             $updates['last_error'] = null;
         }
@@ -170,7 +170,7 @@ class AiProviderController extends Controller
         if ($result['success']) {
             $aiProvider->update([
                 'last_tested_at' => now(),
-                'status' => 'healthy',
+                'status' => 'models_discovered',
                 'last_error' => null,
             ]);
         } else {

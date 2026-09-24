@@ -123,7 +123,7 @@ class GroqAdapter extends BaseProviderAdapter
 
         $driver = $aiManager->createGroqDriver([
             'key' => $connection->getApiKey(),
-            'base_url' => $connection->getBaseUrl(),
+            'url' => $connection->getBaseUrl(),
         ]);
 
         if (Ai::hasFakeGatewayFor($agent::class)) {
