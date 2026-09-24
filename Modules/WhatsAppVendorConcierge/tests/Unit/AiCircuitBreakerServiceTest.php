@@ -12,9 +12,12 @@ use Modules\WhatsAppVendorConcierge\app\Models\AiUsageRecord;
 use Modules\WhatsAppVendorConcierge\app\Services\AiCircuitBreakerService;
 use Exception;
 
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
+
 class AiCircuitBreakerServiceTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
 
     protected AiProviderDefinition $definition;
     protected AiProviderConnection $connection;
@@ -24,6 +27,7 @@ class AiCircuitBreakerServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->setupConciergeTables();
 
         $this->definition = AiProviderDefinition::create([
             'slug' => 'test-circuit-cb',

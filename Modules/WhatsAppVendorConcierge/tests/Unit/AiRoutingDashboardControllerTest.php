@@ -12,11 +12,19 @@ use Modules\WhatsAppVendorConcierge\app\Models\AiProviderConnection;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderModel;
 use Modules\WhatsAppVendorConcierge\app\Models\AiRoutingPolicy;
 use Modules\WhatsAppVendorConcierge\app\Services\AiRouterService;
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
 use Mockery;
 
 class AiRoutingDashboardControllerTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setupConciergeTables();
+    }
 
     protected function tearDown(): void
     {

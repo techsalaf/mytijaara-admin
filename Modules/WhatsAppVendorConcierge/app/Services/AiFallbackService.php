@@ -34,7 +34,14 @@ class AiFallbackService
     public function promptAgent(Agent $agent, string $userText): array
     {
         // 1. If modern OmniRoute connections exist and are active, use AiRouterService
-        $hasModernConnections = AiProviderConnection::where('is_active', true)->exists();
+        $hasModernConnections = false;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('ai_provider_connections')) {
+                $hasModernConnections = AiProviderConnection::where('is_active', true)->exists();
+            }
+        } catch (\Throwable) {
+            $hasModernConnections = false;
+        }
 
         if ($hasModernConnections) {
             $routed = $this->router->routeAndPrompt($agent, $userText);

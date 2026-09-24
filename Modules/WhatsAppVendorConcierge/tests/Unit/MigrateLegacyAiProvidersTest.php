@@ -7,10 +7,18 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderConnection;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderModel;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppAiProvider;
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
 
 class MigrateLegacyAiProvidersTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setupConciergeTables();
+    }
 
     public function test_migrates_legacy_providers_into_connections_and_models(): void
     {

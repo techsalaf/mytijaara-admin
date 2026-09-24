@@ -11,14 +11,17 @@ use Modules\WhatsAppVendorConcierge\app\Models\AiRoutingTarget;
 use Modules\WhatsAppVendorConcierge\app\Models\AiRoutingAttempt;
 use Modules\WhatsAppVendorConcierge\app\Models\AiUsageRecord;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
 
 class AiRoutingSchemaAndModelsTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->setupConciergeTables();
     }
 
     public function test_can_create_definition_and_connection_with_encrypted_credentials(): void

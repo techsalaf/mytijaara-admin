@@ -11,10 +11,12 @@ use Modules\WhatsAppVendorConcierge\app\Models\AiProviderDefinition;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderConnection;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderModel;
 use Modules\WhatsAppVendorConcierge\app\Services\ModelDiscoveryService;
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
 
 class AiProviderAdminControllerTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
 
     protected AiProviderDefinition $definition;
     protected AiProviderConnection $connection;
@@ -23,6 +25,7 @@ class AiProviderAdminControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->setupConciergeTables();
 
         $this->definition = AiProviderDefinition::create([
             'slug' => 'test-admin-openai',

@@ -22,7 +22,7 @@ class AiUsageRecord extends Model
     ];
 
     protected $casts = [
-        'usage_date' => 'date',
+        'usage_date' => 'string',
         'total_requests' => 'integer',
         'successful_requests' => 'integer',
         'failed_requests' => 'integer',

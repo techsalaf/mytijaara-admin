@@ -11,9 +11,18 @@ use Modules\WhatsAppVendorConcierge\app\Models\AiProviderModel;
 use Modules\WhatsAppVendorConcierge\app\Services\ModelDiscoveryService;
 use Modules\WhatsAppVendorConcierge\app\Services\AiAdapters\OpenAiCompatibleAdapter;
 
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
+
 class ModelDiscoveryServiceTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setupConciergeTables();
+    }
 
     public function test_sync_connection_models_uses_api_discovery_when_supported(): void
     {

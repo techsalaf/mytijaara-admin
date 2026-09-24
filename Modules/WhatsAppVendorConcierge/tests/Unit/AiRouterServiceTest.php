@@ -15,12 +15,20 @@ use Modules\WhatsAppVendorConcierge\app\Models\AiRoutingPolicy;
 use Modules\WhatsAppVendorConcierge\app\Services\AiRouterService;
 use Modules\WhatsAppVendorConcierge\app\Services\AiCircuitBreakerService;
 use Modules\WhatsAppVendorConcierge\app\Services\AiAdapters\OpenAiCompatibleAdapter;
+use Modules\WhatsAppVendorConcierge\tests\ConciergeDatabaseTestTrait;
 use Mockery;
 use Exception;
 
 class AiRouterServiceTest extends TestCase
 {
     use DatabaseTransactions;
+    use ConciergeDatabaseTestTrait;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setupConciergeTables();
+    }
 
     protected function tearDown(): void
     {
