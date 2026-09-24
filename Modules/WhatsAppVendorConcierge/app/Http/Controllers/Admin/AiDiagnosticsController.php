@@ -94,7 +94,12 @@ class AiDiagnosticsController extends Controller
         $adapter = AdapterFactory::forConnection($aiProvider);
         
         try {
-            $agent = new \Laravel\Ai\Agents\SystemAgent("You are a helpful assistant.");
+            $agent = new class implements \Laravel\Ai\Contracts\Agent {
+                use \Laravel\Ai\Promptable;
+                public function instructions(): string {
+                    return "You are a helpful assistant.";
+                }
+            };
             $result = $adapter->invokeAgent(
                 $aiProvider,
                 $model,
