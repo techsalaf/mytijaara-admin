@@ -40,8 +40,24 @@ class WhatsAppAiProvider extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'last_failed_at' => 'datetime',
-        'api_key' => 'encrypted',
     ];
+
+    public function getApiKeyAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            return null;
+        }
+    }
+
+    public function setApiKeyAttribute($value)
+    {
+        $this->attributes['api_key'] = empty($value) ? null : \Illuminate\Support\Facades\Crypt::encryptString($value);
+    }
 
     /**
      * Scope a query to only include active and working providers ordered by priority.
