@@ -43,7 +43,7 @@ class AiInboxController extends Controller
         $contact = $conversation->contact;
 
         try {
-            $response = $gateway->sendText($contact->phone_number, $request->message);
+            $response = $gateway->sendTextMessage($contact->phone_number, $request->message);
             WhatsAppMessage::logOutbound($conversation->id, [
                 'type' => 'text',
                 'text' => ['body' => $request->message]
@@ -68,7 +68,7 @@ class AiInboxController extends Controller
             $conversation->transitionTo('human_handoff');
             // Create a support case if one doesn't exist
             if (!$support->getActiveCase($conversation->contact)) {
-                $support->createCase($conversation->contact, "Manual takeover from Inbox", $conversation->vendor_id);
+                $support->createCase($conversation->contact, "Manual takeover from Inbox", 'general', 'medium', null, $conversation);
             }
         } else {
             $conversation->transitionTo('ai_active');
