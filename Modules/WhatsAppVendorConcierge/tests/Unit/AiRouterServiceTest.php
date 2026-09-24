@@ -75,8 +75,8 @@ class AiRouterServiceTest extends TestCase
             'definition_id' => $definition->id,
             'name' => 'Tools Connection',
             'credentials' => ['api_key' => 'test-key'],
-            'is_active' => true,
-            'status' => 'healthy',
+            'is_active' => true, 'status' => 'inference_verified',
+           
         ]);
 
         $noToolModel = AiProviderModel::create([
@@ -116,8 +116,8 @@ class AiRouterServiceTest extends TestCase
             'definition_id' => $definition->id,
             'name' => 'Primary Connection (Failing)',
             'credentials' => ['api_key' => 'fail-key'],
-            'is_active' => true,
-            'status' => 'healthy',
+            'is_active' => true, 'status' => 'inference_verified',
+           
         ]);
 
         $model1 = AiProviderModel::create([
@@ -133,8 +133,8 @@ class AiRouterServiceTest extends TestCase
             'definition_id' => $definition->id,
             'name' => 'Backup Connection (Working)',
             'credentials' => ['api_key' => 'success-key'],
-            'is_active' => true,
-            'status' => 'healthy',
+            'is_active' => true, 'status' => 'inference_verified',
+           
         ]);
 
         $model2 = AiProviderModel::create([
@@ -197,8 +197,8 @@ class AiRouterServiceTest extends TestCase
             'definition_id' => $definition->id,
             'name' => 'Only Connection',
             'credentials' => ['api_key' => 'fail-key'],
-            'is_active' => true,
-            'status' => 'healthy',
+            'is_active' => true, 'status' => 'inference_verified',
+           
         ]);
 
         $model = AiProviderModel::create([
