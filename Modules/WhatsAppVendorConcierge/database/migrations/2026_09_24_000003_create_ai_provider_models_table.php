@@ -12,7 +12,7 @@ return new class extends Migration
             Schema::create('ai_provider_models', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('connection_id')->constrained('ai_provider_connections')->cascadeOnDelete();
-                $table->string('model_id');
+                $table->string('model_id', 128);
                 $table->string('name');
                 $table->boolean('is_enabled')->default(true);
                 $table->boolean('supports_tool_calling')->default(false);

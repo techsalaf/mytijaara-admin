@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->foreignId('connection_id')->nullable()->constrained('ai_provider_connections')->nullOnDelete();
                 $table->foreignId('model_id')->nullable()->constrained('ai_provider_models')->nullOnDelete();
                 $table->unsignedInteger('attempt_number')->default(1);
-                $table->string('status'); // success, rate_limited, auth_failed, timeout, error
+                $table->string('status', 32); // success, rate_limited, auth_failed, timeout, error
                 $table->text('error_message')->nullable();
                 $table->unsignedInteger('latency_ms')->nullable();
                 $table->unsignedInteger('prompt_tokens')->default(0);

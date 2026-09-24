@@ -12,8 +12,8 @@ return new class extends Migration
             Schema::create('ai_routing_policies', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
-                $table->string('slug')->unique();
-                $table->string('strategy')->default('free_first'); // strict_fallback, round_robin, weighted, least_recently_used, lowest_cost, free_first, quality_first
+                $table->string('slug', 64)->unique();
+                $table->string('strategy', 32)->default('free_first'); // strict_fallback, round_robin, weighted, least_recently_used, lowest_cost, free_first, quality_first
                 $table->boolean('requires_tool_calling')->default(false);
                 $table->boolean('requires_vision')->default(false);
                 $table->unsignedInteger('max_latency_ms')->nullable();
