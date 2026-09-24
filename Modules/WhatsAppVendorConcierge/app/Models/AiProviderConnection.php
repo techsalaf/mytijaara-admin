@@ -37,7 +37,6 @@ class AiProviderConnection extends Model
     ];
 
     protected $casts = [
-        'credentials' => 'encrypted:array',
         'auth_state' => 'array',
         'is_active' => 'boolean',
         'consecutive_failures' => 'integer',
@@ -76,6 +75,29 @@ class AiProviderConnection extends Model
     public function routingAttempts(): HasMany
     {
         return $this->hasMany(AiRoutingAttempt::class, 'connection_id');
+    }
+
+    public function getCredentialsAttribute($value)
+    {
+        if (empty($value)) {
+            return [];
+        }
+
+        try {
+            $decrypted = \Illuminate\Support\Facades\Crypt::decryptString($value);
+            return json_decode($decrypted, true) ?? [];
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            return [];
+        }
+    }
+
+    public function setCredentialsAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['credentials'] = \Illuminate\Support\Facades\Crypt::encryptString(json_encode([]));
+        } else {
+            $this->attributes['credentials'] = \Illuminate\Support\Facades\Crypt::encryptString(json_encode($value));
+        }
     }
 
     public function getApiKey(): ?string
