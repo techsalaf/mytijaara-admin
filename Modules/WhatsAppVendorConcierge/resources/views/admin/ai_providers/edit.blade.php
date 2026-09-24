@@ -216,7 +216,7 @@ function togglePasswordVisibility(fieldId) {
 }
 
 function runDiagnostic(type) {
-    let url = '{{ url("admin/whatsapp/diagnostics") }}/{{ $connection->id }}/' + type;
+    let url = '{{ url("admin/whatsapp/ai-providers/diagnostics") }}/{{ $connection->id }}/' + type;
     let body = {};
     
     if (type === 'inference') {
