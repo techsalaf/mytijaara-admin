@@ -265,19 +265,9 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             return;
         }
 
-        // Route navigation before onboarding validation or AI, including at credentials.
-        $command = ConversationCommands::action((string) ($message->raw_text ?? ''));
-        if ($command !== null) {
-            match ($command) {
-                'restart', 'register' => $conversationManager->startFreshOnboarding($conversation, $contact, $gateway),
-                'welcome' => $conversationManager->handleWelcome($conversation, $contact, $gateway),
-                'support' => $conversationManager->initiateHumanHandoff($conversation, $contact, $gateway),
-                'info' => $conversationManager->showSellingInfo($conversation, $contact, $gateway),
-                'help' => $conversationManager->showHelp($conversation, $contact, $gateway),
-                'status' => $conversationManager->checkApplicationStatus($conversation, $contact, $gateway),
-                'resume' => $conversationManager->resumeOnboarding($conversation, $contact, $gateway),
-                'resend' => $conversationManager->handleButtonResponse($conversation, $contact, 'resend_password_link', $gateway),
-            };
+        // 3. AI Orchestration for intents and navigation
+        $orchestrator = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationOrchestrator::class);
+        if ($orchestrator->routeMessage($conversation, $contact, $message, $gateway)) {
             return;
         }
 

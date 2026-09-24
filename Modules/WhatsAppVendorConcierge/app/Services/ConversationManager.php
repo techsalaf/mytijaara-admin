@@ -357,7 +357,7 @@ class ConversationManager
             'open_shop', 'start_onboarding' => $this->startOnboarding($conversation, $contact, $gateway),
             'check_status' => $this->checkApplicationStatus($conversation, $contact, $gateway),
             'manage_shop' => $contact->isVendor()
-                ? $this->handleExistingVendor($conversation, $contact, $gateway)
+                ? $gateway->sendTextMessage($contact->phone_number, "To manage your shop settings, profile, and inventory, please log in to your Vendor Dashboard at https://seller.mytijaara.com, or ask me what you'd like to update (e.g., 'Change my shop name' or 'Update my hours').")
                 : $gateway->sendTextMessage($contact->phone_number, "Please register as a vendor first to manage a shop. Tap *Open My Shop* or reply *Register* to begin!"),
             'learn_selling', 'faq' => $this->showSellingInfo($conversation, $contact, $gateway),
             'talk_support' => $this->initiateHumanHandoff($conversation, $contact, $gateway),
