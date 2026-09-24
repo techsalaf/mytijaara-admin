@@ -146,6 +146,8 @@ class OpenRouterAdapter extends BaseProviderAdapter
         $aiManager = app(AiManager::class);
 
         $driver = $aiManager->createOpenrouterDriver([
+            'driver' => 'openrouter',
+            'name' => 'openrouter',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl(),
         ]);

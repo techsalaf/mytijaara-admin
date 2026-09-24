@@ -122,6 +122,8 @@ class GroqAdapter extends BaseProviderAdapter
         $aiManager = app(AiManager::class);
 
         $driver = $aiManager->createGroqDriver([
+            'driver' => 'groq',
+            'name' => 'groq',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl(),
         ]);

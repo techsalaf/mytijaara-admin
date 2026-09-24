@@ -127,6 +127,8 @@ class OpenAiCompatibleAdapter extends BaseProviderAdapter
         $aiManager = app(AiManager::class);
 
         $driver = $aiManager->createOpenaiDriver([
+            'driver' => 'openai',
+            'name' => 'openai',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl(),
         ]);

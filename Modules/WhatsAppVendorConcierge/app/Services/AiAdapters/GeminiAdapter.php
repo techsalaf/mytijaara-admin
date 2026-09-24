@@ -120,6 +120,8 @@ class GeminiAdapter extends BaseProviderAdapter
         $aiManager = app(AiManager::class);
 
         $driver = $aiManager->createGeminiDriver([
+            'driver' => 'gemini',
+            'name' => 'gemini',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl(),
         ]);

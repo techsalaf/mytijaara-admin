@@ -127,6 +127,8 @@ class DeepSeekAdapter extends BaseProviderAdapter
         $aiManager = app(AiManager::class);
 
         $driver = $aiManager->createDeepseekDriver([
+            'driver' => 'deepseek',
+            'name' => 'deepseek',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl(),
         ]);

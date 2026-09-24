@@ -121,6 +121,8 @@ class NvidiaNimAdapter extends BaseProviderAdapter
         $aiManager = app(AiManager::class);
 
         $driver = $aiManager->createOpenaiDriver([
+            'driver' => 'openai',
+            'name' => 'openai',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl() ?: 'https://integrate.api.nvidia.com/v1',
         ]);
