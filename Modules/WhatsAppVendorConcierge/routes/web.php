@@ -83,6 +83,7 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::post('/diagnostics/{aiProvider}/credentials', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'testCredentials'])->name('diagnostics.credentials');
         Route::post('/diagnostics/{aiProvider}/discovery', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'testDiscovery'])->name('diagnostics.discovery');
         Route::post('/diagnostics/{aiProvider}/inference', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'testInference'])->name('diagnostics.inference');
+        Route::post('/diagnostics/{aiProvider}/bulk-test', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiDiagnosticsController::class, 'bulkTest'])->name('diagnostics.bulk-test');
         Route::post('/sync-models/{aiProvider}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'syncModels'])->name('sync-models');
         Route::post('/models/{model}/toggle', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'toggleModel'])->name('models.toggle');
         Route::post('/models/{model}/update', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiProviderController::class, 'updateModel'])->name('models.update');

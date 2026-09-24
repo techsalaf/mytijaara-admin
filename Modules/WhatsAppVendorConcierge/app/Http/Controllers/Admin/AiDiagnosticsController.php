@@ -143,4 +143,62 @@ class AiDiagnosticsController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Test 5: Bulk Test & Clean all enabled models
+     */
+    public function bulkTest(AiProviderConnection $aiProvider): JsonResponse
+    {
+        $models = $aiProvider->models()->where('is_enabled', true)->get();
+        if ($models->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No enabled models to test.']);
+        }
+
+        try {
+            $adapter = AdapterFactory::forConnection($aiProvider);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to initialize adapter: ' . $e->getMessage()]);
+        }
+
+        $agent = new class implements \Laravel\Ai\Contracts\Agent {
+            use \Laravel\Ai\Promptable;
+            public function instructions(): string {
+                return "You are a helpful assistant.";
+            }
+        };
+
+        $disabledCount = 0;
+        $results = [];
+
+        foreach ($models as $model) {
+            try {
+                $result = $adapter->invokeAgent($aiProvider, $model, $agent, "hi", ['max_tokens' => 5]);
+                $results[] = "[\u{2714}] {$model->model_id} (OK)";
+            } catch (\Throwable $e) {
+                $msg = $e->getMessage();
+                $msgLower = strtolower($msg);
+
+                if (str_contains($msgLower, '401') || str_contains($msgLower, '402') || str_contains($msgLower, 'insufficient balance')) {
+                    $results[] = "[\u{26A0}] {$model->model_id} (Auth/Balance Error, skipped)";
+                    break;
+                }
+
+                $isDead = str_contains($msgLower, '404') || str_contains($msgLower, '400') || str_contains($msgLower, 'does not exist') || str_contains($msgLower, 'decommissioned');
+
+                if ($isDead) {
+                    $model->update(['is_enabled' => false]);
+                    $disabledCount++;
+                    $results[] = "[\u{274C}] {$model->model_id} (Disabled)";
+                } else {
+                    $results[] = "[\u{2753}] {$model->model_id} (Unknown Error)";
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Bulk test completed. Disabled {$disabledCount} broken models.",
+            'details' => implode("\n", $results),
+        ]);
+    }
 }

@@ -135,9 +135,14 @@
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0"><i class="tio-layers"></i> Discovered Models</h5>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runDiagnostic('discovery')">
-                        <i class="tio-sync"></i> Sync
-                    </button>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-danger mr-2" onclick="runDiagnostic('bulk-test')">
+                            <i class="tio-heartbeat"></i> Bulk Test & Clean
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="runDiagnostic('discovery')">
+                            <i class="tio-sync"></i> Sync
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
