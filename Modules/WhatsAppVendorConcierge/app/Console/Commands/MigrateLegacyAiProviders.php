@@ -44,6 +44,13 @@ class MigrateLegacyAiProviders extends Command
             }
 
             // Create or update connection
+            $apiKey = null;
+            try {
+                $apiKey = $legacy->api_key;
+            } catch (\Throwable) {
+                $apiKey = $legacy->getRawOriginal('api_key');
+            }
+
             $connectionName = $legacy->name . ' Account';
             $connection = AiProviderConnection::firstOrCreate(
                 [
@@ -52,7 +59,7 @@ class MigrateLegacyAiProviders extends Command
                 ],
                 [
                     'credentials' => [
-                        'api_key' => $legacy->api_key,
+                        'api_key' => $apiKey,
                     ],
                     'base_url_override' => $legacy->base_url,
                     'is_active' => (bool) $legacy->is_active,
