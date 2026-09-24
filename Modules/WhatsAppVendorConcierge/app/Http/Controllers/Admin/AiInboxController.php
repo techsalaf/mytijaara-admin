@@ -71,10 +71,17 @@ class AiInboxController extends Controller
                 $support->createCase($conversation->contact, "Manual takeover from Inbox", 'general', 'medium', null, $conversation);
             }
         } else {
-            $conversation->transitionTo('ai_active');
+            // Restore to its proper state instead of blindly setting ai_active.
+            // If they have an onboarding session, they should probably go back to onboarding_active.
+            if ($conversation->onboarding_session_id && !$conversation->vendor_id) {
+                $conversation->transitionTo('onboarding_active');
+            } else {
+                $conversation->transitionTo('ai_active');
+            }
+
             // Close the active support case
             if ($case = $support->getActiveCase($conversation->contact)) {
-                $support->resolveCase($case);
+                $support->resolveCase($case, "Handed back to AI via Inbox UI");
             }
         }
 

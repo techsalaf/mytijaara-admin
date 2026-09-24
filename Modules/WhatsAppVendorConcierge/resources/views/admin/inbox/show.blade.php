@@ -90,12 +90,20 @@
                         @foreach($messages as $msg)
                             @if($msg->direction === 'inbound')
                                 <div class="msg-bubble msg-in">
-                                    {{ $msg->raw_text }}
+                                    @if($msg->raw_text)
+                                        {!! nl2br(e($msg->raw_text)) !!}
+                                    @else
+                                        <i class="tio-attachment"></i> [{{ ucfirst(str_replace('_', ' ', $msg->type)) }} Message]
+                                    @endif
                                     <div class="msg-time">{{ $msg->created_at->format('H:i') }}</div>
                                 </div>
                             @else
                                 <div class="msg-bubble msg-out">
-                                    {{ $msg->raw_text }}
+                                    @if($msg->raw_text)
+                                        {!! nl2br(e($msg->raw_text)) !!}
+                                    @else
+                                        <i class="tio-attachment"></i> [{{ ucfirst(str_replace('_', ' ', $msg->type)) }} Message]
+                                    @endif
                                     <div class="msg-time">
                                         {{ $msg->created_at->format('H:i') }}
                                         @if($msg->status === 'read')
