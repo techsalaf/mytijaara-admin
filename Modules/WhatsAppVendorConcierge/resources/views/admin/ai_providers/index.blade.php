@@ -29,10 +29,7 @@
         <li class="nav-item">
             <a class="nav-link" href="{{ route('admin.whatsapp.ai-routing.index') }}">Routing & Fallbacks</a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#">Diagnostics</a>
-        </li>
-    </ul>
+        </ul>
 
     <div class="card shadow-sm">
         <div class="card-header border-bottom">
