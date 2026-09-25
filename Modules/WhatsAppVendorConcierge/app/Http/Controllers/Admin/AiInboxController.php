@@ -14,7 +14,7 @@ class AiInboxController extends Controller
 {
     public function index(Request $request)
     {
-        $query = WhatsAppConversation::with(['contact', 'vendor', 'onboardingSession', 'messages' => function ($q) {
+        $query = WhatsAppConversation::with(['contact', 'vendor.stores', 'onboardingSession', 'messages' => function ($q) {
             $q->latest();
         }]);
 
@@ -55,7 +55,7 @@ class AiInboxController extends Controller
 
     public function show(Request $request, $id)
     {
-        $query = WhatsAppConversation::with(['contact', 'vendor', 'onboardingSession', 'messages' => function ($q) {
+        $query = WhatsAppConversation::with(['contact', 'vendor.stores', 'onboardingSession', 'messages' => function ($q) {
             $q->latest();
         }]);
 
@@ -90,7 +90,7 @@ class AiInboxController extends Controller
 
         $conversations = $query->orderBy('last_activity_at', 'desc')->paginate(20);
 
-        $conversation = WhatsAppConversation::with(['contact', 'vendor', 'onboardingSession'])->findOrFail($id);
+        $conversation = WhatsAppConversation::with(['contact', 'vendor.stores', 'onboardingSession'])->findOrFail($id);
         $messages = $conversation->messages()->orderBy('created_at', 'asc')->get();
         
         // mark unread as read

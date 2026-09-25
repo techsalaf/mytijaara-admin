@@ -151,8 +151,17 @@
                                 <button type="submit" class="btn btn-sm btn-outline-warning"><i class="tio-user"></i> Take Over</button>
                             @endif
                         </form>
-                        <a href="{{ route('admin.vendor.view', $conversation->vendor_id ?? 0) }}" class="btn btn-sm btn-outline-info" title="View Application"><i class="tio-folder-bookmarked"></i></a>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" title="View Diagnostics"><i class="tio-settings"></i></button>
+                        @php
+                            $storeId = $conversation->vendor?->stores?->first()?->id ?? $conversation->onboardingSession?->store_id ?? null;
+                        @endphp
+                        @if($storeId)
+                            <a href="{{ route('admin.store.view', ['store' => $storeId]) }}" class="btn btn-sm btn-outline-info" title="{{ translate('View Store Application') }}" target="_blank">
+                                <i class="tio-folder-bookmarked"></i>
+                            </a>
+                        @endif
+                        <a href="{{ route('admin.whatsapp.operations-center.show', $conversation->id) }}" class="btn btn-sm btn-outline-secondary" title="{{ translate('View Diagnostics & Recovery') }}">
+                            <i class="tio-settings"></i>
+                        </a>
                     </div>
                 </div>
 
