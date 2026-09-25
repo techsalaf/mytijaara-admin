@@ -152,7 +152,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline-success"><i class="tio-robot"></i> Resume automation</button>
                             @else
                                 <input type="hidden" name="state" value="human_handoff">
-                                <button type="submit" class="btn btn-sm btn-outline-warning"><i class="tio-user"></i> Take Over</button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary"><i class="tio-user"></i> Take Over</button>
                             @endif
                         </form>
                         @php

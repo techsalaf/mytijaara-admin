@@ -88,7 +88,7 @@ class OperationsSafetyTest extends ApplicationFixtureTestCase
         $contact->update(['display_name'=>'Demo Shop Owner']);
         $dir=base_path('.agents/operations-view-fixture');
         if (!is_dir($dir.'/layouts/admin')) mkdir($dir.'/layouts/admin',0775,true);
-        file_put_contents($dir.'/layouts/admin/app.blade.php', '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/public/assets/admin/css/bootstrap.min.css"><link rel="stylesheet" href="/public/assets/admin/css/theme.minc619.css"><link rel="stylesheet" href="/public/assets/admin/vendor/icon-set/style.css">@stack("css_or_js")</head><body>@yield("content")</body></html>');
+        file_put_contents($dir.'/layouts/admin/app.blade.php', '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/public/assets/admin/css/bootstrap.min.css"><link rel="stylesheet" href="/public/assets/admin/css/theme.minc619.css"><link rel="stylesheet" href="/public/assets/admin/vendor/icon-set/style.css">@stack("css_or_js")</head><body>@yield("content")</body></html>');
         view()->getFinder()->prependLocation($dir);
         $request=\Illuminate\Http\Request::create('/admin/whatsapp/operations-center');
         $html=app(\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class)->index($request)->render();

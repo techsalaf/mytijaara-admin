@@ -25,10 +25,10 @@ class ConciergeDiagnoseCommand extends Command
                 ['In Human Handoff (Total)', $overview['in_human_handoff']],
                 ['Stale Human Handoffs (>2h)', $overview['stale_human_handoff']],
                 ['Validation Failure Loops', $overview['stuck_conversations']],
-                ['Failed Outbound Sends (48h)', $overview['failed_outbounds']],
+                ['Conversations with failed latest reply', $overview['failed_outbounds']],
                 ['Vendors Awaiting Approval', $overview['vendors_awaiting_approval']],
                 ['Recently Recovered (24h)', $overview['recently_recovered']],
-                ['Overall Health', strtoupper($overview['system_health'])],
+                ['Conversation Health', strtoupper($overview['system_health'])],
             ]
         );
 

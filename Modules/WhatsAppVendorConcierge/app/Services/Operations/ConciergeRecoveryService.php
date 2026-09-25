@@ -99,7 +99,7 @@ class ConciergeRecoveryService
             $conversation = WhatsAppConversation::find($id);
             $item = $conversation ? $this->perform($conversation, $action, $dryRun, $actor, $adminId, null) : ['status'=>'excluded','reason'=>'Conversation not found.'];
             $item['id'] = $id;
-            $eligible = in_array($item['status'], ['success','dry_run_passed'], true);
+            $eligible = $item['is_eligible'] ?? false;
             $result[$eligible ? 'eligible_count' : 'excluded_count']++;
             if ($item['status'] === 'success') $result['success_count']++;
             if ($item['status'] === 'failed') $result['failed_count']++;
