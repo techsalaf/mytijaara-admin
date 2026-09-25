@@ -83,7 +83,7 @@
             
             <div class="wa-chat-list">
                 @forelse($conversations as $conv)
-                    <a href="{{ route('admin.whatsapp.inbox.show', array_merge(['id' => $conv->id], request()->all())) }}" class="wa-chat-item {{ isset($conversation) && $conversation->id == $conv->id ? 'active' : '' }}">
+                    <a href="{{ route('admin.whatsapp.inbox.show', array_merge(['conversation' => $conv->id], request()->query())) }}" class="wa-chat-item {{ isset($conversation) && $conversation->id == $conv->id ? 'active' : '' }}">
                         <div class="wa-avatar">
                             <i class="tio-user"></i>
                         </div>
