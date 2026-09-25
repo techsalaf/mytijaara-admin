@@ -813,7 +813,7 @@ class VendorController extends Controller
         $module_id = $request->query('module_id', 'all');
 
         $stores = Store::with('vendor:id,f_name,l_name,status', 'module:id,module_name', 'zone:id,name')->whereHas('vendor', function ($query) use ($storeApproveStatus) {
-            return $query->where('status', $storeApproveStatus);
+            return is_null($storeApproveStatus) ? $query->whereNull('status') : $query->where('status', $storeApproveStatus);
         })
             ->when(is_numeric($zone_id), function ($query) use ($zone_id) {
                 return $query->where('zone_id', $zone_id);
