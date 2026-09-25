@@ -24,8 +24,8 @@
     .wa-chat-time { font-size: 12px; color: #667781; }
     .wa-chat-preview { display: flex; justify-content: space-between; align-items: center; }
     .wa-chat-last-msg { font-size: 14px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    
-    .wa-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; background: #efeae2 url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png') repeat; }
+
+    .wa-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; background: #f4f7f6; }
     .wa-chat-header { padding: 10px 16px; background: #f0f2f5; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d1d7db; }
     .wa-chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px 5%; display: flex; flex-direction: column; }
     .wa-message { max-width: 65%; margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; line-height: 1.4; position: relative; display: flex; flex-direction: column; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
@@ -39,21 +39,25 @@
     .wa-msg-status.delivered { color: #667781; }
     .wa-msg-status.sent { color: #667781; }
     .wa-msg-status.failed { color: #f15c6d; }
-    
+
     .wa-composer { padding: 12px 16px; background: #f0f2f5; display: flex; align-items: flex-end; gap: 12px; }
     .wa-composer-input { flex-grow: 1; background: #ffffff; border-radius: 8px; padding: 10px 16px; border: none; outline: none; resize: none; max-height: 100px; overflow-y: auto; font-size: 15px; }
     .wa-btn-send { background: #00a884; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     .wa-btn-send:disabled { background: #879297; cursor: not-allowed; }
     .wa-btn-action { background: none; border: none; color: #54656f; font-size: 24px; cursor: pointer; padding: 4px; }
-    
+
     .wa-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #667781; text-align: center; }
     .wa-empty-state i { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
-    
+
     .wa-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; color: white; font-weight: bold; }
     .wa-badge-unread { background: #25d366; }
     .wa-badge-ai { background: #8e24aa; }
     .wa-badge-human { background: #ff9800; }
     .wa-badge-paused { background: #f44336; }
+
+    .wa-container{min-height:520px;height:calc(100dvh - 155px)}.wa-sidebar{flex:0 0 310px;min-width:0}.wa-main,.wa-chat-info{min-width:0}.wa-main,.wa-chat-messages,.wa-chat-list{min-height:0}.wa-message{overflow-wrap:anywhere;max-width:85%}.wa-chat-header{gap:12px;flex-wrap:wrap}.wa-chat-header .d-flex{flex-wrap:wrap;gap:6px}.wa-avatar{color:#31564c;background:#e0eee9}.wa-chat-time{flex-shrink:0;margin-left:8px}.wa-composer-input{min-width:0}.wa-status-banner{padding:12px 18px;background:#fff;border-bottom:1px solid #e3e8e5;font-size:13px}.wa-mobile-back{display:none}.wa-search input:focus,.wa-composer-input:focus{outline:2px solid #008069;outline-offset:2px}
+    @media(max-width:1000px){.wa-sidebar{flex-basis:260px}.wa-message{max-width:92%}}
+    @media(max-width:700px){.wa-container{height:calc(100dvh - 130px);min-height:440px}.wa-sidebar{flex-basis:100%;width:100%}.wa-main{display:none}.wa-container.wa-open .wa-sidebar{display:none}.wa-container.wa-open .wa-main{display:flex;width:100%}.wa-mobile-back{display:inline-block}.wa-chat-header{padding:10px}.wa-chat-messages{padding:12px}.wa-composer{padding:10px;gap:6px}}
 </style>
 @endpush
 
@@ -65,12 +69,12 @@
             <div class="wa-sidebar-header">
                 <h4 class="mb-0">{{ translate('Chats') }}</h4>
             </div>
-            
+
             <form class="wa-search" action="{{ url()->current() }}" method="GET">
                 <input type="hidden" name="filter" value="{{ request('filter', 'all') }}">
-                <input type="text" name="search" placeholder="{{ translate('Search or start new chat') }}" value="{{ request('search') }}">
+                <input type="text" name="search" placeholder="{{ translate('Search name or phone') }}" value="{{ request('search') }}">
             </form>
-            
+
             <div class="wa-filters">
                 @php $currentFilter = request('filter', 'all'); @endphp
                 <a href="{{ request()->fullUrlWithQuery(['filter' => 'all']) }}" class="wa-filter-btn {{ $currentFilter == 'all' ? 'active' : '' }}">All</a>
@@ -80,7 +84,7 @@
                 <a href="{{ request()->fullUrlWithQuery(['filter' => 'stuck']) }}" class="wa-filter-btn {{ $currentFilter == 'stuck' ? 'active' : '' }}">Stuck</a>
                 <a href="{{ request()->fullUrlWithQuery(['filter' => 'incomplete']) }}" class="wa-filter-btn {{ $currentFilter == 'incomplete' ? 'active' : '' }}">Incomplete</a>
             </div>
-            
+
             <div class="wa-chat-list">
                 @forelse($conversations as $conv)
                     <a href="{{ route('admin.whatsapp.inbox.show', array_merge(['conversation' => $conv->id], request()->query())) }}" class="wa-chat-item {{ isset($conversation) && $conversation->id == $conv->id ? 'active' : '' }}">
@@ -89,7 +93,7 @@
                         </div>
                         <div class="wa-chat-info">
                             <div class="wa-chat-title">
-                                <span class="wa-chat-name">{{ $conv->contact->name ?? $conv->contact->phone_number }}</span>
+                                <span class="wa-chat-name">{{ $conv->contact->display_name ?? $conv->contact->phone_number }}</span>
                                 <span class="wa-chat-time">{{ $conv->last_activity_at ? $conv->last_activity_at->format('H:i') : '' }}</span>
                             </div>
                             <div class="wa-chat-preview">
@@ -117,7 +121,7 @@
                         <small>No conversations found.</small>
                     </div>
                 @endforelse
-                
+
                 <div class="p-3">
                     {{ $conversations->appends(request()->all())->links('pagination::bootstrap-4') }}
                 </div>
@@ -133,9 +137,9 @@
                             <i class="tio-user"></i>
                         </div>
                         <div>
-                            <div style="font-size: 16px; font-weight: 500; color: #111b21;">{{ $conversation->contact->name ?? $conversation->contact->phone_number }}</div>
+                            <div style="font-size: 16px; font-weight: 500; color: #111b21;">{{ $conversation->contact->display_name ?? $conversation->contact->phone_number }}</div>
                             <div style="font-size: 13px; color: #667781;">
-                                {{ $conversation->vendor ? ($conversation->vendor->f_name . ' ' . $conversation->vendor->l_name) : 'No Vendor Assigned' }} 
+                                {{ $conversation->vendor ? ($conversation->vendor->f_name . ' ' . $conversation->vendor->l_name) : 'Application in progress' }}
                                 &bull; {{ Str::title(str_replace('_', ' ', $conversation->state)) }}
                             </div>
                         </div>
@@ -145,7 +149,7 @@
                             @csrf
                             @if($conversation->state === 'human_handoff')
                                 <input type="hidden" name="state" value="ai_active">
-                                <button type="submit" class="btn btn-sm btn-outline-success"><i class="tio-robot"></i> Resume AI</button>
+                                <button type="submit" class="btn btn-sm btn-outline-success"><i class="tio-robot"></i> Resume automation</button>
                             @else
                                 <input type="hidden" name="state" value="human_handoff">
                                 <button type="submit" class="btn btn-sm btn-outline-warning"><i class="tio-user"></i> Take Over</button>
@@ -173,7 +177,7 @@
                             @else
                                 <div><i class="tio-attachment"></i> [{{ ucfirst(str_replace('_', ' ', $msg->type)) }}]</div>
                             @endif
-                            
+
                             <div class="wa-msg-meta">
                                 @if($msg->direction === 'outbound')
                                     @php
@@ -289,7 +293,7 @@
     };
 
     btnSend.addEventListener('click', sendMessage);
-    
+
     textarea.addEventListener('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();

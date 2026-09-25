@@ -95,14 +95,14 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::post('/simulate', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiRoutingDashboardController::class, 'simulate'])->name('simulate');
     });
 
-    Route::group(['prefix' => 'admin/whatsapp/inbox', 'as' => 'admin.whatsapp.inbox.'], function () {
+    Route::group(['middleware' => [\Modules\WhatsAppVendorConcierge\app\Http\Middleware\AuthorizeWhatsAppOperations::class], 'prefix' => 'admin/whatsapp/inbox', 'as' => 'admin.whatsapp.inbox.'], function () {
         Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'index'])->name('index');
         Route::get('/{conversation}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'show'])->name('show');
         Route::post('/{conversation}/send', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'sendMessage'])->name('send');
         Route::post('/{conversation}/toggle-state', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'toggleState'])->name('toggle-state');
     });
 
-    Route::group(['prefix' => 'admin/whatsapp/stuck-applications', 'as' => 'admin.whatsapp.stuck-applications.'], function () {
+    Route::group(['middleware' => [\Modules\WhatsAppVendorConcierge\app\Http\Middleware\AuthorizeWhatsAppOperations::class], 'prefix' => 'admin/whatsapp/stuck-applications', 'as' => 'admin.whatsapp.stuck-applications.'], function () {
         Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StuckApplicationController::class, 'index'])->name('index');
         Route::post('/{id}/recover', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StuckApplicationController::class, 'recoveryAction'])->name('recover');
     });
@@ -114,7 +114,7 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::post('/{campaign}/launch', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'launch'])->name('launch');
     });
 
-    Route::group(['prefix' => 'admin/whatsapp/operations-center', 'as' => 'admin.whatsapp.operations-center.'], function () {
+    Route::group(['middleware' => [\Modules\WhatsAppVendorConcierge\app\Http\Middleware\AuthorizeWhatsAppOperations::class], 'prefix' => 'admin/whatsapp/operations-center', 'as' => 'admin.whatsapp.operations-center.'], function () {
         Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'index'])->name('index');
         Route::get('/conversation/{id}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'show'])->name('show');
         Route::post('/conversation/{id}/preview', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'previewAction'])->name('preview');

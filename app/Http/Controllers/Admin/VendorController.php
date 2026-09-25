@@ -803,6 +803,7 @@ class VendorController extends Controller
         return view('admin-views.vendor.pending_requests', compact('stores', 'zone', 'type', 'search_by'));
     }
 
+    // GEMINI-MYTJ START: Cross-module application review; retain explicit module and zone filters.
     private function getNewStores($request, $storeApproveStatus)
     {
 
@@ -812,11 +813,9 @@ class VendorController extends Controller
         $type = $request->query('type', 'all');
         $module_id = $request->query('module_id', 'all');
 
-        // GEMINI-MYTJ START: WhatsApp vendor onboarding compatibility - Pending vendors have status NULL in DB
         $stores = Store::with('vendor:id,f_name,l_name,status', 'module:id,module_name', 'zone:id,name')->whereHas('vendor', function ($query) use ($storeApproveStatus) {
             return is_null($storeApproveStatus) ? $query->whereNull('status') : $query->where('status', $storeApproveStatus);
         })
-        // GEMINI-MYTJ END: WhatsApp vendor onboarding compatibility
             ->when(is_numeric($zone_id), function ($query) use ($zone_id) {
                 return $query->where('zone_id', $zone_id);
             })
@@ -838,11 +837,12 @@ class VendorController extends Controller
                     });
                 });
             })
-            ->module(Config::get('module.current_module_id'))
             ->type($type)->latest()->paginate(config('default_pagination'));
 
         return $stores;
     }
+
+    // GEMINI-MYTJ END: Cross-module application review
 
     public function deny_requests(Request $request)
     {

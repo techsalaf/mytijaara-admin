@@ -44,16 +44,10 @@ class ConciergeDiagnoseCommand extends Command
         }
 
         $filter = $this->option('filter');
-        $query = WhatsAppConversation::with('contact')->whereNotNull('last_activity_at')->latest('last_activity_at')->limit(50);
-        $convs = $query->get();
-
         $rows = [];
-        foreach ($convs as $conv) {
-            $diag = $diagnosticService->diagnoseConversation($conv);
-
-            if ($filter === 'silenced' && $diag['failure_category'] !== 'silenced_onboarding') continue;
-            if ($filter === 'stale_handoff' && $diag['failure_category'] !== 'stale_human_handoff') continue;
-            if ($filter === 'stuck' && !in_array($diag['failure_category'], ['silenced_onboarding', 'stale_human_handoff', 'validation_failure_loop'])) continue;
+        foreach ($diagnosticService->scan($filter) as $item) {
+            $conv = $item['conversation'];
+            $diag = $item['diag'];
 
             $rows[] = [
                 'ID' => $conv->id,

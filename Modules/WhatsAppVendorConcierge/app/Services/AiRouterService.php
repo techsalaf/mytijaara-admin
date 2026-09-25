@@ -144,7 +144,7 @@ class AiRouterService
             ->where('is_enabled', true)
             ->whereHas('connection', function ($q) {
                 $q->where('is_active', true)
-                  ->whereIn('status', ['inference_verified', 'tool_calling_verified', 'degraded', 'models_discovered']);
+                  ->whereIn('status', ['inference_verified', 'tool_calling_verified', 'degraded', 'models_discovered', 'healthy', 'cooldown', 'rate_limited']);
             });
 
         if ($requiresTools) {

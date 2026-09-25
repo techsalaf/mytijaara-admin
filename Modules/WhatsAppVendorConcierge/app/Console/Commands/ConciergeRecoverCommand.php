@@ -35,16 +35,10 @@ class ConciergeRecoverCommand extends Command
             $targetIds[] = (int) $convId;
         } elseif ($this->option('all-silenced')) {
             $action = $action ?: 'renudge_current_step';
-            $targetIds = WhatsAppConversation::where('state', 'onboarding_active')
-                ->whereNotNull('current_step')
-                ->pluck('id')
-                ->toArray();
+            $targetIds = app(\Modules\WhatsAppVendorConcierge\app\Services\Operations\ConciergeDiagnosticService::class)->scan('silenced')->pluck('conversation.id')->all();
         } elseif ($this->option('all-stale-handoffs')) {
             $action = $action ?: 'release_stale_handoff';
-            $targetIds = WhatsAppConversation::where('state', 'human_handoff')
-                ->where('updated_at', '<=', now()->subHours(2))
-                ->pluck('id')
-                ->toArray();
+            $targetIds = app(\Modules\WhatsAppVendorConcierge\app\Services\Operations\ConciergeDiagnosticService::class)->scan('stale_handoff')->pluck('conversation.id')->all();
         }
 
         if (empty($targetIds)) {
@@ -82,6 +76,6 @@ class ConciergeRecoverCommand extends Command
             $this->info("\nLive recovery execution completed.");
         }
 
-        return 0;
+        return $results['failed_count'] > 0 ? 1 : 0;
     }
 }

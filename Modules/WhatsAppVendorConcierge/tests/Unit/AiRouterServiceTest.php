@@ -36,6 +36,22 @@ class AiRouterServiceTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_healthy_and_expired_cooldown_connections_reenter_routing(): void
+    {
+        $definition = AiProviderDefinition::create(['slug'=>'recovery-test','name'=>'Recovery test','adapter_class'=>OpenAiCompatibleAdapter::class]);
+        $connection = AiProviderConnection::create(['definition_id'=>$definition->id,'name'=>'Verified account','credentials'=>['api_key'=>'test-key'],'is_active'=>true,'status'=>'healthy']);
+        $model = AiProviderModel::create(['connection_id'=>$connection->id,'model_id'=>'test-model','name'=>'Test model','is_enabled'=>true,'supports_tool_calling'=>true]);
+        $router = app(AiRouterService::class);
+        $this->assertTrue($router->resolveEligibleModels(true)->contains('id',$model->id));
+        $connection->update(['status'=>'cooldown','cooldown_until'=>now()->addMinutes(5)]);
+        $this->assertFalse($router->resolveEligibleModels(true)->contains('id',$model->id));
+        $connection->update(['cooldown_until'=>now()->subMinute()]);
+        $this->assertTrue($router->resolveEligibleModels(true)->contains('id',$model->id));
+        $this->assertSame('healthy',$connection->fresh()->status);
+        $connection->update(['status'=>'auth_failed']);
+        $this->assertFalse($router->resolveEligibleModels(true)->contains('id',$model->id));
+    }
+
     public function test_orders_free_models_first_in_free_first_strategy(): void
     {
         $circuitBreaker = Mockery::mock(AiCircuitBreakerService::class);

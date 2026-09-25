@@ -30,50 +30,12 @@ class OperationsCenterController extends Controller
         $filter = $request->input('filter', 'all');
         $search = $request->input('search');
 
-        $query = WhatsAppConversation::with(['contact', 'vendor'])
-            ->whereNotNull('last_activity_at')
-            ->orderBy('last_activity_at', 'desc');
-
-        if ($search) {
-            $query->whereHas('contact', function ($q) use ($search) {
-                $q->where('phone_number', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
-            });
-        }
-
-        // Apply primary state / triage filter
-        if ($filter === 'waiting_concierge') {
-            // Silenced onboarding
-            $query->whereIn('state', ['onboarding_active', 'ai_active']);
-        } elseif ($filter === 'waiting_user') {
-            $query->where('state', 'onboarding_active');
-        } elseif ($filter === 'human_handoff') {
-            $query->where('state', 'human_handoff');
-        } elseif ($filter === 'stale_handoff') {
-            $query->where('state', 'human_handoff')
-                  ->where('updated_at', '<=', now()->subHours(2));
-        }
-
-        $conversations = $query->paginate(25);
-
-        // Augment each conversation with live diagnosis
-        $diagnosedItems = [];
-        foreach ($conversations as $conv) {
-            $diag = $this->diagnosticService->diagnoseConversation($conv);
-
-            // Filter out items if specific filter is set
-            if ($filter === 'waiting_concierge' && $diag['failure_category'] !== 'silenced_onboarding') {
-                continue;
-            }
-            if ($filter === 'waiting_user' && $diag['failure_category'] !== 'unresponsive_user') {
-                continue;
-            }
-
-            $diagnosedItems[] = [
-                'conversation' => $conv,
-                'diag' => $diag,
-            ];
-        }
+        $items = $this->diagnosticService->scan($filter, $search);
+        if ($request->filled('conversation')) $items = $items->where('conversation.id', (int) $request->input('conversation'))->values();
+        $page = max(1, (int) $request->input('page', 1));
+        $conversations = new \Illuminate\Pagination\LengthAwarePaginator($items->forPage($page, 25)->values(), $items->count(), 25, $page,
+            ['path'=>$request->url(), 'query'=>$request->query()]);
+        $diagnosedItems = $conversations->items();
 
         // Recent recovery audits
         $recentAudits = ConciergeRecoveryAudit::with(['conversation.contact'])
@@ -104,6 +66,7 @@ class OperationsCenterController extends Controller
         $diag = $this->diagnosticService->diagnoseConversation($conversation);
 
         $messages = WhatsAppMessage::where('conversation_id', $conversation->id)
+            ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->limit(30)
             ->get()
@@ -135,104 +98,55 @@ class OperationsCenterController extends Controller
      */
     public function previewAction(Request $request, $id)
     {
-        $request->validate([
-            'action' => 'required|string|in:renudge_current_step,release_stale_handoff,reprocess_inbound',
-        ]);
-
-        $conv = WhatsAppConversation::with('contact')->findOrFail($id);
-        $action = $request->input('action');
-
-        $result = match ($action) {
-            'renudge_current_step' => $this->recoveryService->renudgeCurrentStep($conv, dryRun: true),
-            'release_stale_handoff' => $this->recoveryService->releaseStaleHandoff($conv, dryRun: true),
-            'reprocess_inbound' => $this->recoveryService->reprocessLastInbound($conv, dryRun: true),
-        };
-
-        return response()->json($result);
+        return $this->preview($request, [(int) $id], false);
     }
 
-    /**
-     * Execute confirmed recovery action.
-     */
-    public function executeAction(Request $request, $id)
-    {
-        $request->validate([
-            'action' => 'required|string|in:renudge_current_step,release_stale_handoff,reprocess_inbound',
-            'reason' => 'nullable|string|max:500',
-        ]);
-
-        $conv = WhatsAppConversation::with('contact')->findOrFail($id);
-        $action = $request->input('action');
-        $reason = $request->input('reason');
-        $adminId = auth('admin')->id() ?? auth()->id();
-
-        $result = match ($action) {
-            'renudge_current_step' => $this->recoveryService->renudgeCurrentStep($conv, dryRun: false, actor: 'admin', adminId: $adminId, reason: $reason),
-            'release_stale_handoff' => $this->recoveryService->releaseStaleHandoff($conv, dryRun: false, actor: 'admin', adminId: $adminId, reason: $reason),
-            'reprocess_inbound' => $this->recoveryService->reprocessLastInbound($conv, dryRun: false, actor: 'admin', adminId: $adminId),
-        };
-
-        if (($result['status'] ?? '') === 'success') {
-            Toastr::success($result['message'] ?? 'Recovery action executed successfully.');
-        } else {
-            Toastr::error($result['reason'] ?? $result['error'] ?? 'Recovery action could not be completed.');
-        }
-
-        if ($request->wantsJson()) {
-            return response()->json($result);
-        }
-
-        return back();
-    }
-
-    /**
-     * Preview bulk recovery action (dry run with eligibility breakdown).
-     */
     public function bulkPreview(Request $request)
     {
-        $request->validate([
-            'conversation_ids' => 'required|array|min:1',
-            'conversation_ids.*' => 'integer|exists:whatsapp_conversations,id',
-            'action' => 'required|string|in:renudge_current_step,release_stale_handoff,reprocess_inbound',
-        ]);
-
-        $ids = $request->input('conversation_ids');
-        $action = $request->input('action');
-
-        $preview = $this->recoveryService->bulkRecover($ids, $action, dryRun: true);
-
-        return response()->json($preview);
+        $request->validate(['conversation_ids'=>'required|array|min:1|max:100', 'conversation_ids.*'=>'integer|distinct|exists:whatsapp_conversations,id']);
+        return $this->preview($request, array_map('intval', $request->input('conversation_ids')), true);
     }
 
-    /**
-     * Execute bulk recovery action.
-     */
+    private function preview(Request $request, array $ids, bool $bulk)
+    {
+        $request->validate(['action'=>'required|in:renudge_current_step,release_stale_handoff,reprocess_inbound,assign_human']);
+        $result = $this->recoveryService->bulkRecover($ids, $request->action, true, 'admin', auth('admin')->id());
+        $token = (string) \Illuminate\Support\Str::uuid();
+        sort($ids);
+        \Illuminate\Support\Facades\Cache::put('concierge-preview-'.$token, ['ids'=>$ids, 'action'=>$request->action, 'admin'=>auth('admin')->id(), 'snapshot'=>$this->snapshot($ids)], now()->addMinutes(5));
+        $response = $bulk ? $result : ($result['items'][0] ?? []);
+        $response['preview_token'] = $token;
+        return response()->json($response);
+    }
+
+    public function executeAction(Request $request, $id)
+    {
+        return $this->executePreview($request, [(int) $id], false);
+    }
+
     public function bulkExecute(Request $request)
     {
-        $request->validate([
-            'conversation_ids' => 'required|array|min:1',
-            'conversation_ids.*' => 'integer|exists:whatsapp_conversations,id',
-            'action' => 'required|string|in:renudge_current_step,release_stale_handoff,reprocess_inbound',
-        ]);
-
-        $ids = $request->input('conversation_ids');
-        $action = $request->input('action');
-        $adminId = auth('admin')->id() ?? auth()->id();
-
-        $results = $this->recoveryService->bulkRecover($ids, $action, dryRun: false, actor: 'admin', adminId: $adminId);
-
-        Toastr::success("Bulk {$action} executed: {$results['success_count']} succeeded, {$results['excluded_count']} excluded.");
-
-        if ($request->wantsJson()) {
-            return response()->json($results);
-        }
-
-        return back();
+        $request->validate(['conversation_ids'=>'required|array|min:1|max:100', 'conversation_ids.*'=>'integer|distinct|exists:whatsapp_conversations,id']);
+        return $this->executePreview($request, array_map('intval', $request->input('conversation_ids')), true);
     }
 
-    /**
-     * Trigger on-demand system health check snapshot.
-     */
+    private function executePreview(Request $request, array $ids, bool $bulk)
+    {
+        $request->validate(['preview_token'=>'required|uuid', 'action'=>'required|string']);
+        sort($ids);
+        $expected = ['ids'=>$ids, 'action'=>$request->action, 'admin'=>auth('admin')->id(), 'snapshot'=>$this->snapshot($ids)];
+        $preview = \Illuminate\Support\Facades\Cache::pull('concierge-preview-'.$request->preview_token);
+        abort_unless($preview === $expected, 409, 'Preview expired, changed, or already executed. Preview the action again.');
+        $result = $this->recoveryService->bulkRecover($ids, $request->action, false, 'admin', auth('admin')->id());
+        return response()->json($bulk ? $result : ($result['items'][0] ?? []));
+    }
+
+    private function snapshot(array $ids): string
+    {
+        return hash('sha256', WhatsAppConversation::whereIn('id',$ids)->orderBy('id')
+            ->get(['id','state','current_step','onboarding_session_id','updated_at'])->toJson());
+    }
+
     public function runHealthCheck()
     {
         $check = $this->recoveryService->runHealthCheck('on_demand');

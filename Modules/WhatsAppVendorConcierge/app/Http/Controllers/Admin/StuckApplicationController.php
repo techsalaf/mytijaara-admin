@@ -48,35 +48,15 @@ class StuckApplicationController extends Controller
     public function recoveryAction(Request $request, $id)
     {
         $application = OnboardingSession::findOrFail($id);
-        $action = $request->input('action');
+        $conversation = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation::where('onboarding_session_id', $application->id)->latest('id')->first();
 
-        switch ($action) {
-            case 'retry_failed':
-                // Logic to retry failed processing
-                $application->status = 'processing';
-                $application->save();
-                // \Log::info("Retrying failed processing for application {$id}");
-                break;
-
-            case 'restore_state':
-                // Logic to restore last valid state
-                $application->status = 'in_progress';
-                $application->save();
-                // \Log::info("Restored valid state for application {$id}");
-                break;
-
-            case 'send_prompt':
-                // Logic to send resume prompt
-                $application->status = 'waiting_for_user';
-                $application->save();
-                // \Log::info("Sent resume prompt for application {$id}");
-                // Send Meta Template message here
-                break;
-                
-            default:
-                return back()->with('error', 'Invalid action selected.');
+        if (!$conversation) {
+            return back()->with('error', 'No conversation is linked to this application. Review it with support.');
         }
 
-        return back()->with('success', 'Recovery action executed successfully.');
+        // Legacy actions only changed status and falsely reported a successful send.
+        // All recovery now uses the shared eligibility checks and preview workflow.
+        return redirect()->route('admin.whatsapp.operations-center.index', ['conversation' => $conversation->id])
+            ->with('info', 'Choose a recovery action and review its preview before execution.');
     }
 }

@@ -2,410 +2,119 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services\Operations;
 
-use Carbon\Carbon;
+use Illuminate\Support\Facades\{Cache, DB, Log};
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
-use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
-use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
-use Modules\WhatsAppVendorConcierge\app\Models\ConciergeRecoveryAudit;
-use Modules\WhatsAppVendorConcierge\app\Models\ConciergeHealthCheck;
-use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
-use Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService;
-use Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService;
-use Modules\WhatsAppVendorConcierge\app\Jobs\ProcessIncomingWhatsAppMessage;
+use Modules\WhatsAppVendorConcierge\app\Models\{WhatsAppConversation, ConciergeRecoveryAudit, ConciergeHealthCheck};
+use Modules\WhatsAppVendorConcierge\app\Services\{WhatsAppGateway, VendorOnboardingService, SupportCaseService};
 
 class ConciergeRecoveryService
 {
-    public function __construct(
-        protected ConciergeDiagnosticService $diagnosticService,
-        protected WhatsAppGateway $gateway,
-        protected VendorOnboardingService $onboardingService,
-        protected SupportCaseService $supportCaseService
-    ) {}
+    public function __construct(protected ConciergeDiagnosticService $diagnosticService, protected WhatsAppGateway $gateway,
+        protected VendorOnboardingService $onboardingService, protected SupportCaseService $supportCaseService) {}
 
-    /**
-     * Release a conversation stuck in human_handoff back to its appropriate active state.
-     */
-    public function releaseStaleHandoff(
-        WhatsAppConversation $conversation,
-        bool $dryRun = false,
-        string $actor = 'admin',
-        ?int $adminId = null,
-        ?string $reason = null
-    ): array {
-        $correlationId = 'REC-' . strtoupper(Str::random(10));
-        $contact = $conversation->contact;
-        $previousState = $conversation->state;
+    public function releaseStaleHandoff(WhatsAppConversation $conversation, bool $dryRun = true, string $actor = 'admin', ?int $adminId = null, ?string $reason = null): array
+    { return $this->perform($conversation, 'release_stale_handoff', $dryRun, $actor, $adminId, $reason); }
 
-        $targetState = ($conversation->onboarding_session_id && !$conversation->vendor_id)
-            ? 'onboarding_active'
-            : 'ai_active';
+    public function renudgeCurrentStep(WhatsAppConversation $conversation, bool $dryRun = true, string $actor = 'admin', ?int $adminId = null, ?string $reason = null): array
+    { return $this->perform($conversation, 'renudge_current_step', $dryRun, $actor, $adminId, $reason); }
 
-        $preview = [
-            'conversation_id' => $conversation->id,
-            'phone' => $contact->phone_number,
-            'action' => 'release_stale_handoff',
-            'previous_state' => $previousState,
-            'proposed_state' => $targetState,
-            'is_eligible' => ($previousState === 'human_handoff'),
-            'dry_run' => $dryRun,
-            'correlation_id' => $correlationId,
-        ];
+    public function reprocessLastInbound(WhatsAppConversation $conversation, bool $dryRun = true, string $actor = 'admin', ?int $adminId = null): array
+    { return $this->perform($conversation, 'reprocess_inbound', $dryRun, $actor, $adminId, null); }
 
-        if (!$preview['is_eligible']) {
-            $preview['status'] = 'skipped';
-            $preview['reason'] = 'Conversation is not in human_handoff mode.';
-            return $preview;
-        }
+    public function assignHuman(WhatsAppConversation $conversation, bool $dryRun = true, string $actor = 'admin', ?int $adminId = null, ?string $reason = null): array
+    { return $this->perform($conversation, 'assign_human', $dryRun, $actor, $adminId, $reason); }
 
-        if ($dryRun) {
-            $preview['status'] = 'dry_run_passed';
-            $preview['message'] = "Would release conversation from '{$previousState}' to '{$targetState}'.";
-            return $preview;
-        }
-
+    private function perform(WhatsAppConversation $conversation, string $action, bool $dryRun, string $actor, ?int $adminId, ?string $reason): array
+    {
+        $lock = Cache::lock('concierge-recovery-contact-'.$conversation->contact_id, 180);
+        if (!$lock->get()) return ['status'=>'excluded', 'reason'=>'Another recovery is running for this contact.'];
         try {
-            $conversation->transitionTo($targetState);
-
-            // Resolve any open support case
-            if ($activeCase = $this->supportCaseService->getActiveCase($contact)) {
-                $this->supportCaseService->resolveCase($activeCase, $reason ?? "Automatically released back to {$targetState} via Operations Centre");
-            }
-
-            // Audit log
-            ConciergeRecoveryAudit::create([
-                'conversation_id' => $conversation->id,
-                'contact_id' => $contact->id,
-                'action' => 'release_stale_handoff',
-                'initiated_by' => $actor,
-                'admin_id' => $adminId,
-                'previous_state' => $previousState,
-                'proposed_state' => $targetState,
-                'previous_step' => $conversation->current_step,
-                'is_dry_run' => false,
-                'status' => 'success',
-                'reason' => $reason ?? 'Released stale human handoff back to automation',
-                'details' => ['resolved_case_id' => $activeCase?->id],
-                'correlation_id' => $correlationId,
-            ]);
-
-            $preview['status'] = 'success';
-            $preview['message'] = "Successfully released to {$targetState}.";
-            return $preview;
-
-        } catch (\Throwable $e) {
-            Log::error('OperationsCenter releaseStaleHandoff failed', [
-                'conversation_id' => $conversation->id,
-                'error' => $e->getMessage(),
-                'correlation_id' => $correlationId,
-            ]);
-
-            ConciergeRecoveryAudit::create([
-                'conversation_id' => $conversation->id,
-                'contact_id' => $contact->id,
-                'action' => 'release_stale_handoff',
-                'initiated_by' => $actor,
-                'admin_id' => $adminId,
-                'previous_state' => $previousState,
-                'proposed_state' => $targetState,
-                'previous_step' => $conversation->current_step,
-                'is_dry_run' => false,
-                'status' => 'failed',
-                'reason' => $e->getMessage(),
-                'correlation_id' => $correlationId,
-            ]);
-
-            $preview['status'] = 'failed';
-            $preview['error'] = $e->getMessage();
-            return $preview;
-        }
-    }
-
-    /**
-     * Safely re-nudge an onboarding conversation by resending its current step prompt.
-     */
-    public function renudgeCurrentStep(
-        WhatsAppConversation $conversation,
-        bool $dryRun = false,
-        string $actor = 'admin',
-        ?int $adminId = null,
-        ?string $reason = null
-    ): array {
-        $correlationId = 'NUDGE-' . strtoupper(Str::random(10));
-        $contact = $conversation->contact;
-        $step = $conversation->current_step;
-
-        $diag = $this->diagnosticService->diagnoseConversation($conversation);
-
-        $preview = [
-            'conversation_id' => $conversation->id,
-            'phone' => $contact->phone_number,
-            'action' => 'renudge_current_step',
-            'step' => $step,
-            'service_window_open' => $diag['service_window_open'],
-            'can_nudge' => $diag['can_nudge'],
-            'dry_run' => $dryRun,
-            'correlation_id' => $correlationId,
-        ];
-
-        if (empty($step)) {
-            $preview['status'] = 'skipped';
-            $preview['reason'] = 'Conversation has no active onboarding step to prompt.';
-            return $preview;
-        }
-
-        if (!$diag['service_window_open']) {
-            $preview['status'] = 'excluded';
-            $preview['reason'] = 'WhatsApp 24-hour service window has expired. Must use an approved template message.';
-            return $preview;
-        }
-
-        if (!$diag['can_nudge'] && $actor === 'system_automated') {
-            $preview['status'] = 'cooldown_active';
-            $preview['reason'] = "Cooldown active (last nudge {$diag['minutes_since_last_nudge']}m ago, total {$diag['nudges_sent_count']}/3).";
-            return $preview;
-        }
-
-        if ($dryRun) {
-            $preview['status'] = 'dry_run_passed';
-            $preview['message'] = "Would send prompt for step '{$step}' to {$contact->phone_number}.";
-            return $preview;
-        }
-
-        try {
-            // Re-send the prompt using canonical service
-            $this->onboardingService->sendStepPrompt($conversation, $contact, $step, $this->gateway);
-
-            // Audit
-            ConciergeRecoveryAudit::create([
-                'conversation_id' => $conversation->id,
-                'contact_id' => $contact->id,
-                'action' => 'renudge_current_step',
-                'initiated_by' => $actor,
-                'admin_id' => $adminId,
-                'previous_state' => $conversation->state,
-                'proposed_state' => $conversation->state,
-                'previous_step' => $step,
-                'is_dry_run' => false,
-                'status' => 'success',
-                'reason' => $reason ?? "Re-nudged user with step '{$step}' prompt",
-                'details' => ['step' => $step, 'actor' => $actor],
-                'correlation_id' => $correlationId,
-            ]);
-
-            $preview['status'] = 'success';
-            $preview['message'] = "Prompt for '{$step}' successfully resent.";
-            return $preview;
-
-        } catch (\Throwable $e) {
-            Log::error('OperationsCenter renudgeCurrentStep failed', [
-                'conversation_id' => $conversation->id,
-                'step' => $step,
-                'error' => $e->getMessage(),
-                'correlation_id' => $correlationId,
-            ]);
-
-            ConciergeRecoveryAudit::create([
-                'conversation_id' => $conversation->id,
-                'contact_id' => $contact->id,
-                'action' => 'renudge_current_step',
-                'initiated_by' => $actor,
-                'admin_id' => $adminId,
-                'previous_state' => $conversation->state,
-                'proposed_state' => $conversation->state,
-                'previous_step' => $step,
-                'is_dry_run' => false,
-                'status' => 'failed',
-                'reason' => $e->getMessage(),
-                'correlation_id' => $correlationId,
-            ]);
-
-            $preview['status'] = 'failed';
-            $preview['error'] = $e->getMessage();
-            return $preview;
-        }
-    }
-
-    /**
-     * Reprocess the last unhandled inbound message for a conversation.
-     */
-    public function reprocessLastInbound(
-        WhatsAppConversation $conversation,
-        bool $dryRun = false,
-        string $actor = 'admin',
-        ?int $adminId = null
-    ): array {
-        $correlationId = 'REP-' . strtoupper(Str::random(10));
-        $contact = $conversation->contact;
-
-        $lastInbound = WhatsAppMessage::where('conversation_id', $conversation->id)
-            ->where('direction', 'inbound')
-            ->latest('id')
-            ->first();
-
-        if (!$lastInbound) {
-            return [
-                'status' => 'skipped',
-                'reason' => 'No inbound message exists for this conversation.',
-            ];
-        }
-
-        if ($dryRun) {
-            return [
-                'status' => 'dry_run_passed',
-                'message' => "Would reprocess message #{$lastInbound->id}: '" . Str::limit($lastInbound->raw_text ?? '', 30) . "'",
-                'correlation_id' => $correlationId,
-            ];
-        }
-
-        try {
-            $rawPayload = [
-                'id' => $lastInbound->whatsapp_message_id ?? ('manual_' . Str::random(16)),
-                'from' => $contact->phone_number,
-                'timestamp' => time(),
-                'type' => $lastInbound->type ?? 'text',
-                'text' => ['body' => $lastInbound->raw_text],
-            ];
-
-            ProcessIncomingWhatsAppMessage::dispatchSync($rawPayload, [
-                'metadata' => ['phone_number_id' => config('whatsapp-vendor-concierge.phone_number_id')],
-                'contacts' => [['profile' => ['name' => $contact->name ?? 'Vendor'], 'wa_id' => $contact->phone_number]],
-            ]);
-
-            ConciergeRecoveryAudit::create([
-                'conversation_id' => $conversation->id,
-                'contact_id' => $contact->id,
-                'action' => 'reprocess_inbound',
-                'initiated_by' => $actor,
-                'admin_id' => $adminId,
-                'previous_state' => $conversation->state,
-                'proposed_state' => $conversation->state,
-                'previous_step' => $conversation->current_step,
-                'is_dry_run' => false,
-                'status' => 'success',
-                'reason' => "Reprocessed inbound message #{$lastInbound->id}",
-                'correlation_id' => $correlationId,
-            ]);
-
-            return [
-                'status' => 'success',
-                'message' => "Inbound message reprocessed successfully.",
-                'correlation_id' => $correlationId,
-            ];
-
-        } catch (\Throwable $e) {
-            ConciergeRecoveryAudit::create([
-                'conversation_id' => $conversation->id,
-                'contact_id' => $contact->id,
-                'action' => 'reprocess_inbound',
-                'initiated_by' => $actor,
-                'admin_id' => $adminId,
-                'previous_state' => $conversation->state,
-                'proposed_state' => $conversation->state,
-                'previous_step' => $conversation->current_step,
-                'is_dry_run' => false,
-                'status' => 'failed',
-                'reason' => $e->getMessage(),
-                'correlation_id' => $correlationId,
-            ]);
-
-            return [
-                'status' => 'failed',
-                'error' => $e->getMessage(),
-                'correlation_id' => $correlationId,
-            ];
-        }
-    }
-
-    /**
-     * Perform bulk recovery on multiple conversations.
-     */
-    public function bulkRecover(
-        array $conversationIds,
-        string $action,
-        bool $dryRun = false,
-        string $actor = 'admin',
-        ?int $adminId = null
-    ): array {
-        $results = [
-            'total_selected' => count($conversationIds),
-            'action' => $action,
-            'dry_run' => $dryRun,
-            'eligible_count' => 0,
-            'excluded_count' => 0,
-            'success_count' => 0,
-            'failed_count' => 0,
-            'items' => [],
-        ];
-
-        foreach ($conversationIds as $id) {
-            $conv = WhatsAppConversation::with('contact')->find($id);
-            if (!$conv) {
-                $results['excluded_count']++;
-                $results['items'][] = [
-                    'id' => $id,
-                    'status' => 'not_found',
-                    'reason' => 'Conversation does not exist.',
-                ];
-                continue;
-            }
-
-            $diag = $this->diagnosticService->diagnoseConversation($conv);
-
-            // Execute or preview per action
-            $itemResult = match ($action) {
-                'release_stale_handoff' => $this->releaseStaleHandoff($conv, $dryRun, $actor, $adminId),
-                'renudge_current_step' => $this->renudgeCurrentStep($conv, $dryRun, $actor, $adminId),
-                'reprocess_inbound' => $this->reprocessLastInbound($conv, $dryRun, $actor, $adminId),
-                default => ['status' => 'invalid_action', 'reason' => "Action '{$action}' is not recognized."],
+            $conversation->refresh()->load(['contact', 'onboardingSession']);
+            $d = $this->diagnosticService->diagnoseConversation($conversation);
+            $target = $d['active_application'] ? 'onboarding_active' : ($conversation->contact?->vendor_id ? 'ai_active' : 'welcome');
+            $result = ['conversation_id'=>$conversation->id, 'phone'=>$d['phone'], 'action'=>$action,
+                'previous_state'=>$conversation->state, 'proposed_state'=>$action === 'release_stale_handoff' ? $target : ($action === 'assign_human' ? 'human_handoff' : $conversation->state),
+                'step'=>$conversation->current_step, 'service_window_open'=>$d['service_window_open'], 'can_nudge'=>$d['can_nudge'],
+                'dry_run'=>$dryRun, 'correlation_id'=>'REC-'.Str::uuid(), 'status'=>'excluded'];
+            $excluded = match ($action) {
+                'release_stale_handoff' => $d['failure_category'] !== 'stale_human_handoff' ? 'Only an old handoff with no open support ticket can be released.' : null,
+                'renudge_current_step' => !$d['can_nudge'] ? 'Prompt excluded: check active draft, support ownership, blocked contact, 24-hour window, cooldown, and daily limit.' : null,
+                'assign_human' => !$conversation->contact || $conversation->contact->is_blocked ? 'Contact is unavailable or blocked.' : null,
+                'reprocess_inbound' => 'Historical messages have no reliable processing checkpoint. Replaying could repeat a completed action. Inspect the chat, resend the current prompt when eligible, or escalate to support.',
+                default => 'Unknown action.',
             };
-
-            $status = $itemResult['status'] ?? 'unknown';
-
-            if (in_array($status, ['success', 'dry_run_passed'])) {
-                $results['eligible_count']++;
-                if (!$dryRun && $status === 'success') {
-                    $results['success_count']++;
-                }
-            } else {
-                $results['excluded_count']++;
-                if (!$dryRun && $status === 'failed') {
-                    $results['failed_count']++;
+            $result['is_eligible'] = $excluded === null;
+            $result['reason'] = $excluded ?? $reason ?? 'Administrator reviewed recovery';
+            $result['message'] = $excluded ?? match ($action) {
+                'renudge_current_step' => 'Resend the current '.strtolower($d['step_label']).' question. No application data will be reset.',
+                'release_stale_handoff' => 'Return this orphaned handoff to '.str_replace('_', ' ', $target).'. No customer message will be sent.',
+                default => 'Open a support ticket and pause automation. No customer message will be sent.',
+            };
+            if (!$excluded && $dryRun) $result['status'] = 'dry_run_passed';
+            if (!$excluded && !$dryRun) {
+                try {
+                    if ($action === 'renudge_current_step') {
+                        $this->gateway->clearLastSendResult();
+                        $this->onboardingService->sendStepPrompt($conversation, $conversation->contact, $conversation->current_step, $this->gateway);
+                        $send = $this->gateway->lastSendResult();
+                        if (empty($send['messages'][0]['id'])) throw new \RuntimeException('WhatsApp did not accept the prompt. Inspect provider configuration and delivery logs.');
+                        $result['message_id'] = $send['messages'][0]['id'];
+                        $result['message'] = 'WhatsApp accepted the prompt. Delivery and read receipts will update the inbox.';
+                    } else {
+                        DB::transaction(function () use ($conversation, $action, $target, $reason) {
+                            if ($action === 'assign_human') {
+                                if (!$this->supportCaseService->getActiveCase($conversation->contact)) {
+                                    $this->supportCaseService->createCase($conversation->contact, 'Concierge recovery needs human help', 'general', 'medium', $reason, $conversation);
+                                }
+                                $conversation->transitionTo('human_handoff');
+                            } else {
+                                $conversation->transitionTo($target);
+                            }
+                        });
+                    }
+                    $result['status'] = 'success';
+                } catch (\Throwable $error) {
+                    $result['status'] = 'failed';
+                    $result['error'] = 'Recovery could not be completed. Use the correlation ID to investigate.';
+                    Log::error('Concierge recovery failed', ['correlation_id'=>$result['correlation_id'], 'exception'=>$error::class]);
                 }
             }
-
-            $results['items'][] = array_merge([
-                'id' => $conv->id,
-                'phone' => $conv->contact?->phone_number,
-                'step' => $conv->current_step,
-            ], $itemResult);
-        }
-
-        return $results;
+            ConciergeRecoveryAudit::create([
+                'conversation_id'=>$conversation->id, 'contact_id'=>$conversation->contact_id, 'action'=>$action,
+                'initiated_by'=>$actor, 'admin_id'=>$adminId, 'previous_state'=>$result['previous_state'], 'proposed_state'=>$result['proposed_state'],
+                'previous_step'=>$result['step'], 'is_dry_run'=>$dryRun, 'status'=>$result['status'], 'reason'=>$result['reason'],
+                'details'=>['message_id'=>$result['message_id'] ?? null, 'eligible'=>$result['is_eligible'], 'result'=>$result['message']],
+                'correlation_id'=>$result['correlation_id'],
+            ]);
+            return $result;
+        } finally { $lock->release(); }
     }
 
-    /**
-     * Run automated periodic health check and record snapshot.
-     */
+    public function bulkRecover(array $conversationIds, string $action, bool $dryRun = true, string $actor = 'admin', ?int $adminId = null): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $conversationIds)));
+        if (count($ids) > 100) throw new \InvalidArgumentException('Select at most 100 conversations per batch.');
+        $result = ['total_selected'=>count($ids), 'action'=>$action, 'dry_run'=>$dryRun, 'eligible_count'=>0, 'excluded_count'=>0, 'success_count'=>0, 'failed_count'=>0, 'items'=>[]];
+        foreach ($ids as $id) {
+            $conversation = WhatsAppConversation::find($id);
+            $item = $conversation ? $this->perform($conversation, $action, $dryRun, $actor, $adminId, null) : ['status'=>'excluded','reason'=>'Conversation not found.'];
+            $item['id'] = $id;
+            $eligible = in_array($item['status'], ['success','dry_run_passed'], true);
+            $result[$eligible ? 'eligible_count' : 'excluded_count']++;
+            if ($item['status'] === 'success') $result['success_count']++;
+            if ($item['status'] === 'failed') $result['failed_count']++;
+            $result['items'][] = $item;
+        }
+        return $result;
+    }
+
     public function runHealthCheck(string $checkType = 'scheduled'): ConciergeHealthCheck
     {
-        $overview = $this->diagnosticService->getOperationsOverview();
-
-        return ConciergeHealthCheck::create([
-            'check_type' => $checkType,
-            'total_active_conversations' => $overview['total_active_onboarding'],
-            'waiting_for_concierge' => $overview['waiting_for_concierge'],
-            'waiting_for_user' => $overview['waiting_for_user'],
-            'in_human_handoff' => $overview['in_human_handoff'],
-            'stale_human_handoff' => $overview['stale_human_handoff'],
-            'silenced_count' => $overview['silenced_conversations'],
-            'stuck_count' => $overview['stuck_conversations'],
-            'failed_sends_count' => $overview['failed_outbounds'],
-            'auto_recovered_count' => $overview['recently_recovered'],
-            'issues_requiring_human' => $overview['issues_requiring_human'],
-            'issues_requiring_code' => $overview['issues_requiring_code'],
-            'summary' => $overview,
-        ]);
+        $o = $this->diagnosticService->getOperationsOverview();
+        return ConciergeHealthCheck::create(['check_type'=>$checkType, 'total_active_conversations'=>$o['total_active_onboarding'],
+            'waiting_for_concierge'=>$o['waiting_for_concierge'], 'waiting_for_user'=>$o['waiting_for_user'], 'in_human_handoff'=>$o['in_human_handoff'],
+            'stale_human_handoff'=>$o['stale_human_handoff'], 'silenced_count'=>$o['silenced_conversations'], 'stuck_count'=>$o['stuck_conversations'],
+            'failed_sends_count'=>$o['failed_outbounds'], 'auto_recovered_count'=>0, 'issues_requiring_human'=>$o['issues_requiring_human'],
+            'issues_requiring_code'=>$o['issues_requiring_code'], 'summary'=>$o]);
     }
 }

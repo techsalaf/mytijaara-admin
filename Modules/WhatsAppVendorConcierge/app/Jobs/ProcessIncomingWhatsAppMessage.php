@@ -223,6 +223,14 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             return;
         }
         $vendor = $contact->vendor_id ? $contact->vendor : null;
+        if ($vendor && $vendor->status === null) {
+            // A submitted applicant must never re-enter an old draft step.
+            // Support commands are handled above, even while review is pending.
+            $conversation->update(['state' => 'onboarding_completed', 'current_step' => null, 'vendor_id' => $vendor->id]);
+            $contact->update(['contact_type' => 'vendor']);
+            $conversationManager->checkApplicationStatus($conversation, $contact, $gateway);
+            return;
+        }
         if ($vendor && $vendor->status !== null && (int) $vendor->status === 0) {
             $conversationManager->handleRejectedApplicant($conversation, $contact, $gateway);
             return;

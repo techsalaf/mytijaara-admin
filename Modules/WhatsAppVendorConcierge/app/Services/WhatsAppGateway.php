@@ -14,6 +14,27 @@ use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
 class WhatsAppGateway
 {
     protected Client $client;
+    protected ?array $lastSendResult = null;
+
+    public function lastSendResult(): ?array { return $this->lastSendResult; }
+    public function clearLastSendResult(): void { $this->lastSendResult = null; }
+
+    protected function recordDelivery(array $payload, array $result): array
+    {
+        $this->lastSendResult = $result;
+        try {
+            $phone = ltrim((string) ($payload['to'] ?? ''), '+');
+            $contact = WhatsAppContact::whereIn('phone_number', [$phone, '+'.$phone])->first();
+            $conversation = $contact?->activeConversation()->first();
+            if ($conversation) {
+                WhatsAppMessage::logOutbound($conversation->id, $payload, $result);
+            }
+        } catch (\Throwable $error) {
+            // A persistence failure must not retry an already accepted Meta send.
+            Log::error('WhatsApp outbound persistence failed', ['exception' => $error::class, 'message_id' => $result['messages'][0]['id'] ?? null]);
+        }
+        return $result;
+    }
     protected string $baseUrl;
     protected string $phoneNumberId;
     protected string $accessToken;
@@ -394,7 +415,7 @@ class WhatsAppGateway
                 'message_id' => $result['messages'][0]['id'] ?? null,
             ]);
 
-            return $result;
+            return $this->recordDelivery($payload, $result);
         } catch (GuzzleException $e) {
             $errorBody = $e->hasResponse() ? $e->getResponse()->getBody()->getContents() : null;
 
@@ -412,9 +433,7 @@ class WhatsAppGateway
                 'provider_error' => $safeError,
             ]);
 
-            return [
-                'error' => $safeError,
-            ];
+            return $this->recordDelivery($payload, ['error' => $safeError]);
         }
     }
 

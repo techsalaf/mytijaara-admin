@@ -13,7 +13,7 @@
                 </ol>
             </nav>
             <h1 class="page-header-title">Recovery Operations Audit Trail</h1>
-            <p class="text-muted fs-13 mb-0">Immutable chronological record of all manual and automated recovery operations.</p>
+            <p class="text-muted fs-13 mb-0">Chronological record of all manual and automated recovery operations.</p>
         </div>
         <div>
             <a href="{{ route('admin.whatsapp.operations-center.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -25,9 +25,9 @@
     <!-- Filters -->
     <div class="card mb-3">
         <div class="card-body py-2">
-            <form action="{{ route('admin.whatsapp.operations-center.audits') }}" method="GET" class="row g-2 align-items-center">
+            <form action="{{ route('admin.whatsapp.operations-center.audits') }}" method="GET" class="row align-items-center">
                 <div class="col-md-3">
-                    <select name="action" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="action" class="form-control form-control-sm" onchange="this.form.submit()">
                         <option value="">All Actions</option>
                         <option value="renudge_current_step" {{ request('action') === 'renudge_current_step' ? 'selected' : '' }}>Re-nudge Current Step</option>
                         <option value="release_stale_handoff" {{ request('action') === 'release_stale_handoff' ? 'selected' : '' }}>Release Stale Handoff</option>
@@ -35,11 +35,12 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <select name="status" class="form-control form-control-sm" onchange="this.form.submit()">
                         <option value="">All Statuses</option>
                         <option value="success" {{ request('status') === 'success' ? 'selected' : '' }}>Success</option>
                         <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
                         <option value="skipped" {{ request('status') === 'skipped' ? 'selected' : '' }}>Skipped</option>
+                        <option value="excluded" {{ request('status') === 'excluded' ? 'selected' : '' }}>Excluded</option><option value="dry_run_passed" {{ request('status') === 'dry_run_passed' ? 'selected' : '' }}>Preview passed</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -71,7 +72,7 @@
                             <td>{{ $audit->created_at->format('Y-m-d H:i:s') }}</td>
                             <td>
                                 @if($audit->conversation_id)
-                                    <a href="{{ route('admin.whatsapp.operations-center.show', $audit->conversation_id) }}" class="fw-bold">
+                                    <a href="{{ route('admin.whatsapp.operations-center.show', $audit->conversation_id) }}" class="font-weight-bold">
                                         #{{ $audit->conversation_id }}
                                     </a>
                                     <small class="text-muted d-block">{{ $audit->conversation?->contact?->phone_number ?? '-' }}</small>

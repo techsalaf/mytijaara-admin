@@ -200,6 +200,11 @@ return [
     |--------------------------------------------------------------------------
     */
 
+    'operations' => [
+        'nudge_cooldown_minutes' => (int) env('WHATSAPP_NUDGE_COOLDOWN_MINUTES', 45),
+        'max_nudges_per_day' => (int) env('WHATSAPP_MAX_NUDGES_PER_DAY', 3),
+    ],
+
     'features' => [
         'ai_concierge' => true,
         // These stay off until their canonical core services replace the legacy

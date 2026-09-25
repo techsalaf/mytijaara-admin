@@ -14,7 +14,7 @@
                 </ol>
             </nav>
             <h1 class="page-header-title d-flex align-items-center gap-2">
-                <span>{{ $conversation->contact->name ?? 'Applicant' }}</span>
+                <span>{{ $conversation->contact->display_name ?? 'Applicant' }}</span>
                 <span class="fs-14 font-monospace text-muted">({{ $conversation->contact->phone_number }})</span>
             </h1>
         </div>
@@ -29,9 +29,9 @@
     </div>
 
     <!-- Diagnostic Summary Card -->
-    <div class="row g-3 mb-4">
+    <div class="row mb-3 mb-4">
         <div class="col-lg-8">
-            <div class="card h-100 border-start border-4 border-{{ $diag['expected_next_responder'] === 'concierge' ? 'danger' : 'info' }}">
+            <div class="card h-100 border-left border-4 border-{{ $diag['expected_next_responder'] === 'concierge' ? 'danger' : 'info' }}">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0 fs-14"><i class="tio-report"></i> Root Cause Diagnosis</h5>
                     <span class="badge badge-soft-secondary font-monospace">{{ $diag['correlation_id'] }}</span>
@@ -67,14 +67,14 @@
                             @endif
                         </div>
                         <div class="col-sm-6">
-                            <strong>Nudges Sent:</strong> {{ $diag['nudges_sent_count'] }} / 3
+                            <strong>Nudges Sent:</strong> {{ $diag['nudges_sent_count'] }} in the last 24 hours
                         </div>
                         <div class="col-sm-6">
                             <strong>Nudge Cooldown:</strong>
                             @if($diag['can_nudge'])
                                 <span class="text-success">Ready</span>
                             @else
-                                <span class="text-warning">Cooldown active ({{ $diag['minutes_since_last_nudge'] }}m ago)</span>
+                                <span class="text-warning">Not eligible: check ownership, reply window and daily limits.</span>
                             @endif
                         </div>
                     </div>
@@ -91,44 +91,20 @@
                 <div class="card-body d-flex flex-column justify-content-between gap-2">
                     <p class="fs-12 text-muted mb-2">Execute deterministic, verified recovery actions. All actions are logged to the permanent audit trail.</p>
 
-                    <div class="d-grid gap-2">
-                        @if($conversation->current_step)
-                            <form action="{{ route('admin.whatsapp.operations-center.execute', $conversation->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="action" value="renudge_current_step">
-                                <button type="submit" class="btn btn-outline-primary btn-sm w-100 text-start" onclick="return confirm('Re-send current step prompt for {{ $conversation->current_step }}?')">
-                                    <i class="tio-refresh"></i> Re-nudge Step Prompt ({{ $conversation->current_step }})
-                                </button>
-                            </form>
-                        @endif
-
-                        @if($conversation->state === 'human_handoff')
-                            <form action="{{ route('admin.whatsapp.operations-center.execute', $conversation->id) }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="action" value="release_stale_handoff">
-                                <button type="submit" class="btn btn-outline-warning btn-sm w-100 text-start" onclick="return confirm('Release from human handoff and resume automation?')">
-                                    <i class="tio-play"></i> Release Human Handoff
-                                </button>
-                            </form>
-                        @endif
-
-                        <form action="{{ route('admin.whatsapp.operations-center.execute', $conversation->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="action" value="reprocess_inbound">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100 text-start" onclick="return confirm('Reprocess the last inbound message through the pipeline?')">
-                                <i class="tio-redo"></i> Reprocess Last Inbound Message
-                            </button>
-                        </form>
+                    <div class="d-flex flex-column" style="gap:10px">
+                        <a class="btn btn-primary" href="{{ route('admin.whatsapp.operations-center.index',['conversation'=>$conversation->id]) }}">Preview recovery options</a>
+                        <a class="btn btn-outline-primary" href="{{ route('admin.whatsapp.inbox.show',$conversation->id) }}">Read and reply in inbox</a>
+                        <a class="btn btn-outline-secondary" href="{{ route('admin.store.pending-requests') }}">Review pending stores</a>
                     </div>
 
-                    <small class="text-muted fs-11 mt-2">Actions respect WhatsApp opt-in and rate limits.</small>
+                    <small class="text-muted fs-11 mt-2">Eligibility is checked again at execution. Open support tickets are preserved.</small>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Timeline of Recent Messages & Events -->
-    <div class="row g-3">
+    <div class="row mb-3">
         <!-- Messages -->
         <div class="col-lg-7">
             <div class="card">
@@ -142,7 +118,7 @@
                                 <div class="fs-11 opacity-75 mb-1">
                                     {{ $msg->direction === 'outbound' ? 'Concierge' : 'Applicant' }} &bull; {{ $msg->created_at->format('H:i:s') }}
                                     @if($msg->status)
-                                        <span class="badge badge-light text-dark fs-10 ms-1">{{ $msg->status }}</span>
+                                        <span class="badge badge-light text-dark fs-10 ml-1">{{ $msg->status }}</span>
                                     @endif
                                 </div>
                                 <div class="fs-13">{{ $msg->raw_text ?? '[' . $msg->type . ']' }}</div>
@@ -189,7 +165,7 @@
                         @forelse($events as $event)
                             <li class="list-group-item py-1">
                                 <span class="badge badge-soft-info">{{ $event->event_type }}</span>
-                                <span class="font-monospace ms-1">{{ $event->step }}</span>
+                                <span class="font-monospace ml-1">{{ $event->step }}</span>
                                 <small class="text-muted d-block fs-10">{{ $event->created_at->diffForHumans() }}</small>
                             </li>
                         @empty

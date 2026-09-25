@@ -72,17 +72,16 @@ class WhatsAppContact extends Model
      */
     public static function findOrCreateByWhatsAppId(string $whatsappId, string $phoneNumber, array $profile = []): self
     {
-        return self::updateOrCreate(
-            ['whatsapp_id' => $whatsappId],
-            [
-                'phone_number' => $phoneNumber,
-                'display_name' => $profile['name'] ?? null,
-                'profile_picture_url' => $profile['profile_picture_url'] ?? null,
-                'metadata' => $profile,
-                'first_interaction_at' => self::where('whatsapp_id', $whatsappId)->exists() ? null : now(),
-                'last_interaction_at' => now(),
-            ]
-        );
+        $contact = self::firstOrNew(['whatsapp_id'=>$whatsappId]);
+        $contact->phone_number = $phoneNumber;
+        $name = $profile['profile']['name'] ?? $profile['name'] ?? null;
+        if ($name) $contact->display_name = $name;
+        if (!empty($profile['profile_picture_url'])) $contact->profile_picture_url = $profile['profile_picture_url'];
+        if ($profile) $contact->metadata = array_merge($contact->metadata ?? [], $profile);
+        if (!$contact->exists) $contact->first_interaction_at = now();
+        $contact->last_interaction_at = now();
+        $contact->save();
+        return $contact;
     }
 
     /**

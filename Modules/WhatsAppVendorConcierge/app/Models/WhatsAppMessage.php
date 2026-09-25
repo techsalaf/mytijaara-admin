@@ -102,6 +102,7 @@ class WhatsAppMessage extends Model
         ];
 
         $type = $message['type'] ?? 'text';
+        if ($type === 'button') $type = 'interactive_button';
         if ($type === 'interactive') {
             $type = isset($message['interactive']['button_reply']) ? 'interactive_button'
                 : (isset($message['interactive']['list_reply']) ? 'interactive_list' : 'interactive_flow');
@@ -143,12 +144,21 @@ class WhatsAppMessage extends Model
     public static function logOutbound(int $conversationId, array $payload, array $response): self
     {
         $messageId = $response['messages'][0]['id'] ?? null;
+        if ($messageId && ($existing = self::where('whatsapp_message_id', $messageId)->where('direction', 'outbound')->first())) {
+            return $existing;
+        }
 
+        $type = $payload['type'] ?? 'text';
+        if ($type === 'interactive') {
+            $type = match ($payload['interactive']['type'] ?? '') {
+                'list' => 'interactive_list', 'flow' => 'interactive_flow', default => 'interactive_button',
+            };
+        }
         return self::create([
             'conversation_id' => $conversationId,
-            'whatsapp_message_id' => $messageId,
+            'whatsapp_message_id' => $messageId ?? 'local-failed:'.\Illuminate\Support\Str::uuid(),
             'direction' => 'outbound',
-            'type' => $payload['type'] ?? 'text',
+            'type' => $type,
             'content' => $payload,
             'raw_text' => $payload['text']['body'] ?? ($payload['interactive']['body']['text'] ?? null),
             'status' => $messageId ? 'sent' : 'failed',
