@@ -64,6 +64,9 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\CheckTemplates::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\MigrateLegacyAiProviders::class,
             \Modules\WhatsAppVendorConcierge\app\Console\AiHealthCommand::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeDiagnoseCommand::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeRecoverCommand::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeHealthCheckCommand::class,
         ]);
     }
 
@@ -84,6 +87,13 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
 
             // Process stuck onboarding sessions
             $schedule->command('whatsapp:process-stuck-sessions')
+                ->everyFifteenMinutes()
+                ->runInBackground()
+                ->withoutOverlapping()
+                ->appendOutputTo(storage_path('logs/whatsapp-schedule.log'));
+
+            // Run Concierge Health Check scan every fifteen minutes
+            $schedule->command('whatsapp:concierge-health-check')
                 ->everyFifteenMinutes()
                 ->runInBackground()
                 ->withoutOverlapping()

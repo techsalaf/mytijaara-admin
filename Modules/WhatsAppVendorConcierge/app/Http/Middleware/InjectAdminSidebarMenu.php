@@ -26,11 +26,21 @@ class InjectAdminSidebarMenu
             try {
                 $url = route('admin.whatsapp.ai-dashboard.index');
                 $inboxRoute = route('admin.whatsapp.inbox.index');
+                $opsRoute = route('admin.whatsapp.operations-center.index');
+                $stuckRoute = route('admin.whatsapp.stuck-applications.index');
+                $campaignsRoute = route('admin.whatsapp.resume-campaigns.index');
             } catch (\Throwable $e) {
                 $url = url('/admin/whatsapp/ai-dashboard');
                 $inboxRoute = url('/admin/whatsapp/inbox');
+                $opsRoute = url('/admin/whatsapp/operations-center');
+                $stuckRoute = url('/admin/whatsapp/stuck-applications');
+                $campaignsRoute = url('/admin/whatsapp/resume-campaigns');
             }
             $isActive = request()->is('admin/whatsapp/ai-dashboard*') ? 'is-active' : '';
+            $isOpsActive = request()->is('admin/whatsapp/operations-center*') ? 'is-active' : '';
+            $isInboxActive = request()->is('admin/whatsapp/inbox*') ? 'is-active' : '';
+            $isStuckActive = request()->is('admin/whatsapp/stuck-applications*') ? 'is-active' : '';
+            $isCampaignsActive = request()->is('admin/whatsapp/resume-campaigns*') ? 'is-active' : '';
 
             $script = <<<HTML
 <script>
@@ -38,6 +48,14 @@ class InjectAdminSidebarMenu
     function injectWhatsAppNav() {
         const url = '{$url}';
         const isActive = '{$isActive}';
+        const opsUrl = '{$opsRoute}';
+        const isOpsActive = '{$isOpsActive}';
+        const inboxUrl = '{$inboxRoute}';
+        const isInboxActive = '{$isInboxActive}';
+        const stuckUrl = '{$stuckRoute}';
+        const isStuckActive = '{$isStuckActive}';
+        const campaignsUrl = '{$campaignsRoute}';
+        const isCampaignsActive = '{$isCampaignsActive}';
 
         // 1. Integrations panel
         if (!document.getElementById('wa-ai-nav-item')) {
@@ -63,6 +81,15 @@ class InjectAdminSidebarMenu
             const vendorContainer = document.querySelector('.v2-panel-content[data-panel="vendors"] .v2-group-items')
                 || document.querySelector('[data-panel="vendors"] .v2-group-items');
             if (vendorContainer) {
+                // Operations Centre
+                const opsLink = document.createElement('a');
+                opsLink.id = 'wa-ops-nav-item';
+                opsLink.className = 'v2-nav-item ' + isOpsActive;
+                opsLink.href = opsUrl;
+                opsLink.innerHTML = '<span class="v2-dot v2-dot--red"></span><span class="v2-label">Concierge Operations Centre</span>';
+                vendorContainer.appendChild(opsLink);
+
+                // AI Providers
                 const vlink = document.createElement('a');
                 vlink.id = 'wa-vendor-nav-item';
                 vlink.className = 'v2-nav-item ' + (isActive ? 'is-active' : '');
@@ -70,18 +97,29 @@ class InjectAdminSidebarMenu
                 vlink.innerHTML = '<span class="v2-dot v2-dot--green"></span><span class="v2-label">WhatsApp Concierge AI</span>';
                 vendorContainer.appendChild(vlink);
 
-                // Add Inbox Link
-                let inboxUrl = '';
-                try {
-                    inboxUrl = '{$inboxRoute}';
-                } catch(e) {}
-                const isInboxActive = window.location.href.includes('admin/whatsapp/inbox') ? 'is-active' : '';
+                // Inbox
                 const ilink = document.createElement('a');
                 ilink.id = 'wa-inbox-nav-item';
                 ilink.className = 'v2-nav-item ' + isInboxActive;
                 ilink.href = inboxUrl;
                 ilink.innerHTML = '<span class="v2-dot v2-dot--blue"></span><span class="v2-label">WhatsApp Inbox</span>';
                 vendorContainer.appendChild(ilink);
+
+                // Stuck Applications
+                const slink = document.createElement('a');
+                slink.id = 'wa-stuck-nav-item';
+                slink.className = 'v2-nav-item ' + isStuckActive;
+                slink.href = stuckUrl;
+                slink.innerHTML = '<span class="v2-dot v2-dot--orange"></span><span class="v2-label">Stuck Applications</span>';
+                vendorContainer.appendChild(slink);
+
+                // Resume Campaigns
+                const clink = document.createElement('a');
+                clink.id = 'wa-campaigns-nav-item';
+                clink.className = 'v2-nav-item ' + isCampaignsActive;
+                clink.href = campaignsUrl;
+                clink.innerHTML = '<span class="v2-dot v2-dot--purple"></span><span class="v2-label">Resume Campaigns</span>';
+                vendorContainer.appendChild(clink);
             }
         }
 

@@ -812,9 +812,11 @@ class VendorController extends Controller
         $type = $request->query('type', 'all');
         $module_id = $request->query('module_id', 'all');
 
+        // GEMINI-MYTJ START: WhatsApp vendor onboarding compatibility - Pending vendors have status NULL in DB
         $stores = Store::with('vendor:id,f_name,l_name,status', 'module:id,module_name', 'zone:id,name')->whereHas('vendor', function ($query) use ($storeApproveStatus) {
             return is_null($storeApproveStatus) ? $query->whereNull('status') : $query->where('status', $storeApproveStatus);
         })
+        // GEMINI-MYTJ END: WhatsApp vendor onboarding compatibility
             ->when(is_numeric($zone_id), function ($query) use ($zone_id) {
                 return $query->where('zone_id', $zone_id);
             })

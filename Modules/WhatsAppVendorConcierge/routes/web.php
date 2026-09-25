@@ -113,4 +113,15 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::post('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'store'])->name('store');
         Route::post('/{campaign}/launch', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'launch'])->name('launch');
     });
+
+    Route::group(['prefix' => 'admin/whatsapp/operations-center', 'as' => 'admin.whatsapp.operations-center.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'index'])->name('index');
+        Route::get('/conversation/{id}', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'show'])->name('show');
+        Route::post('/conversation/{id}/preview', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'previewAction'])->name('preview');
+        Route::post('/conversation/{id}/execute', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'executeAction'])->name('execute');
+        Route::post('/bulk/preview', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'bulkPreview'])->name('bulk.preview');
+        Route::post('/bulk/execute', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'bulkExecute'])->name('bulk.execute');
+        Route::post('/health-check', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'runHealthCheck'])->name('health-check');
+        Route::get('/audits', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'audits'])->name('audits');
+    });
 });
