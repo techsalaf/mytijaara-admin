@@ -49,3 +49,17 @@ storage/app/dummy-service-seed.json
 /.agents/
 /storage/app/public/
 /config/system-addons.php
+
+# Scratch/debug scripts
+/check_*.php
+/test_*.php
+/verify_*.php
+/audit.php
+/fix.php
+/get_*.php
+/reset_*.php
+/run_log.txt
+/test_db.php
+/app/Console/Commands/Fix*.php
+/app/Models/Modules/
+/app/Modules/
