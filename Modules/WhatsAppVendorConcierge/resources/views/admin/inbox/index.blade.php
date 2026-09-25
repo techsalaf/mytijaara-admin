@@ -136,7 +136,7 @@
                             <div style="font-size: 16px; font-weight: 500; color: #111b21;">{{ $conversation->contact->name ?? $conversation->contact->phone_number }}</div>
                             <div style="font-size: 13px; color: #667781;">
                                 {{ $conversation->vendor ? ($conversation->vendor->f_name . ' ' . $conversation->vendor->l_name) : 'No Vendor Assigned' }} 
-                                &bull; {{ str_replace('_', ' ', title_case($conversation->state)) }}
+                                &bull; {{ Str::title(str_replace('_', ' ', $conversation->state)) }}
                             </div>
                         </div>
                     </div>
@@ -169,11 +169,11 @@
                                 @if($msg->direction === 'outbound')
                                     @php
                                         $origin = $msg->metadata['origin'] ?? null;
-                                        if(!$origin) {
-                                            $origin = $msg->metadata['response']['messages'] ? 'ai/system' : 'unknown';
+                                        if (!$origin) {
+                                            $origin = !empty($msg->metadata['response']['messages']) ? 'ai/system' : 'unknown';
                                         }
                                     @endphp
-                                    <span class="wa-msg-origin">{{ str_replace('_', ' ', title_case($origin)) }}</span>
+                                    <span class="wa-msg-origin">{{ Str::title(str_replace('_', ' ', $origin)) }}</span>
                                 @endif
                                 <span class="wa-msg-time">{{ $msg->created_at->format('H:i') }}</span>
                                 @if($msg->direction === 'outbound')

@@ -51,7 +51,7 @@
                     @forelse($applications as $app)
                     <tr>
                         <td>#{{ $app->id }}</td>
-                        <td>{{ $app->contact->name ?? 'Unknown' }} ({{ $app->contact->phone ?? 'N/A' }})</td>
+                        <td>{{ $app->contact->name ?? 'Unknown' }} ({{ $app->contact->phone_number ?? 'N/A' }})</td>
                         <td>
                             <span class="badge badge-soft-{{ $app->status === 'stuck' ? 'danger' : 'warning' }}">
                                 {{ $statuses[$app->status] ?? $app->status }}
