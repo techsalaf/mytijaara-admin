@@ -101,4 +101,16 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::post('/{conversation}/send', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'sendMessage'])->name('send');
         Route::post('/{conversation}/toggle-state', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\AiInboxController::class, 'toggleState'])->name('toggle-state');
     });
+
+    Route::group(['prefix' => 'admin/whatsapp/stuck-applications', 'as' => 'admin.whatsapp.stuck-applications.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StuckApplicationController::class, 'index'])->name('index');
+        Route::post('/{id}/recover', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StuckApplicationController::class, 'recoveryAction'])->name('recover');
+    });
+
+    Route::group(['prefix' => 'admin/whatsapp/resume-campaigns', 'as' => 'admin.whatsapp.resume-campaigns.'], function () {
+        Route::get('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'index'])->name('index');
+        Route::get('/create', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'create'])->name('create');
+        Route::post('/', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'store'])->name('store');
+        Route::post('/{campaign}/launch', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ResumeCampaignController::class, 'launch'])->name('launch');
+    });
 });

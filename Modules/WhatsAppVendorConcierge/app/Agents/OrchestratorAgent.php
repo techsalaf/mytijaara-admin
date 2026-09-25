@@ -7,10 +7,11 @@ use Laravel\Ai\Messages\SystemMessage;
 
 class OrchestratorAgent implements Agent
 {
-    public function systemMessage(): SystemMessage
+    use \Laravel\Ai\Promptable;
+
+    public function instructions(): string
     {
-        return new SystemMessage(
-            "You are an intent router for a WhatsApp Vendor Concierge bot for 'MyTijaara'.\n" .
+        return "You are an intent router for a WhatsApp Vendor Concierge bot for 'MyTijaara'.\n" .
             "Your job is to determine the user's intent and select the appropriate tool to handle it.\n" .
             "Available tools:\n" .
             "- 'start_onboarding': User wants to create a shop, register, or become a vendor.\n" .
@@ -24,7 +25,6 @@ class OrchestratorAgent implements Agent
             "  \"intent\": \"brief description of what user wants\",\n" .
             "  \"confidence\": 0.0 to 1.0,\n" .
             "  \"requested_tool\": \"<one of the tool names above>\"\n" .
-            "}"
-        );
+            "}";
     }
 }
