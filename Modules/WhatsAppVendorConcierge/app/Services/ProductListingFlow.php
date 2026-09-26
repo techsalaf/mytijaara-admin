@@ -82,6 +82,19 @@ class ProductListingFlow
         return ($d && ($d->status === 'active' || in_array(strtolower(trim($text)), ['resume', 'resume product', 'continue product'], true))) || ! empty($c->context['last_product_media_id']) || in_array(strtolower(trim($text)), ['add product', 'add new product', 'resume product', 'confirm', 'confirm and create'], true);
     }
 
+    public function receiveOrDefer(WhatsAppConversation $c,WhatsAppContact $contact,WhatsAppMessage $message): string
+    {
+        try {return $this->receive($c,$contact,$message);}
+        catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            $draft=$this->current($c);
+            if(!$draft || !$message->exists)throw $e;
+            \Modules\WhatsAppVendorConcierge\app\Jobs\ResumeProductDraftMessage::dispatch($draft->id,$message->id,$draft->step)
+                ->onConnection(config('whatsapp-vendor-concierge.queue.connection','database')==='sync'?'database':config('whatsapp-vendor-concierge.queue.connection','database'))
+                ->onQueue(config('whatsapp-vendor-concierge.queue.jobs.process_incoming','whatsapp.process_incoming'))->delay(now()->addSeconds(5));
+            return 'Your image or previous answer is still being processed. Your new reply is saved and will continue automatically.';
+        }
+    }
+
     public function receive(WhatsAppConversation $c, WhatsAppContact $contact, WhatsAppMessage $m): string
     {
         $d = $this->current($c);

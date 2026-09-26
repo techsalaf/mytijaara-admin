@@ -216,4 +216,14 @@ class ProductListingFlowTest extends OperationsFixtureTestCase
             $this->assertSame(0,DB::table('items')->count());
         }
     }
+    public function test_busy_draft_queues_the_stored_reply_independently_of_webhook_deduplication(): void
+    {
+        $flow=app(ProductListingFlow::class);$draft=$flow->start($this->conversation,$this->contact);
+        $message=WhatsAppMessage::create(['conversation_id'=>$this->conversation->id,'whatsapp_message_id'=>'busy-reply','direction'=>'inbound','type'=>'text','raw_text'=>'Blue Bag','content'=>['text'=>'Blue Bag']]);
+        $busy=\Mockery::mock(ProductListingFlow::class,[app(ProductFieldMap::class)])->makePartial();
+        $busy->shouldReceive('receive')->once()->andThrow(new \Illuminate\Contracts\Cache\LockTimeoutException());
+        $this->assertStringContainsString('reply is saved',$busy->receiveOrDefer($this->conversation,$this->contact,$message));
+        \Illuminate\Support\Facades\Queue::assertPushed(\Modules\WhatsAppVendorConcierge\app\Jobs\ResumeProductDraftMessage::class,fn($job)=>$job->draftId===$draft->id && $job->messageId===$message->id);
+    }
+
 }

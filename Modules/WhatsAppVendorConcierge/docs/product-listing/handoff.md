@@ -107,3 +107,5 @@ Additional module audit: Rental uses `vehicle_categories` and `vehicle_brands`, 
 Verified local full module result: 204 tests / 1,095 assertions passed on PHP 8.5.9 with disposable MariaDB enabled. Existing PHPUnit deprecations remain. Four additional vision failure tests and final focused tests are reported separately; CI uses PHP 8.3/MySQL 8.
 
 Final local checks: host 37 tests / 199 assertions; final workflow + vision checks 14 tests / 66 assertions; core-boundary check passed; both new admin Blade templates compile and pass PHP lint. Tests use mocks except the explicitly documented NVIDIA smoke and disposable MariaDB integration. No real WhatsApp acceptance claim is made before the owner test.
+
+Concurrency follow-up: busy draft inputs are deferred as `ResumeProductDraftMessage` on the existing incoming-message worker queue, independently of webhook receipt deduplication. The stored reply is retried with bounded backoff; changed step/ownership flags admin attention rather than applying an old answer to a new question. Images persist before the external vision call.

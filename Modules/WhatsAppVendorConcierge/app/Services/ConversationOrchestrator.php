@@ -33,7 +33,7 @@ class ConversationOrchestrator
         if ($contact->vendor_id && $conversation->state === 'ai_active'
             && !in_array(ConversationCommands::action($text), ['support','shop_details','status'], true)
             && app(ProductListingFlow::class)->handles($conversation,$text)) {
-            $reply=app(ProductListingFlow::class)->receive($conversation,$contact,$message);
+            $reply=app(ProductListingFlow::class)->receiveOrDefer($conversation,$contact,$message);
             if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply);
             return true;
         }

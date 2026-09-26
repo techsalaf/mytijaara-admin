@@ -180,7 +180,7 @@ class ConversationManager
     {
         $flow = app(ProductListingFlow::class);
         if ($message->type === 'image' || $flow->handles($conversation, (string)$message->raw_text)) {
-            $reply = $flow->receive($conversation, $contact, $message);
+            $reply = $flow->receiveOrDefer($conversation, $contact, $message);
             if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply);
             return;
         }
