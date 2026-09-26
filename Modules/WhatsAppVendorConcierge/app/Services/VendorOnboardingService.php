@@ -760,7 +760,7 @@ class VendorOnboardingService
             'business_basics' => "Please provide a valid shop name for your business (between 2 and 100 characters).",
             'module_selection' => "Please choose a valid business module from the list (e.g. Grocery, Food, Pharmacy, etc.).",
             'category_selection' => "We couldn't recognize that category. Please choose from available categories or type your category name.",
-            'location' => "We couldn't detect your shop location. 📍\n\nPlease do one of the following:\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical shop address (e.g. *12 Marina Road, Lagos*)",
+            'location' => "We couldn't detect your shop location. 📍\n\nPlease do one of the following:\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your operating or dispatch address (e.g. *12 Marina Road, Lagos*)",
             'zone_selection' => "Please select or confirm your business operating zone from the available options.",
             'pickup_zone_selection' => "Rental providers must select a valid pickup zone from the available options.",
             'operating_hours' => "Please select or reply with your store's regular operating hours (e.g. *Mon-Sat 8am - 8pm*).",
@@ -965,7 +965,7 @@ class VendorOnboardingService
             ],
             'location' => [
                 'type' => 'text',
-                'text' => "[Section 2 of 5: Store Location] 📍\n\nWhere is your shop physically located?\n\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your full physical street address (e.g. *12 Marina Road, Lagos*)",
+                'text' => "[Section 2 of 5: Business Location] 📍\n\nWhere do you operate or dispatch orders from? Online-only and home-based businesses are welcome.\n\n1. Tap 📎 and share your *Location pin* on WhatsApp\n2. Send a Google Maps link\n3. Type your real operating or dispatch address (e.g. *12 Marina Road, Lagos*)",
             ],
             'zone_selection' => (function () use ($session) {
                 $detectedName = $session?->collected_data['zone_name'] ?? null;

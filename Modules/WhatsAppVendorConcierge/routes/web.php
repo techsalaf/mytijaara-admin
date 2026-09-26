@@ -125,3 +125,8 @@ Route::middleware(['web', 'admin'])->group(function () {
         Route::get('/audits', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\OperationsCenterController::class, 'audits'])->name('audits');
     });
 });
+
+Route::middleware(['web','admin', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\AuthorizeWhatsAppOperations::class])->group(function () {
+    Route::get('/admin/whatsapp/store-managed-delivery', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StoreDeliveryPolicyController::class,'index'])->name('admin.whatsapp.delivery-policy.index');
+    Route::post('/admin/whatsapp/store-managed-delivery', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StoreDeliveryPolicyController::class,'update'])->name('admin.whatsapp.delivery-policy.update');
+});

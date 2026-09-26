@@ -9,7 +9,7 @@
 <div class="content container-fluid">
  <div class="ops-header">
   <div><h1 class="page-header-title">Concierge Operations Centre</h1><p class="text-muted mb-0">See who needs help, understand why, and preview the next action.</p></div>
-  <div class="ops-actions"><a class="btn btn-outline-primary" href="{{ route('admin.whatsapp.inbox.index') }}">Open inbox</a><a class="btn btn-outline-secondary" href="{{ route('admin.whatsapp.operations-center.audits') }}">Recovery history</a>
+  <div class="ops-actions">@if((int)auth("admin")->user()?->role_id === 1)<a class="btn btn-outline-primary" href="{{ route("admin.whatsapp.delivery-policy.index") }}">Store-managed delivery</a>@endif<a class="btn btn-outline-primary" href="{{ route('admin.whatsapp.inbox.index') }}">Open inbox</a><a class="btn btn-outline-secondary" href="{{ route('admin.whatsapp.operations-center.audits') }}">Recovery history</a>
    <form method="POST" action="{{ route('admin.whatsapp.operations-center.health-check') }}">@csrf<button class="btn btn-primary">Refresh health scan</button></form></div>
  </div>
  <p class="ops-muted mt-3">Last saved scan: {{ $latestHealthCheck?->created_at?->diffForHumans() ?? 'Not run yet' }}. Counts below use current conversation records. A reply recorded as sent means Meta accepted it; delivery and read receipts are shown separately.</p>

@@ -58,6 +58,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorAccessNoticeCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReconcileDeliveryLogsCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupMedia::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ProcessStuckSessions::class,
@@ -78,6 +79,8 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     {
         $this->app->booted(function () {
             $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+
+            $schedule->exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(base_path('scripts/prune-releases.php')).' '.escapeshellarg(base_path()).' --force')->dailyAt('03:20')->withoutOverlapping();
 
             // Cleanup old media files daily
             $schedule->command('whatsapp:cleanup-media')

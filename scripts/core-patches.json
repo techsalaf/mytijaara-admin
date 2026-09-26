@@ -85,6 +85,26 @@
       ],
       "upgrade": "Reuse upstream equivalents when available",
       "owner": "MyTijaara backend maintainers"
+    },
+    "app/Models/Store.php": {
+      "purpose": "Global store-managed delivery override for supported commerce modules, including subscriptions and new stores",
+      "reason_in_core": "Delivery behavior must be shared by mobile, web, and optional channels without module dependencies",
+      "upstream_behavior": "No change when policy is absent; explicit global on/off overrides individual and subscription delivery settings",
+      "tests": [
+        "LaunchOperationsTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ blocks and generic service; verify delivery module types and subscription accessor",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/StoreManagedDeliveryPolicy.php": {
+      "purpose": "Global store-managed delivery override for supported commerce modules, including subscriptions and new stores",
+      "reason_in_core": "Delivery behavior must be shared by mobile, web, and optional channels without module dependencies",
+      "upstream_behavior": "No change when policy is absent; explicit global on/off overrides individual and subscription delivery settings",
+      "tests": [
+        "LaunchOperationsTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ blocks and generic service; verify delivery module types and subscription accessor",
+      "owner": "MyTijaara backend maintainers"
     }
   },
   "separate_addon_changes": [

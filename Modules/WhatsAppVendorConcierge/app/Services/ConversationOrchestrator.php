@@ -74,6 +74,7 @@ class ConversationOrchestrator
             'support', 'escalate_to_human' => $this->manager->initiateHumanHandoff($conversation, $contact, $gateway),
             'info', 'show_faq' => $this->manager->showSellingInfo($conversation, $contact, $gateway),
             'help' => $this->manager->showHelp($conversation, $contact, $gateway),
+            'shop_details' => $this->manager->showShopDetails($conversation, $contact, $gateway),
             'status', 'check_status' => $this->manager->checkApplicationStatus($conversation, $contact, $gateway),
             'resume', 'resume_onboarding' => $this->manager->resumeOnboarding($conversation, $contact, $gateway),
             'resend' => $this->manager->handleButtonResponse($conversation, $contact, 'resend_password_link', $gateway),

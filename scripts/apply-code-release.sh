@@ -34,4 +34,8 @@ fi
 php artisan optimize:clear
 php artisan queue:restart
 php artisan up
+# GEMINI-MYTJ: Mark only fully completed releases as eligible for retention cleanup.
+if ! touch "$JOURNAL/../completed"; then
+    echo "Warning: completion marker could not be written; cleanup will preserve this release." >&2
+fi
 trap - ERR

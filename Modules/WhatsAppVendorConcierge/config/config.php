@@ -11,6 +11,8 @@ return [
     |
     */
 
+    'support' => ['whatsapp_number' => env('MYTIJAARA_SUPPORT_WHATSAPP', '2347049147825'), 'email' => 'hello@mytijaara.com'],
+
     'api' => [
         'version' => env('WHATSAPP_API_VERSION', 'v21.0'),
         'base_url' => 'https://graph.facebook.com/',

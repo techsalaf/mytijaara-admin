@@ -81,6 +81,11 @@ class InjectAdminSidebarMenu
             const vendorContainer = document.querySelector('.v2-panel-content[data-panel="vendors"] .v2-group-items')
                 || document.querySelector('[data-panel="vendors"] .v2-group-items');
             if (vendorContainer) {
+                const deliveryLink = document.createElement('a');
+                deliveryLink.className = 'v2-nav-item';
+                deliveryLink.href = '/admin/whatsapp/store-managed-delivery';
+                deliveryLink.innerHTML = '<span class="v2-dot v2-dot--green"></span><span class="v2-label">Store-managed Delivery</span>';
+                if (!document.getElementById('global-delivery-nav')) { deliveryLink.id='global-delivery-nav'; vendorContainer.appendChild(deliveryLink); }
                 // Operations Centre
                 const opsLink = document.createElement('a');
                 opsLink.id = 'wa-ops-nav-item';

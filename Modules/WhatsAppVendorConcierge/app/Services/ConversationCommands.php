@@ -20,6 +20,7 @@ class ConversationCommands
             'support' => ['support', 'human', 'agent', 'help desk', 'talk to support', 'i want to talk to support', 'talk_support'],
             'info' => ['faq', 'info', 'learn', 'how to sell', 'learn about selling'],
             'help' => ['help'],
+            'shop_details' => ['show my shop details', 'show me my shop details', 'my shop details'],
             'status' => ['status', 'check status', 'my application', 'application status'],
             'resume' => ['continue', 'resume'],
             'resend' => ['resend link', 'resend password link'],

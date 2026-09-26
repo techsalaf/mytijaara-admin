@@ -80,7 +80,7 @@ class ConversationManager
 
         $gateway->sendListMessage(
             $contact->phone_number,
-            "Assalaamu Alaikum! Welcome back to MyTijaara. 👋\n\n" .
+            "Welcome back to MyTijaara. 👋\n\n" .
             "🏪 *{$storeName}*\n" .
             "Status: {$status}\n\n" .
             "What would you like to do today? (Type your response or select an option below)",
@@ -110,7 +110,7 @@ class ConversationManager
     {
         $gateway->sendButtonMessage(
             $contact->phone_number,
-            "Assalaamu Alaikum 👋\n\nWelcome to *MyTijaara* — Nigeria's trusted marketplace for local businesses.\n\nWhat would you like to do?\n\n_(Reply 'Help' or 'FAQ' anytime for info)_",
+            "Hello 👋\n\nWelcome to *MyTijaara* — Nigeria's trusted marketplace for local businesses.\n\nWhat would you like to do?\n\n_(Reply 'Help' or 'FAQ' anytime for info)_",
             [
                 ['id' => 'open_shop', 'title' => '🛍️ Open My Shop'],
                 ['id' => 'learn_selling', 'title' => 'Learn About Selling'],
@@ -522,15 +522,27 @@ class ConversationManager
     /**
      * Initiate human handoff.
      */
+    public function showShopDetails(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    {
+        $store=$contact->vendor?->store;
+        if (!$store || (int)$contact->vendor?->status !== 1) { $this->checkApplicationStatus($conversation,$contact,$gateway); return; }
+        $service=app(VendorAccessNoticeService::class);
+        $gateway->sendTextMessage($contact->phone_number,$service->message($service->details($store)));
+    }
+
     public function initiateHumanHandoff(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        $support = app(SupportCaseService::class);
-        if (!$support->getActiveCase($contact)) {
-            $support->createCase($contact, 'WhatsApp support request', 'general', 'medium', null, $conversation);
+        $number = preg_replace('/\D+/', '', (string) config('whatsapp-vendor-concierge.support.whatsapp_number'));
+        if (!$number) {
+            $gateway->sendTextMessage($contact->phone_number, 'Please contact '.config('whatsapp-vendor-concierge.support.email').' for support. You can keep using this concierge.');
+            return;
         }
-        $conversation->update(['state' => 'human_handoff']);
+        $text = 'Hello MyTijaara Support, I need help with '.($contact->vendor?->store?->name ?? 'my account').'. Reference: WA-'.$conversation->id;
+        $url = 'https://wa.me/'.$number.'?text='.rawurlencode($text);
+        $gateway->sendCtaUrlMessage($contact->phone_number,
+            'Our human support team can help on +'.$number.'. Tap below to open a separate WhatsApp chat, then press Send. You can keep using this concierge for your shop or registration.',
+            'Talk to Support', $url);
 
-        $this->handleHumanHandoff($conversation, $contact, new WhatsAppMessage(), $gateway);
     }
 
     public function handleRejectedApplicant(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
@@ -719,7 +731,7 @@ class ConversationManager
             'edit_cat_location' => [
                 'body' => "Which location detail would you like to update?",
                 'rows' => [
-                    ['id' => 'edit_location', 'title' => '📍 Store Address', 'description' => 'Update physical address or GPS pin'],
+                    ['id' => 'edit_location', 'title' => '📍 Store Address', 'description' => 'Update dispatch address or GPS pin'],
                     ['id' => 'edit_zone', 'title' => '🌐 Business Zone', 'description' => 'Update operational zone'],
                     ['id' => 'edit_hours', 'title' => '🕒 Operating Hours', 'description' => 'Update open days and store hours'],
                     ['id' => 'edit_delivery', 'title' => '🚚 Delivery Time', 'description' => 'Update estimated delivery duration'],

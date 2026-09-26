@@ -243,6 +243,10 @@ class Store extends Model
 
     public function getSubSelfDeliveryAttribute(): mixed
     {
+        // GEMINI-MYTJ START: Global delivery override includes subscription stores.
+        $globalDelivery = \App\Services\StoreManagedDeliveryPolicy::forStore($this);
+        if ($globalDelivery !== null) return $globalDelivery;
+        // GEMINI-MYTJ END: Global delivery override.
         if ($this->store_business_model == 'subscription' && isset($this->store_sub)) {
             return (int) $this->store_sub?->self_delivery;
             unset($this->store_sub);
@@ -729,6 +733,12 @@ class Store extends Model
     protected static function booted(): void
     {
         static::addGlobalScope(new ZoneScope);
+        // GEMINI-MYTJ START: New and edited stores inherit the global delivery policy.
+        static::saving(function (Store $store) {
+            $mode = \App\Services\StoreManagedDeliveryPolicy::forStore($store);
+            if ($mode !== null) $store->self_delivery_system = $mode;
+        });
+        // GEMINI-MYTJ END: Global delivery inheritance.
 
         static::addGlobalScope('translate', function (Builder $builder) {
             $builder->with(['translations' => function ($query) {
