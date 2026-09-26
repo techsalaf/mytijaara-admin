@@ -40,6 +40,8 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         VendorOnboardingService $onboardingService,
         ConversationManager $conversationManager
     ): void {
+        // Album/status/unknown events without a user message must not answer draft questions.
+        if (empty($this->messageData['type']) || in_array($this->messageData['type'], ['reaction','system','unsupported'], true)) return;
         $messageId = $this->messageData['id'] ?? null;
         $lock = null;
 
@@ -253,9 +255,38 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             );
         }
 
+        $productSelection = \Modules\WhatsAppVendorConcierge\app\Services\ProductListingPresenter::selection($message);
+        if ($productSelection !== null && $vendor && (int)$vendor->status === 1) {
+            $flow = app(\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow::class);
+            $draft = $flow->current($conversation);
+            if (!$draft) {
+                $gateway->sendTextMessage($contact->phone_number, 'This product draft is already closed. Open Add Products to start another.');
+                return;
+            }
+            $answer = \Modules\WhatsAppVendorConcierge\app\Services\ProductListingPresenter::decode($draft,$productSelection);
+            if ($answer !== null && preg_match('/^page:(\d+)$/',$answer,$page)) {
+                $flow->sendReply($gateway,$contact->phone_number,$flow->prompt($draft),$conversation,(int)$page[1]);
+            } else {
+                $reply=$flow->receiveOrDefer($conversation,$contact,$message);
+                $flow->sendReply($gateway,$contact->phone_number,$reply,$conversation);
+            }
+            return;
+        }
+
         // 1. Check for interactive button replies (Meta payload or parsed message)
         $buttonId = $this->messageData['interactive']['button_reply']['id']
             ?? ($content['interactive']['button_reply']['id'] ?? null);
+
+        if ($buttonId && preg_match('/^onb:(\d+):(cover_branding|kyc_documents):skip$/',$buttonId,$choice)) {
+            if ((int)$conversation->onboarding_session_id !== (int)$choice[1] || $conversation->current_step !== $choice[2]) {
+                $gateway->sendTextMessage($contact->phone_number,'That option is from an earlier question. Please use the latest message.');
+                return;
+            }
+            $answer=clone $message;
+            $answer->raw_text='skip';$answer->type='text';$answer->content=['text'=>'skip'];
+            $onboardingService->processStep($conversation,$contact,$answer,$gateway);
+            return;
+        }
 
         if ($buttonId) {
             $conversationManager->handleButtonResponse($conversation, $contact, $buttonId, $gateway);

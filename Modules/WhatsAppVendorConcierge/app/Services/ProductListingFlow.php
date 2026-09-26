@@ -21,8 +21,22 @@ class ProductListingFlow
 {
     public function __construct(private ProductFieldMap $fields) {}
 
-    public function sendReply(WhatsAppGateway $gateway, string $phone, string $reply): void
+    public function sendReply(WhatsAppGateway $gateway, string $phone, string $reply, ?WhatsAppConversation $conversation = null, int $page = 0): void
     {
+        if ($reply === '') return;
+        $draft = $conversation ? $this->current($conversation) : null;
+        if ($draft) {
+            app(ProductListingPresenter::class)->send($gateway, $phone, $reply, $draft, $page);
+            return;
+        }
+        if (str_starts_with($reply, 'Product #')) {
+            $gateway->sendButtonMessage($phone, '✅ '.$reply, [
+                ['id'=>'add_products','title'=>'Add another product'],
+                ['id'=>'manage_shop','title'=>'Manage my shop'],
+                ['id'=>'talk_support','title'=>'Talk to Support'],
+            ]);
+            return;
+        }
         while ($reply !== '') {
             $chunk = mb_substr($reply, 0, 3500);
             $reply = mb_substr($reply, 3500);
@@ -117,9 +131,20 @@ class ProductListingFlow
                 $d->processed_messages = array_slice($seen, -100);
             }
             $text = trim((string) $m->raw_text);
+            $selection = ProductListingPresenter::selection($m);
+            if ($selection !== null) {
+                $decoded = ProductListingPresenter::decode($d, $selection);
+                if ($decoded === null) return 'This button belongs to an earlier step. Please use the latest options.'.$this->prompt($d);
+                $text = $decoded;
+            }
             $cmd = strtolower($text);
+            if ($d->step === 'additional_media' && in_array($cmd, ['done', 'finished', 'finish', 'no more photos', 'continue'], true)) $cmd = 'skip';
             $before = $d->data;
             $oldStep = $d->step;
+            if ($m->type === 'image' && $d->step === 'review' && count($d->data['additional_media'] ?? []) >= 5) {
+                $d->save();
+                return '📷 All five extra photos are saved. Review below. To replace the main photo, choose Edit details first.'.$this->prompt($d);
+            }
             if (in_array($cmd, ['cancel', 'cancel product'], true)) {
                 $d->status = 'cancelled';
                 $d->save();
@@ -150,6 +175,7 @@ class ProductListingFlow
             if (str_starts_with($cmd, 'options')) {
                 return $this->options($d, trim(substr($text, 7)));
             }
+            if ($cmd === 'edit menu') return '✏️ Choose a detail to change. Nothing will be published until you confirm.';
             if ($cmd === 'back' || str_starts_with($cmd, 'edit ')) {
                 $steps = $this->fields->steps($d->store, $d->data);
                 $f = $cmd === 'back' ? $steps[max(0, array_search($d->step, $steps, true) - 1)] : substr($cmd, 5);
@@ -257,7 +283,7 @@ class ProductListingFlow
                 $d->errors = [];
                 $d->stalled_turns = 0;
                 $d->needs_attention = false;
-                if ($d->step !== 'additional_media' || $m->type !== 'image') {
+                if ($d->step !== 'additional_media' || $m->type !== 'image' || count($d->data['additional_media'] ?? []) >= 5) {
                     $d->step = $this->next($d);
                 }
             } catch (ValidationException $e) {
@@ -287,6 +313,9 @@ class ProductListingFlow
                 return 'Your draft is safe, but this step needs attention. Try Examples, Back, Edit category, Continue without AI, Save draft, or Support. An admin attention flag has been added.';
             }
             $prefix = $d->errors ? implode(' ', array_merge(...array_values($d->errors)))."\n" : '';
+            if ($m->type === 'image' && $oldStep === 'additional_media' && !$d->errors) {
+                $prefix .= '✅ Photo saved — '.count($d->data['additional_media'] ?? [])." of 5 extra photos.\n";
+            }
             if ($m->type === 'image' && $oldStep !== 'additional_media') {
                 $prefix .= ($d->vision['status'] ?? '') === 'success' ? "Image checked. Suggestions below need your confirmation.\n" : "Image saved. AI image analysis is unavailable, so we will continue step by step.\n";
             }
@@ -450,16 +479,21 @@ return 'review';
         $f = $d->step;
         $s = $d->store;
         if ($f === 'review') {
-            $lines = ['Review your product (nothing created yet):'];
+            $lines = ['🛍️ *Review your product*', 'Nothing has been created yet.'];
             foreach ($d->data as $k => $v) {
+                if (in_array($k, ['media_id','image','extra_details'], true)) continue;
+                if ($k === 'additional_media') { $lines[] = '📷 Extra photos: '.count($v); continue; }
+                if ($k === 'unit_id') { $lines[] = 'Selling unit: '.(DB::table('units')->where('id',$v)->value('unit') ?: 'Not specified'); continue; }
+                if ($k === 'attribute_ids') { $lines[] = 'Variants: '.DB::table('attributes')->whereIn('id',$v)->pluck('name')->implode(', '); continue; }
+                if (str_starts_with($k,'choice_')) { $lines[] = (DB::table('attributes')->where('id',substr($k,7))->value('name') ?: 'Options').': '.implode(', ',$v); continue; }
                 $display = is_array($v) ? json_encode($v) : ($v === null ? 'not provided' : (string) $v);
                 if (in_array($k, ['category_id', 'subcategory_id'], true)) {
                     $display = $this->fields->categories($s)->whereKey($v)->value('name') ?: $display;
                 }if (preg_match('/^variant_(price|stock)_(\d+)$/', $k, $a)) {
                     $label = ($this->fields->combinations($d->data)[(int) $a[2]] ?? 'Variation').' '.$a[1];
                 } else {
-                    $label = $k === 'discount' ? 'Discount (%)' : str_replace('_', ' ', ucfirst($k));
-                }$lines[] = $label.': '.$display.' ['.($d->sources[$k] ?? 'vendor').']';
+                    $label = match($k) { 'category_id'=>'Category', 'subcategory_id'=>'Subcategory', 'discount'=>'Discount (%)', default=>str_replace('_',' ',ucfirst($k)) };
+                }$lines[] = $label.': '.$display;
             }
 
             return implode("\n", $lines)."\nReply Confirm and create, Edit followed by a field name, Back, Save draft, or Cancel. Publishing follows admin approval settings.";
@@ -491,7 +525,7 @@ return 'review';
             return 'For variation '.($this->fields->combinations($d->data)[(int) $a[2]] ?? '').', what is the '.($a[1] === 'price' ? 'actual price in naira?' : 'stock quantity?').' Back / Save draft / Cancel.';
         }
         $prompt = match ($f) {
-            'attribute_ids' => 'Does it have variants such as size or colour? Choose attribute IDs, separated by commas, or Skip.','tax_ids' => 'Choose existing tax IDs separated by commas, or Skip. Only your admin-configured taxes are available.','image' => 'Send a clear product photo. Image suggestions depend on available AI; you always set the price and stock.','name' => 'What is the product name?','category_id' => 'Choose a category ID for your shop module:','subcategory_id' => 'Choose a subcategory ID, or Skip:','description' => 'Describe this product (up to 1,000 characters).','unit_id' => 'Choose its selling unit ID, or Skip:','store_category_id' => 'Choose one of your store category IDs:','price' => 'What is the actual selling price in naira? Example: 1800','discount' => 'What percentage discount do you offer? Send 0 or Skip for none.','stock' => 'How many units are available? Send a whole number, including 0.','veg' => 'Is this food vegetarian? Reply Yes or No.','is_prescription_required' => 'Does this item require a prescription? Reply Yes or No. Do not infer this from its photo.','available_time_starts' => 'What time does daily availability start? Use 24-hour HH:MM.','available_time_ends' => 'What time does daily availability end? Use 24-hour HH:MM.','add_ons' => 'Send existing add-on IDs separated by commas, or Skip.','additional_media' => 'Send up to five extra product photos, one at a time. Reply Skip when finished.',default => 'Reply with the requested detail.'
+            'attribute_ids' => 'Does it have variants such as size or colour? Choose attribute IDs, separated by commas, or Skip.','tax_ids' => 'Choose existing tax IDs separated by commas, or Skip. Only your admin-configured taxes are available.','image' => '📷 Send a clear product photo using the camera or 📎 attachment icon. Your photo will be saved even if AI is unavailable; you always set price and stock.','name' => 'What is the product name?','category_id' => '📂 Choose a category for your product:','subcategory_id' => 'Choose a subcategory, or skip:','description' => 'Describe this product (up to 1,000 characters).','unit_id' => 'Choose its selling unit, or skip:','store_category_id' => 'Choose one of your store category IDs:','price' => 'What is the actual selling price in naira? Example: 1800','discount' => 'What percentage discount do you offer? Send 0 or Skip for none.','stock' => 'How many units are available? Send a whole number, including 0.','veg' => 'Is this food vegetarian? Reply Yes or No.','is_prescription_required' => 'Does this item require a prescription? Reply Yes or No. Do not infer this from its photo.','available_time_starts' => 'What time does daily availability start? Use 24-hour HH:MM.','available_time_ends' => 'What time does daily availability end? Use 24-hour HH:MM.','add_ons' => 'Send existing add-on IDs separated by commas, or Skip.','additional_media' => '📷 *Extra photos (optional)*'."\n".count($d->data['additional_media'] ?? []).' of 5 saved. Send another photo, or tap *Done with photos* to review your product. You can also type Done or Skip.',default => 'Reply with the requested detail.'
         };
         if (in_array($f, ['category_id', 'subcategory_id'], true)) {
             $prompt .= "\n".$this->options($d);

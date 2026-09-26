@@ -421,7 +421,7 @@ class VendorOperationsTest extends OperationsFixtureTestCase
         \Illuminate\Support\Facades\Schema::table('items',fn($t)=>[$t->text('food_variations')->nullable(),$t->integer('unit_id')->nullable()]);
         $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
         $gateway = $this->createMock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
-        $gateway->expects($this->exactly(2))->method('sendTextMessage');
+        $gateway->expects($this->exactly(2))->method('sendButtonMessage');
         $manager->handleAiMessage($this->conversation,$this->contact,new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type'=>'image','media_id'=>$media->id]),$gateway);
         $flow=app(\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow::class);
         $this->assertSame($media->id,$flow->current($this->conversation)->data['media_id']);

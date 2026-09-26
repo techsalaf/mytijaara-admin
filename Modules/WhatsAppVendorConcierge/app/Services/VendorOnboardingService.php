@@ -1133,6 +1133,24 @@ class VendorOnboardingService
         ];
 
         $prompt = $prompts[$step] ?? ['text' => 'Please continue...'];
+        if (in_array($step, ['cover_branding','kyc_documents'],true) && $session) {
+            $prompt = ['type'=>'button','body'=>$prompt['text'],'buttons'=>[
+                ['id'=>'onb:'.$session->id.':'.$step.':skip','title'=>'Skip for now'],
+                ['id'=>'talk_support','title'=>'Talk to Support'],
+            ]];
+        }
+        if (($prompt['type'] ?? '') === 'list') {
+            $rows = collect($prompt['sections'])->flatMap(fn($section)=>$section['rows'] ?? [])->values();
+            if ($rows->count()>0 && $rows->count()<=3) {
+                $prompt['type']='button';
+                $prompt['buttons']=$rows->map(fn($row)=>['id'=>$row['id'],'title'=>$row['title']])->all();
+            }
+        }
+        if (($prompt['type'] ?? '') === 'button' && mb_strlen($prompt['body'])>1000) {
+            for($i=0;$i<mb_strlen($prompt['body']);$i+=3500)$gateway->sendTextMessage($contact->phone_number,mb_substr($prompt['body'],$i,3500));
+            $prompt['body']='✅ Review your application above. Submit when everything is correct, or choose Edit.';
+        }
+
 
         if (($prompt['type'] ?? 'text') === 'list') {
             $gateway->sendListMessage(

@@ -34,7 +34,7 @@ class ConversationOrchestrator
             && !in_array(ConversationCommands::action($text), ['support','shop_details','status'], true)
             && app(ProductListingFlow::class)->handles($conversation,$text)) {
             $reply=app(ProductListingFlow::class)->receiveOrDefer($conversation,$contact,$message);
-            if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply);
+            if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply,$conversation);
             return true;
         }
 
@@ -46,12 +46,15 @@ class ConversationOrchestrator
             return true;
         }
 
-        // We only invoke AI orchestration if they are NOT in an active onboarding step,
-        // OR if they are in an active onboarding step but their text matches a known navigation intent via AI.
-        // Wait, if they are in onboarding, they might be answering a question (e.g. "Abuja", "5000").
-        // We shouldn't send that to the AI orchestrator unless it looks like a question/command.
-        // Let's rely on the AI to return `unknown_intent` for normal text, which means we return false
-        // and let state-based routing handle it.
+        if (in_array(mb_strtolower($text), ['thanks','thank you','thank you!','thanks!'],true)) {
+            $gateway->sendButtonMessage($contact->phone_number,"You're welcome! 😊 Your progress is saved. What would you like to do next?",[
+                ['id'=>$conversation->isOnboarding()?'resume_onboarding':'manage_shop','title'=>$conversation->isOnboarding()?'Continue application':'Manage my shop'],
+                ['id'=>'talk_support','title'=>'Talk to Support'],
+            ]);
+            return true;
+        }
+        // Ordinary answers belong to the current form, not an AI navigation guess.
+        if ($conversation->isOnboarding() || ($conversation->onboarding_session_id && $conversation->current_step)) return false;
 
         // Loop detection
         $cacheKey = 'wa_orchestrator_loop_' . $contact->phone_number;

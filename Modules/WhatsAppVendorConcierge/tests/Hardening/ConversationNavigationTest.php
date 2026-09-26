@@ -57,6 +57,25 @@ class ConversationNavigationTest extends HardeningTestCase
     }
 
     #[Test]
+    public function ordinary_onboarding_answers_never_go_to_ai_navigation(): void
+    {
+        [$contact,$session,$conversation]=$this->application();
+        $conversation->update(['state'=>'onboarding_active','current_step'=>'location']);
+        $ai=\Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\AiFallbackService::class);
+        $router=new \Modules\WhatsAppVendorConcierge\app\Services\ConversationOrchestrator(app(ConversationManager::class),$ai);
+        $this->assertFalse($router->routeMessage($conversation,$contact,new WhatsAppMessage(['type'=>'text','raw_text'=>'7 Adeji road A, Ibadan']),$this->gateway()));
+    }
+
+    #[Test]
+    public function optional_onboarding_upload_has_scoped_skip_button(): void
+    {
+        [$contact,$session,$conversation]=$this->application();
+        $gateway=$this->gateway();
+        $gateway->shouldReceive('sendButtonMessage')->once()->withArgs(function($to,$body,$buttons)use($session){return $buttons[0]['id']==='onb:'.$session->id.':cover_branding:skip';})->andReturn([]);
+        app(VendorOnboardingService::class)->sendStepPrompt($conversation,$contact,'cover_branding',$gateway);
+    }
+
+    #[Test]
     public function restart_aliases_escape_password_stage_and_invalidate_old_links(): void
     {
         [$contact, $session, $conversation] = $this->application();

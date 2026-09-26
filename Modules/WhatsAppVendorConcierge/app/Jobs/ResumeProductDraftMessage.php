@@ -19,7 +19,7 @@ class ResumeProductDraftMessage implements ShouldQueue {
   if($draft->step!==$this->expectedStep){$draft->update(['needs_attention'=>true,'errors'=>['processing'=>['A reply arrived while the draft advanced; review the saved inbound message before applying it.']]]);return;}
   $c=$draft->conversation;$contact=$c->contact;
   if($c->state!=='ai_active'||$contact->is_blocked){$draft->update(['needs_attention'=>true,'errors'=>['delivery'=>['A saved reply needs review after conversation ownership changed.']]]);return;}
-  $reply=$flow->receive($c,$contact,$message);$flow->sendReply($gateway,$contact->phone_number,$reply);
+  $reply=$flow->receive($c,$contact,$message);$flow->sendReply($gateway,$contact->phone_number,$reply,$c);
  }
  public function failed(?\Throwable $error): void {ProductListingDraft::find($this->draftId)?->update(['needs_attention'=>true,'errors'=>['processing'=>['A stored reply could not be processed after retries. Review the conversation.']]]);}
 }

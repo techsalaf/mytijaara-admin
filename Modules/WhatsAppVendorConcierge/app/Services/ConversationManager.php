@@ -181,7 +181,7 @@ class ConversationManager
         $flow = app(ProductListingFlow::class);
         if ($message->type === 'image' || $flow->handles($conversation, (string)$message->raw_text)) {
             $reply = $flow->receiveOrDefer($conversation, $contact, $message);
-            if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply);
+            if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply,$conversation);
             return;
         }
 
@@ -588,7 +588,7 @@ class ConversationManager
         $flow=app(ProductListingFlow::class);
         $draft=$flow->start($conversation,$contact);
         $draft->update(['status'=>'active']);
-        $gateway->sendTextMessage($contact->phone_number,$flow->prompt($draft));
+        $flow->sendReply($gateway,$contact->phone_number,$flow->prompt($draft),$conversation);
     }
 
     /**
