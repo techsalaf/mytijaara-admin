@@ -130,3 +130,11 @@ Route::middleware(['web','admin', \Modules\WhatsAppVendorConcierge\app\Http\Midd
     Route::get('/admin/whatsapp/store-managed-delivery', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StoreDeliveryPolicyController::class,'index'])->name('admin.whatsapp.delivery-policy.index');
     Route::post('/admin/whatsapp/store-managed-delivery', [\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\StoreDeliveryPolicyController::class,'update'])->name('admin.whatsapp.delivery-policy.update');
 });
+
+Route::middleware(['web','admin',\Modules\WhatsAppVendorConcierge\app\Http\Middleware\AuthorizeWhatsAppOperations::class])->prefix('admin/whatsapp/product-drafts')->name('admin.whatsapp.product-drafts.')->group(function(){
+ $controller=\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin\ProductDraftController::class;
+ Route::get('/',[$controller,'index'])->name('index');
+ Route::get('/{draft}',[$controller,'show'])->name('show');
+ Route::get('/{draft}/image',[$controller,'image'])->name('image');
+ Route::post('/{draft}',[$controller,'action'])->name('action');
+});

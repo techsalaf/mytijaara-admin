@@ -178,52 +178,10 @@ class ConversationManager
      */
     public function handleAiMessage(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppMessage $message, WhatsAppGateway $gateway): void
     {
-        // If vendor sends a photo, guide them into the photo-to-product workflow
-        if ($message->type === 'image') {
-            $context = $conversation->context ?? [];
-            $context['last_product_media_id'] = $message->media_id;
-            unset($context['photo_to_product_draft']);
-            $conversation->update(['context' => $context]);
-
-            $gateway->sendTextMessage(
-                $contact->phone_number,
-                "📸 **Product Photo Received!**\n\n" .
-                "Your image is being checked. Send the product details, for example:\n\n" .
-                "Name: Chicken Shawarma\nDescription: Grilled chicken wrap\nPrice: 3500\nCategory: Meals\nStock: 10\n\n" .
-                "Use a category from your business module. If your shop also uses store categories, include Store category: followed by its name. You will review a confirmation before anything is added. Reply Cancel to discard this photo."
-            );
-            return;
-        }
-
-        $context = $conversation->context ?? [];
-        if ($message->type === 'text' && !empty($context['last_product_media_id'])) {
-            if (strtolower(trim((string) $message->raw_text)) === 'cancel') {
-                unset($context['last_product_media_id'], $context['photo_to_product_draft']);
-                $conversation->update(['context' => $context]);
-                $gateway->sendTextMessage($contact->phone_number, 'Product photo draft discarded.');
-                return;
-            }
-            $store = Store::where('vendor_id', $contact->vendor_id)->firstOrFail();
-            $photos = app(PhotoToProductService::class);
-            try {
-                if (empty($context['photo_to_product_draft'])) {
-                    $media = app(CoreAdapters\ProductMedia::class)->owned((int) $context['last_product_media_id'], (int) $contact->vendor_id);
-                    $result = $photos->startDraftFromMedia($contact, $conversation, $media);
-                    if (!$result['success']) {
-                        $gateway->sendTextMessage($contact->phone_number, $result['error']);
-                        return;
-                    }
-                    $context = $conversation->fresh()->context;
-                }
-                $context['photo_to_product_draft'] = array_replace($context['photo_to_product_draft'],
-                    $photos->parseVendorDetails((string) $message->raw_text, $store));
-                $conversation->update(['context' => $context]);
-                $photos->prepareConfirmation($contact, $conversation, $store);
-                unset($context['last_product_media_id'], $context['photo_to_product_draft']);
-                $conversation->update(['context' => $context]);
-            } catch (\Illuminate\Validation\ValidationException $error) {
-                $gateway->sendTextMessage($contact->phone_number, implode("\n", $error->validator->errors()->all()));
-            }
+        $flow = app(ProductListingFlow::class);
+        if ($message->type === 'image' || $flow->handles($conversation, (string)$message->raw_text)) {
+            $reply = $flow->receive($conversation, $contact, $message);
+            if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply);
             return;
         }
 
@@ -379,6 +337,10 @@ class ConversationManager
      */
     public function handleListResponse(WhatsAppConversation $conversation, WhatsAppContact $contact, string $selectionId, string $selectionTitle, WhatsAppGateway $gateway): void
     {
+        if (!in_array($selectionId,['add_products','talk_support'],true)) {
+            app(ProductListingFlow::class)->current($conversation)?->update(['status'=>'saved']);
+        }
+
         $step = $conversation->current_step;
 
         $onboardingListSteps = ['module_selection', 'zone_selection', 'pickup_zone_selection', 'category_selection', 'operating_hours', 'delivery_time', 'business_plan', 'subscription_package', 'kyc_documents'];
@@ -623,16 +585,10 @@ class ConversationManager
      */
     protected function handleAddProducts(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
-        $gateway->sendTextMessage(
-            $contact->phone_number,
-            "📸 *Add New Product*\n\n" .
-            "Send me a photo of your product and I'll help you create the listing!\n\n" .
-            "Just send a photo and I'll extract:\n" .
-            "• Product name\n" .
-            "• Category suggestion\n" .
-            "• Description draft\n\n" .
-            "Then I'll ask for the price and any variations."
-        );
+        $flow=app(ProductListingFlow::class);
+        $draft=$flow->start($conversation,$contact);
+        $draft->update(['status'=>'active']);
+        $gateway->sendTextMessage($contact->phone_number,$flow->prompt($draft));
     }
 
     /**

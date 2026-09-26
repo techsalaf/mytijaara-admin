@@ -6,6 +6,7 @@
 </style>
 @endpush
 @section('content')
+<div class="content container-fluid pb-0"><a class="btn btn-outline-primary" href="{{route('admin.whatsapp.product-drafts.index')}}">Product drafts &amp; missing category images</a></div>
 <div class="content container-fluid">
  <div class="ops-header">
   <div><h1 class="page-header-title">Concierge Operations Centre</h1><p class="text-muted mb-0">See who needs help, understand why, and preview the next action.</p></div>

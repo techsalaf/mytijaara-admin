@@ -416,29 +416,24 @@ class VendorOperationsTest extends OperationsFixtureTestCase
             'whatsapp_message_id' => 'photo-product-inbound',
         ]);
 
+        \Illuminate\Support\Facades\Schema::create('units',fn($t)=>[$t->id(),$t->string('unit')]);
+        \Illuminate\Support\Facades\Schema::create('attributes',fn($t)=>[$t->id(),$t->string('name')]);
+        \Illuminate\Support\Facades\Schema::table('items',fn($t)=>[$t->text('food_variations')->nullable(),$t->integer('unit_id')->nullable()]);
         $manager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
         $gateway = $this->createMock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
-        $gateway->expects($this->once())->method('sendTextMessage');
-        $manager->handleAiMessage($this->conversation, $this->contact,
-            new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type' => 'image', 'media_id' => $media->id]), $gateway);
-        $this->assertSame($media->id, $this->conversation->fresh()->context['last_product_media_id']);
-        $manager->handleAiMessage($this->conversation, $this->contact,
-            new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type' => 'text',
-                'raw_text' => "Name: Yam Tubers (Medium)\nDescription: Fresh harvest yam\nPrice: 3500\nCategory: ".$this->category->name]), $gateway);
-        $action = PendingAction::where('conversation_id', $this->conversation->id)->sole();
-        $this->assertArrayNotHasKey('last_product_media_id', $this->conversation->fresh()->context);
-        $this->assertSame(0, Item::count(), 'Photo and details must only prepare a preview');
+        $gateway->expects($this->exactly(2))->method('sendTextMessage');
+        $manager->handleAiMessage($this->conversation,$this->contact,new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type'=>'image','media_id'=>$media->id]),$gateway);
+        $flow=app(\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow::class);
+        $this->assertSame($media->id,$flow->current($this->conversation)->data['media_id']);
+        $manager->handleAiMessage($this->conversation,$this->contact,new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type'=>'text','raw_text'=>"Name: Yam Tubers (Medium)\nDescription: Fresh harvest yam\nPrice: 3500\nCategory: ".$this->category->name]),$gateway);
+        $say=fn($text)=>$flow->receive($this->conversation,$this->contact,new \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage(['type'=>'text','raw_text'=>$text]));
+        $say('skip');$say('skip');$say('10');$say('skip');$say('skip');$review=$say('skip');
+        $this->assertSame('review',$flow->current($this->conversation)->step);
+        $this->assertStringContainsString('Yam Tubers (Medium)',$review);
+        $this->assertSame(0,Item::count(),'Answers must only prepare a review');
         \Illuminate\Support\Facades\Queue::assertNotPushed(\Modules\WhatsAppVendorConcierge\app\Jobs\RunVendorAiConversation::class);
-
-        $this->assertEquals('product_create', $action->action_type);
-        $this->assertStringContainsString('Yam Tubers (Medium)', $action->preview);
-        $this->assertStringContainsString('3,500.00', $action->preview);
-
-        // Step 4: Execute Confirmation
-        $pendingService = app(PendingActionService::class);
-        $confirmResult = $pendingService->confirm($action->action_token, $this->contact->id, $this->conversation->id);
-
-        $this->assertStringContainsString('successfully added to your shop catalog', $confirmResult);
+        $this->assertStringContainsString('Product #',$say('confirm'));
+        $say('confirm');$this->assertSame(1,Item::count());
         $this->assertDatabaseHas('items', [
             'name' => 'Yam Tubers (Medium)',
             'price' => 3500.00,

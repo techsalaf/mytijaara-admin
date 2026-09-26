@@ -1,0 +1,105 @@
+{
+  "grocery": {
+    "Grains & Staples": [
+      "Rice",
+      "Beans & Pulses",
+      "Garri & Cassava",
+      "Flour & Semolina"
+    ],
+    "Fresh Food": [
+      "Vegetables",
+      "Fruit",
+      "Meat & Poultry",
+      "Fish & Seafood"
+    ],
+    "Provisions": [
+      "Milk & Dairy",
+      "Breakfast & Cereals",
+      "Cooking Oils",
+      "Seasonings & Spices"
+    ],
+    "Drinks": [
+      "Water",
+      "Juices",
+      "Soft Drinks"
+    ],
+    "Household Essentials": [
+      "Laundry Supplies",
+      "Cleaning Supplies",
+      "Tissue & Paper"
+    ]
+  },
+  "ecommerce": {
+    "Fashion": [
+      "Women's Clothing",
+      "Men's Clothing",
+      "Children's Clothing"
+    ],
+    "Footwear": [
+      "Shoes",
+      "Sandals & Slippers"
+    ],
+    "Bags & Accessories": [
+      "Handbags",
+      "Backpacks",
+      "Jewellery",
+      "Watches"
+    ],
+    "Beauty & Personal Care": [
+      "Skin Care",
+      "Hair Care",
+      "Fragrances"
+    ],
+    "Electronics": [
+      "Phones & Accessories",
+      "Audio & Earphones",
+      "Computers & Accessories"
+    ],
+    "Home & Kitchen": [
+      "Cookware",
+      "Bedding",
+      "Home Appliances"
+    ],
+    "Baby & Kids": [
+      "Baby Care",
+      "Toys"
+    ]
+  },
+  "food": {
+    "Nigerian Meals": [
+      "Rice Meals",
+      "Swallow & Soups",
+      "Beans & Yam Meals"
+    ],
+    "Grills & Fast Food": [
+      "Shawarma",
+      "Burgers & Sandwiches",
+      "Grilled Meat & Fish"
+    ],
+    "Bakes & Snacks": [
+      "Bread",
+      "Pastries",
+      "Small Chops"
+    ],
+    "Beverages": [
+      "Fresh Juices",
+      "Smoothies",
+      "Tea & Coffee"
+    ]
+  },
+  "pharmacy": {
+    "Personal Health": [
+      "First Aid Supplies",
+      "Medical Devices",
+      "Oral Care"
+    ],
+    "Wellness Essentials": [
+      "Vitamins & Supplements",
+      "Hygiene Products"
+    ],
+    "Mother & Baby Care": [
+      "Baby Hygiene",
+      "Maternity Essentials"
+    ]
+  }
+}

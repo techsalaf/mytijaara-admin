@@ -29,6 +29,15 @@ class ConversationOrchestrator
             return false;
         }
 
+        // Product answers must not be reclassified by the general AI router.
+        if ($contact->vendor_id && $conversation->state === 'ai_active'
+            && !in_array(ConversationCommands::action($text), ['support','shop_details','status'], true)
+            && app(ProductListingFlow::class)->handles($conversation,$text)) {
+            $reply=app(ProductListingFlow::class)->receive($conversation,$contact,$message);
+            if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply);
+            return true;
+        }
+
         // Deterministic routing first
         $command = ConversationCommands::action($text);
         
