@@ -58,3 +58,18 @@ Validation before release: full local suite with disposable MySQL enabled passed
 Validation: full SQLite concierge suite passed 242 tests / 1,200 assertions (three MySQL-only cases skipped); final focused tests passed 26 tests / 134 assertions. Deployment CI supplies the MySQL gates. Existing PHPUnit deprecations remain. The prior P0 deployment passed its gates and the real NVIDIA tool probe passed on the configured production model, without vendor messages or business mutations.
 
 Remaining: full universal navigation coverage, a second live-verified image account, expanded daily-action discovery, and the P2 operations/preferences/digests/accessibility work remain tracked in the review. These are not represented as shipped by this release.
+
+
+## Daily commands and alert navigation follow-up — 27 September 2026
+
+`My shop` opens the authenticated dashboard card and explains two explicit, AI-independent commands:
+
+- `Set price #123 13000` prepares a price confirmation in naira.
+- `Set stock #123 30` prepares a whole-unit stock confirmation (zero is allowed).
+
+The product ID is shown in review cards. Only the linked approved vendor's product can be selected; malformed amounts, foreign products and variant products do not create pending updates. Existing `PendingActionService` supplies the expiring Confirm/Cancel controls and canonical mutation/moderation/authorization checks. No inventory changes until confirmation. Complex variations and modules without stock use the existing dashboard. Delivery copy explains that store-managed delivery is arranged by the store, not a platform rider dispatch.
+
+`STOP`, `PAUSE ALERTS`, `RESUME ALERTS`, and `ALERTS` now bypass AI and active product forms. Three reply buttons let vendors pause/resume or contact support while preserving the draft and active concierge. These safe commands remain usable at the credential step without retaining other input. `START`/`RESUME` no longer silently opt vendors back into alerts. Existing notification event aliases now honor their category opt-outs.
+
+This does not introduce automated nudges, weekly digests, new provider accounts, or paid services. Those remaining recommendations need their own tested rollout; secondary vision and reviewed language/voice coverage are not claimed complete.
+`nValidation for the follow-up: 30 focused tests / 187 assertions passed, covering unchanged inventory before confirmation, ownership, variants, malformed inputs, draft preservation, safe credential-step buttons and category opt-outs.

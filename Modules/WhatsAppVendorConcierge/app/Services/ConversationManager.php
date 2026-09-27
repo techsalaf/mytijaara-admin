@@ -320,6 +320,8 @@ class ConversationManager
             'start_fresh' => $this->startFreshOnboarding($conversation, $contact, $gateway),
             'open_shop', 'start_onboarding' => $this->startOnboarding($conversation, $contact, $gateway),
             'check_status' => $this->checkApplicationStatus($conversation, $contact, $gateway),
+            'alerts_pause' => $this->showNotificationPreferences($conversation, $contact, $gateway, 'pause alerts'),
+            'alerts_resume' => $this->showNotificationPreferences($conversation, $contact, $gateway, 'resume alerts'),
             'product_status' => $this->showProductStatuses($conversation, $contact, $gateway),
             'shop_readiness' => $this->showShopReadiness($conversation, $contact, $gateway),
             'manage_shop' => $this->showManageShop($conversation, $contact, $gateway),
@@ -496,8 +498,21 @@ class ConversationManager
         if (!$store || (int)$contact->vendor?->status !== 1) { $this->checkApplicationStatus($conversation,$contact,$gateway); return; }
         $details=app(VendorAccessNoticeService::class)->details($store);
         $gateway->sendCtaUrlMessage($contact->phone_number,
-            "🏪 *Manage {$details['name']}*\n\nYour vendor dashboard lets you:\n• 📦 Manage products and inventory\n• 🧾 Review orders and sales\n• ⚙️ Update your shop profile and settings\n\n🔐 Sign in with your registered email and password. Use *Forgot Password* if needed.\n\n💬 You can also keep chatting here—try *Add new product* or *Show my shop details*.",
+            "🏪 *Manage {$details['name']}*\n\nYour vendor dashboard lets you:\n• 📦 Manage products and inventory\n• 🧾 Review orders and sales\n• ⚙️ Update your shop profile and settings\n\n🔐 Sign in with your registered email and password. Use *Forgot Password* if needed.\n\n💬 *Quick chat actions*\n• *Product status* — find product IDs\n• *Set price #123 13000*\n• *Set stock #123 30*\nReplace 123 with your product ID. Each change needs your confirmation.\n\n🚚 If your shop uses store-managed delivery, arrange the delivery with your own team and update the order in your dashboard. This does not request a platform rider.",
             'Open dashboard', $details['login_url'], 'MyTijaara');
+    }
+
+    public function showNotificationPreferences(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway, string $command = 'alerts'): void
+    {
+        $service = app(NotificationPreferenceService::class);
+        $result = $service->handleInboundCommand($contact, $command);
+        $prefs = $service->getPreferences($contact);
+        $body = $result['message'] ?? ('🔔 *WhatsApp alerts*'."\n\nNon-critical alerts are ".($prefs->is_paused ? '*paused*.' : '*enabled*.'));
+        $gateway->sendButtonMessage($contact->phone_number, $body."\n\nYou can keep chatting and your draft is preserved.", [
+            ['id'=>'alerts_pause','title'=>'⏸️ Pause alerts'],
+            ['id'=>'alerts_resume','title'=>'🔔 Resume alerts'],
+            ['id'=>'talk_support','title'=>'💬 Support'],
+        ]);
     }
 
     public function showShopReadiness(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void

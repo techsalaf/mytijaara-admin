@@ -87,6 +87,9 @@ class PreferencesAndSupportTest extends ApplicationFixtureTestCase
         $this->assertFalse($orderCheck['allowed']);
         $this->assertEquals('opted_out_of_order_created', $orderCheck['reason']);
 
+        $service->updateCategoryOptIn($contact, 'status', false);
+        $this->assertFalse($service->canReceiveNotification($contact, 'status_alerts')['allowed']);
+        $service->updateCategoryOptIn($contact, 'status', true);
         $statusCheck = $service->canReceiveNotification($contact, 'vendor_approved', false);
         $this->assertTrue($statusCheck['allowed']);
 

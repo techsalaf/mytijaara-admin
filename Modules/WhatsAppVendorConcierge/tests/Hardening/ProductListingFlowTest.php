@@ -93,6 +93,27 @@ class ProductListingFlowTest extends OperationsFixtureTestCase
         }
     }
 
+    public function test_stop_pauses_alerts_without_consuming_a_product_answer_or_turning_ai_off(): void
+    {
+        $this->say('add product');
+        $before = $this->draft()->data;
+        $ai = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\AiFallbackService::class);
+        $ai->shouldNotReceive('promptAgent');
+        $router = new \Modules\WhatsAppVendorConcierge\app\Services\ConversationOrchestrator(app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class), $ai);
+        $gateway = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        $gateway->shouldReceive('sendButtonMessage')->once()->withArgs(fn ($phone, $body, $buttons) => count($buttons) === 3 && str_contains($body, 'Alerts paused'))->andReturn([]);
+        $this->assertTrue($router->routeMessage($this->conversation, $this->contact, new WhatsAppMessage(['type'=>'text','raw_text'=>'STOP']), $gateway));
+        $service = app(\Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService::class);
+        $this->assertTrue($service->getPreferences($this->contact)->is_paused);
+        $this->assertSame($before, $this->draft()->data);
+        $this->assertSame('ai_active', $this->conversation->fresh()->state);
+        $this->assertNull($service->handleInboundCommand($this->contact, 'START'));
+        $this->assertTrue($service->getPreferences($this->contact)->is_paused);
+        $this->conversation->update(['current_step'=>'account_password']);
+        $redacted = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact(['type'=>'interactive','interactive'=>['button_reply'=>['id'=>'alerts_resume','title'=>'Untrusted title']]], $this->conversation);
+        $this->assertSame('alerts_resume', $redacted['interactive']['button_reply']['id']);
+    }
+
     public function test_review_is_grouped_and_uses_human_labels_and_naira(): void
     {
         $flow=app(ProductListingFlow::class);$d=$flow->start($this->conversation,$this->contact);

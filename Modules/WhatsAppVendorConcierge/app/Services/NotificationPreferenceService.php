@@ -55,9 +55,9 @@ class NotificationPreferenceService
 
         // Check category-specific opt-ins
         $categoryAllowed = match ($eventType) {
-            'order_created', 'order_status_update', 'order_action_required' => $prefs->opt_in_order_alerts,
-            'vendor_approved', 'vendor_rejected', 'subscription_status' => $prefs->opt_in_status_alerts,
-            'low_stock', 'product_unavailable' => $prefs->opt_in_stock_alerts,
+            'order_alerts', 'order_created', 'order_status_update', 'order_action_required' => $prefs->opt_in_order_alerts,
+            'status_alerts', 'vendor_approved', 'vendor_rejected', 'subscription_status' => $prefs->opt_in_status_alerts,
+            'stock_alerts', 'low_stock', 'product_unavailable' => $prefs->opt_in_stock_alerts,
             default => true,
         };
 
@@ -86,7 +86,7 @@ class NotificationPreferenceService
         return match ($command) {
             'STOP', 'UNSUBSCRIBE' => $this->pauseAlerts($prefs, 'STOP command received'),
             'PAUSE ALERTS', 'PAUSE' => $this->pauseAlerts($prefs, 'PAUSE ALERTS command received'),
-            'RESUME ALERTS', 'START', 'RESUME', 'UNPAUSE' => $this->resumeAlerts($prefs, 'RESUME ALERTS command received'),
+            'RESUME ALERTS', 'UNPAUSE' => $this->resumeAlerts($prefs, 'RESUME ALERTS command received'),
             default => null,
         };
     }
@@ -99,7 +99,7 @@ class NotificationPreferenceService
 
         return [
             'status' => 'paused',
-            'message' => "Alerts paused. You will not receive non-critical WhatsApp notifications.\nSend RESUME ALERTS or START anytime to unpause.",
+            'message' => "Alerts paused. You will not receive non-critical WhatsApp notifications.\nSend RESUME ALERTS anytime to unpause.",
         ];
     }
 

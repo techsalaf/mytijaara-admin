@@ -27,7 +27,7 @@ class ProductModerationStatusService
                 'id' => (int) $item->id,
                 'name' => $item->name,
                 'status' => $status,
-                'message' => "📦 *{$item->name}*\n\n• Review: *{$status}*\n• Listing switch: ".($item->status ? 'Enabled' : 'Paused')
+                'message' => "📦 *{$item->name}*\n\n• Product ID: *#{$item->id}*\n• Review: *{$status}*\n• Listing switch: ".($item->status ? 'Enabled' : 'Paused')
                     .($review && (int) $item->is_approved === 1 ? "\n• Your existing version remains approved while this change is reviewed." : '')
                     .($reason !== '' ? "\n\n📝 *Correction requested:*\n{$reason}" : '')
                     ."\n\n🕒 Last updated: ".($review->updated_at ?? $item->updated_at)

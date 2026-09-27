@@ -29,9 +29,11 @@ class ConversationOrchestrator
             return false;
         }
 
+        if (app(ShopQuickActionService::class)->handle($text, $conversation, $contact, $gateway)) return true;
+
         // Product answers must not be reclassified by the general AI router.
         if ($contact->vendor_id && $conversation->state === 'ai_active'
-            && !in_array(ConversationCommands::action($text), ['support','shop_details','manage_shop','status','product_status','shop_readiness'], true)
+            && !in_array(ConversationCommands::action($text), ['support','shop_details','manage_shop','status','product_status','shop_readiness','preferences'], true)
             && app(ProductListingFlow::class)->handles($conversation,$text)) {
             $reply=app(ProductListingFlow::class)->receiveOrDefer($conversation,$contact,$message);
             if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply,$conversation);
@@ -42,7 +44,8 @@ class ConversationOrchestrator
         $command = ConversationCommands::action($text);
         
         if ($command !== null) {
-            $this->executeAction($command, $conversation, $contact, $gateway);
+            if ($command === 'preferences') $this->manager->showNotificationPreferences($conversation, $contact, $gateway, $text);
+            else $this->executeAction($command, $conversation, $contact, $gateway);
             return true;
         }
 
@@ -81,6 +84,7 @@ class ConversationOrchestrator
     protected function executeAction(string $action, WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         match ($action) {
+            'preferences' => $this->manager->showNotificationPreferences($conversation, $contact, $gateway, 'alerts'),
             'restart', 'register', 'start_onboarding' => $this->manager->startFreshOnboarding($conversation, $contact, $gateway),
             'welcome' => $this->manager->handleWelcome($conversation, $contact, $gateway),
             'support', 'escalate_to_human' => $this->manager->initiateHumanHandoff($conversation, $contact, $gateway),

@@ -22,7 +22,7 @@ class InboundPrivacy
             $message = array_intersect_key($message, array_flip(['id', 'from', 'timestamp']));
             $message['type'] = 'text';
             $message['text'] = ['body' => $command ? $text : '[redacted: credential step]'];
-            if (in_array($button, ['resend_password_link', 'resume_onboarding', 'start_fresh', 'open_shop', 'start_onboarding', 'talk_support', 'check_status', 'learn_selling', 'faq'], true)) {
+            if (in_array($button, ['alerts_pause', 'alerts_resume', 'resend_password_link', 'resume_onboarding', 'start_fresh', 'open_shop', 'start_onboarding', 'talk_support', 'check_status', 'learn_selling', 'faq'], true)) {
                 unset($message['text']);
                 $message['type'] = 'interactive';
                 $message['interactive'] = ['button_reply' => ['id' => $button, 'title' => $button]];
