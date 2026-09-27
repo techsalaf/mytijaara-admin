@@ -43,3 +43,18 @@ The ordered backlog remains in [the review](ai-provider-expansion-and-review.md)
 These later features are pending, not implicitly included in the P0 release. Complete each with regression tests and an explicit rollout record.
 
 Validation before release: full local suite with disposable MySQL enabled passed 238 tests / 1,209 assertions. Final checkpoint/provider checks passed 19 tests / 72 assertions, including busy-contact retry and audited manual acknowledgement. Existing PHPUnit deprecation notices remain.
+
+
+## Second release: readiness, review status and draft safety — 27 September 2026
+
+- Readiness now reuses customer product visibility (approval, category, module and plan), checks module-specific stock, valid coordinates, subscription expiry/quota, merchant availability and fulfilment options. Payout setup requires both bank and account. Blocking actions take priority over cosmetic tasks. A complete checklist is explicitly not a guarantee of live checkout availability.
+- Vendor menus distinguish merchant availability from administrative approval. Product review and shop readiness are deterministic commands (`product status`, `shop readiness`) and list options, available without AI inference.
+- Product review lists are explicitly store-scoped and capped at 10 recent products. Cards distinguish existing approved products from pending/rejected edits, show canonical correction notes and last-update time, and link to the authenticated vendor edit page (including the canonical temporary-product flag). No product/draft/photo is changed by reading status. Older items remain accessible in the dashboard; field-specific WhatsApp correction editing is not implemented in this release.
+- Product cancellation now requires confirmation. Three buttons offer cancellation, continued editing, or saving. A per-request nonce invalidates previous cancellation controls. Saved product data remains intact.
+- AI product reads distinguish pending approval from enabled listings and clamp limits. Existing confirmed stock/price mutation tools remain in use.
+- Selling help welcomes online-only businesses with a fulfilment address and removes unsupported blanket promises about customer counts and payout frequency.
+- Orchestration logs contain correlation IDs and response length rather than raw AI output/phone numbers. Credential and document steps are excluded from AI extraction.
+
+Validation: full SQLite concierge suite passed 242 tests / 1,200 assertions (three MySQL-only cases skipped); final focused tests passed 26 tests / 134 assertions. Deployment CI supplies the MySQL gates. Existing PHPUnit deprecations remain. The prior P0 deployment passed its gates and the real NVIDIA tool probe passed on the configured production model, without vendor messages or business mutations.
+
+Remaining: full universal navigation coverage, a second live-verified image account, expanded daily-action discovery, and the P2 operations/preferences/digests/accessibility work remain tracked in the review. These are not represented as shipped by this release.

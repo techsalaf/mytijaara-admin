@@ -145,12 +145,25 @@ class ProductListingFlow
                 $d->save();
                 return '📷 All five extra photos are saved. Review below. To replace the main photo, choose Edit details first.'.$this->prompt($d);
             }
-            if (in_array($cmd, ['cancel', 'cancel product'], true)) {
+            $cancelPending = !empty($d->sources['_cancel_requested']);
+            if ($cmd === 'confirm cancel' && $cancelPending) {
                 $d->status = 'cancelled';
                 $d->save();
-
                 return 'Product draft cancelled. No product was created.';
             }
+            if (in_array($cmd, ['cancel', 'cancel product'], true)) {
+                $d->sources = array_merge($d->sources ?? [], ['_cancel_requested' => bin2hex(random_bytes(8))]);
+                $d->save();
+                return "🗑️ *Cancel this product draft?*\nYour details are still saved. Confirm cancellation, keep editing, or save it for later.";
+            }
+            if ($cancelPending) {
+                $sources = $d->sources ?? [];
+                unset($sources['_cancel_requested']);
+                $d->sources = $sources;
+                $d->save();
+                if ($cmd === 'keep editing') return $this->prompt($d);
+            }
+            if (in_array($cmd, ['confirm cancel', 'keep editing'], true)) return $this->prompt($d);
             if (in_array($cmd, ['save', 'save as draft', 'save draft', 'menu'], true)) {
                 $d->status = 'saved';
                 $d->save();

@@ -76,7 +76,7 @@ class ConversationManager
         ]);
 
         $storeName = $store?->name ?? 'Your Shop';
-        $status = $store?->status ? '🟢 Open' : '🔴 Closed';
+        $status = $store?->active ? '🟢 Open' : '🔴 Closed';
 
         $gateway->sendListMessage(
             $contact->phone_number,
@@ -91,6 +91,8 @@ class ConversationManager
                         ['id' => 'add_products', 'title' => '➕ Add Products', 'description' => 'Add new items to catalog'],
                         ['id' => 'manage_shop', 'title' => '🏪 Manage Shop', 'description' => 'View profile and settings'],
                         ['id' => 'view_orders', 'title' => '📦 View Orders', 'description' => 'Check recent orders'],
+                        ['id' => 'product_status', 'title' => '📋 Product Review', 'description' => 'Approval and correction requests'],
+                        ['id' => 'shop_readiness', 'title' => '🚀 Shop Readiness', 'description' => 'Check your launch checklist'],
                         ['id' => 'view_sales', 'title' => '💰 Sales Report', 'description' => 'Summary of shop sales'],
                         ['id' => 'shop_status', 'title' => $store?->active ? '🔴 Pause Shop' : '🟢 Open Shop', 'description' => 'Toggle store availability'],
                         ['id' => 'talk_support', 'title' => '💬 Talk to Support', 'description' => 'Get human assistance'],
@@ -259,6 +261,10 @@ class ConversationManager
             $gateway->sendTextMessage($contact->phone_number, $result);
             return;
         }
+        if (preg_match('/^product_status:(\d+)$/', $buttonId, $matches)) {
+            $this->showProductStatuses($conversation, $contact, $gateway, (int) $matches[1]);
+            return;
+        }
         $editMap = [
             'edit_business_basics' => 'business_basics',
             'edit_module' => 'module_selection',
@@ -314,6 +320,8 @@ class ConversationManager
             'start_fresh' => $this->startFreshOnboarding($conversation, $contact, $gateway),
             'open_shop', 'start_onboarding' => $this->startOnboarding($conversation, $contact, $gateway),
             'check_status' => $this->checkApplicationStatus($conversation, $contact, $gateway),
+            'product_status' => $this->showProductStatuses($conversation, $contact, $gateway),
+            'shop_readiness' => $this->showShopReadiness($conversation, $contact, $gateway),
             'manage_shop' => $this->showManageShop($conversation, $contact, $gateway),
             'learn_selling', 'faq' => $this->showSellingInfo($conversation, $contact, $gateway),
             'talk_support' => $this->initiateHumanHandoff($conversation, $contact, $gateway),
@@ -464,16 +472,16 @@ class ConversationManager
         $gateway->sendTextMessage(
             $contact->phone_number,
             "📖 *About Selling on MyTijaara*\n\n" .
-            "MyTijaara helps you reach thousands of customers in your city.\n\n" .
+            "MyTijaara helps customers discover and order from your business.\n\n" .
             "*Benefits:*\n" .
             "✅ Free to join (commission-based)\n" .
             "✅ No upfront costs\n" .
-            "✅ Marketing & delivery support\n" .
+            "✅ Delivery or pickup options for your shop\n" .
             "✅ Real-time order management\n" .
-            "✅ Weekly payouts\n\n" .
+            "✅ Track your sales and payout details\n\n" .
             "*Requirements:*\n" .
-            "• Valid business registration\n" .
-            "• Physical location in our service area\n" .
+            "• Business information and any documents required for your category\n" .
+            "• A pickup/fulfilment address in our service area (online-only businesses are welcome)\n" .
             "• Phone number for verification\n\n" .
             "Ready to start? Tap *Open My Shop* or reply *Register*! 🚀"
         );
@@ -490,6 +498,41 @@ class ConversationManager
         $gateway->sendCtaUrlMessage($contact->phone_number,
             "🏪 *Manage {$details['name']}*\n\nYour vendor dashboard lets you:\n• 📦 Manage products and inventory\n• 🧾 Review orders and sales\n• ⚙️ Update your shop profile and settings\n\n🔐 Sign in with your registered email and password. Use *Forgot Password* if needed.\n\n💬 You can also keep chatting here—try *Add new product* or *Show my shop details*.",
             'Open dashboard', $details['login_url'], 'MyTijaara');
+    }
+
+    public function showShopReadiness(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    {
+        $store = $contact->vendor?->store;
+        if (!$store || (int) $contact->vendor?->status !== 1) { $this->checkApplicationStatus($conversation, $contact, $gateway); return; }
+        $result = app(VendorReadinessService::class)->calculateReadiness($store);
+        $gateway->sendTextMessage($contact->phone_number, $result['formatted_message']);
+        $gateway->sendButtonMessage($contact->phone_number, 'Choose your next step 👇', [
+            ['id' => 'add_products', 'title' => '➕ Add product'],
+            ['id' => 'manage_shop', 'title' => '🏪 Dashboard'],
+            ['id' => 'talk_support', 'title' => '💬 Support'],
+        ]);
+    }
+
+    public function showProductStatuses(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway, ?int $itemId = null): void
+    {
+        $store = $contact->vendor?->store;
+        if (!$store || (int) $contact->vendor?->status !== 1) { $this->checkApplicationStatus($conversation, $contact, $gateway); return; }
+        $products = app(ProductModerationStatusService::class)->products($store->id, $itemId);
+        if (!$products) {
+            $gateway->sendTextMessage($contact->phone_number, '📦 No matching products found for your shop. Type *Add new product* to start.');
+            return;
+        }
+        if ($itemId !== null) {
+            $product = $products[0];
+            if (mb_strlen($product['message']) > 1000) {
+                $gateway->sendTextMessage($contact->phone_number, $product['message']);
+                $product['message'] = '✏️ Open your dashboard to review or correct this product.';
+            }
+            $gateway->sendCtaUrlMessage($contact->phone_number, $product['message'], 'Review in dashboard', route('vendor.item.edit', $product['edit_parameters']));
+            return;
+        }
+        $rows = array_map(fn ($product) => ['id' => 'product_status:'.$product['id'], 'title' => mb_substr($product['name'], 0, 24), 'description' => $product['status']], $products);
+        $gateway->sendListMessage($contact->phone_number, "📋 *Product review status*\n\nYour 10 most recently updated products. Choose one for details and any requested corrections. Older products are available in your dashboard.", [['title' => 'Your products', 'rows' => $rows]], 'MyTijaara', null, 'View products');
     }
 
     public function showShopDetails(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void

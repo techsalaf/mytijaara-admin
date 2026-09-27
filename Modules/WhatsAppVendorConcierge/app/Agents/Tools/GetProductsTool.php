@@ -30,16 +30,16 @@ class GetProductsTool extends BaseVendorTool
         $args = $request->all();
         $filter = $args['filter'] ?? 'active';
         $search = $args['search'] ?? null;
-        $limit = min((int) ($args['limit'] ?? 20), 50);
+        $limit = max(1, min((int) ($args['limit'] ?? 20), 50));
 
         $query = Item::where('store_id', $store->id);
 
         match ($filter) {
-            'active' => $query->where('status', 1),
+            'active' => $query->where('status', 1)->where('is_approved', 1),
             'inactive' => $query->where('status', 0),
             'low_stock' => $query->where('stock', '<', 10),
             'all' => null,
-            default => $query->where('status', 1),
+            default => $query->where('status', 1)->where('is_approved', 1),
         };
 
         if ($search) {
@@ -48,7 +48,7 @@ class GetProductsTool extends BaseVendorTool
 
         $items = $query->orderByDesc('created_at')
             ->limit($limit)
-            ->get(['id', 'name', 'price', 'discount', 'discount_type', 'stock', 'status', 'avg_rating', 'order_count']);
+            ->get(['id', 'name', 'price', 'discount', 'discount_type', 'stock', 'status', 'is_approved', 'avg_rating', 'order_count']);
 
         if ($items->isEmpty()) {
             return match ($filter) {
@@ -77,7 +77,7 @@ class GetProductsTool extends BaseVendorTool
                     : $item->price - $item->discount)
                 : $item->price;
 
-            $statusIcon = $item->status ? '✅' : '❌';
+            $statusIcon = !$item->is_approved ? '⏳ Awaiting approval' : ($item->status ? '✅ Approved / enabled' : '⏸️ Approved / paused');
             $stockIcon = match (true) {
                 $item->stock <= 0 => '⚠️ Out',
                 $item->stock < 10 => '🔻 Low',

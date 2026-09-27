@@ -45,6 +45,10 @@ class VendorCommandCentreTest extends HardeningTestCase
             $table->timestamps();
         });
 
+        Schema::create('modules', function(Blueprint $table) { $table->id(); $table->string('module_name'); $table->string('module_type'); $table->boolean('status')->default(true); });
+        Schema::create('categories', function(Blueprint $table) { $table->id(); $table->string('name'); $table->unsignedBigInteger('parent_id')->default(0); $table->boolean('status')->default(true); });
+        \Illuminate\Support\Facades\DB::table('modules')->insert(['id'=>1,'module_name'=>'Shop','module_type'=>'ecommerce','status'=>1]);
+        \Illuminate\Support\Facades\DB::table('categories')->insert(['id'=>1,'name'=>'Produce','parent_id'=>0,'status'=>1]);
         Schema::create('store_wallets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('vendor_id');
@@ -70,6 +74,7 @@ class VendorCommandCentreTest extends HardeningTestCase
             $table->unsignedBigInteger('package_id')->nullable();
             $table->double('price', 24, 2)->default(0);
             $table->date('expiry_date')->nullable();
+            $table->string('max_order')->default('unlimited');
             $table->boolean('is_active')->default(1);
             $table->tinyInteger('status')->default(1);
             $table->timestamps();
@@ -111,6 +116,8 @@ class VendorCommandCentreTest extends HardeningTestCase
             $table->text('address')->nullable();
             $table->tinyInteger('status')->default(1);
             $table->boolean('active')->default(true);
+            $table->boolean('delivery')->default(true);
+            $table->boolean('take_away')->default(false);
             $table->unsignedBigInteger('vendor_id');
             $table->unsignedBigInteger('zone_id')->nullable();
             $table->unsignedBigInteger('module_id')->nullable();
@@ -119,6 +126,8 @@ class VendorCommandCentreTest extends HardeningTestCase
         });
 
         Schema::create('items', function (Blueprint $table) {
+            $table->unsignedBigInteger('category_id')->default(1);
+            $table->tinyInteger('is_approved')->default(1);
             $table->id();
             $table->string('name');
             $table->string('slug')->nullable();
@@ -189,6 +198,7 @@ class VendorCommandCentreTest extends HardeningTestCase
         $this->store->module_id = 1;
         $this->store->status = 1;
         $this->store->active = true;
+        $this->store->delivery = true;
         $this->store->store_business_model = 'commission';
         $this->store->save();
     }
@@ -200,7 +210,7 @@ class VendorCommandCentreTest extends HardeningTestCase
         // Initially without items or schedules
         $readiness = $service->calculateReadiness($this->store);
 
-        $this->assertEquals(55, $readiness['score']);
+        $this->assertEquals(65, $readiness['score']);
         $this->assertContains('First Product Added', $readiness['blocking_items']);
         $this->assertStringContainsString('Shop Launch Readiness', $readiness['formatted_message']);
 
@@ -215,6 +225,7 @@ class VendorCommandCentreTest extends HardeningTestCase
 
         Item::create([
             'name' => 'Fresh Plantains',
+            'module_id' => 1,
             'price' => 2000.00,
             'store_id' => $this->store->id,
             'stock' => 15,
@@ -320,4 +331,18 @@ class VendorCommandCentreTest extends HardeningTestCase
         $this->assertEquals('Low Stock Beans', $insights['low_stock_items'][0]['name']);
         $this->assertStringContainsString('Low Stock Alert', $insights['formatted_message']);
     }
+    public function test_pending_or_rejected_product_never_counts_as_available(): void {
+        $item=Item::forceCreate(['name'=>'Pending','store_id'=>$this->store->id,'module_id'=>1,'category_id'=>1,'price'=>100,'stock'=>10,'status'=>1,'is_approved'=>0]);
+        $readiness=app(VendorReadinessService::class)->calculateReadiness($this->store);
+        $this->assertContains('Product Available for Ordering',$readiness['blocking_items']);
+        $item->forceFill(['is_approved'=>1])->save();
+        $readiness=app(VendorReadinessService::class)->calculateReadiness($this->store);
+        $this->assertNotContains('Product Available for Ordering',$readiness['blocking_items']);
+        $this->store->forceFill(['latitude'=>'not-a-coordinate','active'=>false,'delivery'=>false,'take_away'=>false])->save();
+        $readiness=app(VendorReadinessService::class)->calculateReadiness($this->store);
+        $this->assertContains('Store Profile Completeness',$readiness['blocking_items']);
+        $this->assertContains('Shop Open',$readiness['blocking_items']);
+        $this->assertContains('Delivery or Pickup Enabled',$readiness['blocking_items']);
+    }
+
 }

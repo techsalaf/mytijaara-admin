@@ -15,7 +15,7 @@ class ProductListingPresenter
 
     public static function id(Draft $d, string $answer): string
     {
-        return 'pd:'.$d->id.':'.substr(hash('sha256', $d->step.'|'.json_encode($d->data)), 0, 10).':'.rawurlencode($answer);
+        return 'pd:'.$d->id.':'.substr(hash('sha256', $d->step.'|'.json_encode($d->data).'|'.(string) ($d->sources['_cancel_requested'] ?? 'edit')), 0, 10).':'.rawurlencode($answer);
     }
 
     public static function decode(Draft $d, string $id): ?string
@@ -33,7 +33,9 @@ class ProductListingPresenter
             $choices = collect(app(ProductFieldMap::class)->steps($d->store,$d->data))->filter(fn($f)=>in_array($f,['name','image','category_id','description','price','stock','discount','additional_media'],true))->map(fn($f)=>['answer'=>'edit '.$f,'title'=>ucwords(str_replace(['_id','_'],['',' '],$f))])->values()->all();
         }
         $buttons = [];
-        if ($choices) {
+        if (!empty($d->sources['_cancel_requested'])) {
+            $buttons = [['answer'=>'confirm cancel','title'=>'✖ Confirm cancel'],['answer'=>'keep editing','title'=>'✏️ Keep editing'],['answer'=>'save draft','title'=>'💾 Save for later']];
+        } elseif ($choices) {
             $page = max(0, min($page, (int) floor((count($choices)-1)/8)));
             $buttons = array_slice($choices, $page*8, 8);
             if ($page > 0) $buttons[] = ['answer'=>'page:'.($page-1), 'title'=>'← Previous'];

@@ -21,6 +21,8 @@ class ConversationCommands
             'info' => ['faq', 'info', 'learn', 'how to sell', 'learn about selling'],
             'help' => ['help'],
             'manage_shop' => ['manage shop', 'manage my shop', 'manage_shop', 'vendor dashboard', 'open dashboard'],
+            'product_status' => ['product status', 'product review', 'my products', 'product_status'],
+            'shop_readiness' => ['shop readiness', 'launch checklist', 'shop_readiness'],
             'shop_details' => ['show my shop details', 'show me my shop details', 'my shop details'],
             'status' => ['status', 'check status', 'my application', 'application status'],
             'resume' => ['continue', 'resume'],

@@ -43,6 +43,56 @@ class ProductListingFlowTest extends OperationsFixtureTestCase
         return app(ProductListingFlow::class)->current($this->conversation);
     }
 
+    public function test_cancel_confirmation_buttons_expire_when_editing_resumes(): void
+    {
+        $this->say('add product');
+        $this->say('cancel');
+        $draft = $this->draft();
+        $id = \Modules\WhatsAppVendorConcierge\app\Services\ProductListingPresenter::id($draft, 'confirm cancel');
+        $gateway = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        $gateway->shouldReceive('sendButtonMessage')->once()->withArgs(function ($phone, $body, $buttons) {
+            return count($buttons) === 3 && str_contains($buttons[0]['id'], 'confirm%20cancel');
+        })->andReturn([]);
+        app(\Modules\WhatsAppVendorConcierge\app\Services\ProductListingPresenter::class)->send($gateway, $this->contact->phone_number, 'Confirm cancellation?', $draft);
+        $this->say('keep editing');
+        $this->assertNull(\Modules\WhatsAppVendorConcierge\app\Services\ProductListingPresenter::decode($this->draft(), $id));
+        $this->say('confirm cancel');
+        $this->assertSame('active', $this->draft()->status);
+        $this->say('cancel');
+        $this->say('save draft');
+        $this->assertSame('saved', $this->draft()->status);
+        $this->assertArrayNotHasKey('_cancel_requested', $this->draft()->sources);
+    }
+
+    public function test_product_review_command_bypasses_ai_and_scopes_the_dashboard_card(): void
+    {
+        $this->say('add product');
+        $service = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\ProductModerationStatusService::class);
+        $service->shouldReceive('products')->once()->with($this->store->id, null)->andReturn([
+            ['id'=>23,'name'=>'Bag','status'=>'Needs correction'],
+        ]);
+        $this->app->instance(\Modules\WhatsAppVendorConcierge\app\Services\ProductModerationStatusService::class, $service);
+        $gateway = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        $gateway->shouldReceive('sendListMessage')->once()->withArgs(fn ($phone, $body, $sections) => $sections[0]['rows'][0]['id'] === 'product_status:23')->andReturn([]);
+        $ai = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\AiFallbackService::class);
+        $ai->shouldNotReceive('promptAgent');
+        $router = new \Modules\WhatsAppVendorConcierge\app\Services\ConversationOrchestrator(app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class), $ai);
+        $this->assertTrue($router->routeMessage($this->conversation, $this->contact, new WhatsAppMessage(['type'=>'text','raw_text'=>'product status']), $gateway));
+        $this->assertNotNull($this->draft());
+        $this->assertNotNull(app('router')->getRoutes()->getByName('vendor.item.edit'));
+    }
+
+    public function test_sensitive_onboarding_steps_never_reach_ai_extraction(): void
+    {
+        $ai = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\AiFallbackService::class);
+        $ai->shouldNotReceive('promptAgent');
+        $router = new \Modules\WhatsAppVendorConcierge\app\Services\ConversationOrchestrator(app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class), $ai);
+        $gateway = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        foreach (['account_password', 'kyc_documents'] as $step) {
+            $this->assertFalse($router->handleOnboardingExtraction($this->conversation, $this->contact, new WhatsAppMessage(['raw_text'=>'private fixture']), $gateway, $step, []));
+        }
+    }
+
     public function test_review_is_grouped_and_uses_human_labels_and_naira(): void
     {
         $flow=app(ProductListingFlow::class);$d=$flow->start($this->conversation,$this->contact);
@@ -165,6 +215,11 @@ class ProductListingFlowTest extends OperationsFixtureTestCase
         $this->say('Blue Bag');
         $this->assertSame('Blue Bag', $this->draft()->data['name']);
         $this->say('cancel');
+        $this->assertSame('active', $this->draft()->status);
+        $this->say('keep editing');
+        $this->assertSame('Blue Bag', $this->draft()->data['name']);
+        $this->say('cancel');
+        $this->say('confirm cancel');
         $this->assertNull($this->draft());
         $this->assertSame(0, DB::table('items')->count());
     }

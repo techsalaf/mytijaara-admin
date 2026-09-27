@@ -22,6 +22,17 @@ class VendorReadinessService
     {
         $vendor = $store->vendor ?? ($store->vendor_id ? \App\Models\Vendor::find($store->vendor_id) : null);
 
+        $subscription = $store->store_sub;
+        $planActive = $store->store_business_model === 'commission' || ($subscription
+            && (int) $subscription->status === 1
+            && ($subscription->max_order === 'unlimited' || (int) $subscription->max_order > 0)
+            && $subscription->expiry_date && \Carbon\Carbon::parse($subscription->expiry_date)->endOfDay()->isFuture());
+        $coordinates = is_numeric($store->latitude) && is_numeric($store->longitude)
+            && abs((float)$store->latitude) <= 90 && abs((float)$store->longitude) <= 180;
+        // Reuse the customer's canonical approval/module/category/plan scope.
+        $available = $store->items()->active(null, $store->module_id);
+        if (config('module.'.$store->module?->module_type.'.stock', true)) $available->where('stock', '>', 0);
+        $productAvailable = $available->exists();
         $checks = [
             'application_approved' => [
                 'title' => 'Application Approved',
@@ -36,21 +47,21 @@ class VendorReadinessService
                 'description' => 'Active commission plan or valid subscription package',
                 'weight' => 15,
                 'is_blocking' => true,
-                'completed' => $store->store_business_model === 'commission' || (bool) ($store->store_sub?->is_active ?? false),
+                'completed' => $planActive,
                 'action' => 'Select and activate a business plan or subscription package.',
             ],
             'store_profile' => [
                 'title' => 'Store Profile Completeness',
-                'description' => 'Store name, phone, zone, and verified address coordinates',
+                'description' => 'Store name, phone, zone, and saved pickup/fulfilment coordinates',
                 'weight' => 15,
                 'is_blocking' => true,
-                'completed' => !empty($store->name) && !empty($store->phone) && !empty($store->address) && !empty($store->zone_id),
+                'completed' => !empty($store->name) && !empty($store->phone) && !empty($store->address) && !empty($store->zone_id) && $coordinates,
                 'action' => 'Complete your store address, phone, and zone in your dashboard.',
             ],
             'branding_assets' => [
                 'title' => 'Store Logo and Cover Photo',
                 'description' => 'Branding assets uploaded for customer discovery',
-                'weight' => 10,
+                'weight' => 5,
                 'is_blocking' => false,
                 'completed' => !empty($store->logo) && $store->logo !== 'def.png' && !empty($store->cover_photo) && $store->cover_photo !== 'def.png',
                 'action' => 'Upload a store logo and cover photo.',
@@ -66,25 +77,35 @@ class VendorReadinessService
             'first_product' => [
                 'title' => 'First Product Added',
                 'description' => 'At least one item added to the store catalog',
-                'weight' => 15,
+                'weight' => 10,
                 'is_blocking' => true,
                 'completed' => method_exists($store, 'items') ? $store->items()->count() >= 1 : false,
                 'action' => 'Add your first product by sending a product photo or details.',
             ],
             'product_available' => [
                 'title' => 'Product Available for Ordering',
-                'description' => 'At least one product active with available stock',
+                'description' => 'An approved product passes the customer visibility rules and applicable stock checks',
                 'weight' => 10,
-                'is_blocking' => false,
-                'completed' => method_exists($store, 'items') ? $store->items()->where('status', 1)->where('stock', '>', 0)->count() >= 1 : false,
-                'action' => 'Ensure products are activated and stock is greater than zero.',
+                'is_blocking' => true,
+                'completed' => $productAvailable,
+                'action' => 'Check product approval, active category/module, and stock where applicable.',
+            ],
+            'store_open' => [
+                'title' => 'Shop Open', 'description' => 'Merchant availability is enabled',
+                'weight' => 5, 'is_blocking' => true, 'completed' => (bool) $store->active,
+                'action' => 'Open your shop when you are ready to accept orders.',
+            ],
+            'fulfilment' => [
+                'title' => 'Delivery or Pickup Enabled', 'description' => 'At least one fulfilment option is configured',
+                'weight' => 5, 'is_blocking' => true, 'completed' => (bool) $store->delivery || (bool) $store->take_away,
+                'action' => 'Enable pickup or configure delivery. Store-managed delivery means your shop arranges its own delivery; platform riders are not automatically assigned.',
             ],
             'payout_setup' => [
                 'title' => 'Payout Details Configured',
                 'description' => 'Bank account details on file for disbursement',
                 'weight' => 5,
                 'is_blocking' => false,
-                'completed' => !empty($vendor?->account_no) || !empty($vendor?->bank_name),
+                'completed' => !empty($vendor?->account_no) && !empty($vendor?->bank_name),
                 'action' => 'Configure your bank payout details in vendor settings.',
             ],
         ];
@@ -111,11 +132,12 @@ class VendorReadinessService
             }
         }
 
-        $nextAction = !empty($remainingItems) ? $remainingItems[0]['action'] : 'Your store is 100% ready for customer orders!';
+        $priorityItem = collect($remainingItems)->firstWhere('is_blocking', true) ?? ($remainingItems[0] ?? null);
+        $nextAction = $priorityItem ? $priorityItem['action'] : 'Your setup checklist is complete. Live opening hours, delivery availability and checkout checks still apply.';
 
         $formatted = "🚀 *Shop Launch Readiness: {$completedScore}%*\n\n";
         if ($completedScore === 100) {
-            $formatted .= "🎉 *Congratulations!* Your shop is fully configured and ready to accept customer orders.\n";
+            $formatted .= "🎉 *Congratulations!* Your setup checklist is complete. Customer ordering still depends on live hours, fulfilment availability and checkout checks.\n";
         } else {
             $formatted .= "*Completed Items:* (" . count($completedItems) . "/" . count($checks) . ")\n";
             foreach ($completedItems as $item) {

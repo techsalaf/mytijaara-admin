@@ -31,7 +31,7 @@ class ConversationOrchestrator
 
         // Product answers must not be reclassified by the general AI router.
         if ($contact->vendor_id && $conversation->state === 'ai_active'
-            && !in_array(ConversationCommands::action($text), ['support','shop_details','manage_shop','status'], true)
+            && !in_array(ConversationCommands::action($text), ['support','shop_details','manage_shop','status','product_status','shop_readiness'], true)
             && app(ProductListingFlow::class)->handles($conversation,$text)) {
             $reply=app(ProductListingFlow::class)->receiveOrDefer($conversation,$contact,$message);
             if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply,$conversation);
@@ -87,6 +87,8 @@ class ConversationOrchestrator
             'info', 'show_faq' => $this->manager->showSellingInfo($conversation, $contact, $gateway),
             'help' => $this->manager->showHelp($conversation, $contact, $gateway),
             'manage_shop' => $this->manager->showManageShop($conversation, $contact, $gateway),
+            'product_status' => $this->manager->showProductStatuses($conversation, $contact, $gateway),
+            'shop_readiness' => $this->manager->showShopReadiness($conversation, $contact, $gateway),
             'shop_details' => $this->manager->showShopDetails($conversation, $contact, $gateway),
             'status', 'check_status' => $this->manager->checkApplicationStatus($conversation, $contact, $gateway),
             'resume', 'resume_onboarding' => $this->manager->resumeOnboarding($conversation, $contact, $gateway),
@@ -108,7 +110,7 @@ class ConversationOrchestrator
             $response = $result['response'];
             
             $content = (string) $response->text;
-            Log::info('AI Orchestrator response', ['content' => $content, 'phone' => $contact->phone_number]);
+            Log::info('AI Orchestrator response', ['conversation_id' => $conversation->id, 'response_length' => mb_strlen($content)]);
             
             if (preg_match('/```json\s*(\{.*?\})\s*```/s', $content, $matches)) {
                 $content = $matches[1];
@@ -131,7 +133,7 @@ class ConversationOrchestrator
             return false;
             
         } catch (\Exception $e) {
-            Log::error('AI Orchestration failed', ['error' => $e->getMessage()]);
+            Log::error('AI Orchestration failed', ['exception' => get_class($e), 'conversation_id' => $conversation->id]);
             return false;
         }
     }
@@ -144,8 +146,10 @@ class ConversationOrchestrator
         string $currentStep,
         array $validationErrors
     ): bool {
+        // These steps use deterministic handling and must never enter extraction prompts.
+        if (in_array($currentStep, ['account_password', 'kyc_documents'], true)) return false;
         $text = (string) ($message->raw_text ?? '');
-        if (trim($text) === '') {
+        if (trim($text) === '' || str_starts_with($text, '[redacted:')) {
             return false;
         }
 
@@ -155,7 +159,7 @@ class ConversationOrchestrator
             $response = $result['response'];
             
             $content = (string) $response->text;
-            Log::info('AI Onboarding Extraction response', ['content' => $content, 'step' => $currentStep]);
+            Log::info('AI Onboarding Extraction response', ['conversation_id' => $conversation->id, 'step' => $currentStep, 'response_length' => mb_strlen($content)]);
             
             if (preg_match('/```json\s*(\{.*?\})\s*```/s', $content, $matches)) {
                 $content = $matches[1];
@@ -198,7 +202,7 @@ class ConversationOrchestrator
             return false;
             
         } catch (\Exception $e) {
-            Log::error('AI Onboarding Extraction failed', ['error' => $e->getMessage()]);
+            Log::error('AI Onboarding Extraction failed', ['exception' => get_class($e), 'conversation_id' => $conversation->id]);
             return false;
         }
     }
