@@ -111,6 +111,16 @@ class AiProviderConnection extends Model
 
     public function getBaseUrl(): ?string
     {
+        // These integrations always use official hosts, including after credential rotation.
+        if ($this->definition?->slug === 'cloudflare_workers_ai') {
+            $account = $this->credentials['account_id'] ?? '';
+            if (!preg_match('/\A[a-f0-9]{32}\z/i', $account)) {
+                throw new \InvalidArgumentException('A valid Cloudflare account ID is required.');
+            }
+            return "https://api.cloudflare.com/client/v4/accounts/{$account}/ai/v1";
+        }
+        if ($this->definition?->slug === 'cerebras') return 'https://api.cerebras.ai/v1';
+        if ($this->definition?->slug === 'openrouter_free') return 'https://openrouter.ai/api/v1';
         return $this->base_url_override ?: $this->definition?->default_base_url;
     }
 

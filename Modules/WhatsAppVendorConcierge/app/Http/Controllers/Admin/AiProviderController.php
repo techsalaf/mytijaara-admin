@@ -19,6 +19,19 @@ class AiProviderController extends Controller
         protected ModelDiscoveryService $discoveryService
     ) {}
 
+    private function providerCredentials(Request $request, string $slug): array
+    {
+        if (in_array($slug, ['cerebras', 'cloudflare_workers_ai', 'openrouter_free'], true)) {
+            $request->validate(['base_url_override' => 'prohibited']);
+        }
+        if ($slug !== 'cloudflare_workers_ai') return [];
+        $request->validate([
+            'account_id' => ['required', 'regex:/\A[a-f0-9]{32}\z/i'],
+            'free_plan_confirmed' => 'accepted',
+        ]);
+        return ['account_id' => trim($request->input('account_id')), 'free_plan_confirmed' => true];
+    }
+
     /**
      * Display a listing of connected AI accounts and discovered models.
      */
@@ -64,14 +77,17 @@ class AiProviderController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
+        $definition = AiProviderDefinition::findOrFail($validated['definition_id']);
+        $extraCredentials = $this->providerCredentials($request, $definition->slug);
+
         $connection = AiProviderConnection::create([
             'definition_id' => $validated['definition_id'],
             'name' => $validated['name'],
             'credentials' => [
                 'api_key' => trim($validated['api_key']),
-            ],
+            ] + $extraCredentials,
             'base_url_override' => $validated['base_url_override'] ?? null,
-            'selection_mode' => $validated['selection_mode'],
+            'selection_mode' => $definition->slug === 'cerebras' ? 'manual' : $validated['selection_mode'],
             'daily_budget_usd' => $validated['daily_budget_usd'] ?? null,
             'monthly_budget_usd' => $validated['monthly_budget_usd'] ?? null,
             'is_active' => $request->boolean('is_active', true),
@@ -82,7 +98,7 @@ class AiProviderController extends Controller
         $syncResult = $this->discoveryService->syncConnectionModels($connection);
 
         return redirect()->route('admin.whatsapp.ai-providers.index')
-            ->with('success', "Connected {$connection->name} successfully. Discovered {$syncResult['synced']} models.");
+            ->with('success', "Saved {$connection->name}. Discovered {$syncResult['synced']} models. Check connection status before enabling routing.");
     }
 
     /**
@@ -111,6 +127,7 @@ class AiProviderController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
+        $extraCredentials = $this->providerCredentials($request, $aiProvider->definition->slug);
         $updates = [
             'name' => $validated['name'],
             'base_url_override' => $validated['base_url_override'] ?? null,
@@ -121,14 +138,18 @@ class AiProviderController extends Controller
         ];
 
         if (!empty($validated['api_key'])) {
-            $updates['credentials'] = [
+            $updates['credentials'] = array_merge($aiProvider->credentials ?? [], $extraCredentials, [
                 'api_key' => trim($validated['api_key']),
-            ];
+            ]);
             $updates['status'] = 'unverified';
             $updates['consecutive_failures'] = 0;
             $updates['last_error'] = null;
         }
 
+        $updates['credentials'] ??= array_merge($aiProvider->credentials ?? [], $extraCredentials);
+        if ($updates['credentials'] !== $aiProvider->credentials) {
+            $updates['status'] = 'unverified';
+        }
         $aiProvider->update($updates);
 
         return redirect()->route('admin.whatsapp.ai-providers.index')

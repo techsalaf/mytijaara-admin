@@ -18,6 +18,7 @@
                 <div class="card-body">
                     <form action="{{route('admin.whatsapp.ai-providers.store')}}" method="POST">
                         @csrf
+                        @include('whatsapp-vendor-concierge::admin.ai_providers.provider-help')
 
                         <div class="form-group mb-3">
                             <label class="input-label font-weight-bold" for="definition_id">{{translate('Provider Platform')}} <span class="text-danger">*</span></label>
@@ -25,7 +26,7 @@
                                 <option value="">-- {{translate('Select Provider')}} --</option>
                                 @foreach($definitions as $def)
                                     <option value="{{$def->id}}"
-                                        data-base-url="{{$def->default_base_url}}"
+                                        data-base-url="{{$def->default_base_url}}" data-slug="{{$def->slug}}"
                                         {{(old('definition_id', $selectedDefinition?->id) == $def->id) ? 'selected' : ''}}>
                                         {{$def->name}}
                                     </option>
@@ -53,6 +54,12 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <label class="input-label" for="account_id">Cloudflare account ID (Cloudflare only)</label>
+                            <input id="account_id" name="account_id" class="form-control" maxlength="32" pattern="[a-fA-F0-9]{32}" value="{{ old('account_id') }}" autocomplete="off">
+                            <label class="mt-2"><input type="checkbox" name="free_plan_confirmed" value="1" {{ old('free_plan_confirmed') ? 'checked' : '' }}> I confirm this Cloudflare account uses Workers Free; I will disable this connection before upgrading to a paid plan.</label>
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label class="input-label" for="base_url_override">{{translate('Custom Base URL Endpoint (Optional)')}}</label>
                             <input type="url" name="base_url_override" id="base_url_override" class="form-control" placeholder="{{$selectedDefinition?->default_base_url ?? 'https://api.openai.com/v1'}}" value="{{old('base_url_override')}}">
                             <small class="text-muted">{{translate('Leave empty to use the provider default endpoint.')}}</small>
@@ -65,7 +72,7 @@
                                     {{translate('Enable All Compatible Models (Default)')}}
                                 </option>
                                 <option value="auto_include_free" {{old('selection_mode') === 'auto_include_free' ? 'selected' : ''}}>
-                                    {{translate('Auto-include & Prioritise Free Tier Models Only (Zero Cost)')}}
+                                    {{translate('Prioritise models with free allowances (provider limits apply)')}}
                                 </option>
                                 <option value="manual" {{old('selection_mode') === 'manual' ? 'selected' : ''}}>
                                     {{translate('Manual Selection (Select models individually after discovery)')}}
@@ -99,6 +106,16 @@
 <script>
 function handleProviderChange(select) {
     const selected = select.options[select.selectedIndex];
+    const slug = selected.getAttribute('data-slug');
+    const account = document.getElementById('account_id');
+    account.closest('.form-group').hidden = slug !== 'cloudflare_workers_ai';
+    account.disabled = slug !== 'cloudflare_workers_ai';
+    account.required = slug === 'cloudflare_workers_ai';
+    document.querySelector('[name="free_plan_confirmed"]').disabled = slug !== 'cloudflare_workers_ai';
+    const customEndpoint = document.getElementById('base_url_override');
+    customEndpoint.disabled = ['cerebras', 'cloudflare_workers_ai', 'openrouter_free'].includes(slug);
+    if (customEndpoint.disabled) customEndpoint.value = '';
+    if (slug === 'cerebras') document.getElementById('selection_mode').value = 'manual';
     const baseUrl = selected.getAttribute('data-base-url');
     if (baseUrl) {
         document.getElementById('base_url_override').placeholder = baseUrl;
@@ -120,5 +137,6 @@ function togglePasswordVisibility(fieldId) {
         icon.className = 'tio-hidden-outlined';
     }
 }
+handleProviderChange(document.getElementById("definition_id"));
 </script>
 @endsection

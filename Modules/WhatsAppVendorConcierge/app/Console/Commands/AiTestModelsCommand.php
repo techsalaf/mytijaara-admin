@@ -3,81 +3,45 @@
 namespace Modules\WhatsAppVendorConcierge\app\Console\Commands;
 
 use Illuminate\Console\Command;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Promptable;
 use Modules\WhatsAppVendorConcierge\app\Models\AiProviderConnection;
-use Modules\WhatsAppVendorConcierge\app\Services\AiManager;
+use Modules\WhatsAppVendorConcierge\app\Services\AiAdapters\AdapterFactory;
 
 class AiTestModelsCommand extends Command
 {
-    protected $signature = 'ai:test-models {connection_id? : ID of the connection to test}';
-    protected $description = 'Test all enabled models and automatically disable broken/deprecated ones';
+    protected $signature = 'ai:test-models {connection_id : Connection to test}';
+    protected $description = 'Run a small real text probe against enabled models of one connection (consumes provider quota)';
 
-    public function handle(AiManager $aiManager)
+    public function handle(): int
     {
-        $query = AiProviderConnection::where('is_active', true);
-        if ($this->argument('connection_id')) {
-            $query->where('id', $this->argument('connection_id'));
+        $connection = AiProviderConnection::with(['definition', 'models'])->find($this->argument('connection_id'));
+        if (!$connection || !$connection->is_active) {
+            $this->error('Choose an active connection.');
+            return self::FAILURE;
         }
-        
-        $connections = $query->get();
-        if ($connections->isEmpty()) {
-            $this->warn('No active connections found.');
-            return;
+        $models = $connection->models->where('is_enabled', true);
+        if ($models->isEmpty()) {
+            $this->error('Enable the model you intend to test first.');
+            return self::FAILURE;
         }
-
-        foreach ($connections as $connection) {
-            $this->info("Testing models for connection: {$connection->name}...");
-            $models = $connection->models()->where('is_enabled', true)->get();
-            
-            if ($models->isEmpty()) {
-                $this->line(" No enabled models.");
-                continue;
-            }
-
+        $agent = new class implements Agent {
+            use Promptable;
+            public function instructions(): string { return 'Reply with OK only.'; }
+        };
+        $adapter = AdapterFactory::forConnection($connection);
+        $failed = false;
+        foreach ($models as $model) {
             try {
-                $driver = $aiManager->driver($connection->id);
+                $result = $adapter->invokeAgent($connection, $model, $agent, 'Connection test. Reply OK.', ['timeout' => 20]);
+                if (trim((string) $result['response']) === '') throw new \RuntimeException('Empty response.');
+                $this->info($model->model_id.': text inference passed (tool execution not tested).');
             } catch (\Throwable $e) {
-                $this->error(" Failed to initialize driver: " . $e->getMessage());
-                continue;
-            }
-
-            $disabledCount = 0;
-
-            foreach ($models as $model) {
-                $this->line(" Testing {$model->model_id}...");
-                try {
-                    $driver->chat()->create([
-                        'model' => $model->model_id,
-                        'messages' => [
-                            ['role' => 'user', 'content' => 'hello']
-                        ]
-                    ]);
-                    $this->info("   -> Success!");
-                } catch (\Throwable $e) {
-                    $msg = $e->getMessage();
-                    $msgLower = strtolower($msg);
-                    
-                    if (str_contains($msgLower, '401') || str_contains($msgLower, '402') || str_contains($msgLower, 'insufficient balance')) {
-                        $this->warn("   -> Auth/Balance Error (Keeping enabled): " . strtok($msg, "\n"));
-                        break; // Stop testing other models for this connection since auth/balance is account-wide!
-                    }
-
-                    $isDead = str_contains($msgLower, '404') || str_contains($msgLower, '400') || str_contains($msgLower, 'does not exist') || str_contains($msgLower, 'decommissioned');
-                    
-                    if ($isDead) {
-                        $model->update(['is_enabled' => false]);
-                        $disabledCount++;
-                        $this->error("   -> Disabled (Dead model): " . strtok($msg, "\n"));
-                    } else {
-                        $this->warn("   -> Failed (Unknown error): " . strtok($msg, "\n"));
-                    }
-                }
-            }
-            
-            if ($disabledCount > 0) {
-                $this->info(" Disabled {$disabledCount} broken models for {$connection->name}.");
+                $failed = true;
+                $this->error($model->model_id.': probe failed ('.$adapter->normaliseError($e)['type'].'). Check provider dashboard.');
             }
         }
-        
-        $this->info('Done.');
+        if (!$failed) $connection->update(['status' => 'inference_verified', 'last_tested_at' => now(), 'last_error' => null]);
+        return $failed ? self::FAILURE : self::SUCCESS;
     }
 }

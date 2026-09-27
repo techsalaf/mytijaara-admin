@@ -41,7 +41,7 @@ class OpenRouterAdapter extends BaseProviderAdapter
                     'X-Title' => 'MyTijaara WhatsApp Concierge',
                 ])
                 ->timeout(10)
-                ->get("{$baseUrl}/auth/key");
+                ->get("{$baseUrl}/key");
 
             $latency = (int) round((microtime(true) - $start) * 1000);
 
@@ -51,16 +51,6 @@ class OpenRouterAdapter extends BaseProviderAdapter
                 return [
                     'success' => true,
                     'message' => "OpenRouter verified: {$label} (Usage: \${$usage})",
-                    'latency_ms' => $latency,
-                ];
-            }
-
-            // Fallback to checking models if /auth/key isn't supported
-            $modelsResp = Http::withToken($apiKey)->timeout(10)->get("{$baseUrl}/models");
-            if ($modelsResp->successful()) {
-                return [
-                    'success' => true,
-                    'message' => "OpenRouter connection verified.",
                     'latency_ms' => $latency,
                 ];
             }
@@ -110,10 +100,10 @@ class OpenRouterAdapter extends BaseProviderAdapter
 
                 $promptPricing = (float) ($item['pricing']['prompt'] ?? 1);
                 $completionPricing = (float) ($item['pricing']['completion'] ?? 1);
-                $isFree = str_ends_with($id, ':free') || ($promptPricing == 0.0 && $completionPricing == 0.0);
+                $isFree = ($promptPricing == 0.0 && $completionPricing == 0.0);
 
                 $supportedParams = $item['supported_parameters'] ?? [];
-                $supportsTools = in_array('tools', $supportedParams, true) || (bool) preg_match('/(llama-3|gpt-4|claude|gemini|mistral|deepseek)/i', $id);
+                $supportsTools = in_array('tools', $supportedParams, true);
                 $architecture = $item['architecture']['modality'] ?? '';
                 $supportsVision = str_contains($architecture, 'image') || str_contains($id, 'vision');
 

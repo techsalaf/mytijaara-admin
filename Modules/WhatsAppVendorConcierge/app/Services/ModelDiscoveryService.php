@@ -34,6 +34,8 @@ class ModelDiscoveryService
             }
         }
 
+        $apiDiscovered = !empty($discovered);
+
         // 2. If API discovery yielded nothing, fallback to catalogue models from definition
         if (empty($discovered) && !empty($definition?->catalogue_models)) {
             $discovered = $this->transformCatalogueModels($definition->catalogue_models);
@@ -81,10 +83,13 @@ class ModelDiscoveryService
             }
         }
 
+        if (in_array($definition?->slug, ['cerebras', 'cloudflare_workers_ai', 'openrouter_free'], true)) {
+            $connection->models()->whereNotIn('model_id', array_column($discovered, 'id'))
+                ->update(['is_enabled' => false]);
+        }
         $connection->update([
-            'last_tested_at' => now(),
-            'status' => 'healthy',
-            'last_error' => null,
+            'status' => $apiDiscovered ? 'models_discovered' : 'unverified',
+            'last_error' => $apiDiscovered ? null : 'Live discovery did not verify any models. Check credentials and provider availability.',
         ]);
 
         return [

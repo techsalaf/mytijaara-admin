@@ -21,6 +21,7 @@
                 <div class="card-body">
                     <form action="{{route('admin.whatsapp.ai-providers.update', $connection->id)}}" method="POST">
                         @csrf
+                        @include('whatsapp-vendor-concierge::admin.ai_providers.provider-help')
                         @method('PUT')
 
                         <div class="form-group mb-3">
@@ -46,9 +47,17 @@
                             <small class="text-muted">{{translate('The existing key is safely stored encrypted. Enter a new key only if rotating.')}}</small>
                         </div>
 
+                        @if($connection->definition->slug === 'cloudflare_workers_ai')
+                        <div class="form-group mb-3">
+                            <label class="input-label" for="account_id">Cloudflare account ID (Cloudflare only)</label>
+                            <input id="account_id" name="account_id" class="form-control" maxlength="32" pattern="[a-fA-F0-9]{32}" value="{{ old('account_id', $connection->credentials['account_id'] ?? '') }}" autocomplete="off">
+                            <label class="mt-2"><input type="checkbox" name="free_plan_confirmed" value="1" {{ old('free_plan_confirmed', $connection->credentials['free_plan_confirmed'] ?? false) ? 'checked' : '' }}> I confirm this Cloudflare account uses Workers Free; I will disable this connection before upgrading to a paid plan.</label>
+                        </div>
+
+                        @endif
                         <div class="form-group mb-3">
                             <label class="input-label" for="base_url_override">{{translate('Custom Base URL Endpoint (Optional)')}}</label>
-                            <input type="url" name="base_url_override" id="base_url_override" class="form-control" value="{{old('base_url_override', $connection->base_url_override)}}">
+                            <input type="url" name="base_url_override" id="base_url_override" class="form-control" {{ in_array($connection->definition->slug, ['cerebras', 'cloudflare_workers_ai', 'openrouter_free'], true) ? 'disabled' : '' }} value="{{old('base_url_override', $connection->base_url_override)}}">
                         </div>
 
                         <div class="form-group mb-3">
@@ -58,7 +67,7 @@
                                     {{translate('Enable All Compatible Models')}}
                                 </option>
                                 <option value="auto_include_free" {{old('selection_mode', $connection->selection_mode) === 'auto_include_free' ? 'selected' : ''}}>
-                                    {{translate('Auto-include & Prioritise Free Tier Models Only (Zero Cost)')}}
+                                    {{translate('Prioritise models with free allowances (provider limits apply)')}}
                                 </option>
                                 <option value="manual" {{old('selection_mode', $connection->selection_mode) === 'manual' ? 'selected' : ''}}>
                                     {{translate('Manual Selection')}}

@@ -9,6 +9,8 @@ class AiProviderDefinitionSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(AdditionalAiProviderSeeder::class);
+
         $definitions = [
             [
                 'slug' => 'openai',
