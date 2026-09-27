@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
+use Modules\WhatsAppVendorConcierge\app\Models\InboundReceipt;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia;
@@ -27,6 +28,12 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
     public int $backoff = 60;
     public int $timeout = 120;
 
+    public function retryUntil(): \DateTimeInterface
+    {
+        // Lock contention must not exhaust three attempts while another message is still running.
+        return now()->addMinutes(10);
+    }
+
     public function __construct(
         public array $messageData,
         public array $metaValue
@@ -43,7 +50,10 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         // Album/status/unknown events without a user message must not answer draft questions.
         if (empty($this->messageData['type']) || in_array($this->messageData['type'], ['reaction','system','unsupported'], true)) return;
         $messageId = $this->messageData['id'] ?? null;
+        if (!$messageId) return;
         $lock = null;
+        $receipt = null;
+        $contactLock = null;
 
         if ($messageId) {
             $lock = \Illuminate\Support\Facades\Cache::lock('process_wa_msg_' . $messageId, 150);
@@ -59,27 +69,49 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
                 ->where('direction', 'inbound')
                 ->first();
 
-            if ($existingMessage) {
+            $receipt = InboundReceipt::where('whatsapp_message_id', $messageId)->first();
+            // Historical receipts cannot prove whether their side effects completed.
+            if ($existingMessage && !$receipt) {
                 Log::info('Duplicate WhatsApp message ignored', [
                     'message_id' => $this->messageData['id'],
                 ]);
                 return;
             }
 
+            $receipt ??= InboundReceipt::create(['whatsapp_message_id' => $messageId]);
+            if (in_array($receipt->phase, ['completed', 'reviewed', 'needs_review'], true)) return;
+            if ($receipt->phase === 'processing') {
+                // A worker may have died after a mutation or external send. Never replay blindly.
+                $receipt->update(['phase' => 'needs_review', 'error_type' => 'InterruptedProcessing']);
+                return;
+            }
+            $receipt->increment('attempts');
             // Get or create contact
             $contact = $this->getOrCreateContact($this->messageData, $this->metaValue);
 
+            $contactLock = \Illuminate\Support\Facades\Cache::lock('wa_inbound_contact_'.$contact->id, 150);
+            if (!$contactLock->get()) {
+                if ($this->job) { $this->release(15); return; }
+                throw new \RuntimeException('Conversation is processing another message.');
+            }
             // Get or create conversation
-            $conversation = WhatsAppConversation::getOrCreateActive($contact->id);
+            $conversation = $existingMessage?->conversation ?? WhatsAppConversation::getOrCreateActive($contact->id);
 
             if ($contact->is_blocked) {
+                $receipt->update(['phase' => 'completed', 'completed_at' => now()]);
                 return;
             }
             $this->messageData = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($this->messageData, $conversation);
             $this->metaValue = array_intersect_key($this->metaValue, array_flip(['contacts', 'metadata']));
 
             // Log the message
-            $message = WhatsAppMessage::logInbound($conversation->id, $this->messageData, $this->metaValue);
+            $message = $existingMessage ?? WhatsAppMessage::logInbound($conversation->id, $this->messageData, $this->metaValue);
+            $version = hash('sha256', json_encode([$conversation->state, $conversation->current_step, $conversation->onboarding_session_id, $conversation->updated_at?->toISOString()]));
+            if (($receipt->state_version && $receipt->state_version !== $version) || ($existingMessage && $conversation->messages()->where('direction', 'inbound')->where('id', '>', $message->id)->exists())) {
+                $receipt->update(['phase' => 'needs_review', 'error_type' => 'ConversationAdvanced']);
+                return;
+            }
+            $receipt->update(['message_id' => $message->id, 'state_version' => $version, 'error_type' => null]);
 
             // Mark as read
             if (isset($this->messageData['id'])) {
@@ -98,6 +130,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
                 $this->handleMedia($message, $this->messageData, $gateway);
             }
 
+            $receipt->update(['phase' => 'processing']);
             // Process based on conversation state
             $this->processByState($conversation, $contact, $message, $onboardingService, $conversationManager, $gateway);
 
@@ -107,13 +140,18 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
                 'expires_at' => now()->addMinutes(config('whatsapp-vendor-concierge.onboarding.max_inactive_minutes', 30)),
             ]);
 
+            $receipt->update(['phase' => 'completed', 'completed_at' => now()]);
         } catch (\Throwable $e) {
+            if ($receipt) {
+                $receipt->update(['phase' => $receipt->phase === 'processing' ? 'needs_review' : 'received', 'error_type' => $e::class]);
+            }
             Log::error('ProcessIncomingWhatsAppMessage failed', [
                 'message_id' => $this->messageData['id'] ?? null,
                 'exception' => get_class($e),
             ]);
             throw $e;
         } finally {
+            $contactLock?->release();
             $lock?->release();
         }
     }
@@ -189,6 +227,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
                 'media_id' => $media->id,
                 'error' => $e->getMessage(),
             ]);
+            throw $e;
         }
     }
 

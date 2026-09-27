@@ -88,6 +88,7 @@ class ModelDiscoveryService
                 ->update(['is_enabled' => false]);
         }
         $connection->update([
+            'verification' => array_merge($connection->verification ?? [], ['discovery' => ['passed' => $apiDiscovered, 'count' => $syncedCount, 'at' => now()->toIso8601String()]]),
             'status' => $apiDiscovered ? 'models_discovered' : 'unverified',
             'last_error' => $apiDiscovered ? null : 'Live discovery did not verify any models. Check credentials and provider availability.',
         ]);

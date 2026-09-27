@@ -22,7 +22,7 @@ class ConciergeDiagnosticService
                     'stale_handoff' => $d['failure_category'] === 'stale_human_handoff',
                     'failed' => $d['failure_category'] === 'outbound_failed',
                     'active' => $d['active_application'],
-                    'stuck' => in_array($d['failure_category'], ['silenced_onboarding', 'stale_human_handoff', 'validation_failure_loop', 'outbound_failed', 'inconsistent_application']),
+                    'stuck' => in_array($d['failure_category'], ['silenced_onboarding', 'stale_human_handoff', 'validation_failure_loop', 'outbound_failed', 'inconsistent_application', 'inbound_interrupted', 'inbound_retry_pending']),
                     'technical' => $d['safety_classification'] === 'code_defect',
                     default => true,
                 };
@@ -108,6 +108,17 @@ class ConciergeDiagnosticService
         } elseif ($out) {
             $category = 'unresponsive_user'; $diagnosis = 'The concierge has replied. The customer is expected to respond; no repair is needed.';
         }
+        $receipt = \Modules\WhatsAppVendorConcierge\app\Models\InboundReceipt::whereIn('message_id', $conversation->messages()->select('id'))
+            ->where(function ($q) { $q->where('phase', 'needs_review')->orWhere(function ($q) { $q->whereIn('phase', ['received','processing'])->where('updated_at', '<', now()->subMinutes(3)); }); })
+            ->latest('id')->first();
+        $receipt ??= $in ? \Modules\WhatsAppVendorConcierge\app\Models\InboundReceipt::where('message_id', $in->id)->first() : null;
+        if ($receipt && ($receipt->phase === 'needs_review' || ($receipt->phase === 'processing' && $receipt->updated_at->lt(now()->subMinutes(3))))) {
+            $category = 'inbound_interrupted'; $responder = 'admin'; $safety = 'code_defect'; $action = 'investigate'; $canNudge = false;
+            $diagnosis = 'Processing was interrupted after work may have started. Inspect the recorded action and reply before recovery; automatic replay is blocked to prevent duplicates.';
+        } elseif ($receipt && $receipt->phase === 'received' && $receipt->updated_at->lt(now()->subMinutes(3))) {
+            $category = 'inbound_retry_pending'; $responder = 'concierge'; $safety = 'code_defect'; $action = 'investigate'; $canNudge = false;
+            $diagnosis = 'Message received but processing has not started. Check the queue; a checkpointed replay may be available.';
+        }
         $message = fn ($m) => $m ? ['id'=>$m->id, 'text'=>$m->raw_text, 'type'=>$m->type, 'status'=>$m->status, 'created_at'=>$m->created_at->toIso8601String(), 'readable_time'=>$m->created_at->diffForHumans()] : null;
         $steps = OnboardingSession::getSteps(); $position = array_search($step, $steps, true);
         return [
@@ -116,10 +127,11 @@ class ConciergeDiagnosticService
             'state'=>$state, 'current_step'=>$step, 'step_label'=>ucwords(str_replace('_', ' ', $step ?? 'No active step')),
             'active_application'=>(bool) $active, 'progress_percentage'=>$category === 'completed' ? 100 : ($position === false ? 0 : (int) round(100*$position/count($steps))),
             'last_inbound'=>$message($in), 'last_outbound'=>$message($out), 'is_silenced'=>(bool)$silenced, 'service_window_open'=>(bool)$window,
+            'inbound_processing_phase'=>$receipt?->phase, 'inbound_attempts'=>$receipt?->attempts ?? 0,
             'failure_category'=>$category, 'human_diagnosis'=>$diagnosis, 'recommended_action'=>$action, 'safety_classification'=>$safety,
             'expected_next_responder'=>$responder, 'can_nudge'=>(bool)$canNudge, 'nudges_sent_count'=>$nudgeCount, 'minutes_since_last_nudge'=>$elapsed,
             'support_case_id'=>$case?->id, 'last_transition_at'=>$lastTransition?->created_at?->toIso8601String(),
-            'correlation_id'=>'CONV-'.$conversation->id.'-MSG-'.($in?->id ?? 0),
+            'correlation_id'=>'CONV-'.$conversation->id.'-MSG-'.($receipt?->message_id ?? $in?->id ?? 0),
         ];
     }
 }

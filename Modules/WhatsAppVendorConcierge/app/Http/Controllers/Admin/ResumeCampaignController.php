@@ -50,27 +50,10 @@ class ResumeCampaignController extends Controller
             ->with('success', 'Resume campaign created successfully.');
     }
 
-    /**
-     * Launch the campaign (simulated).
-     */
+    /** Bulk launch is unavailable until per-recipient delivery accounting is implemented. */
     public function launch(ResumeCampaign $campaign)
     {
-        // 1. Fetch audience
-        $statuses = $campaign->audience_criteria['statuses'] ?? ['stuck', 'abandoned'];
-        
-        $audience = OnboardingSession::whereIn('status', $statuses)->get();
-
-        // 2. Dispatch jobs to send meta template with structured quick-replies to each audience member
-        // foreach ($audience as $session) {
-        //     SendResumePromptJob::dispatch($session, $campaign->meta_template_name);
-        // }
-        
-        $campaign->update([
-            'status' => 'active',
-            'sent_count' => $audience->count(),
-        ]);
-
         return redirect()->route('admin.whatsapp.resume-campaigns.index')
-            ->with('success', 'Campaign launched successfully.');
+            ->with('error', 'Campaign saved as a draft. Bulk sending is not available yet. Use Operations Centre to preview eligible individual recovery prompts. No messages were sent.');
     }
 }

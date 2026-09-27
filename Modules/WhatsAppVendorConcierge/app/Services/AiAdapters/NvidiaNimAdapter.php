@@ -46,7 +46,7 @@ class NvidiaNimAdapter extends BaseProviderAdapter
                 $count = count($response->json('data') ?? []);
                 return [
                     'success' => true,
-                    'message' => "NVIDIA NIM verified ({$count} models).",
+                    'message' => "NVIDIA model endpoint reachable ({$count} models). Run text/tool probes to verify inference.",
                     'latency_ms' => $latency,
                 ];
             }
@@ -120,9 +120,9 @@ class NvidiaNimAdapter extends BaseProviderAdapter
         $start = microtime(true);
         $aiManager = app(AiManager::class);
 
-        $driver = $aiManager->createOpenaiDriver([
-            'driver' => 'openai',
-            'name' => 'openai',
+        $driver = $aiManager->createGroqDriver([
+            'driver' => 'groq',
+            'name' => 'nvidia_nim',
             'key' => $connection->getApiKey(),
             'url' => $connection->getBaseUrl() ?: 'https://integrate.api.nvidia.com/v1',
         ]);

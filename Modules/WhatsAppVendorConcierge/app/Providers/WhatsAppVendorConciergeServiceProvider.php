@@ -58,6 +58,8 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReviewInboundCommand::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReplayInboundCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\AiTestModelsCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\LaunchTaxonomyCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorAccessNoticeCommand::class,

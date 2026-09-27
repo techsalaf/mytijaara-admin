@@ -29,13 +29,13 @@ class AdditionalAiProvidersTest extends TestCase
         $connection = new AiProviderConnection(['credentials' => [
             'api_key' => 'test-secret', 'account_id' => str_repeat('a', 32), 'free_plan_confirmed' => true,
         ]]);
-        $connection->setRelation('definition', new AiProviderDefinition(['slug' => $slug]));
+        $connection->setRelation('definition', new AiProviderDefinition(['slug' => $slug, 'default_base_url' => $slug === 'nvidia_nim' ? 'https://integrate.api.nvidia.com/v1' : null]));
         return $connection;
     }
 
     public function test_all_three_transports_execute_tool_round_trips_on_the_correct_host(): void
     {
-        foreach (['cerebras' => 'gpt-oss-120b', 'cloudflare_workers_ai' => CloudflareWorkersAiAdapter::MODEL, 'openrouter_free' => 'example/tool:free'] as $slug => $id) {
+        foreach (['nvidia_nim' => 'meta/llama-3.1-8b-instruct', 'cerebras' => 'gpt-oss-120b', 'cloudflare_workers_ai' => CloudflareWorkersAiAdapter::MODEL, 'openrouter_free' => 'example/tool:free'] as $slug => $id) {
             $connection = $this->connection($slug);
             $url = $connection->getBaseUrl().'/chat/completions';
             ProviderProbeTool::$calls = 0;

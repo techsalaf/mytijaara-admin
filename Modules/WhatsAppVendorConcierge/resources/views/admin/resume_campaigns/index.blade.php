@@ -13,6 +13,8 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    <div class="alert alert-warning">Campaigns are draft-only. Bulk delivery is not implemented; previous counts are unverified and do not prove messages were sent. Use Operations Centre for previewed individual recovery.</div>
+    @if(session('error'))<div class="alert alert-warning">{{ session('error') }}</div>@endif
     <div class="card">
         <div class="table-responsive">
             <table class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table">
@@ -21,7 +23,7 @@
                         <th>Campaign Name</th>
                         <th>Meta Template</th>
                         <th>Status</th>
-                        <th>Sent</th>
+                        <th>Historical count (unverified)</th>
                         <th>Resumed</th>
                         <th>Created At</th>
                         <th>Actions</th>
@@ -41,14 +43,7 @@
                         <td>{{ $campaign->resumed_count }}</td>
                         <td>{{ $campaign->created_at->format('Y-m-d H:i') }}</td>
                         <td>
-                            @if($campaign->status === 'draft')
-                                <form action="{{ route('admin.whatsapp.resume-campaigns.launch', $campaign->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Launch this campaign?');">Launch</button>
-                                </form>
-                            @else
-                                <span class="text-muted">No further actions</span>
-                            @endif
+                            <span class="text-muted">Draft only — sending unavailable</span>
                         </td>
                     </tr>
                     @empty

@@ -141,6 +141,7 @@ class AiProviderController extends Controller
             $updates['credentials'] = array_merge($aiProvider->credentials ?? [], $extraCredentials, [
                 'api_key' => trim($validated['api_key']),
             ]);
+            $updates['verification'] = [];
             $updates['status'] = 'unverified';
             $updates['consecutive_failures'] = 0;
             $updates['last_error'] = null;
@@ -148,6 +149,7 @@ class AiProviderController extends Controller
 
         $updates['credentials'] ??= array_merge($aiProvider->credentials ?? [], $extraCredentials);
         if ($updates['credentials'] !== $aiProvider->credentials) {
+            $updates['verification'] = [];
             $updates['status'] = 'unverified';
         }
         $aiProvider->update($updates);
@@ -187,6 +189,7 @@ class AiProviderController extends Controller
     {
         $adapter = AdapterFactory::forConnection($aiProvider);
         $result = $adapter->testConnection($aiProvider);
+        $aiProvider->update(['verification' => array_merge($aiProvider->verification ?? [], ['endpoint_check' => ['passed' => (bool) $result['success'], 'at' => now()->toIso8601String()]])]);
 
         if ($result['success']) {
             $aiProvider->update([

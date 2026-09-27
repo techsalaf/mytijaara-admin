@@ -11,6 +11,7 @@ class AiProviderConnection extends Model
     protected $table = 'ai_provider_connections';
 
     protected $fillable = [
+        'verification',
         'definition_id',
         'name',
         'credentials',
@@ -37,6 +38,7 @@ class AiProviderConnection extends Model
     ];
 
     protected $casts = [
+        'verification' => 'array',
         'auth_state' => 'array',
         'is_active' => 'boolean',
         'consecutive_failures' => 'integer',
