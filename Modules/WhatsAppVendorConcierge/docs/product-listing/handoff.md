@@ -135,3 +135,13 @@ Inspected all 31 conversations. At inspection, 18 were onboarding_active; six co
 Two guarded, audited data repairs preserved existing answers: conversation 24 restored saved session 33 (Jummy Beads and Accessories) at location after an ordinary address had caused a restart; conversation 15 returned to business-name collection because a navigation question had been stored as its name. Backups: local storage disk private/maintenance/stalled-24-20260927-005050.json and stalled-15-20260927-005050.json. The invalid name is preserved for audit until the applicant supplies the correct value.
 
 Local focused regression: 41 tests / 228 assertions passed, including photo cap, Done, stale controls, pagination, inbound button routing, empty events and onboarding routing. The first full run had one obsolete assertion expecting plain text; it was updated to expect the new buttons and the focused regression passed. Full CI gates remain authoritative for this follow-up. No core source files changed.
+
+## 27 September presentation polish
+
+Customer-facing text, buttons, lists and URL-button bodies share a presentation formatter: native WhatsApp bold, spaced sections, readable bullets and an emoji when absent. AI instructions request restrained relevant emojis and short sections; final AI replies also pass through the formatter. Tool/extraction JSON, credentials, URLs and approved Meta template definitions are not rewritten. Long text and interactive bodies respect delivery size limits.
+
+Product review now groups product details, description, naira prices/stock, per-variant prices/quantities, food options, additional details and saved photos. Required product questions offer Back / Save for later / Cancel; optional questions offer Skip / Back / Save; review offers Create / Edit / Save. Existing scoped control IDs and confirmation checks remain intact.
+
+Manage shop uses the same configured login URL source as shop details and exposes an Open dashboard URL button. Verified production URL: https://dashboard.mytijaara.com/login/vendor . The old seller.mytijaara.com address has been removed from runtime module code, and the AI receives the canonical URL. Both messages have headings, emojis, spacing and clear next actions.
+
+Validation: existing full module suite passed (215 tests / 1,127 assertions); subsequent focused coverage including new formatting, URL, review and gateway-length tests passed (28 tests / 162 assertions). Run tests sequentially: parallel Laravel Storage::fake suites share fixture directories and can cause spurious missing-media failures. Core-boundary validation passed; no core source modifications.

@@ -314,9 +314,7 @@ class ConversationManager
             'start_fresh' => $this->startFreshOnboarding($conversation, $contact, $gateway),
             'open_shop', 'start_onboarding' => $this->startOnboarding($conversation, $contact, $gateway),
             'check_status' => $this->checkApplicationStatus($conversation, $contact, $gateway),
-            'manage_shop' => $contact->isVendor()
-                ? $gateway->sendTextMessage($contact->phone_number, "To manage your shop settings, profile, and inventory, please log in to your Vendor Dashboard at https://seller.mytijaara.com, or ask me what you'd like to update (e.g., 'Change my shop name' or 'Update my hours').")
-                : $gateway->sendTextMessage($contact->phone_number, "Please register as a vendor first to manage a shop. Tap *Open My Shop* or reply *Register* to begin!"),
+            'manage_shop' => $this->showManageShop($conversation, $contact, $gateway),
             'learn_selling', 'faq' => $this->showSellingInfo($conversation, $contact, $gateway),
             'talk_support' => $this->initiateHumanHandoff($conversation, $contact, $gateway),
             'add_products' => $this->handleAddProducts($conversation, $contact, $gateway),
@@ -484,6 +482,16 @@ class ConversationManager
     /**
      * Initiate human handoff.
      */
+    public function showManageShop(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
+    {
+        $store=$contact->vendor?->store;
+        if (!$store || (int)$contact->vendor?->status !== 1) { $this->checkApplicationStatus($conversation,$contact,$gateway); return; }
+        $details=app(VendorAccessNoticeService::class)->details($store);
+        $gateway->sendCtaUrlMessage($contact->phone_number,
+            "🏪 *Manage {$details['name']}*\n\nYour vendor dashboard lets you:\n• 📦 Manage products and inventory\n• 🧾 Review orders and sales\n• ⚙️ Update your shop profile and settings\n\n🔐 Sign in with your registered email and password. Use *Forgot Password* if needed.\n\n💬 You can also keep chatting here—try *Add new product* or *Show my shop details*.",
+            'Open dashboard', $details['login_url'], 'MyTijaara');
+    }
+
     public function showShopDetails(WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void
     {
         $store=$contact->vendor?->store;

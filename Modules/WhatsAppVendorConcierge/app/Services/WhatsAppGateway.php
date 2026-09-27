@@ -84,6 +84,8 @@ class WhatsAppGateway
      */
     public function sendTextMessage(string $to, string $body, ?string $previewUrl = null): array
     {
+        $body = WhatsAppCopy::format($body);
+        if (mb_strlen($body)>4000) { $result=[]; for($i=0;$i<mb_strlen($body);$i+=3500)$result=$this->sendTextMessage($to,mb_substr($body,$i,3500),$previewUrl); return $result; }
         $payload = [
             'messaging_product' => 'whatsapp',
             'to' => $to,
@@ -102,6 +104,8 @@ class WhatsAppGateway
      */
     public function sendButtonMessage(string $to, string $body, array $buttons, ?string $header = null, ?string $footer = null): array
     {
+        $body = WhatsAppCopy::format($body);
+        if (mb_strlen($body)>1000) { $this->sendTextMessage($to,$body); $body='👇 Choose your next step below.'; }
         $actionButtons = [];
         $slicedButtons = array_slice($buttons, 0, 3);
         foreach ($slicedButtons as $index => $button) {
@@ -147,6 +151,8 @@ class WhatsAppGateway
      */
     public function sendListMessage(string $to, string $body, array $sections, ?string $header = null, ?string $footer = null, string $buttonText = 'Select'): array
     {
+        $body = WhatsAppCopy::format($body);
+        if (mb_strlen($body)>1000) { $this->sendTextMessage($to,$body); $body='👇 Choose your next step below.'; }
         $sanitizedSections = [];
         $totalRowCount = 0;
         $maxTotalRows = 10;
@@ -227,6 +233,8 @@ class WhatsAppGateway
      */
     public function sendCtaUrlMessage(string $to, string $body, string $buttonText, string $url, ?string $header = null, ?string $footer = null): array
     {
+        $body = WhatsAppCopy::format($body);
+        if (mb_strlen($body)>1000) { $this->sendTextMessage($to,$body); $body='👇 Choose your next step below.'; }
         $interactive = [
             'type' => 'cta_url',
             'body' => ['text' => $body],

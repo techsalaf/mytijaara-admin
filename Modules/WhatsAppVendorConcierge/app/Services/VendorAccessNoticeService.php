@@ -6,17 +6,21 @@ use Modules\WhatsAppVendorConcierge\app\Models\{WhatsAppContact,WhatsAppMessage,
 use Modules\WhatsAppVendorConcierge\app\Mail\VendorAccessMail;
 class VendorAccessNoticeService
 {
+    public function loginUrl(): string
+    {
+        $tab=\Illuminate\Support\Facades\Schema::hasTable('data_settings') ? DB::table('data_settings')->where('key','store_login_url')->value('value') : null;
+        return url('/login/'.rawurlencode($tab ?: 'vendor'));
+    }
     public function details(Store $store): array
     {
-        $tab=DB::table('data_settings')->where('key','store_login_url')->value('value') ?: 'vendor';
         return ['name'=>$store->name,'id'=>$store->id,'module'=>$store->module?->module_name,
-            'email'=>$store->vendor?->email,'address'=>$store->address,'plan'=>ucfirst($store->store_business_model),'login_url'=>url('/login/'.rawurlencode($tab)),
+            'email'=>$store->vendor?->email,'address'=>$store->address,'plan'=>ucfirst($store->store_business_model),'login_url'=>$this->loginUrl(),
             'delivery'=>$store->sub_self_delivery ? 'You arrange delivery' : 'Platform delivery',
             'support_url'=>'https://wa.me/'.preg_replace('/\D+/','',config('whatsapp-vendor-concierge.support.whatsapp_number')).'?text=Hello%20MyTijaara%20Support%2C%20I%20need%20help'];
     }
     public function message(array $d): string
     {
-        return "Hello! Here are your MyTijaara shop details:\n\n*{$d['name']}* • Store #{$d['id']}\nModule: {$d['module']}\nLogin email: {$d['email']}\nDispatch address: {$d['address']}\nPlan: {$d['plan']}\nDelivery: {$d['delivery']}\n\nManage products, orders and settings: {$d['login_url']}\nUse your existing password, or Forgot Password. Never share your password in WhatsApp.\n\nAdd this login page to your phone's Home Screen for quick access. We're working on the vendor mobile app and will announce when it is ready. Thanks for your patience! Check your email for the full guide.\n\nHuman support: {$d['support_url']}";
+        return "🏪 *Your MyTijaara shop*\n\n*{$d['name']}*\n• 🛍️ Module: {$d['module']}\n• 📍 Dispatch address: {$d['address']}\n• 📋 Plan: {$d['plan']}\n• 🚚 Delivery: {$d['delivery']}\n\n🔐 *Dashboard access*\n• Login email: {$d['email']}\n{$d['login_url']}\n\nUse your existing password or *Forgot Password*. Never share your password in WhatsApp.\n\n📱 *Quick access*\nAdd the login page to your phone’s Home Screen. We’re working on the vendor mobile app and will announce when it is ready.\n\n💬 *Human support*\n{$d['support_url']}";
     }
     public function send(Store $store, string $channel, bool $dryRun=true): array
     {

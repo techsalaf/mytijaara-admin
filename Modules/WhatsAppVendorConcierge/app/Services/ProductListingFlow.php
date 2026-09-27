@@ -478,26 +478,7 @@ return 'review';
     {
         $f = $d->step;
         $s = $d->store;
-        if ($f === 'review') {
-            $lines = ['🛍️ *Review your product*', 'Nothing has been created yet.'];
-            foreach ($d->data as $k => $v) {
-                if (in_array($k, ['media_id','image','extra_details'], true)) continue;
-                if ($k === 'additional_media') { $lines[] = '📷 Extra photos: '.count($v); continue; }
-                if ($k === 'unit_id') { $lines[] = 'Selling unit: '.(DB::table('units')->where('id',$v)->value('unit') ?: 'Not specified'); continue; }
-                if ($k === 'attribute_ids') { $lines[] = 'Variants: '.DB::table('attributes')->whereIn('id',$v)->pluck('name')->implode(', '); continue; }
-                if (str_starts_with($k,'choice_')) { $lines[] = (DB::table('attributes')->where('id',substr($k,7))->value('name') ?: 'Options').': '.implode(', ',$v); continue; }
-                $display = is_array($v) ? json_encode($v) : ($v === null ? 'not provided' : (string) $v);
-                if (in_array($k, ['category_id', 'subcategory_id'], true)) {
-                    $display = $this->fields->categories($s)->whereKey($v)->value('name') ?: $display;
-                }if (preg_match('/^variant_(price|stock)_(\d+)$/', $k, $a)) {
-                    $label = ($this->fields->combinations($d->data)[(int) $a[2]] ?? 'Variation').' '.$a[1];
-                } else {
-                    $label = match($k) { 'category_id'=>'Category', 'subcategory_id'=>'Subcategory', 'discount'=>'Discount (%)', default=>str_replace('_',' ',ucfirst($k)) };
-                }$lines[] = $label.': '.$display;
-            }
-
-            return implode("\n", $lines)."\nReply Confirm and create, Edit followed by a field name, Back, Save draft, or Cancel. Publishing follows admin approval settings.";
-        }
+        if ($f === 'review') return app(ProductListingPresenter::class)->review($d);
         if ($f === 'extra_details') {
             return 'Would you like to add optional details such as brand, tags or module-specific information? Yes or Skip.';
         }

@@ -31,7 +31,7 @@ class ConversationOrchestrator
 
         // Product answers must not be reclassified by the general AI router.
         if ($contact->vendor_id && $conversation->state === 'ai_active'
-            && !in_array(ConversationCommands::action($text), ['support','shop_details','status'], true)
+            && !in_array(ConversationCommands::action($text), ['support','shop_details','manage_shop','status'], true)
             && app(ProductListingFlow::class)->handles($conversation,$text)) {
             $reply=app(ProductListingFlow::class)->receiveOrDefer($conversation,$contact,$message);
             if ($reply !== '') app(ProductListingFlow::class)->sendReply($gateway,$contact->phone_number,$reply,$conversation);
@@ -86,6 +86,7 @@ class ConversationOrchestrator
             'support', 'escalate_to_human' => $this->manager->initiateHumanHandoff($conversation, $contact, $gateway),
             'info', 'show_faq' => $this->manager->showSellingInfo($conversation, $contact, $gateway),
             'help' => $this->manager->showHelp($conversation, $contact, $gateway),
+            'manage_shop' => $this->manager->showManageShop($conversation, $contact, $gateway),
             'shop_details' => $this->manager->showShopDetails($conversation, $contact, $gateway),
             'status', 'check_status' => $this->manager->checkApplicationStatus($conversation, $contact, $gateway),
             'resume', 'resume_onboarding' => $this->manager->resumeOnboarding($conversation, $contact, $gateway),

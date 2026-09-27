@@ -206,6 +206,7 @@ class RunVendorAiConversation implements ShouldQueue
 
     protected function sendReply(string $text): void
     {
+        $text = \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppCopy::format($text);
         if (app()->environment('testing')) {
             \Modules\WhatsAppVendorConcierge\app\Jobs\SendWhatsAppMessage::dispatch(
                 $this->contact->phone_number,
