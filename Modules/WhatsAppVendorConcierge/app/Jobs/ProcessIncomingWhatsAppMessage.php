@@ -283,6 +283,15 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             $state = 'ai_active';
         }
 
+        // Voice transcription must be backed by a separately verified provider
+        // and confirmed by the vendor. Until then, acknowledge the note instead
+        // of letting an empty audio payload repeat the current form question.
+        if ($type === 'audio') {
+            $gateway->sendTextMessage($contact->phone_number,
+                "🎙️ I received your voice note. Voice transcription is not enabled for this concierge yet.\n\nPlease type the detail you want to send, or use *Support* for help. Your saved progress remains unchanged.");
+            return;
+        }
+
         // Log event if onboarding session exists
         if (!empty($conversation->onboarding_session_id)) {
             OnboardingEvent::log(

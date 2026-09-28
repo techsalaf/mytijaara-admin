@@ -212,6 +212,25 @@ class ProductListingFlowTest extends OperationsFixtureTestCase
         $this->assertSame('image',$d->fresh()->step);$this->assertSame(0,$d->fresh()->stalled_turns);
     }
 
+    public function test_voice_note_gets_an_honest_text_fallback_without_changing_product_progress(): void
+    {
+        $draft = app(ProductListingFlow::class)->start($this->conversation, $this->contact);
+        $draft->update(['step' => 'price', 'data' => ['name' => 'Voice-safe draft']]);
+        $gateway = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        $gateway->shouldReceive('sendTextMessage')->once()->withArgs(function ($phone, $body) {
+            return $phone === $this->contact->phone_number && str_contains($body, 'Voice transcription is not enabled');
+        })->andReturn([]);
+        $job = new \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessIncomingWhatsAppMessage([], []);
+        (new \ReflectionMethod($job, 'processByState'))->invoke(
+            $job, $this->conversation, $this->contact,
+            new WhatsAppMessage(['type' => 'audio', 'raw_text' => null, 'content' => []]),
+            app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class),
+            app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class), $gateway
+        );
+        $this->assertSame('price', $draft->fresh()->step);
+        $this->assertSame('Voice-safe draft', $draft->fresh()->data['name']);
+    }
+
     public function test_exact_production_failure_recovers_valid_details_and_only_asks_missing_category(): void
     {
         $media = (int) $this->productData([])['image'];

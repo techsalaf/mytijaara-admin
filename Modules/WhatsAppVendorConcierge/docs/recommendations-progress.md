@@ -83,3 +83,5 @@ Recovery reminders and weekly-digest preferences are separate, explicitly consen
 ## Global navigation follow-up — 28 September 2026
 
 While a product draft is active, a vendor can now use a genuine concierge destination such as `Hi`, `Menu`, `Manage shop`, `Product status`, `Shop readiness`, `Support`, or alert preferences. The active product draft is saved first and its cancellation confirmation is cleared, so the command cannot be misread as product input and an old confirmation cannot cancel a resumed draft. Product-local `Cancel`, Back, Edit, Save, and Resume controls retain their existing behaviour.
+
+Voice notes now receive an honest text-entry fallback while no second transcription provider has been verified. The fallback preserves the current onboarding/product state and never sends audio or an inferred transcript to an AI provider. A real transcription feature remains contingent on an explicitly configured provider, byte-level verification, and a vendor confirmation step.
