@@ -14033,6 +14033,11 @@ Smartly or Earn. ',
   'If you already created Services without tax then go to edit Service and update tax.' => 'If you already created Services without tax then go to edit Service and update tax.',
   'go_to_the_pinterest_tag_id_section_under_marketing_tools.' => 'Go to the pinterest tag id section under marketing tools.',
   'no_payment_gateway_found' => 'No payment gateway found',
-  // GEMINI-MYTJ: WhatsApp vendor onboarding error message
+  // GEMINI-MYTJ START: WhatsApp vendor onboarding translations
   'an_approved_store_already_exists_for_this_phone' => 'An approved store already exists for this phone',
+  'WhatsApp Inbox' => 'WhatsApp Inbox',
+  'Chats' => 'Chats',
+  'Search name or phone' => 'Search name or phone',
+  'View Diagnostics & Recovery' => 'View Diagnostics & Recovery',
+  // GEMINI-MYTJ END: WhatsApp vendor onboarding translations
 );

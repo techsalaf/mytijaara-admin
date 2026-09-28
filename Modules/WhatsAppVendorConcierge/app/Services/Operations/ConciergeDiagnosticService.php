@@ -107,9 +107,19 @@ class ConciergeDiagnosticService
             $category = 'paused'; $diagnosis = 'This conversation is paused or closed. Inactivity alone is not a reason to restart it.'; $silenced = false;
         } elseif ($state === 'human_handoff' || $case) {
             $silenced = false; $responder = 'human_agent'; $safety = 'human_required';
-            $stale = !$case && $conversation->updated_at?->lte(now()->subHours(2));
+            $lastOperatorMsg = $conversation->messages()->where('direction', 'outbound')
+                ->where(function ($q) {
+                    $q->where('metadata->origin', 'human_operator')
+                      ->orWhere('metadata->origin', 'human');
+                })->latest('created_at')->first();
+            $operatorInactive = !$lastOperatorMsg || $lastOperatorMsg->created_at->lte(now()->subHours(2));
+            $caseAgeHours = $case ? $case->created_at->diffInHours(now()) : 999;
+            $convAgeHours = $conversation->updated_at ? $conversation->updated_at->diffInHours(now()) : 999;
+            $stale = ($caseAgeHours >= 2 || $convAgeHours >= 2) && $operatorInactive;
             $category = $stale ? 'stale_human_handoff' : 'in_human_handoff';
-            $diagnosis = $case ? 'An open support ticket needs a human response. Automation must not close it.' : 'Human handoff has no open support ticket.';
+            $diagnosis = $stale
+                ? 'Human handoff has had no operator response for >2 hours. Safe to release back to concierge.'
+                : ($case ? 'An open support ticket needs a human response. Automation must not close it.' : 'Human handoff with recent activity.');
             $action = $stale ? 'release_stale_handoff' : 'assign_human';
             if ($stale) $safety = 'safe_manual';
         } elseif ($session && in_array($session->status, ['submitted', 'approved', 'rejected'])) {

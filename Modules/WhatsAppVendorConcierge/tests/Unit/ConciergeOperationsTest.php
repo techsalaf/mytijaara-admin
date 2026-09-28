@@ -60,4 +60,46 @@ class ConciergeOperationsTest extends ApplicationFixtureTestCase
         $this->assertEquals('human_handoff', $conv->state); // Must not mutate on dry-run!
         $this->assertEquals('onboarding_active', $result['proposed_state']);
     }
+
+    public function test_diagnose_stale_human_handoff_with_inactive_support_case()
+    {
+        $diagnosticService = new ConciergeDiagnosticService();
+
+        [$contact, , $conv] = $this->application();
+        $conv->state = 'human_handoff';
+        $conv->updated_at = now()->subHours(5);
+        $conv->save();
+
+        // Create an open support case that has had no operator responses for > 2 hours
+        $support = app(SupportCaseService::class);
+        $case = $support->createCase($contact, 'Test issue', 'general', 'medium', 'Help needed', $conv);
+        $case->created_at = now()->subHours(4);
+        $case->save();
+
+        $diag = $diagnosticService->diagnoseConversation($conv);
+
+        $this->assertEquals('stale_human_handoff', $diag['failure_category']);
+        $this->assertEquals('release_stale_handoff', $diag['recommended_action']);
+        $this->assertEquals('safe_manual', $diag['safety_classification']);
+    }
+
+    public function test_recovery_release_stale_handoff_resolves_open_case()
+    {
+        [$contact, , $conv] = $this->application();
+        $conv->state = 'human_handoff';
+        $conv->updated_at = now()->subHours(5);
+        $conv->save();
+
+        $support = app(SupportCaseService::class);
+        $case = $support->createCase($contact, 'Test issue', 'general', 'medium', 'Help needed', $conv);
+        $case->created_at = now()->subHours(4);
+        $case->save();
+
+        $recovery = app(ConciergeRecoveryService::class);
+        $result = $recovery->releaseStaleHandoff($conv, dryRun: false);
+
+        $this->assertEquals('success', $result['status']);
+        $this->assertEquals('onboarding_active', $conv->fresh()->state);
+        $this->assertEquals('resolved', $case->fresh()->status);
+    }
 }

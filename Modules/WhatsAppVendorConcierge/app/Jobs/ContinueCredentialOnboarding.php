@@ -31,8 +31,15 @@ class ContinueCredentialOnboarding implements ShouldQueue
             return;
         }
         $conversation = WhatsAppConversation::where('onboarding_session_id', $session->id)
-            ->where('contact_id', $session->contact_id)->where('state', 'onboarding_active')->latest()->first();
-        if ($conversation && $session->contact && !$session->contact->is_blocked) {
+            ->where('contact_id', $session->contact_id)->latest()->first();
+        if ($conversation && $conversation->state === 'human_handoff') {
+            $support = app(\Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService::class);
+            if ($case = $support->getActiveCase($session->contact)) {
+                $support->resolveCase($case, 'Auto-resumed to onboarding upon password creation', $conversation);
+            }
+            $conversation->transitionTo('onboarding_active');
+        }
+        if ($conversation && $conversation->state === 'onboarding_active' && $session->contact && !$session->contact->is_blocked) {
             $onboarding->sendStepPrompt($conversation, $session->contact, $this->step, $gateway);
         }
     }

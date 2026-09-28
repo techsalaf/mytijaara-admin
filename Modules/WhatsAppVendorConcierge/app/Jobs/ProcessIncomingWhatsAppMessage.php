@@ -246,11 +246,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         $type = $message->type;
         $content = $message->content;
 
-        if ($state === 'human_handoff') {
-            $support = app(\Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService::class);
-            if ($case = $support->getActiveCase($contact)) {
-                $support->appendCustomerMessage($case, (string) $message->raw_text);
-            }
+        if ($state === 'human_handoff' && !$this->handleHumanHandoffState($conversation, $contact, $message, $gateway, $content, $state)) {
             return;
         }
 
@@ -382,5 +378,101 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             default => $conversationManager->handleWelcome($conversation, $contact, $gateway),
         };
     }
-}
 
+    /**
+     * Handle incoming message when conversation is in human_handoff.
+     * Returns true if handoff was released and message should continue processing.
+     * Returns false if message was handled/queued for human support.
+     */
+    protected function handleHumanHandoffState(
+        WhatsAppConversation $conversation,
+        WhatsAppContact $contact,
+        WhatsAppMessage $message,
+        WhatsAppGateway $gateway,
+        array $content,
+        string &$state
+    ): bool {
+        $support = app(\Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService::class);
+        $activeCase = $support->getActiveCase($contact);
+
+        // 1. Check for interactive button/list replies (e.g. user clicked a menu or action button)
+        $buttonId = $this->messageData['interactive']['button_reply']['id']
+            ?? ($content['interactive']['button_reply']['id'] ?? null);
+        $listId = $this->messageData['interactive']['list_reply']['id']
+            ?? ($content['interactive']['list_reply']['id'] ?? null);
+        $hasInteractiveAction = ($buttonId !== null && $buttonId !== 'talk_support')
+            || ($listId !== null && $listId !== 'talk_support');
+
+        // 2. Check for explicit resume / restart / navigation commands
+        $rawText = trim((string) ($message->raw_text ?? ''));
+        $command = \Modules\WhatsAppVendorConcierge\app\Services\ConversationCommands::action($rawText);
+        $isBreakoutCommand = in_array($command, [
+            'restart', 'register', 'resume', 'welcome', 'info', 'help', 'status', 'manage_shop', 'resend'
+        ], true);
+
+        // 3. Check for active onboarding step requiring vendor input (e.g. credential/password step)
+        $isOnboardingInput = !empty($conversation->onboarding_session_id)
+            && !empty($conversation->current_step)
+            && $conversation->onboardingSession?->canResume();
+
+        // 4. Check if human handoff is stale (no operator reply for > 2 hours)
+        $lastOperatorMsg = WhatsAppMessage::where('conversation_id', $conversation->id)
+            ->where('direction', 'outbound')
+            ->where(function ($q) {
+                $q->where('metadata->origin', 'human_operator')
+                  ->orWhere('metadata->origin', 'human');
+            })
+            ->latest('created_at')
+            ->first();
+
+        $caseAgeHours = $activeCase ? $activeCase->created_at->diffInHours(now()) : 999;
+        $convAgeHours = $conversation->updated_at ? $conversation->updated_at->diffInHours(now()) : 999;
+        $isStaleHandoff = $lastOperatorMsg
+            ? $lastOperatorMsg->created_at->lte(now()->subHours(2))
+            : ($caseAgeHours >= 2 || $convAgeHours >= 2);
+
+        // If user takes action OR handoff is stale, auto-release back to concierge!
+        if ($hasInteractiveAction || $isBreakoutCommand || ($isOnboardingInput && $isStaleHandoff) || $isStaleHandoff) {
+            \Illuminate\Support\Facades\Log::info('Auto-releasing human handoff for customer message', [
+                'conversation_id' => $conversation->id,
+                'phone' => $contact->phone_number,
+                'has_interactive' => $hasInteractiveAction,
+                'command' => $command,
+                'is_stale' => $isStaleHandoff,
+            ]);
+
+            if ($activeCase) {
+                $support->resolveCase($activeCase, 'Auto-released human handoff: customer resumed activity or handoff was stale (>2h)', $conversation);
+            }
+
+            $targetState = ($conversation->onboarding_session_id && $conversation->current_step)
+                ? 'onboarding_active'
+                : ($contact->isVendor() ? 'ai_active' : 'welcome');
+
+            $conversation->transitionTo($targetState);
+            $state = $targetState;
+            return true; // continue processing in processByState
+        }
+
+        // Active human handoff: record message to support ticket
+        if ($activeCase) {
+            $support->appendCustomerMessage($activeCase, $rawText);
+        }
+
+        // If customer hasn't received an acknowledgment in the last 30 minutes, confirm receipt
+        $recentAck = WhatsAppMessage::where('conversation_id', $conversation->id)
+            ->where('direction', 'outbound')
+            ->where('created_at', '>=', now()->subMinutes(30))
+            ->exists();
+
+        if (!$recentAck) {
+            $gateway->sendTextMessage(
+                $contact->phone_number,
+                "👤 Our support team has received your message and will respond shortly.\n\nType *resume* or *restart* at any time if you'd like to return to the automated concierge."
+            );
+        }
+
+        return false; // handoff handled, stop processing
+    }
+
+}
