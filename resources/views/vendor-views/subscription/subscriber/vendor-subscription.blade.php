@@ -68,7 +68,7 @@ active
                         <h2 class="name text--primary">{{ translate('Commission Base Plan') }}</h2>
                         <h4 class="title mt-2"><span class="text-180">{{ $store->comission ?? $admin_commission }} %</span> {{ translate('messages.Commission_per_'.$orderOrTrip) }}</h4>
                         <div class="info-text ">
-                            {{ translate($title . ' will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each '.$orderOrTrip.'. You will get access of all the features and options  in '.$title.' panel , app and interaction with user.') }}
+                            {{ translate($title . ' will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each '.$orderOrTrip.'. You will get access to all the features and options in '.$title.' panel, app and interaction with user.') }}
                         </div>
                     </div>
                 </div>

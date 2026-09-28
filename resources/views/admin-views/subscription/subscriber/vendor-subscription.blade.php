@@ -159,7 +159,7 @@ active
                             <div class="max-w-595">
                                 <h3 class="name">{{ translate('Commission Base Plan') }}</h3>
                                 <div class="info-text fs-14">
-                                    {{ translate('Store will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access of all the features and options  in store panel , app and interaction with user.') }}
+                                    {{ translate('Store will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access to all the features and options in store panel, app and interaction with user.') }}
                                 </div>
                             </div>
                         </div>

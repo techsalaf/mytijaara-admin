@@ -141,7 +141,7 @@
                         {{ translate('messages.Announcement') }}
                     </h3>
                     <span class="fs-13 lh--12 color-484848 opacity-70 d-block">
-                        {{ translate('messages.This announcement shown in the user app/web') }}
+                        {{ translate('messages.This announcement is shown in the user app/web') }}
                     </span>
                 </div>
                 <div class="d-flex align-items-center gap-3">

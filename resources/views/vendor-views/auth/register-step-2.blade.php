@@ -69,7 +69,7 @@
                                             <p>
                                                 {{ translate('Vendor will pay') }} {{ $admin_commission }}%
                                                 {{ translate('commission to') }} {{ $business_name }}
-                                                {{ translate('from each order. You will get access of all the features and options  in vendor panel , app and interaction with user.') }}
+                                                {{ translate('from each order. You will get access to all the features and options in vendor panel, app and interaction with user.') }}
                                             </p>
                                         </div>
                                     </label>

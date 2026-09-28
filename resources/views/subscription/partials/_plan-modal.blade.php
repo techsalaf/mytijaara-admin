@@ -24,7 +24,7 @@
                                 </div>
                                 <div class="py-5 mt-4">
                                     <div class="info-text text-center">
-                                        {{ translate($title.' will pay') }} {{  $store->comission ?? $admin_commission }}% {{ translate('commission to') }} {{ $business_name }} {{ translate('from each '.$orderOrTrip.'. You will get access of all the features and options  in '.$title.' panel , app and interaction with user.') }}
+                                        {{ translate($title.' will pay') }} {{  $store->comission ?? $admin_commission }}% {{ translate('commission to') }} {{ $business_name }} {{ translate('from each '.$orderOrTrip.'. You will get access to all the features and options in '.$title.' panel, app and interaction with user.') }}
                                     </div>
                                 </div>
                                 <div class="text-center">
