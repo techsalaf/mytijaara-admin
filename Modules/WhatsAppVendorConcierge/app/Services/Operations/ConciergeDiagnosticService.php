@@ -9,6 +9,28 @@ use App\Models\Store;
 
 class ConciergeDiagnosticService
 {
+    /**
+     * Fast path for the default operations view. It paginates in SQL before
+     * diagnosing rows, avoiding a second all-conversation scan on every page.
+     */
+    public function paginateAll(?string $search = null, int $perPage = 25): \Illuminate\Pagination\LengthAwarePaginator
+    {
+        $query = WhatsAppConversation::with(['contact', 'vendor', 'onboardingSession'])
+            ->latest('last_activity_at');
+        if ($search = trim((string) $search)) {
+            $needle = '%'.str_replace(['%', '_'], ['\\%', '\\_'], strtolower($search)).'%';
+            $query->whereHas('contact', fn ($contacts) => $contacts
+                ->whereRaw('LOWER(COALESCE(display_name, \'\')) LIKE ?', [$needle])
+                ->orWhereRaw('LOWER(COALESCE(phone_number, \'\')) LIKE ?', [$needle]));
+        }
+        $page = $query->paginate(max(1, min($perPage, 100)));
+        $page->setCollection($page->getCollection()->map(fn ($conversation) => [
+            'conversation' => $conversation,
+            'diag' => $this->diagnoseConversation($conversation),
+        ]));
+        return $page;
+    }
+
     public function scan(string $filter = 'all', ?string $search = null): \Illuminate\Support\Collection
     {
         return WhatsAppConversation::with(['contact', 'vendor', 'onboardingSession'])->latest('last_activity_at')->get()

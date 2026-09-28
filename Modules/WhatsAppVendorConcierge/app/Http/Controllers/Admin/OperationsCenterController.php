@@ -30,11 +30,15 @@ class OperationsCenterController extends Controller
         $filter = $request->input('filter', 'all');
         $search = $request->input('search');
 
-        $items = $this->diagnosticService->scan($filter, $search);
-        if ($request->filled('conversation')) $items = $items->where('conversation.id', (int) $request->input('conversation'))->values();
-        $page = max(1, (int) $request->input('page', 1));
-        $conversations = new \Illuminate\Pagination\LengthAwarePaginator($items->forPage($page, 25)->values(), $items->count(), 25, $page,
-            ['path'=>$request->url(), 'query'=>$request->query()]);
+        if ($filter === 'all' && !$request->filled('conversation')) {
+            $conversations = $this->diagnosticService->paginateAll($search);
+        } else {
+            $items = $this->diagnosticService->scan($filter, $search);
+            if ($request->filled('conversation')) $items = $items->where('conversation.id', (int) $request->input('conversation'))->values();
+            $page = max(1, (int) $request->input('page', 1));
+            $conversations = new \Illuminate\Pagination\LengthAwarePaginator($items->forPage($page, 25)->values(), $items->count(), 25, $page,
+                ['path'=>$request->url(), 'query'=>$request->query()]);
+        }
         $diagnosedItems = $conversations->items();
 
         // Recent recovery audits

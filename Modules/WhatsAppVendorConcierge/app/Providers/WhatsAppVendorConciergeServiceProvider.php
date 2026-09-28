@@ -73,6 +73,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeDiagnoseCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeRecoverCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeHealthCheckCommand::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\RefreshAiModelsCommand::class,
         ]);
     }
 
@@ -103,6 +104,13 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             // Run Concierge Health Check scan every fifteen minutes
             $schedule->command('whatsapp:concierge-health-check')
                 ->everyFifteenMinutes()
+                ->runInBackground()
+                ->withoutOverlapping()
+                ->appendOutputTo(storage_path('logs/whatsapp-schedule.log'));
+
+            // Discovery refresh only updates provider catalogues; it performs no vendor inference.
+            $schedule->command('whatsapp:refresh-ai-models')
+                ->dailyAt('02:40')
                 ->runInBackground()
                 ->withoutOverlapping()
                 ->appendOutputTo(storage_path('logs/whatsapp-schedule.log'));

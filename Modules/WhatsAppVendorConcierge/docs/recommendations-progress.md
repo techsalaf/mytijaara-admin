@@ -72,4 +72,10 @@ The product ID is shown in review cards. Only the linked approved vendor's produ
 `STOP`, `PAUSE ALERTS`, `RESUME ALERTS`, and `ALERTS` now bypass AI and active product forms. Three reply buttons let vendors pause/resume or contact support while preserving the draft and active concierge. These safe commands remain usable at the credential step without retaining other input. `START`/`RESUME` no longer silently opt vendors back into alerts. Existing notification event aliases now honor their category opt-outs.
 
 This does not introduce automated nudges, weekly digests, new provider accounts, or paid services. Those remaining recommendations need their own tested rollout; secondary vision and reviewed language/voice coverage are not claimed complete.
-`nValidation for the follow-up: 30 focused tests / 187 assertions passed, covering unchanged inventory before confirmation, ownership, variants, malformed inputs, draft preservation, safe credential-step buttons and category opt-outs.
+Validation for the follow-up: 30 focused tests / 187 assertions passed, covering unchanged inventory before confirmation, ownership, variants, malformed inputs, draft preservation, safe credential-step buttons and category opt-outs.
+
+## Consent and provider maintenance follow-up — 28 September 2026
+
+Recovery reminders and weekly-digest preferences are separate, explicitly consented choices. Both default to off. A vendor can type `ENABLE NUDGES`, `DISABLE NUDGES`, `ENABLE WEEKLY DIGEST`, or `DISABLE WEEKLY DIGEST`; every change is retained in the consent audit log. The recovery centre will not send a current-step reminder unless that vendor opted in, in addition to the existing active-session, quiet-hours, support-case, 24-hour-window, cooldown, and daily-limit checks. No digest sender or campaign sender is enabled by this work.
+
+`php artisan whatsapp:refresh-ai-models` refreshes active provider catalogues without sending messages or running inference. It skips a connection refreshed in the prior 24 hours unless `--force` is supplied, preserves manual selections through the existing discovery service, and runs daily at 02:40. A catalogue refresh is deliberately not treated as a provider health or tool-execution verification.
