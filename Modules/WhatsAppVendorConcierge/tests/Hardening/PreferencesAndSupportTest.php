@@ -104,6 +104,22 @@ class PreferencesAndSupportTest extends ApplicationFixtureTestCase
         $this->assertEquals('quiet_hours_active', $quietCheck['reason']);
     }
 
+    public function test_engagement_preferences_are_explicit_and_audited(): void
+    {
+        $contact = WhatsAppContact::create(['whatsapp_id' => 'wa_' . uniqid(), 'phone_number' => '2348044556677']);
+        $service = app(NotificationPreferenceService::class);
+        $prefs = $service->getPreferences($contact);
+        $this->assertFalse($prefs->opt_in_recovery_nudges);
+        $this->assertFalse($prefs->opt_in_weekly_digest);
+        $this->assertFalse($service->canReceiveNotification($contact, 'recovery_nudge')['allowed']);
+        $service->handleInboundCommand($contact, 'ENABLE NUDGES');
+        $service->handleInboundCommand($contact, 'ENABLE WEEKLY DIGEST');
+        $prefs->refresh();
+        $this->assertTrue($prefs->opt_in_recovery_nudges);
+        $this->assertTrue($prefs->opt_in_weekly_digest);
+        $this->assertGreaterThanOrEqual(3, count($prefs->consent_audit_log));
+    }
+
     public function test_language_preference_and_commands(): void
     {
         $contact = WhatsAppContact::create([

@@ -21,6 +21,8 @@ class NotificationPreferenceService
                 'opt_in_order_alerts' => true,
                 'opt_in_status_alerts' => true,
                 'opt_in_stock_alerts' => true,
+                'opt_in_recovery_nudges' => false,
+                'opt_in_weekly_digest' => false,
                 'is_paused' => false,
                 'locale' => $contact->language ?? 'en',
                 'consent_audit_log' => [
@@ -58,6 +60,8 @@ class NotificationPreferenceService
             'order_alerts', 'order_created', 'order_status_update', 'order_action_required' => $prefs->opt_in_order_alerts,
             'status_alerts', 'vendor_approved', 'vendor_rejected', 'subscription_status' => $prefs->opt_in_status_alerts,
             'stock_alerts', 'low_stock', 'product_unavailable' => $prefs->opt_in_stock_alerts,
+            'recovery_nudge' => $prefs->opt_in_recovery_nudges,
+            'weekly_digest' => $prefs->opt_in_weekly_digest,
             default => true,
         };
 
@@ -87,8 +91,32 @@ class NotificationPreferenceService
             'STOP', 'UNSUBSCRIBE' => $this->pauseAlerts($prefs, 'STOP command received'),
             'PAUSE ALERTS', 'PAUSE' => $this->pauseAlerts($prefs, 'PAUSE ALERTS command received'),
             'RESUME ALERTS', 'UNPAUSE' => $this->resumeAlerts($prefs, 'RESUME ALERTS command received'),
+            'ENABLE NUDGES' => $this->updateEngagementOptIn($prefs, 'recovery_nudges', true),
+            'DISABLE NUDGES' => $this->updateEngagementOptIn($prefs, 'recovery_nudges', false),
+            'ENABLE WEEKLY DIGEST' => $this->updateEngagementOptIn($prefs, 'weekly_digest', true),
+            'DISABLE WEEKLY DIGEST' => $this->updateEngagementOptIn($prefs, 'weekly_digest', false),
             default => null,
         };
+    }
+
+    public function updateEngagementOptIn(WhatsAppVendorPreference $prefs, string $type, bool $enabled): array
+    {
+        $field = match ($type) {
+            'recovery_nudges' => 'opt_in_recovery_nudges',
+            'weekly_digest' => 'opt_in_weekly_digest',
+            default => throw new \InvalidArgumentException("Unknown engagement preference: {$type}"),
+        };
+        $prefs->{$field} = $enabled;
+        $this->appendAuditLog($prefs, $enabled ? 'engagement_opted_in' : 'engagement_opted_out', $type);
+        $prefs->save();
+
+        $label = $type === 'recovery_nudges' ? 'recovery reminders' : 'weekly business digests';
+        return [
+            'status' => $enabled ? 'enabled' : 'disabled',
+            'message' => $enabled
+                ? "✅ {$label} enabled. You can change this anytime in this chat."
+                : "🔕 {$label} disabled. You can enable them anytime in this chat.",
+        ];
     }
 
     public function pauseAlerts(WhatsAppVendorPreference $prefs, string $reason): array

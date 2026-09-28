@@ -322,6 +322,7 @@ class ConversationManager
             'check_status' => $this->checkApplicationStatus($conversation, $contact, $gateway),
             'alerts_pause' => $this->showNotificationPreferences($conversation, $contact, $gateway, 'pause alerts'),
             'alerts_resume' => $this->showNotificationPreferences($conversation, $contact, $gateway, 'resume alerts'),
+            'engagement_nudges' => $this->showNotificationPreferences($conversation, $contact, $gateway, 'enable nudges'),
             'product_status' => $this->showProductStatuses($conversation, $contact, $gateway),
             'shop_readiness' => $this->showShopReadiness($conversation, $contact, $gateway),
             'manage_shop' => $this->showManageShop($conversation, $contact, $gateway),
@@ -508,9 +509,10 @@ class ConversationManager
         $result = $service->handleInboundCommand($contact, $command);
         $prefs = $service->getPreferences($contact);
         $body = $result['message'] ?? ('🔔 *WhatsApp alerts*'."\n\nNon-critical alerts are ".($prefs->is_paused ? '*paused*.' : '*enabled*.'));
-        $gateway->sendButtonMessage($contact->phone_number, $body."\n\nYou can keep chatting and your draft is preserved.", [
-            ['id'=>'alerts_pause','title'=>'⏸️ Pause alerts'],
-            ['id'=>'alerts_resume','title'=>'🔔 Resume alerts'],
+        $body .= "\n\n📌 Recovery reminders: ".($prefs->opt_in_recovery_nudges ? '*enabled*' : '*off*')."\n📊 Weekly digest: ".($prefs->opt_in_weekly_digest ? '*enabled*' : '*off*')."\n\nYou can keep chatting and your draft is preserved.";
+        $gateway->sendButtonMessage($contact->phone_number, $body, [
+            ['id'=>$prefs->is_paused ? 'alerts_resume' : 'alerts_pause','title'=>$prefs->is_paused ? '🔔 Resume alerts' : '⏸️ Pause alerts'],
+            ['id'=>'engagement_nudges','title'=>'✅ Enable reminders'],
             ['id'=>'talk_support','title'=>'💬 Support'],
         ]);
     }

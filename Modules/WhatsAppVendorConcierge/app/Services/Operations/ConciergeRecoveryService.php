@@ -38,7 +38,7 @@ class ConciergeRecoveryService
                 'dry_run'=>$dryRun, 'correlation_id'=>'REC-'.Str::uuid(), 'status'=>'excluded'];
             $excluded = match ($action) {
                 'release_stale_handoff' => $d['failure_category'] !== 'stale_human_handoff' ? 'Only an old handoff with no open support ticket can be released.' : null,
-                'renudge_current_step' => !$d['can_nudge'] ? 'Prompt excluded: check active draft, support ownership, blocked contact, 24-hour window, cooldown, and daily limit.' : null,
+                'renudge_current_step' => !$d['can_nudge'] ? 'Prompt excluded: check vendor opt-in, active draft, support ownership, blocked contact, 24-hour window, cooldown, and daily limit.' : null,
                 'assign_human' => !$conversation->contact || $conversation->contact->is_blocked ? 'Contact is unavailable or blocked.' : null,
                 'reprocess_inbound' => 'Historical messages have no reliable processing checkpoint. Replaying could repeat a completed action. Inspect the chat, resend the current prompt when eligible, or escalate to support.',
                 default => 'Unknown action.',

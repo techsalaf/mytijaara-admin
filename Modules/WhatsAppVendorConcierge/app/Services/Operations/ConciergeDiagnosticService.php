@@ -4,6 +4,7 @@ namespace Modules\WhatsAppVendorConcierge\app\Services\Operations;
 
 use Modules\WhatsAppVendorConcierge\app\Models\{WhatsAppConversation, WhatsAppMessage, OnboardingSession, OnboardingEvent, ConciergeRecoveryAudit};
 use Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService;
+use Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService;
 use App\Models\Store;
 
 class ConciergeDiagnosticService
@@ -75,7 +76,8 @@ class ConciergeDiagnosticService
         $elapsed = $lastNudge ? max(0, (int) $lastNudge->created_at->diffInMinutes(now())) : 9999;
         $cooldown = (int) config('whatsapp-vendor-concierge.operations.nudge_cooldown_minutes', 45);
         $max = (int) config('whatsapp-vendor-concierge.operations.max_nudges_per_day', 3);
-        $canNudge = $active && in_array($step, OnboardingSession::getSteps(), true) && $state === 'onboarding_active' && !$contact?->is_blocked && !$case && $window && $elapsed >= $cooldown && $nudgeCount < $max;
+        $nudgePreference = $contact ? app(NotificationPreferenceService::class)->canReceiveNotification($contact, 'recovery_nudge') : ['allowed'=>false, 'reason'=>'no_contact'];
+        $canNudge = $active && in_array($step, OnboardingSession::getSteps(), true) && $state === 'onboarding_active' && !$contact?->is_blocked && !$case && $window && $elapsed >= $cooldown && $nudgeCount < $max && $nudgePreference['allowed'];
         $category = 'none'; $diagnosis = 'No action is needed.'; $action = 'none'; $safety = 'none'; $responder = 'user';
         if (!$contact || $contact->is_blocked) {
             $category = 'blocked'; $diagnosis = 'Messaging is disabled for this contact.'; $safety = 'human_required'; $silenced = false;
@@ -130,6 +132,7 @@ class ConciergeDiagnosticService
             'inbound_processing_phase'=>$receipt?->phase, 'inbound_attempts'=>$receipt?->attempts ?? 0,
             'failure_category'=>$category, 'human_diagnosis'=>$diagnosis, 'recommended_action'=>$action, 'safety_classification'=>$safety,
             'expected_next_responder'=>$responder, 'can_nudge'=>(bool)$canNudge, 'nudges_sent_count'=>$nudgeCount, 'minutes_since_last_nudge'=>$elapsed,
+            'nudge_preference_reason'=>$nudgePreference['reason'],
             'support_case_id'=>$case?->id, 'last_transition_at'=>$lastTransition?->created_at?->toIso8601String(),
             'correlation_id'=>'CONV-'.$conversation->id.'-MSG-'.($receipt?->message_id ?? $in?->id ?? 0),
         ];

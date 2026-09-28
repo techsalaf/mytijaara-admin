@@ -16,6 +16,8 @@ class WhatsAppVendorPreference extends Model
         'opt_in_order_alerts',
         'opt_in_status_alerts',
         'opt_in_stock_alerts',
+        'opt_in_recovery_nudges',
+        'opt_in_weekly_digest',
         'is_paused',
         'quiet_hours_start',
         'quiet_hours_end',
@@ -27,6 +29,8 @@ class WhatsAppVendorPreference extends Model
         'opt_in_order_alerts' => 'boolean',
         'opt_in_status_alerts' => 'boolean',
         'opt_in_stock_alerts' => 'boolean',
+        'opt_in_recovery_nudges' => 'boolean',
+        'opt_in_weekly_digest' => 'boolean',
         'is_paused' => 'boolean',
         'consent_audit_log' => 'array',
     ];

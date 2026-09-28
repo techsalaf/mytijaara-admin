@@ -14,7 +14,7 @@ class ConversationCommands
     {
         $text = self::normalize($text);
         foreach ([
-            'preferences' => ['stop', 'unsubscribe', 'pause alerts', 'resume alerts', 'unpause', 'alerts'],
+            'preferences' => ['stop', 'unsubscribe', 'pause alerts', 'resume alerts', 'unpause', 'alerts', 'enable nudges', 'disable nudges', 'enable weekly digest', 'disable weekly digest'],
             'restart' => ['start', 'reset', 'restart', 'start over', 'start fresh'],
             'register' => ['register', 'open shop', 'create shop', 'sell', 'start onboarding', 'become a vendor', 'i want to sell on mytijaara', 'i want to create a shop', 'open_shop'],
             'welcome' => ['menu', 'hi', 'hello', 'hey', 'cancel', 'assalamu alaikum', 'assalaamu alaikum'],

@@ -114,13 +114,29 @@ class OperationsSafetyTest extends ApplicationFixtureTestCase
     #[Test]
     public function nudge_cooldown_applies_to_admins_and_provider_rejection_is_not_success(): void
     {
-        [,,$conversation]=$this->application();$this->inbound($conversation);
+        [$contact,,$conversation]=$this->application();$this->inbound($conversation);
+        app(\Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService::class)
+            ->handleInboundCommand($contact, 'ENABLE NUDGES');
         $this->gateway(400);$recovery=app(ConciergeRecoveryService::class);
         $this->assertSame('dry_run_passed',$recovery->renudgeCurrentStep($conversation,true)['status']);
         $this->assertSame('failed',$recovery->renudgeCurrentStep($conversation,false)['status']);
         $this->assertSame('excluded',$recovery->renudgeCurrentStep($conversation,false)['status']);
         $this->assertSame(0,ConciergeRecoveryAudit::where('status','success')->count());
         $this->assertSame(2,WhatsAppMessage::where('status','failed')->count());
+    }
+    #[Test]
+    public function recovery_nudges_require_explicit_vendor_consent_and_keep_other_alert_choices_separate(): void
+    {
+        [$contact,,$conversation]=$this->application();$this->inbound($conversation);
+        $diagnostic = app(ConciergeDiagnosticService::class)->diagnoseConversation($conversation);
+        $this->assertFalse($diagnostic['can_nudge']);
+        $this->assertSame('opted_out_of_recovery_nudge', $diagnostic['nudge_preference_reason']);
+        $preferences = app(\Modules\WhatsAppVendorConcierge\app\Services\NotificationPreferenceService::class);
+        $this->assertSame('enabled', $preferences->handleInboundCommand($contact, 'ENABLE NUDGES')['status']);
+        $this->assertTrue(app(ConciergeDiagnosticService::class)->diagnoseConversation($conversation)['can_nudge']);
+        $this->assertSame('enabled', $preferences->handleInboundCommand($contact, 'ENABLE WEEKLY DIGEST')['status']);
+        $this->assertTrue($preferences->canReceiveNotification($contact, 'weekly_digest')['allowed']);
+        $this->assertTrue($preferences->canReceiveNotification($contact, 'order_created')['allowed']);
     }
     #[Test]
     public function active_support_cases_are_never_released_or_nudged_by_recovery(): void
