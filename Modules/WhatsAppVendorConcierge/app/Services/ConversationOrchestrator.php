@@ -31,6 +31,16 @@ class ConversationOrchestrator
 
         if (app(ShopQuickActionService::class)->handle($text, $conversation, $contact, $gateway)) return true;
 
+        $command = ConversationCommands::action($text);
+        // A vendor must be able to leave a product question for a real menu,
+        // support, or shop action. Preserve the draft instead of interpreting a
+        // global command such as "Hi" or "Manage shop" as product data.
+        $globalProductEscape = ['restart', 'register', 'support', 'info', 'manage_shop', 'product_status', 'shop_readiness', 'shop_details', 'status', 'preferences'];
+        $isGreeting = $command === 'welcome' && ConversationCommands::normalize($text) !== 'cancel';
+        if (($isGreeting || in_array($command, $globalProductEscape, true)) && $this->suspendActiveProductDraft($conversation)) {
+            // Continue below through the deterministic command path.
+        }
+
         // Product answers must not be reclassified by the general AI router.
         if ($contact->vendor_id && $conversation->state === 'ai_active'
             && !in_array(ConversationCommands::action($text), ['support','shop_details','manage_shop','status','product_status','shop_readiness','preferences'], true)
@@ -41,8 +51,6 @@ class ConversationOrchestrator
         }
 
         // Deterministic routing first
-        $command = ConversationCommands::action($text);
-        
         if ($command !== null) {
             if ($command === 'preferences') $this->manager->showNotificationPreferences($conversation, $contact, $gateway, $text);
             else $this->executeAction($command, $conversation, $contact, $gateway);
@@ -79,6 +87,17 @@ class ConversationOrchestrator
         }
 
         return false;
+    }
+
+    private function suspendActiveProductDraft(WhatsAppConversation $conversation): bool
+    {
+        $draft = app(ProductListingFlow::class)->current($conversation);
+        if (!$draft || $draft->status !== 'active') return false;
+
+        $sources = $draft->sources ?? [];
+        unset($sources['_cancel_requested']);
+        $draft->update(['status' => 'saved', 'sources' => $sources]);
+        return true;
     }
 
     protected function executeAction(string $action, WhatsAppConversation $conversation, WhatsAppContact $contact, WhatsAppGateway $gateway): void

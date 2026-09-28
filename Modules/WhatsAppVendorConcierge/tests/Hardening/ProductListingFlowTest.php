@@ -187,6 +187,22 @@ class ProductListingFlowTest extends OperationsFixtureTestCase
         $this->assertSame(1,$d->fresh()->data['extra_details']);
     }
 
+    public function test_global_shop_navigation_saves_active_product_draft_before_routing(): void
+    {
+        $draft = app(ProductListingFlow::class)->start($this->conversation, $this->contact);
+        $draft->update(['step' => 'price', 'data' => ['name' => 'Saved bag']]);
+        $manager = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
+        $manager->shouldReceive('showManageShop')->once()->with($this->conversation, $this->contact, \Mockery::type(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class));
+        $ai = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\AiFallbackService::class);
+        $ai->shouldNotReceive('promptAgent');
+        $gateway = \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
+        $router = new \Modules\WhatsAppVendorConcierge\app\Services\ConversationOrchestrator($manager, $ai);
+
+        $this->assertTrue($router->routeMessage($this->conversation, $this->contact, new WhatsAppMessage(['type' => 'text', 'raw_text' => 'Manage shop']), $gateway));
+        $this->assertSame('saved', $draft->fresh()->status);
+        $this->assertSame('Saved bag', $draft->fresh()->data['name']);
+    }
+
     public function test_empty_album_events_do_not_prompt_or_change_progress(): void
     {
         $flow=app(ProductListingFlow::class);$d=$flow->start($this->conversation,$this->contact);
