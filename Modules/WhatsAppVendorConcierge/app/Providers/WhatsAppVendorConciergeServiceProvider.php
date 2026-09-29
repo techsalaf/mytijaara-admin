@@ -74,6 +74,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeRecoverCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeHealthCheckCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\RefreshAiModelsCommand::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\SendActiveStoreOutreachCommand::class,
         ]);
     }
 
