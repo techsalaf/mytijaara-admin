@@ -70,7 +70,7 @@ class StoreOutreachTest extends ApplicationFixtureTestCase
             'vendor_name' => 'John Doe',
             'email' => 'john@example.com',
             'items_count' => 0,
-            'login_url' => 'https://dashboard.mytijaara.com/vendor/auth/login',
+            'login_url' => 'https://dashboard.mytijaara.com/login/vendor',
         ];
 
         $mailable = new StoreProductUploadNudgeMail($details);
@@ -79,6 +79,6 @@ class StoreOutreachTest extends ApplicationFixtureTestCase
         $this->assertStringContainsString('Test Mart', $rendered);
         $this->assertStringContainsString('John Doe', $rendered);
         $this->assertStringContainsString('100% FREE Product Uploads', $rendered);
-        $this->assertStringContainsString('https://dashboard.mytijaara.com/vendor/auth/login', $rendered);
+        $this->assertStringContainsString('https://dashboard.mytijaara.com/login/vendor', $rendered);
     }
 }

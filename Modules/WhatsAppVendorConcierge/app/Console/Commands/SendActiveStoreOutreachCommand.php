@@ -76,7 +76,7 @@ class SendActiveStoreOutreachCommand extends Command
                             'vendor_name' => $vendorName,
                             'email' => $email,
                             'items_count' => $itemsCount,
-                            'login_url' => 'https://dashboard.mytijaara.com/vendor/auth/login',
+                            'login_url' => 'https://dashboard.mytijaara.com/login/vendor',
                         ];
                         Mail::to($email)->send(new StoreProductUploadNudgeMail($details));
                         $emailStatus = 'sent';
