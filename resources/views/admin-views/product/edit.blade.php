@@ -115,21 +115,25 @@
                                     <div class="identity_documnet_body multiple_coba-img tabs-slide-wrap position-relative">
                                         <div class="tabs-inner pt-1 d-flex gap-3 identity_documnet_wrap" id="coba">
 
-                                            @foreach($product->images as $key => $img)
-                                            @php($photo = is_array($img) ? $img : ['img' => $img, 'storage' => 'public'])
-                                                <div class="spartan_item_wrapper size--md existing_image" id="existing_image_{{ $key }}">
-                                                    <div style="position: relative;">
-                                                        <label class="file_upload" style="width: 100%; height: 100px; border: 2px dashed #ddd; border-radius: 3px; cursor: pointer; text-align: center; overflow: hidden; padding: 5px; margin-top: 5px; margin-bottom : 5px; position : relative; display: flex; align-items: center; margin: auto; justify-content: center; flex-direction: column;">
-                                                            <div class="spartan_item_loader" data-spartanindexloader="0" style=" position: absolute; width: 100%; height: 100px; background: rgba(255,255,255, 0.7); z-index: 22; text-align: center; align-items: center; margin: auto; justify-content: center; flex-direction: column; display : none; font-size : 1.7em; color: #CECECE"><i class="fas fa-sync fa-spin"></i></div>
-                                                            <img class="img--100 rounded border" style="width: 100%; margin: 0px auto; vertical-align: middle;" src="{{ \App\CentralLogics\Helpers::get_full_url('product', $photo['img'] ?? '', $photo['storage']) }}">
-                                                            <a href="javascript:void(0)" style="right: 3px; top: 3px; background: transparent; border-radius: 3px; width: 30px; height: 30px; line-height: 30px; text-align: center; text-decoration: none; color: rgb(255, 7, 0); position: absolute !important;" data-key="{{ $key }}"
-                                                            data-photo="{{ $photo['img'] }}"
-                                                            data-img="{{ $photo['img'] ?? '' }}" class="spartan_remove_row function_remove_img remove-existing-image-btn"><i class="tio-add-to-trash"></i></a>
-                                                            </div>
-                                                        </label>
+{{-- GEMINI-MYTJ START: Null-safe product gallery images --}}
+                                            @if(!empty($product->images) && is_iterable($product->images))
+                                                @foreach($product->images as $key => $img)
+                                                @php($photo = is_array($img) ? $img : ['img' => $img, 'storage' => 'public'])
+                                                    <div class="spartan_item_wrapper size--md existing_image" id="existing_image_{{ $key }}">
+                                                        <div style="position: relative;">
+                                                            <label class="file_upload" style="width: 100%; height: 100px; border: 2px dashed #ddd; border-radius: 3px; cursor: pointer; text-align: center; overflow: hidden; padding: 5px; margin-top: 5px; margin-bottom : 5px; position : relative; display: flex; align-items: center; margin: auto; justify-content: center; flex-direction: column;">
+                                                                <div class="spartan_item_loader" data-spartanindexloader="0" style=" position: absolute; width: 100%; height: 100px; background: rgba(255,255,255, 0.7); z-index: 22; text-align: center; align-items: center; margin: auto; justify-content: center; flex-direction: column; display : none; font-size : 1.7em; color: #CECECE"><i class="fas fa-sync fa-spin"></i></div>
+                                                                <img class="img--100 rounded border" style="width: 100%; margin: 0px auto; vertical-align: middle;" src="{{ \App\CentralLogics\Helpers::get_full_url('product', $photo['img'] ?? '', $photo['storage']) }}">
+                                                                <a href="javascript:void(0)" style="right: 3px; top: 3px; background: transparent; border-radius: 3px; width: 30px; height: 30px; line-height: 30px; text-align: center; text-decoration: none; color: rgb(255, 7, 0); position: absolute !important;" data-key="{{ $key }}"
+                                                                data-photo="{{ $photo['img'] }}"
+                                                                data-img="{{ $photo['img'] ?? '' }}" class="spartan_remove_row function_remove_img remove-existing-image-btn"><i class="tio-add-to-trash"></i></a>
+                                                                </div>
+                                                            </label>
 
-                                                </div>
-                                            @endforeach
+                                                    </div>
+                                                @endforeach
+                                            @endif
+{{-- GEMINI-MYTJ END: Null-safe product gallery images --}}
                                         </div>
                                         <div class="arrow-area">
                                             <div class="button-prev align-items-center">

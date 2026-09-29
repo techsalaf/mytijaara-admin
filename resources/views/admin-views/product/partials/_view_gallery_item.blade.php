@@ -39,18 +39,22 @@
 
 
 
-                                        @foreach($item->images as $key => $img)
-                                            @php
-                                            $photo = is_array($img) ? $img : ['img' => $img, 'storage' => 'public'];
-                                            @endphp
+{{-- GEMINI-MYTJ START: Null-safe product gallery images --}}
+                                        @if(!empty($item->images) && is_iterable($item->images))
+                                            @foreach($item->images as $key => $img)
+                                                @php
+                                                $photo = is_array($img) ? $img : ['img' => $img, 'storage' => 'public'];
+                                                @endphp
 
-                                            <div class="tabs-slide_items">
-                                                <div class="product-d-thumb aspect-ratio-1 overflow-hidden rounded border">
-                                                    <img src="{{ \App\CentralLogics\Helpers::get_full_url('product', $photo['img'] ?? '', $photo['storage']) }}"
-                                                        alt="img" class="w-100 h-100 object-cover">
+                                                <div class="tabs-slide_items">
+                                                    <div class="product-d-thumb aspect-ratio-1 overflow-hidden rounded border">
+                                                        <img src="{{ \App\CentralLogics\Helpers::get_full_url('product', $photo['img'] ?? '', $photo['storage']) }}"
+                                                            alt="img" class="w-100 h-100 object-cover">
+                                                    </div>
                                                 </div>
-                                            </div>
                                             @endforeach
+                                        @endif
+{{-- GEMINI-MYTJ END: Null-safe product gallery images --}}
 
                                     </div>
                                     <div class="arrow-area">

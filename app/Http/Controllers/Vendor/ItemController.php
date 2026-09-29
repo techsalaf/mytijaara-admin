@@ -258,28 +258,30 @@ class ItemController extends Controller
                 }
             }
 
-            foreach ($item_data->images as $key => $value) {
-                if (!in_array(is_array($value) ?   $value['img'] : $value, explode(",", $request->removedImageKeys))) {
-                    $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
-                    $oldDisk = $value['storage'];
-                    $oldPath = "product/{$value['img']}";
-                    $newFileName = Carbon::now()->toDateString() . "-" . uniqid() . ".png";
-                    $newPath = "product/{$newFileName}";
-                    $dir = 'product/';
-                    $newDisk = Helpers::getDisk();
-                    try {
-                        if (Storage::disk($oldDisk)->exists($oldPath)) {
+// GEMINI-MYTJ START: Null-safe product gallery images
+            if (!empty($item_data->images) && is_iterable($item_data->images)) {
+                foreach ($item_data->images as $key => $value) {
+                    if (!in_array(is_array($value) ?   $value['img'] : $value, explode(",", $request->removedImageKeys))) {
+                        $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
+                        $oldDisk = $value['storage'];
+                        $oldPath = "product/{$value['img']}";
+                        $newFileName = Carbon::now()->toDateString() . "-" . uniqid() . ".png";
+                        $newPath = "product/{$newFileName}";
+                        $dir = 'product/';
+                        $newDisk = Helpers::getDisk();
+                        try {
                             if (!Storage::disk($newDisk)->exists($dir)) {
                                 Storage::disk($newDisk)->makeDirectory($dir);
                             }
                             $fileContents = Storage::disk($oldDisk)->get($oldPath);
                             Storage::disk($newDisk)->put($newPath, $fileContents);
+                        } catch (\Exception $e) {
                         }
-                    } catch (\Exception $e) {
+                        $images[] = ['img' => $newFileName, 'storage' => Helpers::getDisk()];
                     }
-                    $images[] = ['img' => $newFileName, 'storage' => Helpers::getDisk()];
                 }
             }
+// GEMINI-MYTJ END: Null-safe product gallery images
         }
 
         $food = new Item;
@@ -835,13 +837,16 @@ class ItemController extends Controller
             $p->image = $request->has('image') ? Helpers::update('product/', $p->image, 'png', $request->file('image')) : $p->image;
             $p->video = $videoData['video'];
             $p->video_link = $videoData['video_link'];
-            $images = $p['images'];
+// GEMINI-MYTJ START: Null-safe product gallery images
+            $images = is_array($p['images']) ? $p['images'] : [];
 
-            foreach ($p->images as $key => $value) {
-                if (in_array(is_array($value) ?   $value['img'] : $value, explode(",", $request->removedImageKeys))) {
-                    $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
-                    Helpers::check_and_delete('product/', $value['img']);
-                    unset($images[$key]);
+            if (!empty($p->images) && is_iterable($p->images)) {
+                foreach ($p->images as $key => $value) {
+                    if (in_array(is_array($value) ?   $value['img'] : $value, explode(",", $request->removedImageKeys))) {
+                        $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
+                        Helpers::check_and_delete('product/', $value['img']);
+                        unset($images[$key]);
+                    }
                 }
             }
             $images = array_values($images);
@@ -853,6 +858,7 @@ class ItemController extends Controller
                 }
             }
             $p->images = $images;
+// GEMINI-MYTJ END: Null-safe product gallery images
         }
 
         if ($p->module->module_type == 'pharmacy') {
@@ -946,10 +952,14 @@ class ItemController extends Controller
             Helpers::check_and_delete('product/', $product['video']);
         }
 
-        foreach ($product->images as $value) {
-            $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
-            Helpers::check_and_delete('product/', $value['img']);
+// GEMINI-MYTJ START: Null-safe product gallery images
+        if (!empty($product->images) && is_iterable($product->images)) {
+            foreach ($product->images as $value) {
+                $value = is_array($value) ? $value : ['img' => $value, 'storage' => 'public'];
+                Helpers::check_and_delete('product/', $value['img']);
+            }
         }
+// GEMINI-MYTJ END: Null-safe product gallery images
 
         $product->translations()->delete();
         $product?->taxVats()->delete();
@@ -1167,13 +1177,15 @@ class ItemController extends Controller
             $item = Item::find($request['id']);
         }
 
+// GEMINI-MYTJ START: Null-safe product gallery images
         $array = [];
-        if (count($item['images']) < 2) {
+        $itemImages = is_array($item['images']) ? $item['images'] : [];
+        if (count($itemImages) < 2) {
             Toastr::warning('You cannot delete all images!');
             return back();
         }
         Helpers::check_and_delete('product/', $request['name']);
-        foreach ($item['images'] as $image) {
+        foreach ($itemImages as $image) {
             if (is_array($image)) {
                 if ($image['img'] != $request['name']) {
                     array_push($array, $image);
@@ -1184,6 +1196,7 @@ class ItemController extends Controller
                 }
             }
         }
+// GEMINI-MYTJ END: Null-safe product gallery images
 
         if ($request?->temp_product) {
             TempProduct::where('id', $request['id'])->update([
