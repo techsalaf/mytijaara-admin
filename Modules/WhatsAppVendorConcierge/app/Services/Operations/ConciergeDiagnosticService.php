@@ -115,7 +115,7 @@ class ConciergeDiagnosticService
             $operatorInactive = !$lastOperatorMsg || $lastOperatorMsg->created_at->lte(now()->subHours(2));
             $caseAgeHours = $case ? $case->created_at->diffInHours(now()) : 999;
             $convAgeHours = $conversation->updated_at ? $conversation->updated_at->diffInHours(now()) : 999;
-            $stale = ($caseAgeHours >= 2 || $convAgeHours >= 2) && $operatorInactive;
+            $stale = ($case ? ($caseAgeHours >= 2) : ($convAgeHours >= 2)) && $operatorInactive;
             $category = $stale ? 'stale_human_handoff' : 'in_human_handoff';
             $diagnosis = $stale
                 ? 'Human handoff has had no operator response for >2 hours. Safe to release back to concierge.'

@@ -105,6 +105,66 @@
       ],
       "upgrade": "Reapply GEMINI-MYTJ blocks and generic service; verify delivery module types and subscription accessor",
       "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Admin/ItemController.php": {
+      "purpose": "Null-safe product gallery image handling during store, update, delete, remove_image, and approve actions",
+      "reason_in_core": "Admin item management core controller must not crash with TypeError when product images is null",
+      "upstream_behavior": "Identical product management functionality; protects against null foreach in PHP 8.2+",
+      "tests": [
+        "NullSafeProductGalleryTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ null-safe gallery blocks on ItemController",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Vendor/ItemController.php": {
+      "purpose": "Null-safe product gallery image handling during store, update, delete, and remove_image actions",
+      "reason_in_core": "Vendor item management core controller must not crash with TypeError when product images is null",
+      "upstream_behavior": "Identical vendor product management functionality; protects against null foreach in PHP 8.2+",
+      "tests": [
+        "NullSafeProductGalleryTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ null-safe gallery blocks on Vendor ItemController",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Api/V1/Vendor/ItemController.php": {
+      "purpose": "Null-safe product gallery image handling during store, update, and delete API actions",
+      "reason_in_core": "Vendor API controller must not crash with TypeError when product images is null",
+      "upstream_behavior": "Identical API functionality; protects against null foreach in PHP 8.2+",
+      "tests": [
+        "NullSafeProductGalleryTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ null-safe gallery blocks on Vendor API ItemController",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/admin-views/product/edit.blade.php": {
+      "purpose": "Null-safe product gallery image loop in admin product edit view",
+      "reason_in_core": "Admin edit view must render without ErrorException when product images is null",
+      "upstream_behavior": "Identical admin edit form; renders 0 existing images when images is null",
+      "tests": [
+        "NullSafeProductGalleryTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ null-safe @if wrapper around gallery @foreach",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/admin-views/product/partials/_view_gallery_item.blade.php": {
+      "purpose": "Null-safe product gallery image loop in gallery partial view",
+      "reason_in_core": "Admin product view modal must render without ErrorException when item images is null",
+      "upstream_behavior": "Identical partial layout; renders empty gallery when images is null",
+      "tests": [
+        "NullSafeProductGalleryTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ null-safe @if wrapper around gallery @foreach",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/vendor-views/product/edit.blade.php": {
+      "purpose": "Null-safe product gallery image loop in vendor product edit view",
+      "reason_in_core": "Vendor edit view must render without ErrorException when product images is null",
+      "upstream_behavior": "Identical vendor edit form; renders 0 existing images when images is null",
+      "tests": [
+        "NullSafeProductGalleryTest"
+      ],
+      "upgrade": "Reapply GEMINI-MYTJ null-safe @if wrapper around gallery @foreach",
+      "owner": "MyTijaara backend maintainers"
     }
   },
   "separate_addon_changes": [
@@ -117,6 +177,6 @@
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/StoreAvailabilityService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/SubscriptionLifecycleService.php"
   ],
-  "platform_baseline": "e4b06059540745c83dc38a9862dc71964ad7ec52",
-  "platform_baseline_reason": "User-authored and explicitly pushed updater revision, following platform import d76e3efc. Includes installer, updater and activation behavior changes; this records the accepted source snapshot, not license validity or upstream certification. Only exact unchanged file content at this commit is accepted; new edits remain gated."
+  "platform_baseline": "f5bff94a13b0ef1b6f125a2160cc9d58abe57ae9",
+  "platform_baseline_reason": "User-authored subscription copy revisions in f5bff94a following updater revision e4b06059 and platform import d76e3efc. Records accepted source snapshot. Only exact unchanged file content at this commit is accepted; new edits remain gated."
 }
