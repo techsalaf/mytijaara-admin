@@ -63,3 +63,5 @@ storage/app/dummy-service-seed.json
 /app/Console/Commands/Fix*.php
 /app/Models/Modules/
 /app/Modules/
+
+/public/downloads/*.apk
