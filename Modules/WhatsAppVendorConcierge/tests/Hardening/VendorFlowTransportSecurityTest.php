@@ -12,6 +12,16 @@ use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 
 class VendorFlowTransportSecurityTest extends HardeningTestCase
 {
+    public function test_local_validation_rejects_the_empty_sensitive_list_rejected_by_meta(): void
+    {
+        $validator = app(\Modules\WhatsAppVendorConcierge\app\Services\FlowDefinitionValidator::class);
+        $definition = $validator->validate();
+        $this->assertArrayNotHasKey('sensitive', $definition['screens'][4]);
+        $definition['screens'][4]['sensitive'] = [];
+        $this->expectException(\InvalidArgumentException::class);
+        $validator->validate($definition);
+    }
+
     public function test_explicit_served_root_allows_private_sibling_but_never_served_paths(): void
     {
         $sibling = dirname(base_path()).'/private-synthetic-fixture';

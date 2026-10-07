@@ -519,7 +519,6 @@
       "title": "Cover image",
       "data": {},
       "refresh_on_back": true,
-      "sensitive": [],
       "layout": {
         "type": "SingleColumnLayout",
         "children": [

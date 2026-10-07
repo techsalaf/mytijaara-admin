@@ -21,6 +21,9 @@ class FlowDefinitionValidator
             throw new \InvalidArgumentException('Flow screen contract mismatch.');
         }
         foreach ($f['screens'] as $s) {
+            if (array_key_exists('sensitive', $s) && (! is_array($s['sensitive']) || ! array_is_list($s['sensitive']) || $s['sensitive'] === [])) {
+                throw new \InvalidArgumentException('An optional sensitive field list must be non-empty.');
+            }
             if (($s['layout']['type'] ?? '') !== 'SingleColumnLayout') {
                 throw new \InvalidArgumentException('Invalid layout.');
             }
