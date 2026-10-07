@@ -70,7 +70,7 @@ Route::group(['middleware' => ['admin', 'current-module']], function () {
                 Route::get('edit-business-setup/{id}', [ProviderController::class, 'editBusinessSetup'])->name('edit-business-setup');
                 Route::post('edit-business-setup/{id}', [ProviderController::class, 'updateBusinessSetup']);
                 Route::delete('delete/{id}', [ProviderController::class, 'destroy'])->name('delete');
-                Route::get('status/{id}', [ProviderController::class, 'status'])->name('status');
+                Route::post('status/{id}', [ProviderController::class, 'status'])->name('status');
                 Route::get('verified-seller/{id}', [ProviderController::class, 'verifiedSeller'])->name('verified-seller');
                 Route::get('details/{id}/{tab?}/{sub_tab?}', [ProviderController::class, 'details'])->name('details');
                 Route::post('update-settings/{id}', [ProviderController::class, 'updateSettings'])->name('update_settings');
@@ -78,8 +78,8 @@ Route::group(['middleware' => ['admin', 'current-module']], function () {
                 Route::get('export-categories', [ProviderController::class, 'export'])->name('export-brands');
                 Route::get('new-requests', [ProviderController::class, 'newRequests'])->name('new-requests');
                 Route::get('new-requests-details/{id}', [ProviderController::class, 'newRequestsDetails'])->name('new-requests-details');
-                Route::get('approve-or-deny/{id}', [ProviderController::class, 'approveOrDeny'])->name('approve-or-deny');
-                Route::get('status/{store_id}', [ProviderController::class, 'status'])->name('status-by-store');
+                Route::post('approve-or-deny/{id}', [ProviderController::class, 'approveOrDeny'])->name('approve-or-deny');
+                Route::post('status/{store_id}', [ProviderController::class, 'status'])->name('status-by-store');
 
                 Route::get('bulk-import', [ProviderController::class, 'bulkImportIndex'])->name('bulk_import');
                 Route::post('bulk-import', [ProviderController::class, 'bulkImportData']);

@@ -58,7 +58,7 @@ Route::post('/reset-password', 'LoginController@reset_password_request')->name('
 Route::post('/vendor-reset-password', 'LoginController@vendor_reset_password_request')->name('vendor-reset-password')->middleware('throttle:3,60');
 Route::get('/password-reset', 'LoginController@reset_password')->name('change-password');
 Route::post('verify-otp', 'LoginController@verify_token')->name('verify-otp');
-Route::post('reset-password-submit', 'LoginController@reset_password_submit')->name('reset-password-submit');
+Route::post('reset-password-submit', 'LoginController@reset_password_submit')->middleware('throttle:5,10')->name('reset-password-submit');
 Route::get('otp-resent', 'LoginController@otp_resent')->name('otp_resent');
 
 Route::get('authentication-failed', function () {
@@ -225,10 +225,10 @@ Route::group(['prefix' => 'vendor', 'as' => 'restaurant.'], function () {
     Route::get('get-module-type', 'VendorController@get_modules_type')->name('get-module-type');
     Route::get('check-module-type', 'VendorController@check_module_type')->name('check-module-type');
 
-    Route::get('back', 'VendorController@back')->name('back');
-    Route::post('business-plan', 'VendorController@business_plan')->name('business_plan');
-    Route::get('business-plan', 'VendorController@secondStep')->name('secondStep');
-    Route::post('payment', 'VendorController@payment')->name('payment');
+    Route::get('back', 'VendorController@back')->middleware('vendor.registration-session')->name('back');
+    Route::post('business-plan', 'VendorController@business_plan')->middleware('vendor.registration-session')->name('business_plan');
+    Route::get('business-plan', 'VendorController@secondStep')->middleware('vendor.registration-session')->name('secondStep');
+    Route::post('payment', 'VendorController@payment')->middleware('vendor.registration-session')->name('payment');
     Route::get('final-step', 'VendorController@final_step')->name('final_step');
 });
 

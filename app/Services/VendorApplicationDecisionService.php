@@ -31,6 +31,7 @@ class VendorApplicationDecisionService
 
             $vendor->status = $status;
             $vendor->rejection_note = $status === 0 ? trim($reason) : null;
+            app(VendorAccessRevocationService::class)->invalidate($vendor);
             // Preserve all ordinary model observers. Optional status observers may
             // defer to the complete decision event rather than the intermediate save.
             self::$deciding[$vendor->id] = true;

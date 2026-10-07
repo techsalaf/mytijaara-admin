@@ -33,28 +33,39 @@ class SubscriptionController extends Controller
     public function business_plan(Request $request)
     {
 
-
         $validator = Validator::make($request->all(), [
             'store_id' => 'required',
             'payment' => 'nullable',
             'business_plan' => 'required|in:subscription,commission',
             'package_id' => 'nullable|required_if:business_plan,subscription',
             'payment_gateway' => 'nullable|required_if:business_plan,subscription',
-            'payment_platform' => 'nullable|in:app,web'
+            'payment_platform' => 'nullable|in:app,web',
         ]);
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
         $store = Store::Where('id', $request->store_id)->first();
+        if (! $store || (int) $store->vendor_id !== (int) $request->vendor?->id) {
+            return response()->json(['errors' => [['code' => 'token_scope_invalid', 'message' => 'Subscription setup is unavailable.']]], 403);
+        }
+        if ($request->attributes->get('vendor_restricted') && $request->payment_gateway === 'wallet') {
+            return response()->json(['errors' => [['code' => 'token_scope_invalid', 'message' => 'Wallet access requires account approval.']]], 403);
+        }
+        if ($request->payment_gateway === 'free_trial' && BusinessSetting::where('key', 'subscription_free_trial_status')->value('value') != '1') {
+            return response()->json(['errors' => [['code' => 'subscription_setup_required', 'message' => 'Free trial is unavailable.']]], 403);
+        }
         if ($request->business_plan == 'subscription' && $request->package_id != null) {
             $package = SubscriptionPackage::withoutGlobalScope('translate')->find($request->package_id);
+            if (! $package || (int) $package->status !== 1 || $package->module_type !== Helpers::subscriptionPackageType($store->module)) {
+                return response()->json(['errors' => [['code' => 'package_id', 'message' => 'Choose an eligible package.']]], 403);
+            }
             $pending_bill = SubscriptionBillingAndRefundHistory::where([
                 'store_id' => $store->id,
                 'transaction_type' => 'pending_bill',
-                'is_success' => 0
+                'is_success' => 0,
             ])?->sum('amount') ?? 0;
-            if (!in_array($request->payment_gateway, ['wallet', 'free_trial'])) {
+            if (! in_array($request->payment_gateway, ['wallet', 'free_trial'])) {
                 $url = $request->has('callback') ? $request['callback'] : session('callback');
                 $data = [
                     'redirect_link' => Helpers::subscriptionPayment(store_id: $store->id, package_id: $package->id, payment_gateway: $request->payment_gateway, payment_platform: $request->payment_platform ?? 'web', url: $url, pending_bill: $pending_bill, type: $request?->type),
@@ -69,27 +80,28 @@ class SubscriptionController extends Controller
 
                 if ($balance > $package?->price) {
                     $reference = 'wallet_payment_by_vendor';
-                    $plan_data =   Helpers::subscription_plan_chosen(store_id: $store->id, package_id: $package->id, payment_method: 'wallet', discount: 0, pending_bill: $pending_bill, reference: $reference, type: $request?->type);
+                    $plan_data = Helpers::subscription_plan_chosen(store_id: $store->id, package_id: $package->id, payment_method: 'wallet', discount: 0, pending_bill: $pending_bill, reference: $reference, type: $request?->type);
                     if ($plan_data != false) {
                         $wallet->total_withdrawn = $wallet?->total_withdrawn + $package->price;
                         $wallet?->save();
                     }
                 } else {
                     return response()->json([
-                        'errors' => ['message' => translate('messages.Insufficient_balance_in_wallet')]
+                        'errors' => ['message' => translate('messages.Insufficient_balance_in_wallet')],
                     ], 403);
                 }
             }
 
             if ($request->payment_gateway == 'free_trial') {
-                $plan_data =   Helpers::subscription_plan_chosen(store_id: $store->id, package_id: $package->id, payment_method: 'free_trial', discount: 0, pending_bill: $pending_bill, reference: 'free_trial', type: 'new_join');
+                $plan_data = Helpers::subscription_plan_chosen(store_id: $store->id, package_id: $package->id, payment_method: 'free_trial', discount: 0, pending_bill: $pending_bill, reference: 'free_trial', type: 'new_join');
             }
 
             $data = [
                 'store_business_model' => 'subscription',
                 'logo' => $store->logo,
-                'message' => translate('messages.application_placed_successfully')
+                'message' => translate('messages.application_placed_successfully'),
             ];
+
             return response()->json($data, 200);
         } elseif ($request->business_plan == 'commission') {
             $store->store_business_model = 'commission';
@@ -100,14 +112,14 @@ class SubscriptionController extends Controller
             $data = [
                 'store_business_model' => 'commission',
                 'logo' => $store->logo,
-                'message' => translate('messages.application_placed_successfully')
+                'message' => translate('messages.application_placed_successfully'),
             ];
+
             return response()->json($data, 200);
         }
 
         return response()->json([], 403);
     }
-
 
 
     public function transaction(Request $request)

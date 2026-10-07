@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('registration/policies', \App\Http\Controllers\Api\V1\RegistrationPoliciesController::class)->middleware('throttle:60,1');
+
 Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function () {
     Route::group(['prefix' => 'configurations'], function () {
         Route::get('/', 'ExternalConfigurationController@getConfiguration');
@@ -60,10 +62,10 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
             Route::put('reset-password', 'DMPasswordResetController@reset_password_submit');
         });
         Route::group(['prefix' => 'vendor','middleware' => 'actch:vendor_app'], function () {
-            Route::post('login', 'VendorLoginController@login');
-            Route::post('forgot-password', 'VendorPasswordResetController@reset_password_request');
-            Route::post('verify-token', 'VendorPasswordResetController@verify_token');
-            Route::put('reset-password', 'VendorPasswordResetController@reset_password_submit');
+            Route::post('login', 'VendorLoginController@login')->middleware('throttle:10,1');
+            Route::post('forgot-password', 'VendorPasswordResetController@reset_password_request')->middleware('throttle:5,1');
+            Route::post('verify-token', 'VendorPasswordResetController@verify_token')->middleware('throttle:5,1');
+            Route::put('reset-password', 'VendorPasswordResetController@reset_password_submit')->middleware('throttle:5,1');
             Route::post('register','VendorLoginController@register')->withoutMiddleware('actch:vendor_app');
         });
 
@@ -74,11 +76,11 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
     //Store Subscription
     Route::group(['prefix' => 'vendor','namespace' => 'Vendor'], function () {
         Route::get('package-view', 'SubscriptionController@package_view');
-        Route::post('business_plan', 'SubscriptionController@business_plan');
-        Route::post('subscription/payment/api', 'SubscriptionController@subscription_payment_api')->name('subscription_payment_api');
-        Route::post('package-renew', 'SubscriptionController@package_renew_change_update_api');
-        Route::post('cancel-subscription', 'SubscriptionController@cancelSubscription');
-        Route::get('check-product-limits', 'SubscriptionController@checkProductLimits');
+        Route::post('business_plan', 'SubscriptionController@business_plan')->middleware('vendor.subscription');
+        // Removed dangling payment/api and package-renew routes: no implementation exists.
+
+        Route::post('cancel-subscription', 'SubscriptionController@cancelSubscription')->middleware('vendor.subscription');
+        Route::get('check-product-limits', 'SubscriptionController@checkProductLimits')->middleware('vendor.subscription');
     });
 
     // Module
@@ -164,6 +166,7 @@ Route::group(['namespace' => 'Api\V1', 'middleware'=>'localization'], function (
     });
 
     Route::group(['prefix' => 'vendor', 'namespace' => 'Vendor', 'middleware'=>['vendor.api','actch:vendor_app']], function () {
+        Route::post('logout', [\App\Http\Controllers\Api\V1\Auth\VendorLoginController::class, 'logout']);
         Route::get('notifications', 'VendorController@get_notifications');
         Route::get('profile', 'VendorController@get_profile');
         Route::post('update-active-status', 'VendorController@active_status');

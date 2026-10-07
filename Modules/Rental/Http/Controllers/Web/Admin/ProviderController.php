@@ -596,54 +596,40 @@ class ProviderController extends Controller
      */
     public function approveOrDeny(Request $request): RedirectResponse
     {
-        $store = $this->store->findOrFail($request->id);
-        $store->comment = $request->message;
-        $store->vendor->status = $request->status;
-        $store->vendor->save();
-
-        if($request->status) $store->status = 1;
-
-        $add_days = 1;
-
-        if($store?->store_sub_update_application){
-            if($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 1){
-                $add_days = $this->businessSetting->where(['key' => 'subscription_free_trial_days'])->first()?->value ?? 1;
-            }elseif($store?->store_sub_update_application && $store?->store_sub_update_application->is_trial == 0){
-                $add_days = $store?->store_sub_update_application->validity;
-            }
-
-            $store?->store_sub_update_application->update([
-                'expiry_date'=> Carbon::now()->addDays((int) $add_days)->format('Y-m-d'),
-                'status'=>1
-            ]);
-            $store->store_business_model= 'subscription';
+        $request->validate(['status' => 'required|in:0,1', 'message' => 'required_if:status,0|nullable|string|max:1000']);
+        $id = (int) ($request->route('id') ?? $request->id);
+        $store = app(\App\Services\VendorApplicationDecisionService::class)->decide($id, (int) $request->status, $request->message);
+        if (! $store) {
+            return back();
         }
-
+        $store->comment = $request->message;
         $store->save();
 
-        try{
-            if($request->status == 1){
+        try {
+            if ($request->status == 1) {
 
-                if(config('mail.status') && Helpers::get_mail_status('rental_approve_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_registration_approval','mail_status') ){
+                if (config('mail.status') && Helpers::get_mail_status('rental_approve_mail_status_provider') == '1' && Helpers::getRentalNotificationStatusData('provider', 'provider_registration_approval', 'mail_status')) {
                     Mail::to($store?->vendor?->getRawOriginal('email'))->send(new ProviderSelfRegistration('approved', $store->vendor->f_name.' '.$store->vendor->l_name));
                 }
-            }else{
-                if(config('mail.status') && Helpers::get_mail_status('rental_deny_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_registration_deny','mail_status') ){
+            } else {
+                if (config('mail.status') && Helpers::get_mail_status('rental_deny_mail_status_provider') == '1' && Helpers::getRentalNotificationStatusData('provider', 'provider_registration_deny', 'mail_status')) {
                     Mail::to($store?->vendor?->getRawOriginal('email'))->send(new ProviderSelfRegistration('denied', $store->vendor->f_name.' '.$store->vendor->l_name));
                 }
             }
-        }
-        catch(\Exception $ex){
+        } catch (\Exception $ex) {
             info($ex->getMessage());
         }
         Toastr::success(translate('messages.application_status_updated_successfully'));
+
         return back();
     }
 
     /**
-     * @param Request $request
+     * @param  Request  $request
      * @return BinaryFileResponse
      */
+
+
     public function exportReview(Request $request): BinaryFileResponse
     {
         $vehicles = $this->vehicleReview->where('provider_id', $request->provider_id)->latest()->get();
@@ -1209,71 +1195,78 @@ class ProviderController extends Controller
         return back();
     }
 
-    public function status($store_id)
+    public function status(Request $request, $store_id)
     {
-        $store = $this->store->with('vendor')->findOrFail($store_id);
-        $store->status = !$store->status;
-        $store->save();
+        $request->validate(['status' => 'required|in:0,1']);
+        $store = DB::transaction(function () use ($request, $store_id) {
+            $locked = Store::withoutGlobalScopes()->whereKey($store_id)->lockForUpdate()->firstOrFail();
+            $vendor = Vendor::withoutGlobalScopes()->whereKey($locked->vendor_id)->lockForUpdate()->firstOrFail();
+            app(\App\Services\VendorAccessRevocationService::class)->invalidate($vendor);
+            $vendor->save();
+            $locked->status = $request->status;
+            $locked->save();
+            $locked->setRelation('vendor', $vendor);
+
+            return $locked;
+        }, 3);
         $vendor = $store->vendor;
-        try
-        {
-            if($store->status == 0)
-            {   $vendor->auth_token = null;
-                if(isset($vendor->firebase_token) && Helpers::getRentalNotificationStatusData('provider','provider_account_block','push_notification_status',$store?->id))
-                {
+        try {
+            if ($store->status == 0) {
+                if (isset($vendor->firebase_token) && Helpers::getRentalNotificationStatusData('provider', 'provider_account_block', 'push_notification_status', $store?->id)) {
                     $data = [
                         'title' => translate('messages.suspended'),
                         'description' => translate('messages.your_account_has_been_suspended'),
                         'order_id' => '',
                         'image' => '',
-                        'type'=> 'block'
-                    ];
-                    Helpers::send_push_notif_to_device($vendor->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data'=> json_encode($data),
-                        'vendor_id'=>$vendor->id,
-                        'created_at'=>now(),
-                        'updated_at'=>now()
-                    ]);
-                }
-
-                if ( config('mail.status') && Helpers::get_mail_status('rental_suspend_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_account_block','mail_status',$store?->id)) {
-                    Mail::to($vendor?->getRawOriginal('email'))->send(new ProviderStatus('suspended', $vendor?->f_name.' '.$vendor?->l_name));
-                }
-            } else{
-
-                if ( Helpers::getRentalNotificationStatusData('provider','provider_account_unblock','push_notification_status',$store?->id) &&  isset($vendor->firebase_token)) {
-                    $data = [
-                        'title' => translate('Account_Activation'),
-                        'description' => translate('messages.your_account_has_been_activated'),
-                        'order_id' => '',
-                        'image' => '',
-                        'type' => 'unblock'
+                        'type' => 'block',
                     ];
                     Helpers::send_push_notif_to_device($vendor->firebase_token, $data);
                     DB::table('user_notifications')->insert([
                         'data' => json_encode($data),
                         'vendor_id' => $vendor->id,
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ]);
                 }
 
-                if ( config('mail.status') && Helpers::get_mail_status('rental_unsuspend_mail_status_provider') == '1' &&  Helpers::getNotificationStatusData('provider','provider_account_unblock','mail_status',$store?->id)) {
-                    Mail::to( $vendor?->getRawOriginal('email'))->send(new ProviderStatus('unsuspended', $vendor?->f_name.' '.$vendor?->l_name));
+                if (config('mail.status') && Helpers::get_mail_status('rental_suspend_mail_status_provider') == '1' && Helpers::getRentalNotificationStatusData('provider', 'provider_account_block', 'mail_status', $store?->id)) {
+                    Mail::to($vendor?->getRawOriginal('email'))->send(new ProviderStatus('suspended', $vendor?->f_name.' '.$vendor?->l_name));
+                }
+            } else {
+
+                if (Helpers::getRentalNotificationStatusData('provider', 'provider_account_unblock', 'push_notification_status', $store?->id) && isset($vendor->firebase_token)) {
+                    $data = [
+                        'title' => translate('Account_Activation'),
+                        'description' => translate('messages.your_account_has_been_activated'),
+                        'order_id' => '',
+                        'image' => '',
+                        'type' => 'unblock',
+                    ];
+                    Helpers::send_push_notif_to_device($vendor->firebase_token, $data);
+                    DB::table('user_notifications')->insert([
+                        'data' => json_encode($data),
+                        'vendor_id' => $vendor->id,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+
+                if (config('mail.status') && Helpers::get_mail_status('rental_unsuspend_mail_status_provider') == '1' && Helpers::getNotificationStatusData('provider', 'provider_account_unblock', 'mail_status', $store?->id)) {
+                    Mail::to($vendor?->getRawOriginal('email'))->send(new ProviderStatus('unsuspended', $vendor?->f_name.' '.$vendor?->l_name));
                 }
             }
 
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
 
             // dd($e);
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
         Toastr::success(translate('messages.store_status_updated'));
+
         return back();
     }
+
 
     public function verifiedSeller($store_id)
     {

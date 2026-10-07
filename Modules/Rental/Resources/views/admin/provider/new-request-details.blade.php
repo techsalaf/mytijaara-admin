@@ -270,7 +270,7 @@
 
                     <h3 class="text--title mb-6 font-medium text-center">
                         {{ translate('Are you sure, want to approve the request?') }}</h3>
-                    <form method="get" action="{{route('admin.rental.provider.approve-or-deny',[$store['id'],1])}}">
+                    <form method="post" action="{{route('admin.rental.provider.approve-or-deny',[$store['id'],1])}}">
                         @csrf
                         <div class="form-floating">
                             <input type="hidden" value="1" name="status">
@@ -302,7 +302,7 @@
 
                     <h3 class="text--title mb-6 font-medium text-center">
                         {{ translate('Are you sure, want to cancel the request?') }}</h3>
-                    <form method="get" action="{{route('admin.rental.provider.approve-or-deny',[$store['id'],0])}}">
+                    <form method="post" action="{{route('admin.rental.provider.approve-or-deny',[$store['id'],0])}}">
                         @csrf
                         <div class="form-floating">
                             <label for="add-your-note" class="font-medium input-label text--title">{{ translate('Cancellation Note') }}

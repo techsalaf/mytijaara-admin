@@ -102,25 +102,50 @@ class LoginController extends Controller
     public function login_attemp($role, $email, $password, $ip, $remember = false)
     {
         $auth = ($role == 'admin_employee' ? 'admin' : $role);
-        if (auth($auth)->attempt(['email' => $email, 'password' => $password], $remember)) {
+        if (in_array($auth, ['vendor', 'vendor_employee'], true)) {
+            $result = app(\App\Services\VendorAuthenticationService::class)->authenticate(
+                $email, $password, $auth === 'vendor' ? 'owner' : 'employee', 'web'
+            );
+            if (! $result) {
+                return false;
+            }
+            if (! $result['decision']->eligible) {
+                if ($result['decision']->preActivationAllowed) {
+                    session(['vendor_registration_store_id' => $result['store']->id, 'vendor_registration_expires_at' => now()->addMinutes(15)->timestamp]);
+                    session()->regenerate();
+
+                    return 'vendor_setup';
+                }
+
+                return false;
+            }
+            auth($auth)->login($result['principal'], $remember);
+            session()->regenerate();
+        } elseif (! auth($auth)->attempt(['email' => $email, 'password' => $password], $remember)) {
+            return false;
+        }
+        if (auth($auth)->check()) {
             $user = auth($auth)->user();
             $newToken = $user?->login_remember_token ?? Str::random(60);
             $user->login_remember_token = $newToken;
             $user->save();
             session(['login_remember_token' => $newToken]);
-            if ($remember) {
+            if ($remember && $auth === 'admin') {
                 Cookie::queue('role', $role, 120);
                 Cookie::queue('e_token', Crypt::encryptString($email), 120);
                 Cookie::queue('p_token', Crypt::encryptString($password), 120);
             }
             if ($auth == 'admin') {
-                RateLimiter::clear('login-attempts:' . $ip);
+                RateLimiter::clear('login-attempts:'.$ip);
+
                 return 'admin';
             } else {
-                RateLimiter::clear('login-attempts:' . $ip);
+                RateLimiter::clear('login-attempts:'.$ip);
+
                 return 'vendor';
             }
         }
+
         return false;
     }
 
@@ -130,11 +155,11 @@ class LoginController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'role' => 'required'
+            'role' => 'required|in:admin,admin_employee,vendor,vendor_employee',
         ]);
 
         $recaptcha = Helpers::get_business_settings('recaptcha');
-        if (isset($recaptcha) && $recaptcha['status'] == 1 && !$request?->set_default_captcha) {
+        if (isset($recaptcha) && $recaptcha['status'] == 1 && ! $request?->set_default_captcha) {
             $request->validate([
                 'g-recaptcha-response' => [
                     function ($attribute, $value, $fail) {
@@ -145,111 +170,66 @@ class LoginController extends Controller
                             'remoteip' => \request()->ip(),
                         ]);
 
-                        if (!$gResponse->successful()) {
+                        if (! $gResponse->successful()) {
                             $fail(translate('ReCaptcha Failed'));
                         }
                     },
                 ],
             ]);
-        } else if (strtolower(session('six_captcha')) != strtolower($request->custome_recaptcha)) {
+        } elseif (strtolower(session('six_captcha')) != strtolower($request->custome_recaptcha)) {
             Toastr::error(translate('messages.ReCAPTCHA Failed'));
+
             return back();
         }
 
         $ip = $request->ip();
-        $key = 'login-attempts:' . $ip;
+        $key = 'login-attempts:'.$ip;
         $maxAttempts = 5;
         $decayMinutes = 2;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
             $time = $seconds > 60
-                ? ceil($seconds / 60) . ' minutes'
-                : $seconds . ' seconds';
+                ? ceil($seconds / 60).' minutes'
+                : $seconds.' seconds';
 
             return redirect()->back()
                 ->withInput($request->only('email', 'remember'))
-                ->withErrors(['Too many login attempts. Try again in ' . $time . '.']);
+                ->withErrors(['Too many login attempts. Try again in '.$time.'.']);
         }
-
 
         if ($request->role == 'admin_employee') {
             $data = Admin::where('email', $request->email)->where('role_id', 1)->exists();
             if ($data) {
                 RateLimiter::hit($key, $decayMinutes * 60);
+
                 return redirect()->back()->withInput($request->only('email', 'remember'))
                     ->withErrors(['Email does not match.']);
             }
-        }
-        elseif ($request->role == 'admin') {
+        } elseif ($request->role == 'admin') {
             $data = Admin::where('email', $request->email)->where('role_id', 1)->exists();
-            if (!$data) {
+            if (! $data) {
                 RateLimiter::hit($key, $decayMinutes * 60);
+
                 return redirect()->back()->withInput($request->only('email', 'remember'))
                     ->withErrors(['Email does not match.']);
             }
         }
-        elseif ($request->role == 'vendor') {
-            $vendor = Vendor::where('email', $request->email)->first();
-            if ($vendor) {
-                if($vendor?->stores[0]?->module?->module_type == 'rental'){
-                    if(!addon_published_status('Rental')){
-                        return redirect()->back()->withInput($request->only('email', 'remember'))
-                        ->withErrors([translate('messages.rental_module_is_not_available')]);
-                    }
-                }
-                if ($vendor?->stores[0]?->store_business_model == 'none') {
-                    $key = ['subscription_free_trial_days', 'subscription_free_trial_type', 'subscription_free_trial_status'];
-                    $free_trial_settings = BusinessSetting::whereIn('key', $key)->pluck('value', 'key');
-
-                    return view('vendor-views.auth.register-subscription-payment', [
-                        'package_id' => $vendor?->stores[0]?->package_id,
-                        'store_id' => $vendor?->stores[0]?->id,
-                        'free_trial_settings' => $free_trial_settings,
-                        'payment_methods' => Helpers::getActivePaymentGateways(),
-                    ]);
-                }
-
-                if ($vendor?->stores[0]?->status == 0 && $vendor?->status == 0) {
-                    return redirect()->back()->withInput($request->only('email', 'remember'))
-                        ->withErrors([translate('messages.Admin_did_not_approve_your_registration_yet.')]);
-                }
-            }else{
-                RateLimiter::hit($key, $decayMinutes * 60);
-                return redirect()->back()->withInput($request->only('email', 'remember'))
-                ->withErrors(['Email does not match.']);
-            }
-        } elseif ($request->role == 'vendor_employee') {
-            $employee = VendorEmployee::where('email', $request->email)->first();
-                if($employee?->store?->module?->module_type == 'rental'){
-                    if(!addon_published_status('Rental')){
-                        return redirect()->back()->withInput($request->only('email', 'remember'))
-                        ->withErrors([translate('messages.rental_module_is_not_available')]);
-                    }
-                }
-                if ($employee && (in_array($employee?->store?->store_business_model, ['none', 'unsubscribed']) || $employee?->store?->status == 0)) {
-                    return redirect()->back()->withInput($request->only('email', 'remember'))
-                        ->withErrors([translate('messages.store_is_inactive')]);
-                }
-                if (!$employee) {
-                    RateLimiter::hit($key, $decayMinutes * 60);
-                    return redirect()->back()->withInput($request->only('email', 'remember'))
-                        ->withErrors(['Email does not match.']);
-                }
-        }
-
         $data = $this->login_attemp($request->role, $request->email, $request->password, $request->ip(), $request->remember);
 
-        if($request->remember){
+        if ($data === 'vendor_setup') {
+            return redirect()->route('restaurant.secondStep', ['store_id' => session('vendor_registration_store_id'), 'business_plan' => 'subscription-base']);
+        }
+
+        if ($request->remember) {
             $forgetCookies = [];
-        }else{
+        } else {
             $forgetCookies = [
                 Cookie::forget('role'),
                 Cookie::forget('e_token'),
                 Cookie::forget('p_token'),
             ];
         }
-
 
         if ($data == 'admin') {
             $admin = Admin::find(auth('admin')->id());
@@ -260,6 +240,7 @@ class LoginController extends Controller
 
                 return redirect(Helpers::admin_landing_url() ?? route('admin.dashboard'))->withCookies($forgetCookies);
             }
+
             return redirect()->route('admin.business-settings.business-setup')->withCookies($forgetCookies);
         }
         if ($data == 'vendor') {
@@ -272,18 +253,21 @@ class LoginController extends Controller
             if ($employee_landing) {
                 return redirect($employee_landing)->withCookies($forgetCookies);
             }
-            if(Helpers::get_store_data()?->module_type == 'rental' && addon_published_status('Rental')){
+            if (Helpers::get_store_data()?->module_type == 'rental' && addon_published_status('Rental')) {
                 return redirect()->route('vendor.providerDashboard')->withCookies($forgetCookies);
             }
-            if(Helpers::get_store_data()?->module_type == 'service' && addon_published_status('Service')){
+            if (Helpers::get_store_data()?->module_type == 'service' && addon_published_status('Service')) {
                 return redirect()->route('vendor.service.dashboard')->withCookies($forgetCookies);
             }
+
             return redirect()->route('vendor.dashboard')->withCookies($forgetCookies);
         }
         RateLimiter::hit($key, $decayMinutes * 60);
+
         return redirect()->back()->withInput($request->only('email', 'remember'))
             ->withErrors(['Password does not match.']);
     }
+
 
     public function reloadCaptcha()
     {
@@ -343,54 +327,51 @@ class LoginController extends Controller
     public function vendor_reset_password_request(Request $request)
     {
         $request->validate([
-            'email' => 'required|email'
+            'email' => 'required|email',
         ]);
 
         $ip = $request->ip();
-        $key = 'vendor-reset-password:' . $ip;
+        $key = 'vendor-reset-password:'.$ip;
         $maxAttempts = 3;
         $decayMinutes = 60;
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
-            $time = $seconds > 60 ? ceil($seconds / 60) . ' minutes' : $seconds . ' seconds';
-            Toastr::error(translate('Too many reset requests. Try again in ') . $time . '.');
+            $time = $seconds > 60 ? ceil($seconds / 60).' minutes' : $seconds.' seconds';
+            Toastr::error(translate('Too many reset requests. Try again in ').$time.'.');
+
             return back();
         }
         RateLimiter::hit($key, $decayMinutes * 60);
 
-        $vendor = Vendor::where('email', $request['email'])->first();
-
-        if (isset($vendor)) {
-            DB::table('password_resets')->where(['email' => $vendor['email'], 'created_by' => 'vendor'])->delete();
-            $token = Helpers::generate_reset_password_code();
-            DB::table('password_resets')->insert([
-                'email' => $vendor['email'],
-                'token' => $token,
-                'created_by' => 'vendor',
-                'created_at' => now(),
-            ]);
-            $url = url('/') . '/password-reset?token=' . $token;
-
-            try {
-                if (config('mail.status') && $vendor['email']) {
-                    Mail::to($vendor?->getRawOriginal('email'))->send(new PasswordResetRequestMail($url, $vendor['f_name']));
-                    session()->put('log_email_succ', 1);
-                } else {
-                    Toastr::error(translate('messages.Failed_to_send_mail'));
-                }
-            } catch (\Throwable $th) {
-                info($th->getMessage());
-                Toastr::error(translate('messages.Failed_to_send_mail'));
-            }
-            return back();
+        $origin = rtrim((string) config('app.url'), '/');
+        $parts = parse_url($origin);
+        if (! $parts || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
+            // Configuration failure is identical for known and unknown accounts.
+            throw new \LogicException('Vendor reset links require a trusted HTTPS APP_URL.');
         }
-        Toastr::error(translate('messages.Email_does_not_exists'));
+        $vendor = Vendor::where('email', $request['email'])->first();
+        if ($vendor && ! $vendor->getAttribute('deleted_at')) {
+            $tokens = app(\App\Services\VendorSecurityTokenService::class);
+            $token = $tokens->issue($vendor, \App\Services\VendorSecurityTokenService::WEB_RESET);
+            $url = $origin.'/password-reset?token='.$token;
+            try {
+                if (config('mail.status')) {
+                    Mail::to($vendor->getRawOriginal('email'))->send(new PasswordResetRequestMail($url, $vendor['f_name']));
+                }
+            } catch (\Throwable) {
+                $tokens->revokePurpose($vendor->id, \App\Services\VendorSecurityTokenService::WEB_RESET);
+            }
+        }
+        Toastr::success(translate('If the account exists, password reset instructions have been sent.'));
+
         return back();
     }
 
+
     public function reset_password(Request $request)
     {
+        $request->validate(['token' => 'required|string|max:128']);
         $language = BusinessSetting::where('key', 'system_language')->first();
         if ($language) {
             foreach (json_decode($language->value, true) as $key => $data) {
@@ -400,9 +381,24 @@ class LoginController extends Controller
                 }
             }
         }
-        $data = DB::table('password_resets')->where(['token' => $request['token']])->first();
-        if (!$data || Carbon::parse($data->created_at)->diffInMinutes(Carbon::now()) >= 60) {
+        $vendorReset = app(\App\Services\VendorSecurityTokenService::class)->lookup((string) $request->input('token'), \App\Services\VendorSecurityTokenService::WEB_RESET);
+        if ($vendorReset) {
+            $token = $request->input('token');
+            $site_direction = session('vendor_site_direction', 'ltr');
+            $locale = session('vendor_local', 'en');
+            App::setLocale($locale);
+
+            return response()->view('auth.reset-password', compact('token', 'site_direction', 'locale'))->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer');
+        }
+        if (str_starts_with($request->input('token'), 'vr1_')) {
             Toastr::error(translate('messages.link_expired'));
+
+            return redirect()->route('home');
+        }
+        $data = DB::table('password_resets')->where(['token' => $request['token'], 'created_by' => 'admin'])->first();
+        if (! $data || Carbon::parse($data->created_at)->diffInMinutes(Carbon::now()) >= 60) {
+            Toastr::error(translate('messages.link_expired'));
+
             return redirect()->route('home');
         }
         $token = $request['token'];
@@ -416,7 +412,7 @@ class LoginController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-            //for payment and sms gateway addon
+            // for payment and sms gateway addon
 
             $response = null;
             if (Helpers::getNotificationStatusData('admin', 'forget_password', 'sms_status')) {
@@ -434,21 +430,23 @@ class LoginController extends Controller
             if ($response == 'success') {
                 return view('auth.verify-otp', compact('token', 'admin', 'site_direction', 'locale'));
             }
+
             return view('auth.reset-password', compact('token', 'admin', 'site_direction', 'locale'));
         } else {
             $site_direction = session()?->get('vendor_site_direction') ?? $direction ?? 'ltr';
             $locale = session()?->get('vendor_local') ?? $lang ?? 'en';
             App::setLocale($locale);
-            return view('auth.reset-password', compact('token', 'site_direction', 'locale'));
+
+            return response()->view('auth.reset-password', compact('token', 'site_direction', 'locale'))->header('Cache-Control', 'no-store')->header('Referrer-Policy', 'no-referrer');
         }
 
-
     }
+
 
     public function verify_token(Request $request)
     {
         $request->validate([
-            'reset_token' => 'required',
+            'reset_token' => 'required|string|max:128',
             'opt-value' => 'required',
         ]);
         $language = BusinessSetting::where('key', 'system_language')->first();
@@ -483,40 +481,50 @@ class LoginController extends Controller
     public function reset_password_submit(Request $request)
     {
         $request->validate([
-            'reset_token' => 'required',
+            'reset_token' => 'required|string|max:128',
             'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
             'confirm_password' => 'required|same:password',
         ]);
-        $data = DB::table('password_resets')->where(['token' => $request['reset_token']])->first();
-        if (isset($data)) {
-            if ($request['password'] == $request['confirm_password']) {
-                $newRememberToken = Str::random(60);
-                if ($data->created_by == 'admin') {
-                    DB::table('admins')->where(['email' => $data->email])->update([
-                        'password' => bcrypt($request['confirm_password']),
-                        'login_remember_token' => $newRememberToken,
-                    ]);
-                    $user_link = Helpers::get_login_url('admin_login_url');
-                } else {
-                    DB::table('vendors')->where(['email' => $data->email])->update([
-                        'password' => bcrypt($request['confirm_password']),
-                        'login_remember_token' => $newRememberToken,
-                    ]);
-                    $user_link = Helpers::get_login_url('store_login_url');
-                }
-                DB::table('password_resets')->where(['token' => $request['reset_token']])->delete();
-                Toastr::success(translate('messages.password_changed_successfully'));
-                return redirect()->route('login', [$user_link]);
+        $tokens = app(\App\Services\VendorSecurityTokenService::class);
+        if ($tokens->resetPassword($request->reset_token, \App\Services\VendorSecurityTokenService::WEB_RESET, $request->password)) {
+            Toastr::success(translate('messages.password_changed_successfully'));
+
+            return redirect()->route('login', [Helpers::get_login_url('store_login_url')]);
+        }
+        if (str_starts_with($request->reset_token, 'vr1_')) {
+            Toastr::error(translate('messages.link_expired'));
+
+            return back();
+        }
+        // Legacy admin resets remain explicitly admin-only; other purposes cannot reset vendors.
+        $changed = DB::transaction(function () use ($request) {
+            $data = DB::table('password_resets')->where(['token' => $request->reset_token, 'created_by' => 'admin'])->lockForUpdate()->first();
+            if (! $data || Carbon::parse($data->created_at)->addHour()->isPast()) {
+                return false;
             }
+            DB::table('admins')->where('email', $data->email)->where('role_id', 1)->update([
+                'password' => bcrypt($request->password), 'login_remember_token' => Str::random(60),
+            ]);
+            DB::table('password_resets')->where(['token' => $request->reset_token, 'created_by' => 'admin'])->delete();
+
+            return true;
+        });
+        if ($changed) {
+            Toastr::success(translate('messages.password_changed_successfully'));
+
+            return redirect()->route('login', [Helpers::get_login_url('admin_login_url')]);
         }
         Toastr::error(translate('messages.something_went_wrong'));
+
         return back();
 
     }
 
+
     public function logout()
     {
         if (auth('vendor')?->check()) {
+            Vendor::withoutGlobalScopes()->whereKey(auth('vendor')->id())->update(['auth_token' => null]);
             $user_link = Helpers::get_login_url('store_login_url');
             auth()->guard('vendor')->logout();
             session()->forget('subscription_free_trial_close_btn');
@@ -524,6 +532,7 @@ class LoginController extends Controller
             session()->forget('subscription_cancel_close_btn');
 
         } elseif (auth('vendor_employee')?->check()) {
+            VendorEmployee::withoutGlobalScopes()->whereKey(auth('vendor_employee')->id())->update(['auth_token' => null]);
             $user_link = Helpers::get_login_url('store_employee_login_url');
             auth()->guard('vendor_employee')->logout();
             session()->forget('subscription_free_trial_close_btn');
@@ -531,14 +540,16 @@ class LoginController extends Controller
             session()->forget('subscription_cancel_close_btn');
         } else {
             if (auth()?->guard('admin')?->user()?->role_id == 1) {
-                    $user_link = Helpers::get_login_url('admin_login_url');
-                } else {
+                $user_link = Helpers::get_login_url('admin_login_url');
+            } else {
                 $user_link = Helpers::get_login_url('admin_employee_login_url');
             }
             auth()?->guard('admin')?->logout();
         }
+
         return redirect()->route('login', [$user_link]);
     }
+
 
     public function otp_resent(Request $request)
     {

@@ -50,6 +50,7 @@ use App\Models\Tag;
 use App\Models\Translation;
 use App\Models\User;
 use App\Models\UserNotification;
+use App\Models\Vendor;
 use App\Models\VendorEmployee;
 use App\Models\VisitorLog;
 use App\Models\Zone;
@@ -4125,15 +4126,8 @@ class Helpers
 
             $store->item_section = 1;
             $store->pos_system = 1;
-            if ($type == 'new_join' && $store->vendor?->status == 0) {
-                $store->status = 0;
-                $store_subscription->status = 0;
-
-            } else {
-                $store->status = 1;
-                $store_subscription->status = 1;
-
-            }
+            // Payment never approves or reactivates a store. Re-evaluate under locks below.
+            $store_subscription->status = 0;
 
             // For Store Free Delivery
             if ($store->free_delivery == 1 && $package->self_delivery == 1) {
@@ -4190,6 +4184,10 @@ class Helpers
                 'max_product' => $package->max_product,
             ];
             DB::beginTransaction();
+            $currentStore = Store::withoutGlobalScopes()->whereKey($store->id)->lockForUpdate()->firstOrFail();
+            $currentVendor = Vendor::withoutGlobalScopes()->whereKey($currentStore->vendor_id)->lockForUpdate()->firstOrFail();
+            $store->status = $currentStore->status;
+            $store_subscription->status = (int) $currentStore->status === 1 && (int) $currentVendor->status === 1 && $payment_method !== 'pay_now' ? 1 : 0;
             $store->save();
             $subscription_transaction->save();
             $store_subscription->save();
@@ -4244,11 +4242,12 @@ class Helpers
         }
 
         if (! (in_array($payment_method, ['manual_payment_by_admin', 'plan_shift_by_admin']) && $store_old_subscription == null)) {
-            self::subscriptionNotifications($store, $type, $subscription_transaction);
+            DB::afterCommit(static fn () => self::subscriptionNotifications($store, $type, $subscription_transaction));
         }
 
         return $subscription_transaction->id;
     }
+
 
     public static function subscriptionNotifications($store, $type, $subscription_transaction)
     {

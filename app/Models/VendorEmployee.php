@@ -27,6 +27,7 @@ class VendorEmployee extends Authenticatable
         'password',
         'auth_token',
         'remember_token',
+        'login_remember_token',
     ];
     protected $appends = ['image_full_url'];
     public function getImageFullUrlAttribute(){

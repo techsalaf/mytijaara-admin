@@ -86,6 +86,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => AdminMiddleware::class,
             'vendor' => VendorMiddleware::class,
             'vendor.api' => VendorTokenIsValid::class,
+            'vendor.subscription' => \App\Http\Middleware\VendorSubscriptionAccess::class,
+            'vendor.registration-session' => \App\Http\Middleware\VendorRegistrationSession::class,
             'dm.api' => DmTokenIsValid::class,
             'serviceman.api' => \Modules\Service\Http\Middleware\ServicemanTokenIsValid::class,
             'module' => ModulePermissionMiddleware::class,

@@ -1010,15 +1010,24 @@ class VendorController extends Controller
         $request->validate(['status' => 'required|in:0,1']);
         if ((int) $store->status === (int) $request->status) {
             Toastr::success(translate('messages.store_status_updated'));
+
             return back();
         }
-        $store->status = $request->status;
-        $store->save();
+        $store = DB::transaction(function () use ($store, $request) {
+            $locked = Store::withoutGlobalScopes()->whereKey($store->id)->lockForUpdate()->firstOrFail();
+            $vendor = Vendor::withoutGlobalScopes()->whereKey($locked->vendor_id)->lockForUpdate()->firstOrFail();
+            app(\App\Services\VendorAccessRevocationService::class)->invalidate($vendor);
+            $vendor->save();
+            $locked->status = $request->status;
+            $locked->save();
+            $locked->setRelation('vendor', $vendor);
+
+            return $locked;
+        }, 3);
         $vendor = $store->vendor;
 
         try {
             if ($request->status == 0) {
-                $vendor->auth_token = null;
                 if (isset($vendor->firebase_token) && Helpers::getNotificationStatusData('store', 'store_account_block', 'push_notification_status', $store?->id)) {
                     $data = [
                         'title' => translate('messages.suspended'),
@@ -1077,13 +1086,14 @@ class VendorController extends Controller
                 ));
             }
         } catch (\Throwable $ex) {
-            info('Vendor application status event dispatch failed: ' . $ex->getMessage());
+            info('Vendor application status event dispatch failed: '.$ex->getMessage());
         }
 
         Toastr::success(translate('messages.store_status_updated'));
 
         return back();
     }
+
 
     public function verifiedSeller(Store $store)
     {

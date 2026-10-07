@@ -270,12 +270,16 @@
                             <td>
                                 @if(isset($store->vendor->status))
                                     @if($store->vendor->status)
+                                    <form method="post" action="{{route('admin.rental.provider.status-by-store',[$store->id])}}">
+                                    @csrf
+                                    <input type="hidden" name="status" value="{{$store->status ? 0 : 1}}">
                                     <label class="toggle-switch toggle-switch-sm" for="stocksCheckbox{{$store->id}}">
-                                        <input type="checkbox" data-url="{{route('admin.rental.provider.status-by-store',[$store->id])}}" data-message="{{translate('messages.you_want_to_change_this_provider_status')}}" class="toggle-switch-input status_change_alert" id="stocksCheckbox{{$store->id}}" {{$store->status?'checked':''}}>
+                                        <input type="checkbox" data-url="{{route('admin.rental.provider.status-by-store',[$store->id])}}" data-message="{{translate('messages.you_want_to_change_this_provider_status')}}" class="toggle-switch-input" onchange="if(confirm(this.dataset.message)){this.form.requestSubmit()}else{this.checked=!this.checked}" id="stocksCheckbox{{$store->id}}" {{$store->status?'checked':''}}>
                                         <span class="toggle-switch-label">
                                             <span class="toggle-switch-indicator"></span>
                                         </span>
                                     </label>
+                                    </form>
                                     @else
                                     <span class="badge badge-soft-danger">{{translate('messages.denied')}}</span>
                                     @endif
