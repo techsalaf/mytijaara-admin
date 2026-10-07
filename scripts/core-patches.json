@@ -653,6 +653,16 @@
       ],
       "upgrade": "Reverify served roots and deployment layout on host upgrades",
       "owner": "MyTijaara backend maintainers"
+    },
+    "database/migrations/2026_10_07_000004_enforce_registration_transactional_storage.php": {
+      "purpose": "Forward-only transactional storage repair and restoration of restrictive registration foreign keys",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "Preserve all rows; enforce InnoDB; reject orphan or incompatible foreign-key evidence; no destructive rollback",
+      "tests": [
+        "MySqlVendorFlowConcurrencyTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
     }
   },
   "separate_addon_changes": [

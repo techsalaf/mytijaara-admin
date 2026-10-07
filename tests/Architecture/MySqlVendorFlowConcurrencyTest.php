@@ -25,6 +25,7 @@ class MySqlVendorFlowConcurrencyTest extends \Tests\TestCase
         parent::setUp();
         $this->fixture = new FullCoreDatabase;
         $this->fixture->create();
+        DB::statement("SET SESSION default_storage_engine='MyISAM'");
         Queue::fake();
         Mail::fake();
         Http::preventStrayRequests();
@@ -39,6 +40,7 @@ class MySqlVendorFlowConcurrencyTest extends \Tests\TestCase
         }
         (require base_path('database/migrations/2026_10_07_000002_create_registration_policy_evidence.php'))->up();
         (require base_path('database/migrations/2026_10_07_000001_create_vendor_security_tokens_table.php'))->up();
+        (require base_path('database/migrations/2026_10_07_000004_enforce_registration_transactional_storage.php'))->up();
         DB::table('business_settings')->insert([['key' => 'toggle_store_registration', 'value' => '1'], ['key' => 'subscription_business_model', 'value' => '0'], ['key' => 'commission_business_model', 'value' => '1']]);
         DB::table('modules')->insert(['id' => 1, 'module_name' => 'Fixture', 'module_type' => 'grocery', 'status' => 1]);
         DB::table('zones')->insert(['id' => 1, 'name' => 'Fixture', 'status' => 1, 'coordinates' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))',".POINT_SRID.')')]);
@@ -57,6 +59,39 @@ class MySqlVendorFlowConcurrencyTest extends \Tests\TestCase
         } finally {
             parent::tearDown();
         }
+    }
+
+    public function test_forward_repair_preserves_policy_rows_and_restores_real_transactions_and_foreign_keys(): void
+    {
+        $before = DB::table('legal_policy_versions')->orderBy('id')->get()->toJson();
+        $keys = DB::select("SELECT TABLE_NAME AS table_name,CONSTRAINT_NAME AS constraint_name FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA=DATABASE() AND CONSTRAINT_TYPE='FOREIGN KEY' AND TABLE_NAME IN ('vendor_security_tokens','vendor_registration_consents')");
+        foreach ($keys as $key) {
+            \Illuminate\Support\Facades\Schema::table($key->table_name, fn ($t) => $t->dropForeign($key->constraint_name));
+        }
+        foreach (['vendor_security_tokens', 'vendor_registration_consents', 'vendor_registration_media', 'legal_policy_versions'] as $table) {
+            DB::statement("ALTER TABLE `$table` ENGINE=MyISAM");
+        }
+        $guard = app(\Modules\WhatsAppVendorConcierge\app\Services\FlowStorageInvariant::class);
+        try {
+            $guard->assertSafe();
+            $this->fail('Nontransactional storage must prevent activation.');
+        } catch (\RuntimeException) {
+            $this->addToAssertionCount(1);
+        }
+        (require base_path('database/migrations/2026_10_07_000004_enforce_registration_transactional_storage.php'))->up();
+        (require base_path('database/migrations/2026_10_07_000004_enforce_registration_transactional_storage.php'))->up();
+        $guard->assertSafe();
+        $this->assertSame($before, DB::table('legal_policy_versions')->orderBy('id')->get()->toJson());
+        $foreign = DB::select("SELECT DELETE_RULE AS delete_rule FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA=DATABASE() AND TABLE_NAME='vendor_registration_consents'");
+        $this->assertCount(3, $foreign);
+        foreach ($foreign as $key) {
+            $this->assertSame('RESTRICT', $key->delete_rule);
+        }
+        $count = DB::table('wa_vendor_flow_events')->count();
+        DB::beginTransaction();
+        DB::table('wa_vendor_flow_events')->insert(['event' => 'synthetic_rollback', 'created_at' => now()]);
+        DB::rollBack();
+        $this->assertSame($count, DB::table('wa_vendor_flow_events')->count());
     }
 
     public function test_two_connections_cannot_complete_one_session_and_duplicates_remain_unique(): void

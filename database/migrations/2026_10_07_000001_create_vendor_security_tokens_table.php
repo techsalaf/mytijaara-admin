@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vendor_security_tokens', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->unsignedBigInteger('vendor_id')->index();
             $table->unsignedBigInteger('store_id')->nullable();

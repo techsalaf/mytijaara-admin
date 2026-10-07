@@ -20,6 +20,11 @@ class FlowOnboardingService
             return false;
         }
         if (! app()->environment(['local', 'testing'])) {
+            try {
+                app(FlowStorageInvariant::class)->assertSafe();
+            } catch (\Throwable) {
+                return false;
+            }
             if (! \Illuminate\Support\Facades\Schema::hasTable('wa_vendor_flow_sync')) {
                 return false;
             }

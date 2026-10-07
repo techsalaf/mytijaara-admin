@@ -810,7 +810,7 @@ return;
             'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
             'subscription_package' => "Please select one of the active subscription packages shown in the list.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
-            'privacy_acceptance' => "You must accept MyTijaara's Merchant Privacy Policy (https://mytijaara.com/privacy-policy) to proceed. Tap *✅ Accept Privacy* or reply *Accept*.",
+            'privacy_acceptance' => "You must accept MyTijaara's Merchant Privacy Policy (https://www.mytijaara.com/privacy/) to proceed. Tap *✅ Accept Privacy* or reply *Accept*.",
             'kyc_documents' => "Please provide a valid TIN / CAC / NIN number, upload a document (max 2MB), or reply *Skip* to complete verification later in your dashboard.",
             'documents' => "Please upload a photo or document of your ID or business registration, or reply *Skip* to continue.",
             default => "Please check your input and try again, or reply *Support* if you need help.",
@@ -1140,7 +1140,7 @@ return;
             ],
             'privacy_acceptance' => [
                 'type' => 'button',
-                'body' => "[Section 5 of 5: Privacy Policy] 🔒\n\nPlease review MyTijaara's Merchant Privacy Policy:\n🔗 https://mytijaara.com/privacy-policy\n\nDo you accept the Merchant Privacy Policy to proceed?",
+                'body' => "[Section 5 of 5: Privacy Policy] 🔒\n\nPlease review MyTijaara's Merchant Privacy Policy:\n🔗 https://www.mytijaara.com/privacy/\n\nDo you accept the Merchant Privacy Policy to proceed?",
                 'buttons' => [
                     ['id' => 'accept_privacy', 'title' => '✅ Accept Privacy'],
                     ['id' => 'decline_privacy', 'title' => '❌ Decline'],

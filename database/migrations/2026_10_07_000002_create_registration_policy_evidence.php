@@ -2,16 +2,18 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        if (! in_array(\Illuminate\Support\Facades\DB::connection()->getDriverName(), ['sqlite', 'mysql'], true)) {
+        if (! in_array(DB::connection()->getDriverName(), ['sqlite', 'mysql'], true)) {
             throw new LogicException('Policy evidence immutability requires a reviewed database driver before schema creation.');
         }
         Schema::create('legal_policy_versions', function (Blueprint $t) {
+            $t->engine = 'InnoDB';
             $t->id();
             $t->string('policy', 20);
             $t->string('version', 191);
@@ -25,6 +27,7 @@ return new class extends Migration
             $t->unique(['policy', 'version']);
         });
         Schema::create('vendor_registration_media', function (Blueprint $t) {
+            $t->engine = 'InnoDB';
             $t->id();
             $t->unsignedBigInteger('store_id');
             $t->string('directory', 100);
@@ -35,6 +38,7 @@ return new class extends Migration
             $t->unique(['store_id', 'directory', 'name']);
         });
         Schema::create('vendor_registration_consents', function (Blueprint $t) {
+            $t->engine = 'InnoDB';
             $t->id();
             $t->unsignedBigInteger('vendor_id');
             $t->unsignedBigInteger('store_id');
@@ -55,14 +59,14 @@ return new class extends Migration
 
     private function protectEvidence(): void
     {
-        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $driver = DB::connection()->getDriverName();
         foreach (['legal_policy_versions', 'vendor_registration_consents'] as $table) {
             foreach (['UPDATE', 'DELETE'] as $action) {
                 $name = $table.'_immutable_'.strtolower($action);
                 if ($driver === 'sqlite') {
-                    \Illuminate\Support\Facades\DB::unprepared("CREATE TRIGGER $name BEFORE $action ON $table BEGIN SELECT RAISE(ABORT, 'Immutable registration policy evidence'); END");
+                    DB::unprepared("CREATE TRIGGER $name BEFORE $action ON $table BEGIN SELECT RAISE(ABORT, 'Immutable registration policy evidence'); END");
                 } elseif ($driver === 'mysql') {
-                    \Illuminate\Support\Facades\DB::unprepared("CREATE TRIGGER $name BEFORE $action ON $table FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Immutable registration policy evidence'");
+                    DB::unprepared("CREATE TRIGGER $name BEFORE $action ON $table FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Immutable registration policy evidence'");
                 } else {
                     throw new LogicException('Policy evidence immutability requires a reviewed database driver.');
                 }
