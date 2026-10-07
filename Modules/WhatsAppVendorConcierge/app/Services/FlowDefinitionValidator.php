@@ -2,6 +2,8 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
+use App\Services\RegistrationPolicyService;
+
 class FlowDefinitionValidator
 {
     public function path(): string
@@ -38,7 +40,7 @@ class FlowDefinitionValidator
             }
             foreach ($nodes as $n) {
                 if (($n['type'] ?? '') === 'OptIn') {
-                    $statements = ['terms_agreed' => \App\Services\RegistrationPolicyService::TERMS, 'privacy_acknowledged' => \App\Services\RegistrationPolicyService::PRIVACY];
+                    $statements = ['terms_agreed' => RegistrationPolicyService::TERMS, 'privacy_acknowledged' => RegistrationPolicyService::PRIVACY];
                     if (($statements[$n['name'] ?? ''] ?? null) !== ($n['label'] ?? null) || ($n['required'] ?? null) !== true || ($n['init-value'] ?? null) !== false) {
                         throw new \InvalidArgumentException('Policy presentation differs from the server-owned evidence contract.');
                     }
