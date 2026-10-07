@@ -18,6 +18,37 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 class VendorFlowIntegrationTest extends ApplicationFixtureTestCase
 {
+    public function test_live_environment_requires_private_roots_and_confirmed_publication(): void
+    {
+        $this->app['env'] = 'live';
+        try {
+            config(['whatsapp-vendor-flow.test_phones' => ['2348000000001'], 'whatsapp-vendor-flow.private_root_configured' => false, 'filesystems.disks.registration_private.configured' => false]);
+            $service = app(\Modules\WhatsAppVendorConcierge\app\Services\FlowOnboardingService::class);
+            $this->assertFalse($service->enabledFor('2348000000001'));
+            config(['whatsapp-vendor-flow.private_root_configured' => true, 'filesystems.disks.registration_private.configured' => true]);
+            $this->assertFalse($service->enabledFor('2348000000001'));
+            DB::table('wa_vendor_flow_sync')->insert(['definition_version' => config('whatsapp-vendor-flow.definition_version'), 'published_flow_id' => '987', 'asset_hash' => hash_file('sha256', app(\Modules\WhatsAppVendorConcierge\app\Services\FlowDefinitionValidator::class)->path()), 'status' => 'published', 'created_at' => now(), 'updated_at' => now()]);
+            $this->assertTrue($service->enabledFor('2348000000001'));
+            $this->assertFalse($service->enabledFor('2348000000002'));
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+    }
+
+    public function test_live_environment_rejects_plain_http_credential_pages(): void
+    {
+        $this->app['env'] = 'live';
+        try {
+            $middleware = app(\Modules\WhatsAppVendorConcierge\app\Http\Middleware\SecureCredentialPage::class);
+            $middleware->handle(\Illuminate\Http\Request::create('http://example.test/whatsapp/flow/password'), fn () => response('unreachable'));
+            $this->fail('Live credential pages must require HTTPS.');
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $error) {
+            $this->assertSame(400, $error->getStatusCode());
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

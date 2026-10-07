@@ -16,10 +16,10 @@ class FlowOnboardingService
         if (! config('whatsapp-vendor-flow.enabled') || ! in_array(config('whatsapp-vendor-flow.mode'), ['draft', 'published'], true) || ! preg_match('/^[0-9]+$/D', (string) config('whatsapp-vendor-flow.flow_id'))) {
             return false;
         }
-        if (app()->environment('production') && (! config('whatsapp-vendor-flow.private_root_configured') || ! config('filesystems.disks.registration_private.configured'))) {
+        if (! app()->environment(['local', 'testing']) && (! config('whatsapp-vendor-flow.private_root_configured') || ! config('filesystems.disks.registration_private.configured'))) {
             return false;
         }
-        if (app()->environment('production')) {
+        if (! app()->environment(['local', 'testing'])) {
             if (! \Illuminate\Support\Facades\Schema::hasTable('wa_vendor_flow_sync')) {
                 return false;
             }
