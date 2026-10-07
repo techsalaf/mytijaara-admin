@@ -1,5 +1,8 @@
 * text=auto
 scripts/*.sh text eol=lf
+Modules/WhatsAppVendorConcierge/resources/flows/**/*.json text eol=lf
+Modules/WhatsAppVendorConcierge/resources/flows/*.json text eol=lf
+Modules/WhatsAppVendorConcierge/resources/flows/fixtures/policies/*.txt -text
 *.css linguist-vendored
 *.scss linguist-vendored
 *.js linguist-vendored

@@ -659,8 +659,22 @@
                                 </div>
                             </div>
                             <div class="terms-check mt-3 px-4">
-                                <input type="checkbox" id="businessTerms" required />
-                                <label for="businessTerms">{{ translate('messages.i_agree_to_the') }} <a href="{{ route('terms-and-conditions') }}" target="_blank">{{ translate('messages.terms_and_condition') }}</a> {{ translate('messages.and') }} <a href="{{ route('privacy-policy') }}" target="_blank">{{ translate('messages.privacy_policy') }}</a></label>
+                                <input type="checkbox" id="businessTerms" name="terms_accepted" value="1" required />
+                                @if(config('registration-policies.require_versions'))
+                                    @php($registrationPolicies=app(\App\Services\RegistrationPolicyService::class)->manifest(str_replace('_','-',app()->getLocale())))
+                                    <input type="hidden" name="policy_locale" value="{{ $registrationPolicies['locale'] }}">
+                                    <input type="hidden" name="terms_version" value="{{ $registrationPolicies['terms']['version'] }}">
+                                    <input type="hidden" name="privacy_version" value="{{ $registrationPolicies['privacy']['version'] }}">
+                                    <input type="hidden" name="presentation_hash" value="{{ $registrationPolicies['presentation_hash'] }}">
+                                    <p>Terms version: {{ $registrationPolicies['terms']['version'] }}. Privacy version: {{ $registrationPolicies['privacy']['version'] }}.</p>
+                                @endif
+@if(isset($registrationPolicies))
+<label for="businessTerms">{{ $registrationPolicies['terms_statement'] ?? \App\Services\RegistrationPolicyService::TERMS }} <a href="{{ $registrationPolicies['terms']['url'] }}" target="_blank" rel="noopener">Terms</a></label>
+<input type="checkbox" id="privacyNotice" name="privacy_accepted" value="1" required>
+<label for="privacyNotice">{{ $registrationPolicies['privacy_statement'] ?? \App\Services\RegistrationPolicyService::PRIVACY }} <a href="{{ $registrationPolicies['privacy']['url'] }}" target="_blank" rel="noopener">Privacy notice</a></label>
+@else
+                                <label for="businessTerms">{{ translate('messages.i_agree_to_the') }} <a href="{{ isset($registrationPolicies) ? $registrationPolicies['terms']['url'] : route('terms-and-conditions') }}" target="_blank">{{ translate('messages.terms_and_condition') }}</a> {{ translate('messages.and') }} <a href="{{ isset($registrationPolicies) ? $registrationPolicies['privacy']['url'] : route('privacy-policy') }}" target="_blank">{{ translate('messages.privacy_policy') }}</a></label>
+@endif
                             </div>
                             <div class="text-end pt-3 d-flex flex-wrap p-4 justify-content-end gap-3">
                                 <button type="button" id="back-to-form"
@@ -672,6 +686,25 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                @else
+                    <div class="terms-check mt-3 px-4">
+                        <input type="checkbox" id="businessTerms" name="terms_accepted" value="1" required />
+                                @if(config('registration-policies.require_versions'))
+                                    @php($registrationPolicies=app(\App\Services\RegistrationPolicyService::class)->manifest(str_replace('_','-',app()->getLocale())))
+                                    <input type="hidden" name="policy_locale" value="{{ $registrationPolicies['locale'] }}">
+                                    <input type="hidden" name="terms_version" value="{{ $registrationPolicies['terms']['version'] }}">
+                                    <input type="hidden" name="privacy_version" value="{{ $registrationPolicies['privacy']['version'] }}">
+                                    <input type="hidden" name="presentation_hash" value="{{ $registrationPolicies['presentation_hash'] }}">
+                                    <p>Terms version: {{ $registrationPolicies['terms']['version'] }}. Privacy version: {{ $registrationPolicies['privacy']['version'] }}.</p>
+                                @endif
+@if(isset($registrationPolicies))
+<label for="businessTerms">{{ $registrationPolicies['terms_statement'] ?? \App\Services\RegistrationPolicyService::TERMS }} <a href="{{ $registrationPolicies['terms']['url'] }}" target="_blank" rel="noopener">Terms</a></label>
+<input type="checkbox" id="privacyNotice" name="privacy_accepted" value="1" required>
+<label for="privacyNotice">{{ $registrationPolicies['privacy_statement'] ?? \App\Services\RegistrationPolicyService::PRIVACY }} <a href="{{ $registrationPolicies['privacy']['url'] }}" target="_blank" rel="noopener">Privacy notice</a></label>
+@else
+                        <label for="businessTerms">{{ translate('messages.i_agree_to_the') }} <a href="{{ isset($registrationPolicies) ? $registrationPolicies['terms']['url'] : route('terms-and-conditions') }}" target="_blank">{{ translate('messages.terms_and_condition') }}</a> {{ translate('messages.and') }} <a href="{{ isset($registrationPolicies) ? $registrationPolicies['privacy']['url'] : route('privacy-policy') }}" target="_blank">{{ translate('messages.privacy_policy') }}</a></label>
+@endif
                     </div>
                 @endif
             </form>
@@ -812,9 +845,12 @@ function submitForm() {
     }
     @endif
 
+    if ($('#privacyNotice').length && (!$('#businessTerms').is(':checked') || !$('#privacyNotice').is(':checked'))) { toastr.error('Agree to the terms and acknowledge the privacy notice.'); return; }
     $('.btn-disable').prop('disabled', true);
 
     let formData = new FormData(document.getElementById('form-id'));
+    // Legacy combined checkbox mapping only; versioned presentation requires both explicit controls.
+    if (!$('#privacyNotice').length && $('#businessTerms').is(':checked')) formData.append('privacy_accepted', '1');
     @if (!\App\CentralLogics\Helpers::subscription_check())
     formData.append('business_plan', 'commission-base');
     @endif
@@ -1069,8 +1105,8 @@ function submitForm() {
         })
 
         // Terms checkbox — enable/disable submit in business plan step
-        $('#businessTerms').on('change', function () {
-            $('#generalSubmitBtn').prop('disabled', !this.checked);
+        $('#businessTerms, #privacyNotice').on('change', function () {
+            $('#generalSubmitBtn').prop('disabled', !$('#businessTerms').is(':checked') || ($('#privacyNotice').length && !$('#privacyNotice').is(':checked')));
         });
 
         // Business plan toggle — show/hide subscription packages

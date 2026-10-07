@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'registration_public_root' => env('VENDOR_REGISTRATION_PUBLIC_ROOT'),
 
     /*
     |--------------------------------------------------------------------------
@@ -29,6 +30,7 @@ return [
     */
 
     'disks' => [
+        'registration_private' => ['configured'=>(bool)env('VENDOR_REGISTRATION_PRIVATE_ROOT'),'driver'=>'local','root'=>env('VENDOR_REGISTRATION_PRIVATE_ROOT',sys_get_temp_dir().'/mytijaara-registration-private/'.hash('sha256',base_path())),'visibility'=>'private','throw'=>true],
 
         'local' => [
             'driver' => 'local',

@@ -65,3 +65,6 @@ storage/app/dummy-service-seed.json
 /app/Modules/
 
 /public/downloads/*.apk
+
+# OpenSSL runtime randomness state is never source.
+/.rnd
