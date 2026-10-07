@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use Modules\WhatsAppVendorConcierge\app\Http\Controllers\Api\WebhookController;
 
+Route::get('/registration-policy-documents/{version}', \Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\PolicyDocumentController::class)
+    ->where('version', '[a-zA-Z0-9_-]+')
+    ->middleware('throttle:120,1')
+    ->name('whatsapp.policy-document');
+
 /*
 |--------------------------------------------------------------------------
 | WhatsApp Webhook Routes

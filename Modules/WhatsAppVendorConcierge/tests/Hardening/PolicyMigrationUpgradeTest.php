@@ -2,11 +2,31 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Hardening;
 
+use App\Models\LegalPolicyVersion;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class PolicyMigrationUpgradeTest extends ApplicationFixtureTestCase
 {
+    public function test_public_policy_endpoint_serves_exact_archived_bytes_and_fails_closed_on_tampering(): void
+    {
+        (require base_path('database/migrations/2026_10_07_000002_create_registration_policy_evidence.php'))->up();
+        Storage::fake('policy_archive');
+        config(['registration-policies.archive_disk' => 'policy_archive']);
+        $bytes = "<h2>Approved synthetic Terms</h2>\r\n<p>Exact bytes.</p>";
+        $object = 'policy-documents/test-terms-en.html';
+        Storage::disk('policy_archive')->put($object, $bytes);
+        LegalPolicyVersion::create(['policy' => 'terms', 'version' => 'test-terms-en', 'locale' => 'en', 'content_hash' => hash('sha256', $bytes), 'document_url' => 'https://example.test/registration-policy-documents/test-terms-en', 'storage_object' => $object, 'effective_at' => now('UTC'), 'created_at' => now('UTC')]);
+        $response = $this->get('/registration-policy-documents/test-terms-en');
+        $response->assertOk()->assertContent($bytes)->assertHeader('X-Content-Type-Options', 'nosniff')->assertHeader('ETag', '"'.hash('sha256', $bytes).'"');
+        $this->assertStringContainsString('sandbox', $response->headers->get('Content-Security-Policy'));
+        Storage::disk('policy_archive')->put($object, 'changed');
+        $this->get('/registration-policy-documents/test-terms-en')->assertStatus(503);
+        $this->get('/registration-policy-documents/unknown')->assertNotFound();
+    }
+
     public function test_upgrade_preserves_existing_vendor_without_acceptance_backfill(): void
     {
         $id = DB::table('vendors')->insertGetId(['f_name' => 'Synthetic legacy', 'l_name' => 'Owner', 'email' => 'legacy@example.test', 'phone' => '2348000000099', 'password' => 'synthetic-unusable', 'status' => 1]);
@@ -36,7 +56,7 @@ class PolicyMigrationUpgradeTest extends ApplicationFixtureTestCase
                 (require base_path('database/migrations/2026_10_07_000002_create_registration_policy_evidence.php'))->up();
             });
             $this->fail('Injected trigger-name collision must fail migration.');
-        } catch (\Illuminate\Database\QueryException) {
+        } catch (QueryException) {
             $this->assertFalse(Schema::hasTable('legal_policy_versions'));
             $this->assertFalse(Schema::hasTable('vendor_registration_consents'));
             $this->assertFalse(Schema::hasTable('vendor_registration_media'));
@@ -47,7 +67,7 @@ class PolicyMigrationUpgradeTest extends ApplicationFixtureTestCase
     public function test_synthetic_archive_installer_is_idempotent_and_refuses_normal_database(): void
     {
         (require base_path('database/migrations/2026_10_07_000002_create_registration_policy_evidence.php'))->up();
-        \Illuminate\Support\Facades\Storage::fake('policy_archive');
+        Storage::fake('policy_archive');
         config(['registration-policies.archive_disk' => 'policy_archive']);
         $path = module_path('WhatsAppVendorConcierge', 'resources/flows/fixtures/install_sandbox_policies.php');
         $manifest = require $path;
