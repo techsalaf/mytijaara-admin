@@ -165,13 +165,500 @@
       ],
       "upgrade": "Reapply GEMINI-MYTJ null-safe @if wrapper around gallery @foreach",
       "owner": "MyTijaara backend maintainers"
+    },
+    "app/DTOs/VendorSelfRegistrationInput.php": {
+      "purpose": "Immutable channel-neutral registration contract with explicit consent and phone normalization",
+      "reason_in_core": "User-approved Phase A canonical registration extraction, 2026-10-06; host must work without optional channels",
+      "upstream_behavior": "Retain translated field behavior, pending approval and payment route; intentionally reject invalid and incomplete inputs",
+      "tests": [
+        "SharedVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "HostWithoutConciergeTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile upstream public registration domain changes and rerun parity/isolation tests",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/DTOs/VendorSelfRegistrationResult.php": {
+      "purpose": "Typed registration result with pending entities and payment requirement",
+      "reason_in_core": "User-approved Phase A canonical registration extraction, 2026-10-06; host must work without optional channels",
+      "upstream_behavior": "Retain translated field behavior, pending approval and payment route; intentionally reject invalid and incomplete inputs",
+      "tests": [
+        "SharedVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "HostWithoutConciergeTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile upstream public registration domain changes and rerun parity/isolation tests",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorSelfRegistrationService.php": {
+      "purpose": "Atomic shared web/Concierge creation, canonical translations, defaults, media and eligibility",
+      "reason_in_core": "User-approved Phase A canonical registration extraction, 2026-10-06; host must work without optional channels",
+      "upstream_behavior": "Retain translated field behavior, pending approval and payment route; intentionally reject invalid and incomplete inputs",
+      "tests": [
+        "SharedVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "HostWithoutConciergeTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile upstream public registration domain changes and rerun parity/isolation tests",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorRegistrationNotifier.php": {
+      "purpose": "Canonical module-specific mail preferences at an after-commit boundary",
+      "reason_in_core": "User-approved Phase A canonical registration extraction, 2026-10-06; host must work without optional channels",
+      "upstream_behavior": "Retain translated field behavior, pending approval and payment route; intentionally reject invalid and incomplete inputs",
+      "tests": [
+        "SharedVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "HostWithoutConciergeTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile upstream public registration domain changes and rerun parity/isolation tests",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/VendorController.php": {
+      "purpose": "Transport mapping and delegation to shared creation service; approved validation corrections",
+      "reason_in_core": "User-approved Phase A canonical registration extraction, 2026-10-06; host must work without optional channels",
+      "upstream_behavior": "Retain translated field behavior, pending approval and payment route; intentionally reject invalid and incomplete inputs",
+      "tests": [
+        "SharedVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "HostWithoutConciergeTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile upstream public registration domain changes and rerun parity/isolation tests",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "resources/views/vendor-views/auth/general-info.blade.php": {
+      "purpose": "Submit explicit named terms/privacy consent for both configured business-model paths",
+      "reason_in_core": "User-approved Phase A canonical registration extraction, 2026-10-06; host must work without optional channels",
+      "upstream_behavior": "Retain translated field behavior, pending approval and payment route; intentionally reject invalid and incomplete inputs",
+      "tests": [
+        "SharedVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "HostWithoutConciergeTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile upstream public registration domain changes and rerun parity/isolation tests",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Api/V1/Auth/VendorLoginController.php": {
+      "purpose": "User-authorized uncommitted Phase B API registration mapping/delegation; structured errors and safe duplicate races",
+      "upstream_behavior": "Keeps successful commission/subscription envelopes and 403 validation; required cover/surname/explicit consent are intentional client rollout gates",
+      "reason_in_core": "Public API registration must share canonical domain creation independently of optional modules",
+      "tests": [
+        "ApiVendorRegistrationTest",
+        "MySqlHostRegistrationTest",
+        "RegistrationSourceContractTest"
+      ],
+      "upgrade": "Reconcile API client fields/status envelopes; do not release strict consent requirements before coordinated client adoption",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/DTOs/VendorAccessDecision.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorAuthenticationEligibility.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorAuthenticationService.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorSecurityTokenService.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Middleware/VendorTokenIsValid.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Middleware/VendorMiddleware.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Middleware/VendorSubscriptionAccess.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Middleware/VendorRegistrationSession.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/LoginController.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Api/V1/Auth/VendorPasswordResetController.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Api/V1/Vendor/SubscriptionController.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/CentralLogics/Helpers.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Console/Commands/AuditVendorAuthenticationTokens.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "bootstrap/app.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "routes/api/v1/api.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "routes/web.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "database/migrations/2026_10_07_000001_create_vendor_security_tokens_table.php": {
+      "purpose": "Phase C0 centralized vendor access and reset/subscription authorization hardening",
+      "reason_in_core": "Vendor security must hold with Concierge disabled",
+      "upstream_behavior": "Intentional security correction; pending and ineligible accounts never receive full vendor access",
+      "tests": [
+        "VendorAuthenticationSecurityTest",
+        "MySqlVendorAuthenticationSecurityTest",
+        "VendorSubscriptionSecurityTest"
+      ],
+      "upgrade": "Preserve centralized eligibility and token purpose boundaries when reconciling upstream auth changes",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/VendorAccessRevocationService.php": {
+      "purpose": "Transactional owner/employee and restricted-token revocation on application/status changes",
+      "reason_in_core": "Host authorization lifecycle must not depend on Concierge",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Preserve revocation together with status transaction"
+    },
+    "Modules/Rental/Http/Controllers/Web/Admin/ProviderController.php": {
+      "purpose": "Phase C0 Rental approval and suspension: shared policy lifecycle and CSRF POST",
+      "reason_in_core": "Separate Rental host adapter controls the same vendor and store identities",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Preserve shared decisions, revocation and POST route/form contracts"
+    },
+    "Modules/Rental/Routes/web/admin/admin.php": {
+      "purpose": "Phase C0 Rental approval and suspension: shared policy lifecycle and CSRF POST",
+      "reason_in_core": "Separate Rental host adapter controls the same vendor and store identities",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Preserve shared decisions, revocation and POST route/form contracts"
+    },
+    "Modules/Rental/Resources/views/admin/provider/new-request.blade.php": {
+      "purpose": "Phase C0 Rental approval and suspension: shared policy lifecycle and CSRF POST",
+      "reason_in_core": "Separate Rental host adapter controls the same vendor and store identities",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Preserve shared decisions, revocation and POST route/form contracts"
+    },
+    "Modules/Rental/Resources/views/admin/provider/new-request-details.blade.php": {
+      "purpose": "Phase C0 Rental approval and suspension: shared policy lifecycle and CSRF POST",
+      "reason_in_core": "Separate Rental host adapter controls the same vendor and store identities",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Preserve shared decisions, revocation and POST route/form contracts"
+    },
+    "Modules/Rental/Resources/views/admin/provider/list.blade.php": {
+      "purpose": "Phase C0 Rental approval and suspension: shared policy lifecycle and CSRF POST",
+      "reason_in_core": "Separate Rental host adapter controls the same vendor and store identities",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Preserve shared decisions, revocation and POST route/form contracts"
+    },
+    "app/Models/Vendor.php": {
+      "purpose": "Hide web session revocation nonce from API/model serialization",
+      "reason_in_core": "Authentication secrets must not appear in profile serialization",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Retain login_remember_token in hidden fields"
+    },
+    "app/Models/VendorEmployee.php": {
+      "purpose": "Hide web session revocation nonce from API/model serialization",
+      "reason_in_core": "Authentication secrets must not appear in profile serialization",
+      "tests": [
+        "VendorAuthenticationSecurityTest"
+      ],
+      "owner": "MyTijaara backend maintainers",
+      "upgrade": "Retain login_remember_token in hidden fields"
+    },
+    "app/DTOs/RegistrationPolicyEvidence.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Models/LegalPolicyVersion.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Models/VendorRegistrationConsent.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/RegistrationPolicyService.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Http/Controllers/Api/V1/RegistrationPoliciesController.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "config/registration-policies.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "config/filesystems.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "database/migrations/2026_10_07_000002_create_registration_policy_evidence.php": {
+      "purpose": "Generic immutable registration policy evidence and private media publication contract",
+      "reason_in_core": "Canonical web/API/channel registration and legal evidence must work without the optional Concierge module",
+      "upstream_behavior": "No legacy evidence backfill; explicit version transport and private publication support; production activation remains gated",
+      "tests": [
+        "VendorFlowIntegrationTest",
+        "MySqlVendorFlowConcurrencyTest",
+        "ApiVendorRegistrationTest",
+        "SharedVendorRegistrationTest",
+        "HostWithoutConciergeTest"
+      ],
+      "upgrade": "Review generic service/model/schema integration on host upgrades",
+      "owner": "MyTijaara backend maintainers"
+    },
+    "app/Services/PrivateRegistrationStorageGuard.php": {
+      "purpose": "Canonical private filesystem boundary with resolved aliases and traversal checks",
+      "reason_in_core": "Shared prepared-registration media must remain private independently of optional transports",
+      "upstream_behavior": "Adds fail-closed prepared-media path checks; ordinary web/API upload paths are unchanged",
+      "tests": [
+        "VendorFlowTransportSecurityTest"
+      ],
+      "upgrade": "Reverify served roots and deployment layout on host upgrades",
+      "owner": "MyTijaara backend maintainers"
     }
   },
   "separate_addon_changes": [
     "config/system-addons.php"
   ],
   "protected_write_owners": [
-    "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/VendorApplicationService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/ProductMutationService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/OrderMutationService.php",
     "Modules/WhatsAppVendorConcierge/app/Services/CoreAdapters/StoreAvailabilityService.php",

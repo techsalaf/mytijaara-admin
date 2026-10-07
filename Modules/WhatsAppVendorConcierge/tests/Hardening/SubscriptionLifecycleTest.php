@@ -2,12 +2,11 @@
 
 namespace Modules\WhatsAppVendorConcierge\tests\Hardening;
 
-use App\Models\BusinessSetting;
 use App\Models\Store;
 use App\Models\SubscriptionPackage;
 use App\Models\Vendor;
-use Carbon\Carbon;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
@@ -122,9 +121,15 @@ class SubscriptionLifecycleTest extends HardeningTestCase
             $table->id();
             $table->unsignedBigInteger('store_id');
             $table->string('transaction_type');
+            $table->string('reference')->nullable();
             $table->tinyInteger('is_success')->default(0);
             $table->double('amount')->default(0);
             $table->timestamps();
+        });
+
+        Schema::create('items', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('store_id');
         });
 
         Schema::create('coupons', function (Blueprint $table) {
@@ -202,6 +207,7 @@ class SubscriptionLifecycleTest extends HardeningTestCase
         $store = Store::create([
             'id' => 60,
             'name' => 'Bolanle Boutique',
+            'status' => 1,
             'vendor_id' => $vendor->id,
             'package_id' => $package->id,
             'store_business_model' => 'none',
@@ -271,6 +277,23 @@ class SubscriptionLifecycleTest extends HardeningTestCase
         // Duplicate callback (replay) must be idempotent without error
         $result2 = $lifecycle->handlePaymentSuccess($store->id, 'paystack', 'ref_123456');
         $this->assertTrue($result2['success']);
+    }
+
+    public function test_payment_callback_preserves_pending_approval_and_deduplicates_inactive_subscription(): void
+    {
+        $vendor = Vendor::create(['f_name' => 'Pending', 'status' => null]);
+        $package = SubscriptionPackage::create(['package_name' => 'Fixture', 'price' => 100, 'validity' => 30, 'status' => 1]);
+        $store = Store::create(['name' => 'Pending Store', 'vendor_id' => $vendor->id, 'package_id' => $package->id, 'status' => 0]);
+        $store->forceFill(['package_id' => $package->id])->save();
+        $gateway = $this->createMock(WhatsAppGateway::class);
+        $gateway->expects($this->never())->method('sendTextMessage');
+        $lifecycle = new SubscriptionLifecycleService($gateway);
+        $this->assertTrue($lifecycle->handlePaymentSuccess($store->id, 'paystack', 'pending-fixture-reference')['success']);
+        $this->assertTrue($lifecycle->handlePaymentSuccess($store->id, 'paystack', 'pending-fixture-reference')['success']);
+        $this->assertSame(0, (int) $store->fresh()->status);
+        $this->assertNull($vendor->fresh()->status);
+        $this->assertSame(1, DB::table('store_subscriptions')->count());
+        $this->assertSame(1, DB::table('subscription_transactions')->count());
     }
 
     public function test_expired_link_detection_and_regeneration(): void

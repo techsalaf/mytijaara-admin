@@ -88,8 +88,8 @@ class ConversationNavigationTest extends HardeningTestCase
     {
         [$contact,$session,$conversation]=$this->application();
         $gateway=$this->gateway();
-        $gateway->shouldReceive('sendButtonMessage')->once()->withArgs(function($to,$body,$buttons)use($session){return $buttons[0]['id']==='onb:'.$session->id.':cover_branding:skip';})->andReturn([]);
-        app(VendorOnboardingService::class)->sendStepPrompt($conversation,$contact,'cover_branding',$gateway);
+        $gateway->shouldReceive('sendButtonMessage')->once()->withArgs(function($to,$body,$buttons)use($session){return $buttons[0]['id']==='onb:'.$session->id.':kyc_documents:skip';})->andReturn([]);
+        app(VendorOnboardingService::class)->sendStepPrompt($conversation,$contact,'kyc_documents',$gateway);
     }
 
     #[Test]

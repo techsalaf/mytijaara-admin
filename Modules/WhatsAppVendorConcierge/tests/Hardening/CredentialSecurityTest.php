@@ -74,6 +74,9 @@ class CredentialSecurityTest extends HardeningTestCase
         $this->postJson($path, ['password' => 'StrongPass@2026', 'password_confirmation' => 'different'])->assertUnprocessable();
         $this->assertSame(2, (int) CredentialToken::first()->attempt_count);
         $this->postJson($path, ['password' => 'StrongPass@2026', 'password_confirmation' => 'StrongPass@2026'])->assertOk();
+        $this->assertFalse(auth('vendor')->check());
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('vendors')->count());
+        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('stores')->count());
         $this->assertTrue(Hash::check('StrongPass@2026', $session->fresh()->collected_data['password_hash']));
         $this->postJson($path, ['password' => 'StrongPass@2026', 'password_confirmation' => 'StrongPass@2026'])->assertGone();
         Queue::assertPushed(ContinueCredentialOnboarding::class, 1);

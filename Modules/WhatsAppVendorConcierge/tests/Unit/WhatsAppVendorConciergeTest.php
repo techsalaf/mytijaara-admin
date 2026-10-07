@@ -1048,7 +1048,7 @@ class WhatsAppVendorConciergeTest extends ApplicationFixtureTestCase
     }
 
     /** @test */
-    public function it_handles_duplicate_vendor_phone_resiliently_on_submission()
+    public function it_rejects_duplicate_vendor_phone_without_overwriting_the_existing_applicant()
     {
         $phone = '2349032617923';
 
@@ -1099,21 +1099,17 @@ class WhatsAppVendorConciergeTest extends ApplicationFixtureTestCase
         $this->completeSubmissionFixture($session);
 
         $gateway = $this->createMock(WhatsAppGateway::class);
-        $gateway->expects($this->once())
-            ->method('sendTextMessage')
-            ->with($contact->phone_number, $this->stringContains('Application Has Been Submitted'));
-
+        $gateway->expects($this->once())->method('sendTextMessage')
+            ->with($contact->phone_number, $this->stringContains('phone'));
         $service = app(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
-        // Must succeed without throwing 1062 Duplicate entry constraint violation
         $service->submitApplication($conversation, $contact, $session, $gateway);
-
-        $session->refresh();
-        $this->assertEquals('submitted', $session->status);
-        $this->assertEquals($existingVendor->id, $session->vendor_id);
-
-        $existingVendor->refresh();
-        $this->assertNull($existingVendor->status, 'Vendor status must remain null for pending approval');
-        $this->assertEquals('Updated', $existingVendor->f_name);
+        $this->assertSame('started', $session->fresh()->status);
+        $this->assertNull($session->fresh()->vendor_id);
+        $this->assertNull($session->fresh()->store_id);
+        $this->assertSame(1, \App\Models\Vendor::count());
+        $this->assertSame(0, \App\Models\Store::count());
+        $this->assertSame('Existing', $existingVendor->fresh()->f_name);
+        $this->assertNull($existingVendor->fresh()->status);
     }
 
     /** @test */
@@ -1393,16 +1389,24 @@ class WhatsAppVendorConciergeTest extends ApplicationFixtureTestCase
         $module = \App\Models\Module::create(['module_name' => 'Grocery', 'module_type' => 'grocery', 'status' => 1]);
         $zone = \App\Models\Zone::create(['name' => 'Lagos', 'status' => 1]);
         \Illuminate\Support\Facades\DB::table('module_zone')->insert(['module_id' => $module->id, 'zone_id' => $zone->id]);
-        $image = \Illuminate\Http\UploadedFile::fake()->image('logo.png', 512, 512);
-        $path = 'whatsapp/logos/test.png';
-        \Illuminate\Support\Facades\Storage::disk('local')->put($path, file_get_contents($image->getRealPath()));
-        $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::create([
-            'whatsapp_media_id' => 'logo-'.$session->id, 'mime_type' => 'image/png', 'status' => 'processed',
-            'file_path' => $path, 'storage_disk' => 'local',
-            'metadata' => ['contact_id' => $session->contact_id, 'purpose' => 'logo'],
-        ]);
+        $conversation = WhatsAppConversation::where('onboarding_session_id', $session->id)->firstOrFail();
+        $mediaIds = [];
+        foreach (['logo', 'cover'] as $purpose) {
+            $image = \Illuminate\Http\UploadedFile::fake()->image($purpose.'.png', 512, 512);
+            $path = 'whatsapp/'.$purpose.'/'.$session->id.'.png';
+            \Illuminate\Support\Facades\Storage::disk('local')->put($path, file_get_contents($image->getRealPath()));
+            $media = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::create([
+                'whatsapp_media_id' => $purpose.'-'.$session->id, 'mime_type' => 'image/png', 'status' => 'processed',
+                'file_path' => $path, 'storage_disk' => 'local',
+                'metadata' => ['contact_id' => $session->contact_id, 'purpose' => $purpose],
+            ]);
+            WhatsAppMessage::create(['conversation_id' => $conversation->id, 'media_id' => $media->id,
+                'whatsapp_message_id' => $purpose.'-'.$session->id, 'direction' => 'inbound', 'type' => 'image',
+                'metadata' => ['registration_session_id' => $session->id, 'registration_contact_id' => $session->contact_id]]);
+            $mediaIds[$purpose] = $media->id;
+        }
         $session->update(['collected_data' => array_merge($session->collected_data, [
-            'module_id' => $module->id, 'zone_id' => $zone->id, 'logo_media_id' => $media->id,
+            'module_id' => $module->id, 'zone_id' => $zone->id, 'logo_media_id' => $mediaIds['logo'], 'cover_media_id' => $mediaIds['cover'],
             'privacy_accepted' => true, 'delivery_time' => '20-40 min',
         ])]);
     }

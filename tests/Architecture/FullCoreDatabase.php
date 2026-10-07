@@ -16,6 +16,7 @@ final class FullCoreDatabase
         $password = getenv('ISOLATION_MYSQL_PASSWORD') ?: '';
         $this->server = new \PDO("mysql:host=127.0.0.1;port=$port", 'root', $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
         $this->name = 'mytijaara_isolation_'.bin2hex(random_bytes(8));
+        fwrite(STDOUT, 'LOCAL disposable database: 127.0.0.1:'.$port.'/'.$this->name.PHP_EOL);
         $this->server->exec('CREATE DATABASE `'.$this->name.'`');
         config(['database.connections.core_fixture' => [
             'driver' => 'mysql', 'host' => '127.0.0.1', 'port' => $port, 'database' => $this->name,

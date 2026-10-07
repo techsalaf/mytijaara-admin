@@ -30,6 +30,7 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
         $password = getenv('ISOLATION_MYSQL_PASSWORD') ?: '';
         $this->server = new \PDO("mysql:host=127.0.0.1;port=$port", 'root', $password, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
         $name = 'mytijaara_isolation_'.bin2hex(random_bytes(8));
+        fwrite(STDOUT, 'LOCAL disposable database: 127.0.0.1:'.$port.'/'.$name.PHP_EOL);
         $this->server->exec("CREATE DATABASE `$name`");
         $this->scratch = $name;
         config(['database.connections.isolation' => [
@@ -38,14 +39,17 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
             'charset' => 'utf8mb4', 'collation' => 'utf8mb4_unicode_ci', 'prefix' => '', 'strict' => true,
         ], 'database.default' => 'isolation', 'mail.status' => false]);
         RegistrationSchema::create();
+        (require base_path('database/migrations/2026_10_07_000001_create_vendor_security_tokens_table.php'))->up();
         DB::table('business_settings')->insert([
             ['key' => 'toggle_store_registration', 'value' => '1'],
             ['key' => 'recaptcha', 'value' => '{"status":0}'],
             ['key' => 'subscription_business_model', 'value' => '1'],
+            ['key' => 'commission_business_model', 'value' => '1'],
         ]);
         DB::table('zones')->insert(['id' => 1, 'name' => 'Test zone', 'coordinates' => DB::raw("ST_GeomFromText('POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))',".POINT_SRID.")")]);
         DB::table('modules')->insert(['id' => 1, 'module_name' => 'Groceries', 'module_type' => 'grocery']);
         DB::table('module_zone')->insert(['module_id' => 1, 'zone_id' => 1]);
+        DB::table('subscription_packages')->insert(['id' => 7, 'module_type' => 'all', 'status' => 1]);
         session(['six_captcha' => 'fixture']);
         Storage::fake('public');
         Mail::fake();
@@ -73,7 +77,7 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
             'latitude' => 5, 'longitude' => 5, 'zone_id' => 1, 'module_id' => 1,
             'minimum_delivery_time' => 30, 'maximum_delivery_time' => 40,
             'delivery_time_type' => 'min', 'business_plan' => 'commission-base',
-            'custome_recaptcha' => 'fixture',
+            'custome_recaptcha' => 'fixture', 'terms_accepted' => '1', 'privacy_accepted' => '1',
         ], $overrides));
         $request->files->set('logo', UploadedFile::fake()->image('logo.png'));
         $request->files->set('cover_photo', UploadedFile::fake()->image('cover.png'));
@@ -223,6 +227,30 @@ final class MySqlHostRegistrationTest extends HostWithoutConciergeTest
         }
         Mail::assertSent(\Modules\Rental\Emails\ProviderSelfRegistration::class);
         Mail::assertSent(\Modules\Rental\Emails\ProviderRegistration::class);
+    }
+
+    public function test_real_mysql_identity_races_return_safe_api_validation_and_keep_competing_vendor(): void
+    {
+        foreach (['email', 'phone'] as $field) {
+            Vendor::creating(function ($vendor) use ($field) {
+                $statement = $this->server->prepare('INSERT INTO `'.$this->scratch.'`.vendors (f_name, email, phone) VALUES (?, ?, ?)');
+                $statement->execute(['Competing', $field === 'email' ? $vendor->email : 'other@example.test',
+                    $field === 'phone' ? $vendor->phone : '2348000000999']);
+            });
+            $request = $this->registration(['business_plan' => 'commission', 'translations' => json_encode([
+                ['locale' => 'en', 'key' => 'address', 'value' => 'API Address'],
+                ['locale' => 'en', 'key' => 'name', 'value' => 'API Store'],
+            ])]);
+            $response = app(\App\Http\Controllers\Api\V1\Auth\VendorLoginController::class)->register($request);
+            $this->assertSame(403, $response->getStatusCode());
+            $this->assertSame($field, $response->getData(true)['errors'][0]['code']);
+            $this->assertStringNotContainsString('SQLSTATE', $response->getContent());
+            $this->assertSame('Competing', Vendor::firstOrFail()->f_name);
+            $this->assertSame(0, Store::count());
+            $this->assertSame([], Storage::disk('public')->allFiles());
+            Vendor::flushEventListeners();
+            DB::table('vendors')->delete();
+        }
     }
 
     // The parent validation test creates its own SQLite fixture; this class already has a schema.

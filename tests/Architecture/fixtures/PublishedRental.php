@@ -6,3 +6,10 @@ function addon_published_status($moduleName): int
 {
     return $moduleName === 'Rental' ? 1 : \addon_published_status($moduleName);
 }
+
+namespace App\Services;
+
+function addon_published_status($moduleName): int
+{
+    return $moduleName === 'Rental' ? 1 : \addon_published_status($moduleName);
+}

@@ -79,8 +79,10 @@ class VendorApplicationParityTest extends ApplicationFixtureTestCase
             'business_plan' => 'commission-base',
             'minimum_delivery_time' => '20',
             'maximum_delivery_time' => '40',
-            'delivery_time_type' => 'min',
+            'delivery_time_type' => 'min', 'terms_accepted' => '1', 'privacy_accepted' => '1',
         ]);
+        $webRequest->files->set('logo', \Illuminate\Http\UploadedFile::fake()->image('logo.png'));
+        $webRequest->files->set('cover_photo', \Illuminate\Http\UploadedFile::fake()->image('cover.png'));
 
         $webDto = VendorApplicationDTO::fromWebRequest($webRequest);
         $webResult = $service->submit($webDto);
@@ -125,6 +127,8 @@ class VendorApplicationParityTest extends ApplicationFixtureTestCase
         ]);
 
         $waDto = VendorApplicationDTO::fromWhatsAppSession($session, $contact);
+        $waDto->logo = \Illuminate\Http\UploadedFile::fake()->image('logo.png');
+        $waDto->cover_photo = \Illuminate\Http\UploadedFile::fake()->image('cover.png');
         $waResult = $service->submit($waDto);
 
         $this->assertNotNull($waResult['vendor']);

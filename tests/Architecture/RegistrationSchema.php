@@ -52,7 +52,11 @@ final class RegistrationSchema {
         Schema::create('zones', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->geometry('coordinates', subtype: 'polygon', srid: POINT_SRID)->nullable();
+            if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
+                $table->text('coordinates')->nullable();
+            } else {
+                $table->geometry('coordinates', subtype: 'polygon', srid: POINT_SRID)->nullable();
+            }
             $table->tinyInteger('status')->default(1);
             $table->string('restaurant_wise_topic')->nullable();
             $table->string('customer_wise_topic')->nullable();
@@ -93,12 +97,13 @@ final class RegistrationSchema {
             $table->timestamps();
         });
 
-        Schema::create('store_schedules', function (Blueprint $table) {
+        Schema::create('store_schedule', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('store_id');
             $table->integer('day');
             $table->time('opening_time');
             $table->time('closing_time');
+            $table->unique(['store_id', 'day', 'opening_time', 'closing_time']);
             $table->timestamps();
         });
 
@@ -109,6 +114,11 @@ final class RegistrationSchema {
             $table->string('key')->nullable();
             $table->string('value')->nullable();
             $table->timestamps();
+        });
+
+        Schema::create('subscription_packages', function (Blueprint $t) {
+            $t->id(); $t->string('module_type')->default('all'); $t->boolean('status')->default(true);
+            $t->string('package_name')->default('Fixture package'); $t->timestamps();
         });
 
         Schema::create('business_settings', function (Blueprint $t) {

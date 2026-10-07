@@ -25,6 +25,15 @@ abstract class ApplicationFixtureTestCase extends HardeningTestCase
         $this->app->instance(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ZoneEligibility::class,
             \Mockery::mock(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ZoneEligibility::class)
                 ->shouldReceive('contains')->andReturn(true)->getMock());
+        $this->app->instance(\App\Services\VendorSelfRegistrationService::class,
+            \Mockery::mock(\App\Services\VendorSelfRegistrationService::class)->makePartial()
+                ->shouldAllowMockingProtectedMethods()->shouldReceive('zoneContains')->andReturn(true)->getMock());
+        \Illuminate\Support\Facades\DB::table('business_settings')->insert([
+            ['key' => 'toggle_store_registration', 'value' => '1'],
+            ['key' => 'subscription_business_model', 'value' => '0'],
+            ['key' => 'commission_business_model', 'value' => '1'],
+        ]);
+        config(['mail.status' => false]);
         Storage::fake('public');
         Storage::fake('local');
 
@@ -129,12 +138,13 @@ abstract class ApplicationFixtureTestCase extends HardeningTestCase
             $table->timestamps();
         });
 
-        Schema::create('store_schedules', function (Blueprint $table) {
+        Schema::create('store_schedule', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('store_id');
             $table->integer('day');
             $table->time('opening_time');
             $table->time('closing_time');
+            $table->unique(['store_id', 'day', 'opening_time', 'closing_time']);
             $table->timestamps();
         });
 
