@@ -647,7 +647,7 @@
     "app/Services/PrivateRegistrationStorageGuard.php": {
       "purpose": "Canonical private filesystem boundary with resolved aliases and traversal checks",
       "reason_in_core": "Shared prepared-registration media must remain private independently of optional transports",
-      "upstream_behavior": "Adds fail-closed prepared-media path checks; ordinary web/API upload paths are unchanged",
+      "upstream_behavior": "Adds fail-closed prepared-media path checks; explicit served-root configuration supports private shared-hosting siblings while retaining application/document-root exclusion; ordinary web/API upload paths are unchanged",
       "tests": [
         "VendorFlowTransportSecurityTest"
       ],

@@ -8,9 +8,14 @@ final class PrivateRegistrationStorageGuard
     public static function assertPrivate(string $directory): void
     {
         $candidate = self::resolve($directory).'/';
-        // The parent is intentionally excluded too: XAMPP serves htdocs, not just this checkout.
+        // Without an explicit served root, conservatively exclude the parent (e.g. XAMPP htdocs).
+        // Shared hosting serves individual sibling applications rather than the entire account home.
         $parent = dirname(base_path());
-        $roots = [base_path(), dirname($parent) !== $parent ? $parent : null, $_SERVER['DOCUMENT_ROOT'] ?? null, config('filesystems.registration_public_root')];
+        $publicRoot = config('filesystems.registration_public_root');
+        if ($publicRoot !== null && (! is_string($publicRoot) || $publicRoot === '' || self::resolve($publicRoot) === '/')) {
+            throw new \RuntimeException('Invalid explicit public filesystem root.');
+        }
+        $roots = [base_path(), $publicRoot ? null : (dirname($parent) !== $parent ? $parent : null), $_SERVER['DOCUMENT_ROOT'] ?? null, $publicRoot];
         foreach (array_filter($roots) as $root) {
             if (str_starts_with($candidate, self::resolve($root).'/')) {
                 throw new \RuntimeException('Private registration data must be outside the served tree.');

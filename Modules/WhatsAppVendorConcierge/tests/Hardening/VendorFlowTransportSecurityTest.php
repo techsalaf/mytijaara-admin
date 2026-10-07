@@ -12,6 +12,28 @@ use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 
 class VendorFlowTransportSecurityTest extends HardeningTestCase
 {
+    public function test_explicit_served_root_allows_private_sibling_but_never_served_paths(): void
+    {
+        $sibling = dirname(base_path()).'/private-synthetic-fixture';
+        config(['filesystems.registration_public_root' => base_path()]);
+        \App\Services\PrivateRegistrationStorageGuard::assertPrivate($sibling);
+        $this->addToAssertionCount(1);
+        foreach ([base_path().'/storage/private', $sibling] as $index => $path) {
+            if ($index === 1) {
+                config(['filesystems.registration_public_root' => dirname(base_path())]);
+            }
+            try {
+                \App\Services\PrivateRegistrationStorageGuard::assertPrivate($path);
+                $this->fail('Served paths must remain excluded.');
+            } catch (\RuntimeException $error) {
+                $this->assertSame('Private registration data must be outside the served tree.', $error->getMessage());
+            }
+        }
+        config(['filesystems.registration_public_root' => null]);
+        $this->expectException(\RuntimeException::class);
+        \App\Services\PrivateRegistrationStorageGuard::assertPrivate($sibling);
+    }
+
     private ?string $keyPath = null;
 
     protected function tearDown(): void
