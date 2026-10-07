@@ -25,7 +25,6 @@ class MySqlVendorFlowConcurrencyTest extends \Tests\TestCase
         parent::setUp();
         $this->fixture = new FullCoreDatabase;
         $this->fixture->create();
-        DB::statement("SET SESSION default_storage_engine='MyISAM'");
         Queue::fake();
         Mail::fake();
         Http::preventStrayRequests();
@@ -36,6 +35,9 @@ class MySqlVendorFlowConcurrencyTest extends \Tests\TestCase
         Storage::fake('public');
         config(['cache.default' => 'array', 'mail.status' => false, 'whatsapp-vendor-flow.enabled' => true, 'whatsapp-vendor-flow.flow_id' => '987', 'whatsapp-vendor-flow.definition_version' => 'fixture', 'registration-policies.current.en' => ['terms' => 'test-terms.en', 'privacy' => 'test-privacy.en']]);
         foreach (glob(module_path('WhatsAppVendorConcierge', 'database/migrations/*.php')) as $migration) {
+            if (basename($migration) === '2026_10_07_000003_create_vendor_flow_sessions.php') {
+                DB::statement("SET SESSION default_storage_engine='MyISAM'");
+            }
             (require $migration)->up();
         }
         (require base_path('database/migrations/2026_10_07_000002_create_registration_policy_evidence.php'))->up();
