@@ -1,0 +1,10 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "MyTijaara locally verified Flow contract subset (not the Meta validator)",
+ "type": "object", "required": ["version", "data_api_version", "routing_model", "screens"],
+ "properties": {
+  "version": {"const": "7.3"}, "data_api_version": {"const": "3.0"},
+  "routing_model": {"type": "object"},
+  "screens": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "object", "required": ["id", "data", "layout"], "properties": {"id": {"enum": ["OWNER", "STORE", "LOCATION_DELIVERY", "PLAN_LOGO", "COVER", "TIN", "REVIEW"]}, "data": {"type": "object"}, "layout": {"type": "object", "required": ["type", "children"], "properties": {"type": {"const": "SingleColumnLayout"}, "children": {"type": "array", "maxItems": 50}}}}}}
+ }
+}

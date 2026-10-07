@@ -1,0 +1,10 @@
+{
+  "first_name": "Fixture",
+  "email": "fixture@example.test",
+  "latitude": "6.45",
+  "longitude": "3.39",
+  "logo": "fixture-private-logo",
+  "cover": "fixture-private-cover",
+  "terms_agreed": false,
+  "privacy_acknowledged": true
+}

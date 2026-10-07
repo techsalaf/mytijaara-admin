@@ -1,0 +1,23 @@
+{
+  "first_name": "Fixture",
+  "surname": "Owner",
+  "email": "fixture@example.test",
+  "latitude": "6.45",
+  "longitude": "3.39",
+  "logo": "fixture-private-logo",
+  "cover": "fixture-private-cover",
+  "terms_agreed": true,
+  "privacy_acknowledged": true,
+  "store_name": "Fixture store",
+  "address": "Fixture address",
+  "module_id": "1",
+  "zone_id": "1",
+  "minimum_delivery_time": "20",
+  "maximum_delivery_time": "30",
+  "delivery_time_unit": "min",
+  "business_plan": "commission-base",
+  "pickup_zone_ids": [],
+  "terms_version": "test-terms.en",
+  "privacy_version": "test-privacy.en",
+  "presentation_hash": "97974c44432f22c13afb20b0087efb1ab2b2f583526120e29a7014e336f870f4"
+}

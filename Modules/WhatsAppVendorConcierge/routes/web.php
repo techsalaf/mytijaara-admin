@@ -138,3 +138,9 @@ Route::middleware(['web','admin',\Modules\WhatsAppVendorConcierge\app\Http\Middl
  Route::get('/{draft}/image',[$controller,'image'])->name('image');
  Route::post('/{draft}',[$controller,'action'])->name('action');
 });
+
+Route::post('/webhooks/whatsapp/flow-data', \Modules\WhatsAppVendorConcierge\app\Http\Controllers\Api\FlowEndpointController::class)->middleware('throttle:120,1')->name('whatsapp.flow.exchange');
+Route::middleware(['web',\Modules\WhatsAppVendorConcierge\app\Http\Middleware\SecureCredentialPage::class,'throttle:10,1'])->group(function(){
+ Route::get('/whatsapp/flow/password',[\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\FlowPasswordController::class,'show'])->name('whatsapp.flow.password');
+ Route::post('/whatsapp/flow/password',[\Modules\WhatsAppVendorConcierge\app\Http\Controllers\Web\FlowPasswordController::class,'store'])->name('whatsapp.flow.password.store');
+});

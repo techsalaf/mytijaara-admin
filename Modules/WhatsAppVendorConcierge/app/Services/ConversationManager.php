@@ -131,6 +131,7 @@ class ConversationManager
         if ($contact->vendor_id || OnboardingSession::where('contact_id', $contact->id)
             ->whereIn('status', ['submitted', 'approved'])->exists()) {
             $this->checkApplicationStatus($conversation, $contact, $gateway);
+
             return;
         }
 
@@ -171,6 +172,9 @@ class ConversationManager
         // Log event
         OnboardingEvent::log($session->id, $contact->id, 'onboarding_started', 'welcome');
 
+        if (app(FlowOnboardingService::class)->offer($session, $contact, $conversation)) {
+            return;
+        }
         // Send first step prompt
         $this->onboardingService->sendStepPrompt($conversation, $contact, 'business_basics', $gateway);
     }
@@ -404,21 +408,7 @@ class ConversationManager
      */
     public function handleFlowResponse(WhatsAppConversation $conversation, WhatsAppContact $contact, array $flowResponse, WhatsAppGateway $gateway): void
     {
-        $session = OnboardingSession::find($conversation->onboarding_session_id);
-
-        if (!$session) {
-            return;
-        }
-
-        $responseData = json_decode($flowResponse['nfm_reply']['response_json'] ?? '{}', true);
-
-        // Map flow screen data to onboarding steps
-        $screen = $flowResponse['nfm_reply']['screen'] ?? '';
-
-        $this->onboardingService->processStep($conversation, $contact, (object)[
-            'content' => $responseData,
-            'type' => 'interactive_flow',
-        ], $gateway);
+        throw new \LogicException('Flow responses require the verified webhook and FlowSubmission DTO.');
     }
 
     /**
@@ -749,7 +739,7 @@ class ConversationManager
                     ['id' => 'edit_business_basics', 'title' => '🏪 Shop Name', 'description' => 'Update store / business name'],
                     ['id' => 'edit_module', 'title' => '📦 Business Module', 'description' => 'Grocery, Food, Pharmacy, etc.'],
                     ['id' => 'edit_branding', 'title' => '🖼️ Store Logo', 'description' => 'Upload 1:1 store logo'],
-                    ['id' => 'edit_cover', 'title' => '🏞️ Cover Photo', 'description' => 'Upload or skip optional store cover'],
+                    ['id' => 'edit_cover', 'title' => '🏞️ Cover Photo', 'description' => 'Upload required store cover'],
                 ],
             ],
             'edit_cat_location' => [
@@ -805,7 +795,8 @@ class ConversationManager
     {
         $session = OnboardingSession::find($conversation->onboarding_session_id);
 
-        if (!$session) {
+        if (!$session || $session->contact_id !== $contact->id || $conversation->contact_id !== $contact->id
+            || !in_array($session->status, ['started', 'review'], true)) {
             $gateway->sendTextMessage($contact->phone_number, "No active application found to edit. Reply *Start* to begin a new application.");
             return;
         }

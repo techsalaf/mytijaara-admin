@@ -635,37 +635,7 @@ class WhatsAppGateway
      */
     public function sendFlowMessage(string $to, string $flowId, string $screen = 'SCREEN_1', array $data = []): array
     {
-        $payload = [
-            'messaging_product' => 'whatsapp',
-            'to' => $to,
-            'type' => 'interactive',
-            'interactive' => [
-                'type' => 'flow',
-                'header' => [
-                    'type' => 'text',
-                    'text' => 'MyTijaara Vendor Onboarding',
-                ],
-                'body' => [
-                    'text' => 'Please complete the form below to continue your vendor registration.',
-                ],
-                'footer' => [
-                    'text' => 'Powered by MyTijaara',
-                ],
-                'action' => [
-                    'name' => 'flow',
-                    'parameters' => json_encode([
-                        'flow_message_version' => '5.0',
-                        'flow_token' => base64_encode(json_encode(['screen' => $screen, 'data' => $data])),
-                        'flow_id' => $flowId,
-                        'flow_cta' => 'Continue',
-                        'flow_action' => 'navigate',
-                        'flow_action_payload' => json_encode(['screen' => $screen]),
-                    ]),
-                ],
-            ],
-        ];
-
-        return $this->sendMessage($payload);
+        throw new \LogicException('Vendor Flow offers require the session-bound FlowOnboardingService.');
     }
 
     /**

@@ -129,63 +129,71 @@ class SubscriptionLifecycleService
      */
     public function handlePaymentSuccess(int $storeId, string $method, ?string $reference = null): array
     {
-        $store = Store::findOrFail($storeId);
-        $session = OnboardingSession::where('store_id', $store->id)->latest()->first();
+        return DB::transaction(function () use ($storeId, $method, $reference) {
+            $store = Store::withoutGlobalScopes()->lockForUpdate()->findOrFail($storeId);
+            Vendor::withoutGlobalScopes()->lockForUpdate()->findOrFail($store->vendor_id);
+            $session = OnboardingSession::where('store_id', $store->id)->latest()->lockForUpdate()->first();
 
-        // Prevent double activation
-        $alreadyActive = $store->store_sub_update_application && (int) $store->store_sub_update_application->status === 1;
+            // Prevent double activation
+            $alreadyActive = $store->store_sub_update_application && (int) $store->store_sub_update_application->status === 1;
+            $alreadyRecorded = $reference !== null && \App\Models\SubscriptionTransaction::where('store_id', $store->id)
+                ->where('reference', $reference)->where('payment_method', $method)->where('payment_status', 'success')->exists();
 
-        if (!$alreadyActive) {
-            $packageId = $store->package_id;
-            if (!$packageId && $session) {
-                $packageId = $session->collected_data['package_id'] ?? null;
-            }
+            if (! $alreadyActive && ! $alreadyRecorded) {
+                $packageId = $store->package_id;
+                if (! $packageId && $session) {
+                    $packageId = $session->collected_data['package_id'] ?? null;
+                }
 
-            if (!$packageId) {
-                throw new \InvalidArgumentException("No subscription package found for store {$store->id}");
-            }
+                if (! $packageId) {
+                    throw new \InvalidArgumentException("No subscription package found for store {$store->id}");
+                }
 
-            // Call canonical core activation
-            Helpers::subscription_plan_chosen(
-                store_id: $store->id,
-                package_id: $packageId,
-                payment_method: $method,
-                discount: 0,
-                pending_bill: 0,
-                reference: $reference,
-                type: 'new_join'
-            );
-
-            $store->refresh();
-        }
-
-        if ($session) {
-            $data = $session->collected_data ?? [];
-            if (($data['payment_state'] ?? null) !== self::STATE_SUCCEEDED) {
-                $data['payment_state'] = self::STATE_SUCCEEDED;
-                $data['payment_reference'] = $reference;
-                $data['payment_method'] = $method;
-                $data['payment_confirmed_at'] = now()->toIso8601String();
-                $session->update(['collected_data' => $data]);
-
-                OnboardingEvent::log(
-                    $session->id,
-                    $session->contact_id,
-                    'payment_succeeded',
-                    'subscription',
-                    ['method' => $method, 'reference' => $reference]
+                // Call canonical core activation
+                $recorded = Helpers::subscription_plan_chosen(
+                    store_id: $store->id,
+                    package_id: $packageId,
+                    payment_method: $method,
+                    discount: 0,
+                    pending_bill: 0,
+                    reference: $reference,
+                    type: 'new_join'
                 );
+                if ($recorded === false) {
+                    throw new \RuntimeException('Subscription payment persistence failed.');
+                }
 
-                // Send WhatsApp continuation
-                $this->sendContinuationNotification($session, self::STATE_SUCCEEDED);
+                $store->refresh();
             }
-        }
 
-        return [
-            'success' => true,
-            'store_id' => $store->id,
-            'state' => self::STATE_SUCCEEDED,
-        ];
+            if ($session) {
+                $data = $session->collected_data ?? [];
+                if (($data['payment_state'] ?? null) !== self::STATE_SUCCEEDED) {
+                    $data['payment_state'] = self::STATE_SUCCEEDED;
+                    $data['payment_reference'] = $reference;
+                    $data['payment_method'] = $method;
+                    $data['payment_confirmed_at'] = now()->toIso8601String();
+                    $session->update(['collected_data' => $data]);
+
+                    OnboardingEvent::log(
+                        $session->id,
+                        $session->contact_id,
+                        'payment_succeeded',
+                        'subscription',
+                        ['method' => $method, 'reference' => $reference]
+                    );
+
+                    // Send WhatsApp continuation
+                    DB::afterCommit(fn () => $this->sendContinuationNotification($session, self::STATE_SUCCEEDED));
+                }
+            }
+
+            return [
+                'success' => true,
+                'store_id' => $store->id,
+                'state' => self::STATE_SUCCEEDED,
+            ];
+        }, 3);
     }
 
     /**

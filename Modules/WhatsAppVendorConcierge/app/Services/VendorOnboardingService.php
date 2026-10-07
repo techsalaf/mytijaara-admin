@@ -11,10 +11,8 @@ use App\Models\Zone;
 use App\Models\SubscriptionPackage;
 use App\Models\StoreSchedule;
 use App\Mail\VendorSelfRegistration;
-use App\Mail\StoreRegistration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
@@ -43,24 +41,74 @@ class VendorOnboardingService
         $step = $conversation->current_step ?? 'welcome';
         $session = OnboardingSession::find($conversation->onboarding_session_id);
 
+        if ($step === 'flow_active' && $session) {
+            if ($session->vendor_id) {
+                $flow = \Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession::where('onboarding_session_id', $session->id)->first();
+                if ($flow) {
+                    try {
+                        app(FlowSubmissionProcessor::class)->resumeRegistered($flow->id);
+                    } catch (\Throwable $error) {
+                        $gateway->sendTextMessage($contact->phone_number, 'Your application was received. Media processing is still pending; please retry shortly.');
+                    }
+
+return;
+                }
+            }
+            $choice = strtolower(trim((string) ($message->raw_text ?? '')));
+            $button = $message->content['interactive']['button_reply']['id'] ?? null;
+            if (($button === 'flow_chat_fallback' || in_array($choice, ['chat', 'unsupported'], true)) && config('whatsapp-vendor-flow.fallback_to_chat')) {
+                $flow = \Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession::where('onboarding_session_id', $session->id)->first();
+                if ($flow && ! $flow->consumed_at) {
+                    $flow->update(['state' => 'failed_terminal', 'expires_at' => now()->subSecond(), 'draft' => null]);
+                    app(FlowStateMachine::class)->event($flow, 'fallback_to_chat');
+                }
+                $conversation->update(['current_step' => 'business_basics']);
+                $session->update(['current_step' => 'business_basics']);
+                $this->sendStepPrompt($conversation, $contact, 'business_basics', $gateway);
+
+                return;
+            }
+            if ($button === 'flow_reopen' || in_array($choice, ['resume', 'reopen', 'retry'], true)) {
+                if (app(FlowOnboardingService::class)->offer($session, $contact, $conversation)) {
+                    return;
+                }
+                if (config('whatsapp-vendor-flow.fallback_to_chat')) {
+                    $conversation->update(['current_step' => 'business_basics']);
+                    $session->update(['current_step' => 'business_basics']);
+                    $this->sendStepPrompt($conversation, $contact, 'business_basics', $gateway);
+
+                    return;
+                }
+            }
+            $buttons = [['id' => 'flow_reopen', 'title' => 'Reopen form']];
+            if (config('whatsapp-vendor-flow.fallback_to_chat')) {
+                $buttons[] = ['id' => 'flow_chat_fallback', 'title' => 'Continue in chat'];
+            }
+            $gateway->sendButtonMessage($contact->phone_number, 'Complete the secure form, reopen it to correct details, or continue in chat if the form is unavailable.', $buttons);
+
+            return;
+        }
         // Special handling when currently on review_submit
         if ($step === 'review_submit') {
             $rawText = strtolower(trim((string) ($message->raw_text ?? ($message->content['text'] ?? ''))));
 
             if (in_array($rawText, ['submit', 'yes', 'confirm', 'proceed', 'done', 'ok', 'okay', 'correct'])) {
                 $this->submitApplication($conversation, $contact, $session, $gateway);
+
                 return;
             }
 
             if (in_array($rawText, ['cancel', 'stop', 'abort'])) {
                 $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
                 $conversationManager->handleCancelApplication($conversation, $contact, $gateway);
+
                 return;
             }
 
             if (in_array($rawText, ['edit', 'change', 'modify', 'update'])) {
                 $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
                 $conversationManager->handleEditApplication($conversation, $contact, $gateway);
+
                 return;
             }
 
@@ -109,12 +157,14 @@ class VendorOnboardingService
                 if (str_contains($rawText, $keyword)) {
                     $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
                     $conversationManager->handleEditSection($conversation, $contact, $targetStep, $gateway);
+
                     return;
                 }
             }
 
             // If user typed anything else, re-send the review summary with action buttons
             $this->sendStepPrompt($conversation, $contact, 'review_submit', $gateway);
+
             return;
         }
 
@@ -122,6 +172,7 @@ class VendorOnboardingService
         // including a pasted password, participates in validation or event storage.
         if ($step === 'account_password') {
             $this->sendStepPrompt($conversation, $contact, $step, $gateway);
+
             return;
         }
 
@@ -130,7 +181,7 @@ class VendorOnboardingService
         // Validate step data
         $validation = $this->validateStep($step, $data);
 
-        if (!$validation['valid']) {
+        if (! $validation['valid']) {
             $this->sendValidationErrors($conversation, $contact, $validation['errors'], $gateway);
 
             $sanitizedData = $data;
@@ -143,6 +194,7 @@ class VendorOnboardingService
                 $step,
                 ['data' => $sanitizedData, 'errors' => $validation['errors']]
             );
+
             return;
         }
 
@@ -267,36 +319,17 @@ class VendorOnboardingService
                 $btnId = $content['interactive']['button_reply']['id']
                     ?? $content['interactive']['list_reply']['id']
                     ?? null;
-                $raw = trim($btnId ?: $rawText);
-
                 if ($btnId && str_starts_with($btnId, 'zone_')) {
                     $zoneId = (int) str_replace('zone_', '', $btnId);
                     $zone = Zone::find($zoneId);
                     return ['zone_id' => $zone?->id ?? $zoneId, 'zone_name' => $zone?->name ?? 'Selected Zone'];
                 }
 
-                if (in_array(strtolower($raw), ['confirm', 'yes', 'correct', 'ok', 'okay', '1'])) {
-                    $fallbackZone = Zone::active()->first() ?? Zone::first();
-                    return [
-                        'zone_id' => $fallbackZone?->id ?? 1,
-                        'zone_name' => $fallbackZone?->name ?? 'Default Zone',
-                    ];
-                }
-
-                $matched = Zone::active()
-                    ->where(function ($q) use ($raw) {
-                        $q->where('name', 'LIKE', "%{$raw}%")
-                          ->orWhere('id', $raw);
-                    })->first();
-
-                if (!$matched) {
-                    $matched = Zone::active()->first() ?? Zone::first();
-                }
-
-                return [
-                    'zone_id' => $matched?->id ?? 1,
-                    'zone_name' => $matched?->name ?? 'Default Zone',
-                ];
+                // Confirmation must come from a zone-specific button, not a fabricated default.
+                $matched = Zone::active()->where('name', $raw)->orWhere(function ($query) use ($raw) {
+                    $query->where('status', 1)->where('id', ctype_digit($raw) ? (int) $raw : null);
+                })->first();
+                return ['zone_id' => $matched?->id, 'zone_name' => $matched?->name];
             })(),
             'operating_hours' => (function () use ($content, $rawText) {
                 $btnId = $content['interactive']['button_reply']['id']
@@ -326,17 +359,17 @@ class VendorOnboardingService
                     ?? null;
                 $raw = trim($btnId ?: $rawText);
 
-                if ($btnId === 'deliv_20_40' || str_contains($raw, '20')) {
+                if ($btnId === 'deliv_20_40') {
                     return ['delivery_time' => '20-40 min'];
                 }
-                if ($btnId === 'deliv_30_60' || str_contains($raw, '30')) {
+                if ($btnId === 'deliv_30_60') {
                     return ['delivery_time' => '30-60 min'];
                 }
-                if ($btnId === 'deliv_1_2hr' || str_contains($raw, '1-2')) {
+                if ($btnId === 'deliv_1_2hr') {
                     return ['delivery_time' => '1-2 hours'];
                 }
 
-                return ['delivery_time' => $rawText ?: '20-40 min'];
+                return ['delivery_time' => $rawText];
             })(),
             'owner_info' => (function () use ($rawText, $content) {
                 $text = trim($rawText ?: ($content['text'] ?? ''));
@@ -399,7 +432,7 @@ class VendorOnboardingService
                 }
 
                 return [
-                    'business_plan' => 'commission-base',
+                    'business_plan' => ($btnId === 'plan_commission' || str_contains($lower, 'commission')) ? 'commission-base' : null,
                     'plan_name' => 'Commission-Based',
                 ];
             })(),
@@ -695,7 +728,7 @@ class VendorOnboardingService
             ],
             'owner_info' => [
                 'f_name' => 'required|string|min:2|max:100',
-                'l_name' => 'nullable|string|max:100',
+                'l_name' => 'required|string|max:100',
             ],
             'contact_info' => [
                 'email' => 'required|email|unique:vendors,email',
@@ -708,7 +741,7 @@ class VendorOnboardingService
                 'logo_media_id' => 'required|integer|exists:whatsapp_media,id',
             ],
             'cover_branding' => [
-                'cover_media_id' => 'nullable|integer|exists:whatsapp_media,id',
+                'cover_media_id' => 'required|integer|exists:whatsapp_media,id',
                 'cover_skipped' => 'nullable|boolean',
             ],
             'business_plan' => [
@@ -772,8 +805,8 @@ class VendorOnboardingService
                     ? "This phone number is already registered to an approved vendor account. Reply *Support* if you need assistance."
                     : "Please enter a valid email address for account notifications (e.g. *yourshop@gmail.com*)."),
             'account_password' => 'Passwords cannot be entered in WhatsApp. Reply Resend Link for a new secure link.',
-            'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
-            'cover_branding' => "Please upload a cover photo or reply *Skip*. Cover photos are optional, but help customers recognise your store.",
+            'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, GIF, WEBP\n• File Size: Max 2 MB\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
+            'cover_branding' => "Please upload your required store cover photo (maximum 2 MB). Reply Support if you need help.",
             'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
             'subscription_package' => "Please select one of the active subscription packages shown in the list.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
@@ -972,7 +1005,7 @@ class VendorOnboardingService
                 $zones = Zone::active()->get(['id', 'name']);
 
                 if ($detectedName && $zones->count() <= 2) {
-                    $detectedZoneId = $session?->collected_data['zone_id'] ?? ($zones->first()?->id ?? 1);
+                    $detectedZoneId = $session?->collected_data['zone_id'];
                     return [
                         'type' => 'button',
                         'body' => "[Section 2 of 5: Operating Zone] 🌐\n\nBased on your location, your store is in:\n• Zone: *{$detectedName}* ✅\n\nConfirm your operating zone to continue:",
@@ -1060,7 +1093,7 @@ class VendorOnboardingService
             ],
             'store_branding' => [
                 'type' => 'text',
-                'text' => "[Section 4 of 5: Store Branding] 🖼️\n\nPlease upload your *Store Logo*.\n\nSpecifications (matching web requirements):\n• Allowed Formats: JPG, JPEG, PNG, WEBP\n• File Size: Max 2 MB\n• Aspect Ratio: 1:1 Square (e.g. 500x500 px)\n• Requirement: *Mandatory* (No skip)\n\nPlease tap 📎 or camera to send your store logo photo now:",
+                'text' => "[Section 4 of 5: Store Branding] 🖼️\n\nPlease upload your *Store Logo*.\n\nSpecifications (matching web requirements):\n• Allowed Formats: JPG, JPEG, PNG, GIF, WEBP\n• File Size: Max 2 MB\n• Requirement: *Mandatory* (No skip)\n\nPlease tap 📎 or camera to send your store logo photo now:",
             ],
             'business_plan' => [
                 'type' => 'button',
@@ -1072,7 +1105,7 @@ class VendorOnboardingService
             ],
             'cover_branding' => [
                 'type' => 'text',
-                'text' => "[Section 4 of 5: Store Cover Photo] 🏞️\n\nUpload an optional cover photo (JPG, PNG or WEBP; maximum 2 MB), or reply *Skip*. Please do not send documents in this step.",
+                'text' => "[Section 4 of 5: Store Cover Photo] 🏞️\n\nUpload your required cover photo (JPG, PNG or WEBP; maximum 2 MB). Please do not send documents in this step.",
             ],
             'subscription_package' => (function () use ($session) {
                 $moduleType = Module::find($session?->collected_data['module_id'] ?? null)?->module_type;
@@ -1133,7 +1166,7 @@ class VendorOnboardingService
         ];
 
         $prompt = $prompts[$step] ?? ['text' => 'Please continue...'];
-        if (in_array($step, ['cover_branding','kyc_documents'],true) && $session) {
+        if ($step === 'kyc_documents' && $session) {
             $prompt = ['type'=>'button','body'=>$prompt['text'],'buttons'=>[
                 ['id'=>'onb:'.$session->id.':'.$step.':skip','title'=>'Skip for now'],
                 ['id'=>'talk_support','title'=>'Talk to Support'],
@@ -1204,7 +1237,7 @@ class VendorOnboardingService
         $logoStatus = !empty($data['logo_media_id']) || !empty($data['has_logo']) || !empty($data['media_id'])
             ? 'Uploaded (1:1 Verified) 🖼️'
             : 'Required ⚠️';
-        $coverStatus = !empty($data['cover_media_id']) ? 'Uploaded 🏞️' : 'Skipped (optional)';
+        $coverStatus = !empty($data['cover_media_id']) ? 'Uploaded 🏞️' : 'Missing (required)';
 
         $plan = ($data['business_plan'] ?? '') === 'subscription-base'
             ? 'Subscription Plan 📅'
@@ -1284,110 +1317,59 @@ class VendorOnboardingService
     ): void {
         $persisted = false;
         try {
-            $data = $session?->collected_data ?? [];
-
-            $phone = $data['phone'] ?? $contact->phone_number;
-            $email = $data['email'] ?? null;
-
-            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $gateway->sendTextMessage($contact->phone_number, "⚠️ A valid email address is required. Please reply *Edit Email* to provide your email address.");
+            if (!$session || $session->contact_id !== $contact->id
+                || $conversation->contact_id !== $contact->id
+                || $conversation->onboarding_session_id !== $session->id) {
+                $gateway->sendTextMessage($contact->phone_number, 'This application does not match your conversation. Reply Support for help.');
                 return;
             }
-
-            if (empty($data['password_hash']) || empty($data['module_id']) || empty($data['zone_id'])
-                || !isset($data['latitude'], $data['longitude']) || empty($data['logo_media_id'])
-                || empty($data['business_plan']) || empty($data['terms_accepted']) || empty($data['privacy_accepted'])) {
-                $gateway->sendTextMessage($contact->phone_number, 'Your application is incomplete. Please use Edit to complete every required section before submitting.');
-                return;
-            }
-
-            $module = Module::active()->notParcel()->find($data['module_id']);
-            $zone = Zone::where('id', $data['zone_id'])->where('status', 1)->first();
-            $insideZone = $zone && app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\ZoneEligibility::class)
-                ->contains((int) $zone->id, (float) $data['latitude'], (float) $data['longitude']);
-            if (!$module || !$insideZone || !\App\Models\ModuleZone::where('module_id', $module->id)->where('zone_id', $zone->id)->exists()) {
-                $gateway->sendTextMessage($contact->phone_number, 'Your selected module and zone no longer match the shared location. Please edit Location, Zone or Business Module and submit again.');
-                return;
-            }
-
-            if ($module->module_type === 'rental' && addon_published_status('Rental')
-                && empty($data['pickup_zone_id'])) {
-                $gateway->sendTextMessage($contact->phone_number, 'Rental providers must choose a pickup zone before submitting. Please use Edit to complete that step.');
-                return;
-            }
-
-            $logoMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['logo_media_id']);
-            if (!$logoMedia || $logoMedia->status !== 'processed' || empty($logoMedia->file_path)
-                || !in_array($logoMedia->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-                $gateway->sendTextMessage($contact->phone_number, 'Your store logo is still being checked or is not a supported image. Please wait for confirmation before submitting.');
-                return;
-            }
-            if (!empty($data['cover_media_id'])) {
-                $coverMedia = \Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMedia::find($data['cover_media_id']);
-                if (!$coverMedia || $coverMedia->status !== 'processed' || empty($coverMedia->file_path)
-                    || !in_array($coverMedia->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-                    $gateway->sendTextMessage($contact->phone_number, 'Your cover photo is still being checked or is not a supported image. Please wait for confirmation, replace it, or skip it before submitting.');
-                    return;
-                }
-            }
-
-            $subscriptionPackage = null;
-            if (($data['business_plan'] ?? null) === 'subscription-base') {
-                $packageType = $module->module_type === 'rental' && addon_published_status('Rental') ? 'rental' : 'all';
-                $subscriptionPackage = SubscriptionPackage::where('status', 1)
-                    ->where('module_type', $packageType)
-                    ->find($data['package_id'] ?? null);
-                if (!$subscriptionPackage) {
-                    $gateway->sendTextMessage($contact->phone_number, 'Please select an active subscription package for your business module before submitting.');
-                    return;
-                }
-            }
-
-            $dto = \Modules\WhatsAppVendorConcierge\app\DTOs\VendorApplicationDTO::fromWhatsAppSession($session, $contact);
             $appService = app(\Modules\WhatsAppVendorConcierge\app\Services\CoreAdapters\VendorApplicationService::class);
-            [$vendor, $store, $paymentUrl] = DB::transaction(function () use ($dto, $appService, $contact, $conversation, $session, $data, $subscriptionPackage) {
-            $lockedSession = OnboardingSession::lockForUpdate()->findOrFail($session->id);
-            if ($lockedSession->status === 'submitted' && $lockedSession->store_id && $lockedSession->vendor_id) {
-                return [Vendor::findOrFail($lockedSession->vendor_id), Store::findOrFail($lockedSession->store_id), null];
-            }
-            $result = $appService->submit($dto);
-            $vendor = $result['vendor'];
-            $store = $result['store'];
+            [$vendor, $store, $paymentUrl] = DB::transaction(function () use ($appService, $contact, $conversation, $session) {
+                $lockedSession = OnboardingSession::lockForUpdate()->findOrFail($session->id);
+                if ($lockedSession->status === 'submitted' && $lockedSession->store_id && $lockedSession->vendor_id) {
+                    return [Vendor::findOrFail($lockedSession->vendor_id), Store::findOrFail($lockedSession->store_id), null];
+                }
+                if (!in_array($lockedSession->status, ['started', 'review'], true)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['application' => 'This application is not open for submission.']);
+                }
+                $dto = \Modules\WhatsAppVendorConcierge\app\DTOs\VendorApplicationDTO::fromWhatsAppSession($lockedSession, $contact);
+                $result = $appService->submit($dto);
+                $vendor = $result['vendor'];
+                $store = $result['store'];
 
-            // Link contact to vendor
-            $contact->update(['vendor_id' => $vendor->id]);
+                // Link contact to vendor
+                $contact->update(['vendor_id' => $vendor->id]);
 
-            if ($session) {
-                $session->update([
-                    'vendor_id' => $vendor->id,
-                    'store_id' => $store->id,
-                    'status' => 'submitted',
-                    'completed_at' => now(),
-                ]);
-            }
-            $conversation->update(['state' => 'onboarding_completed', 'current_step' => null, 'vendor_id' => $vendor->id]);
+                if ($session) {
+                    $session->update([
+                        'vendor_id' => $vendor->id,
+                        'store_id' => $store->id,
+                        'status' => 'submitted',
+                        'completed_at' => now(),
+                    ]);
+                }
+                $conversation->update(['state' => 'onboarding_completed', 'current_step' => null, 'vendor_id' => $vendor->id]);
 
-            // Insert operating hours if specified
-            $this->insertStoreSchedule($store, $data['operating_hours'] ?? null);
+                // Default schedule creation belongs to the shared core registration service.
 
-            $paymentUrl = null;
-            if ($subscriptionPackage && $session) {
-                $paymentLifecycle = app(\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class);
-                $paymentUrl = $paymentLifecycle->issuePaymentLink($session, 7);
-            }
-            OnboardingEvent::log($session->id, $contact->id, 'application_submitted', 'review_submit',
-                ['vendor_id' => $vendor->id, 'store_id' => $store->id]);
-            return [$vendor, $store, $paymentUrl];
+                $paymentUrl = null;
+                if ($store->package_id && $session) {
+                    $paymentLifecycle = app(\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class);
+                    $paymentUrl = $paymentLifecycle->issuePaymentLink($session, 7);
+                }
+                OnboardingEvent::log($session->id, $contact->id, 'application_submitted', 'review_submit',
+                    ['vendor_id' => $vendor->id, 'store_id' => $store->id]);
+                return [$vendor, $store, $paymentUrl];
             });
             $persisted = true;
-            $fName = $data['f_name'] ?? ($data['business_name'] ?? 'Vendor');
-            $lName = $data['l_name'] ?? 'Owner';
+            $fName = $vendor->f_name;
+            $lName = $vendor->l_name;
 
             // Send confirmation to vendor
             $confirmation =
                 "🎉 *Your Application Has Been Submitted!*\n\n" .
                 "• Application ID: #{$vendor->id}\n" .
-                "• Business: *{$data['business_name']}*\n" .
+                "• Business: *{$store->name}*\n" .
                 "• Owner: *{$fName} {$lName}*\n" .
                 "• Status: *Under Review (Pending)* ⏳\n\n" .
                 "Our team will review your application within 24-48 hours. " .
@@ -1405,6 +1387,14 @@ class VendorOnboardingService
                 );
             }
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $labels = ['f_name' => 'first name', 'l_name' => 'last name', 'email' => 'email', 'phone' => 'phone number',
+                'logo' => 'store logo', 'cover_photo' => 'cover photo', 'terms_accepted' => 'terms acceptance', 'privacy_accepted' => 'privacy acceptance'];
+            $fields = array_keys($e->errors());
+            $commands = ['logo' => 'edit logo', 'cover_photo' => 'edit cover', 'l_name' => 'edit owner', 'f_name' => 'edit owner',
+                'terms_accepted' => 'edit terms', 'privacy_accepted' => 'edit privacy', 'email' => 'edit email', 'phone' => 'edit phone'];
+            $command = $commands[$fields[0]] ?? 'Edit';
+            $gateway->sendTextMessage($contact->phone_number, 'Please correct: '.implode(', ', array_map(fn ($field) => $labels[$field] ?? str_replace('_', ' ', $field), $fields)).'. Reply "'.$command.'" to update or re-upload, or Support for help.');
         } catch (\Throwable $e) {
             if ($persisted) {
                 Log::error('Application confirmation delivery failed after submission', [
@@ -1421,45 +1411,6 @@ class VendorOnboardingService
                 $contact->phone_number,
                 "❌ Sorry, there was an error submitting your application. Please try again or contact support."
             );
-        }
-    }
-
-    /**
-     * Insert operating hours schedule into store_schedules table.
-     */
-    protected function insertStoreSchedule(Store $store, ?string $hoursInput): void
-    {
-        $raw = strtolower(trim((string)$hoursInput));
-
-        if (str_contains($raw, 'standard') || str_contains($raw, 'mon-sat')) {
-            // Monday to Saturday: 08:00 to 20:00 (days 1-6)
-            $this->storeLogic->insert_schedule($store->id, [1, 2, 3, 4, 5, 6], '08:00:00', '20:00:00');
-        } elseif (str_contains($raw, 'everyday') || str_contains($raw, 'mon-sun')) {
-            // Everyday: 08:00 to 22:00 (days 0-6)
-            $this->storeLogic->insert_schedule($store->id, [0, 1, 2, 3, 4, 5, 6], '08:00:00', '22:00:00');
-        } elseif (str_contains($raw, '24/7') || str_contains($raw, 'always open')) {
-            // 24/7: days 0-6 00:00 to 23:59:59
-            $this->storeLogic->insert_schedule($store->id, [0, 1, 2, 3, 4, 5, 6], '00:00:00', '23:59:59');
-        } else {
-            // Default schedule
-            $this->storeLogic->insert_schedule($store->id);
-        }
-    }
-
-    /**
-     * Notify admin of new application (reuse existing logic).
-     */
-    protected function notifyAdmin(Vendor $vendor, Store $store): void
-    {
-        try {
-            $admin = \App\Models\Admin::where('role_id', 1)->first();
-            $module = $store->module;
-
-            if ($module && $module->module_type != 'rental' && config('mail.status') && Helpers::get_mail_status('store_registration_mail_status_admin') == '1') {
-                Mail::to($admin?->getRawOriginal('email'))->send(new StoreRegistration('pending', $vendor->f_name . ' ' . $vendor->l_name));
-            }
-        } catch (\Exception $e) {
-            Log::error('Admin notification failed', ['error' => $e->getMessage()]);
         }
     }
 

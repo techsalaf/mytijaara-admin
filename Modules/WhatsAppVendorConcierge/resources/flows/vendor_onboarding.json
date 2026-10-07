@@ -1,0 +1,728 @@
+{
+  "version": "7.3",
+  "data_api_version": "3.0",
+  "routing_model": {
+    "OWNER": [
+      "STORE"
+    ],
+    "STORE": [
+      "LOCATION_DELIVERY"
+    ],
+    "LOCATION_DELIVERY": [
+      "PLAN_LOGO"
+    ],
+    "PLAN_LOGO": [
+      "COVER"
+    ],
+    "COVER": [
+      "TIN"
+    ],
+    "TIN": [
+      "REVIEW"
+    ],
+    "REVIEW": []
+  },
+  "screens": [
+    {
+      "id": "OWNER",
+      "title": "Owner details",
+      "data": {
+        "first_name": {
+          "type": "string",
+          "__example__": ""
+        },
+        "surname": {
+          "type": "string",
+          "__example__": ""
+        },
+        "email": {
+          "type": "string",
+          "__example__": ""
+        }
+      },
+      "refresh_on_back": true,
+      "sensitive": [
+        "first_name",
+        "surname",
+        "email"
+      ],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextArea",
+            "name": "first_name",
+            "label": "First name",
+            "required": true,
+            "init-value": "${data.first_name}",
+            "helper-text": "up to 100 characters."
+          },
+          {
+            "type": "TextArea",
+            "name": "surname",
+            "label": "Surname",
+            "required": true,
+            "init-value": "${data.surname}",
+            "helper-text": "up to 100 characters."
+          },
+          {
+            "type": "TextArea",
+            "name": "email",
+            "label": "Email",
+            "required": true,
+            "init-value": "${data.email}",
+            "helper-text": "Valid email; up to 100 characters."
+          },
+          {
+            "type": "Footer",
+            "label": "Continue",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "first_name": "${form.first_name}",
+                "surname": "${form.surname}",
+                "email": "${form.email}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "STORE",
+      "title": "Store details",
+      "data": {
+        "store_name": {
+          "type": "string",
+          "__example__": ""
+        },
+        "module_id": {
+          "type": "string",
+          "__example__": ""
+        },
+        "address": {
+          "type": "string",
+          "__example__": ""
+        },
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "example",
+              "title": "Example",
+              "enabled": true
+            }
+          ]
+        }
+      },
+      "refresh_on_back": true,
+      "sensitive": [
+        "store_name",
+        "module_id",
+        "address"
+      ],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextArea",
+            "name": "store_name",
+            "label": "Store name",
+            "required": true,
+            "init-value": "${data.store_name}",
+            "helper-text": "up to 250 characters."
+          },
+          {
+            "type": "Dropdown",
+            "name": "module_id",
+            "label": "Business module",
+            "data-source": "${data.modules}",
+            "required": true,
+            "init-value": "${data.module_id}"
+          },
+          {
+            "type": "TextArea",
+            "name": "address",
+            "label": "Store address",
+            "required": true,
+            "init-value": "${data.address}",
+            "helper-text": "up to 500 characters."
+          },
+          {
+            "type": "Footer",
+            "label": "Continue",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "store_name": "${form.store_name}",
+                "module_id": "${form.module_id}",
+                "address": "${form.address}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "LOCATION_DELIVERY",
+      "title": "Location and delivery",
+      "data": {
+        "latitude": {
+          "type": "string",
+          "__example__": ""
+        },
+        "longitude": {
+          "type": "string",
+          "__example__": ""
+        },
+        "zone_id": {
+          "type": "string",
+          "__example__": ""
+        },
+        "minimum_delivery_time": {
+          "type": "string",
+          "__example__": ""
+        },
+        "maximum_delivery_time": {
+          "type": "string",
+          "__example__": ""
+        },
+        "delivery_time_unit": {
+          "type": "string",
+          "__example__": ""
+        },
+        "pickup_zone_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "__example__": []
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "example",
+              "title": "Example",
+              "enabled": true
+            }
+          ]
+        },
+        "pickup_zones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "example",
+              "title": "Example",
+              "enabled": true
+            }
+          ]
+        },
+        "is_rental": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "refresh_on_back": true,
+      "sensitive": [
+        "latitude",
+        "longitude",
+        "zone_id",
+        "minimum_delivery_time",
+        "maximum_delivery_time",
+        "delivery_time_unit",
+        "pickup_zone_ids"
+      ],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "Enter the store coordinates from your map. Latitude comes first; longitude comes second."
+          },
+          {
+            "type": "TextInput",
+            "name": "latitude",
+            "label": "Latitude",
+            "required": true,
+            "init-value": "${data.latitude}",
+            "helper-text": "From -90 to 90; decimals and minus signs allowed."
+          },
+          {
+            "type": "TextInput",
+            "name": "longitude",
+            "label": "Longitude",
+            "required": true,
+            "init-value": "${data.longitude}",
+            "helper-text": "From -180 to 180."
+          },
+          {
+            "type": "Dropdown",
+            "name": "zone_id",
+            "label": "Operating zone",
+            "data-source": "${data.zones}",
+            "required": true,
+            "init-value": "${data.zone_id}"
+          },
+          {
+            "type": "TextInput",
+            "name": "minimum_delivery_time",
+            "label": "Minimum delivery",
+            "required": true,
+            "init-value": "${data.minimum_delivery_time}",
+            "input-type": "number"
+          },
+          {
+            "type": "TextInput",
+            "name": "maximum_delivery_time",
+            "label": "Maximum delivery",
+            "required": true,
+            "init-value": "${data.maximum_delivery_time}",
+            "input-type": "number"
+          },
+          {
+            "type": "Dropdown",
+            "name": "delivery_time_unit",
+            "label": "Delivery unit",
+            "required": true,
+            "init-value": "${data.delivery_time_unit}",
+            "data-source": [
+              {
+                "id": "min",
+                "title": "Minutes"
+              },
+              {
+                "id": "hours",
+                "title": "Hours"
+              },
+              {
+                "id": "days",
+                "title": "Days"
+              }
+            ]
+          },
+          {
+            "type": "CheckboxGroup",
+            "name": "pickup_zone_ids",
+            "label": "Rental pickup zones",
+            "data-source": "${data.pickup_zones}",
+            "required": "${data.is_rental}",
+            "visible": "${data.is_rental}",
+            "init-value": "${data.pickup_zone_ids}"
+          },
+          {
+            "type": "Footer",
+            "label": "Continue",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "latitude": "${form.latitude}",
+                "longitude": "${form.longitude}",
+                "zone_id": "${form.zone_id}",
+                "minimum_delivery_time": "${form.minimum_delivery_time}",
+                "maximum_delivery_time": "${form.maximum_delivery_time}",
+                "delivery_time_unit": "${form.delivery_time_unit}",
+                "pickup_zone_ids": "${form.pickup_zone_ids}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "PLAN_LOGO",
+      "title": "Plan and logo",
+      "data": {
+        "business_plan": {
+          "type": "string",
+          "__example__": ""
+        },
+        "package_id": {
+          "type": "string",
+          "__example__": ""
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "example",
+              "title": "Example",
+              "enabled": true
+            }
+          ]
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "enabled": {
+                "type": "boolean"
+              }
+            }
+          },
+          "__example__": [
+            {
+              "id": "example",
+              "title": "Example",
+              "enabled": true
+            }
+          ]
+        },
+        "show_plan": {
+          "type": "boolean",
+          "__example__": true
+        },
+        "show_package": {
+          "type": "boolean",
+          "__example__": false
+        }
+      },
+      "refresh_on_back": true,
+      "sensitive": [
+        "business_plan",
+        "package_id"
+      ],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "Dropdown",
+            "name": "business_plan",
+            "label": "Business plan",
+            "data-source": "${data.plans}",
+            "required": true,
+            "init-value": "${data.business_plan}",
+            "enabled": "${data.show_plan}"
+          },
+          {
+            "type": "If",
+            "condition": "${form.business_plan} == 'subscription-base'",
+            "then": [
+              {
+                "type": "Dropdown",
+                "name": "package_id",
+                "label": "Subscription package",
+                "data-source": "${data.packages}",
+                "required": true,
+                "init-value": "${data.package_id}"
+              }
+            ]
+          },
+          {
+            "type": "PhotoPicker",
+            "name": "media",
+            "label": "Store logo",
+            "min-uploaded-photos": 1,
+            "max-uploaded-photos": 1,
+            "photo-source": "camera_gallery",
+            "max-file-size-kb": 2048
+          },
+          {
+            "type": "If",
+            "condition": "${form.business_plan} == 'subscription-base'",
+            "then": [
+              {
+                "type": "Footer",
+                "label": "Continue",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "business_plan": "${form.business_plan}",
+                    "package_id": "${form.package_id}",
+                    "media": "${form.media}"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "type": "Footer",
+                "label": "Continue",
+                "on-click-action": {
+                  "name": "data_exchange",
+                  "payload": {
+                    "business_plan": "${form.business_plan}",
+                    "media": "${form.media}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "COVER",
+      "title": "Cover image",
+      "data": {},
+      "refresh_on_back": true,
+      "sensitive": [],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "PhotoPicker",
+            "name": "media",
+            "label": "Store cover image",
+            "min-uploaded-photos": 1,
+            "max-uploaded-photos": 1,
+            "photo-source": "camera_gallery",
+            "max-file-size-kb": 2048
+          },
+          {
+            "type": "Footer",
+            "label": "Continue",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "media": "${form.media}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "TIN",
+      "title": "Optional TIN information",
+      "data": {
+        "tin": {
+          "type": "string",
+          "__example__": ""
+        },
+        "tin_expire_date": {
+          "type": "string",
+          "__example__": ""
+        }
+      },
+      "refresh_on_back": true,
+      "sensitive": [
+        "tin",
+        "tin_expire_date"
+      ],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "TIN information and its supporting image are optional. You may leave this screen blank."
+          },
+          {
+            "type": "TextArea",
+            "name": "tin",
+            "label": "TIN (optional)",
+            "required": false,
+            "init-value": "${data.tin}",
+            "helper-text": "up to 100 characters."
+          },
+          {
+            "type": "TextInput",
+            "name": "tin_expire_date",
+            "label": "TIN expiry date",
+            "required": false,
+            "init-value": "${data.tin_expire_date}",
+            "helper-text": "Optional: YYYY-MM-DD"
+          },
+          {
+            "type": "DocumentPicker",
+            "name": "media",
+            "label": "Optional TIN image",
+            "min-uploaded-documents": 0,
+            "max-uploaded-documents": 1,
+            "allowed-mime-types": [
+              "image/jpeg",
+              "image/png"
+            ],
+            "max-file-size-kb": 2048
+          },
+          {
+            "type": "Footer",
+            "label": "Continue",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "tin": "${form.tin}",
+                "tin_expire_date": "${form.tin_expire_date}",
+                "media": "${form.media}"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "REVIEW",
+      "title": "Review and agreement",
+      "data": {
+        "terms_agreed": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "privacy_acknowledged": {
+          "type": "boolean",
+          "__example__": false
+        },
+        "terms_version": {
+          "type": "string",
+          "__example__": ""
+        },
+        "privacy_version": {
+          "type": "string",
+          "__example__": ""
+        },
+        "presentation_hash": {
+          "type": "string",
+          "__example__": ""
+        },
+        "summary": {
+          "type": "string",
+          "__example__": "Review your application."
+        },
+        "policy_versions": {
+          "type": "string",
+          "__example__": "Terms and privacy versions"
+        },
+        "terms_url": {
+          "type": "string",
+          "__example__": "https://example.test/legal/terms"
+        },
+        "privacy_url": {
+          "type": "string",
+          "__example__": "https://example.test/legal/privacy"
+        },
+        "review_hash": {
+          "type": "string",
+          "__example__": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      },
+      "refresh_on_back": true,
+      "sensitive": [
+        "terms_agreed",
+        "privacy_acknowledged"
+      ],
+      "layout": {
+        "type": "SingleColumnLayout",
+        "children": [
+          {
+            "type": "TextBody",
+            "text": "${data.summary}"
+          },
+          {
+            "type": "TextCaption",
+            "text": "${data.policy_versions}"
+          },
+          {
+            "type": "EmbeddedLink",
+            "text": "Read exact terms",
+            "on-click-action": {
+              "name": "open_url",
+              "url": "${data.terms_url}"
+            }
+          },
+          {
+            "type": "EmbeddedLink",
+            "text": "Read exact privacy notice",
+            "on-click-action": {
+              "name": "open_url",
+              "url": "${data.privacy_url}"
+            }
+          },
+          {
+            "type": "OptIn",
+            "name": "terms_agreed",
+            "label": "I agree to the terms of service.",
+            "required": true,
+            "init-value": false
+          },
+          {
+            "type": "OptIn",
+            "name": "privacy_acknowledged",
+            "label": "I acknowledge the privacy notice.",
+            "required": true,
+            "init-value": false
+          },
+          {
+            "type": "Footer",
+            "label": "Submit application",
+            "on-click-action": {
+              "name": "data_exchange",
+              "payload": {
+                "terms_agreed": "${form.terms_agreed}",
+                "privacy_acknowledged": "${form.privacy_acknowledged}",
+                "terms_version": "${data.terms_version}",
+                "privacy_version": "${data.privacy_version}",
+                "presentation_hash": "${data.presentation_hash}",
+                "review_hash": "${data.review_hash}"
+              }
+            }
+          }
+        ]
+      },
+      "terminal": true,
+      "success": true
+    }
+  ]
+}

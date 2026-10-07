@@ -85,9 +85,8 @@ class WhatsAppMessage extends Model
      */
     public static function logInbound(int $conversationId, array $messageData, array $metaValue): self
     {
-        $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact(
-            $messageData, WhatsAppConversation::find($conversationId)
-        );
+        $conversation = WhatsAppConversation::find($conversationId);
+        $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($messageData, $conversation);
         $content = [
             'text' => $message['text']['body'] ?? null,
             'button' => $message['button'] ?? null,
@@ -133,6 +132,9 @@ class WhatsAppMessage extends Model
                 'from' => $message['from'] ?? null,
                 'timestamp' => $message['timestamp'] ?? null,
                 'phone_number_id' => $metaValue['metadata']['phone_number_id'] ?? null,
+                // Capture trusted ownership once; reusing a conversation must not reassign old uploads.
+                'registration_session_id' => $conversation?->onboarding_session_id,
+                'registration_contact_id' => $conversation?->contact_id,
             ],
             'delivered_at' => now(),
         ]);

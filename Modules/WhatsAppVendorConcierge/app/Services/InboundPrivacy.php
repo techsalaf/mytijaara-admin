@@ -8,7 +8,10 @@ class InboundPrivacy
 {
     public static function redact(array $message, ?WhatsAppConversation $conversation = null): array
     {
-        if (!$conversation && !empty($message['from'])) {
+        if (($message['interactive']['type'] ?? '') === 'nfm_reply' || isset($message['interactive']['nfm_reply']) || ($message['type'] ?? '') === 'interactive_flow') {
+            return array_intersect_key($message, array_flip(['id', 'from', 'timestamp'])) + ['type' => 'unsupported'];
+        }
+        if (! $conversation && ! empty($message['from'])) {
             $conversation = WhatsAppConversation::whereHas('contact', fn ($q) => $q->where('whatsapp_id', $message['from']))
                 ->whereNotIn('state', ['closed', 'expired'])->latest()->first();
         }
@@ -28,6 +31,7 @@ class InboundPrivacy
                 $message['interactive'] = ['button_reply' => ['id' => $button, 'title' => $button]];
             }
         }
+
         return $message;
     }
 }

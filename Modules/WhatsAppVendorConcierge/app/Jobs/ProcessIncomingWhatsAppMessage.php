@@ -47,18 +47,26 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
         VendorOnboardingService $onboardingService,
         ConversationManager $conversationManager
     ): void {
+        if (($this->messageData['interactive']['type'] ?? '') === 'nfm_reply' || isset($this->messageData['interactive']['nfm_reply']) || ($this->messageData['type'] ?? '') === 'interactive_flow') {
+            return;
+        }
         // Album/status/unknown events without a user message must not answer draft questions.
-        if (empty($this->messageData['type']) || in_array($this->messageData['type'], ['reaction','system','unsupported'], true)) return;
+        if (empty($this->messageData['type']) || in_array($this->messageData['type'], ['reaction', 'system', 'unsupported'], true)) {
+            return;
+        }
         $messageId = $this->messageData['id'] ?? null;
-        if (!$messageId) return;
+        if (! $messageId) {
+            return;
+        }
         $lock = null;
         $receipt = null;
         $contactLock = null;
 
         if ($messageId) {
-            $lock = \Illuminate\Support\Facades\Cache::lock('process_wa_msg_' . $messageId, 150);
-            if (!$lock->get()) {
+            $lock = \Illuminate\Support\Facades\Cache::lock('process_wa_msg_'.$messageId, 150);
+            if (! $lock->get()) {
                 Log::info('Duplicate concurrent WhatsApp message locked', ['message_id' => $messageId]);
+
                 return;
             }
         }
@@ -71,18 +79,22 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
 
             $receipt = InboundReceipt::where('whatsapp_message_id', $messageId)->first();
             // Historical receipts cannot prove whether their side effects completed.
-            if ($existingMessage && !$receipt) {
+            if ($existingMessage && ! $receipt) {
                 Log::info('Duplicate WhatsApp message ignored', [
                     'message_id' => $this->messageData['id'],
                 ]);
+
                 return;
             }
 
             $receipt ??= InboundReceipt::create(['whatsapp_message_id' => $messageId]);
-            if (in_array($receipt->phase, ['completed', 'reviewed', 'needs_review'], true)) return;
+            if (in_array($receipt->phase, ['completed', 'reviewed', 'needs_review'], true)) {
+                return;
+            }
             if ($receipt->phase === 'processing') {
                 // A worker may have died after a mutation or external send. Never replay blindly.
                 $receipt->update(['phase' => 'needs_review', 'error_type' => 'InterruptedProcessing']);
+
                 return;
             }
             $receipt->increment('attempts');
@@ -90,8 +102,12 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             $contact = $this->getOrCreateContact($this->messageData, $this->metaValue);
 
             $contactLock = \Illuminate\Support\Facades\Cache::lock('wa_inbound_contact_'.$contact->id, 150);
-            if (!$contactLock->get()) {
-                if ($this->job) { $this->release(15); return; }
+            if (! $contactLock->get()) {
+                if ($this->job) {
+                    $this->release(15);
+
+                    return;
+                }
                 throw new \RuntimeException('Conversation is processing another message.');
             }
             // Get or create conversation
@@ -99,7 +115,18 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
 
             if ($contact->is_blocked) {
                 $receipt->update(['phase' => 'completed', 'completed_at' => now()]);
+
                 return;
+            }
+            if (config('whatsapp-vendor-flow.enabled') && strtolower(trim((string) ($this->messageData['text']['body'] ?? ''))) === 'setup') {
+                $flow = \Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession::where('contact_id', $contact->id)->whereNotNull('consumed_at')->latest('id')->first();
+                if ($flow) {
+                    $flow->update(['notification_status' => 'pending']);
+                    SendFlowRegistrationNotification::dispatch($flow->id)->afterCommit();
+                    $receipt->update(['phase' => 'completed', 'completed_at' => now()]);
+
+                    return;
+                }
             }
             $this->messageData = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($this->messageData, $conversation);
             $this->metaValue = array_intersect_key($this->metaValue, array_flip(['contacts', 'metadata']));
@@ -109,6 +136,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
             $version = hash('sha256', json_encode([$conversation->state, $conversation->current_step, $conversation->onboarding_session_id, $conversation->updated_at?->toISOString()]));
             if (($receipt->state_version && $receipt->state_version !== $version) || ($existingMessage && $conversation->messages()->where('direction', 'inbound')->where('id', '>', $message->id)->exists())) {
                 $receipt->update(['phase' => 'needs_review', 'error_type' => 'ConversationAdvanced']);
+
                 return;
             }
             $receipt->update(['message_id' => $message->id, 'state_version' => $version, 'error_type' => null]);
@@ -120,7 +148,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error('Failed to mark WhatsApp message as read', [
                         'message_id' => $this->messageData['id'],
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -169,15 +197,7 @@ class ProcessIncomingWhatsAppMessage implements ShouldQueue, \Illuminate\Contrac
      */
     public static function dispatchFlow(array $flow, array $metaValue): self
     {
-        $messageData = [
-            'id' => $flow['flow_token'] ?? uniqid('flow_'),
-            'type' => 'interactive_flow',
-            'interactive' => ['nfm_reply' => $flow],
-            'from' => $metaValue['contacts'][0]['wa_id'] ?? null,
-            'timestamp' => now()->timestamp,
-        ];
-
-        return new self($messageData, $metaValue);
+        throw new \LogicException('Flow responses require the verified webhook and FlowSubmission DTO.');
     }
 
     /**

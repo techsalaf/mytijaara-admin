@@ -58,6 +58,9 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorFlowOperations::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ValidateVendorFlow::class,
+            \Modules\WhatsAppVendorConcierge\app\Console\Commands\SyncVendorFlow::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReviewInboundCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReplayInboundCommand::class,
             \Modules\WhatsAppVendorConcierge\app\Console\Commands\AiTestModelsCommand::class,
@@ -141,6 +144,8 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     {
         $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower.'.php')], 'config');
         $this->mergeConfigFrom(module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower);
+        $this->mergeConfigFrom(module_path($this->moduleName, 'config/flow.php'), 'whatsapp-vendor-flow');
+        config(['filesystems.disks.vendor_flow_private' => ['driver'=>'local','root'=>config('whatsapp-vendor-flow.private_root'),'visibility'=>'private','throw'=>true]]);
     }
 
     /**

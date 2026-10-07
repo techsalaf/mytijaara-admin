@@ -56,13 +56,15 @@ class WebhookController extends \App\Http\Controllers\Controller
      */
     public function handle(Request $request): JsonResponse
     {
+        if (app()->bound('debugbar')) app('debugbar')->disable();
         // Validate signature if enabled
         if (config('whatsapp-vendor-concierge.webhook.enable_signature_validation')) {
-            if (!$this->validateSignature($request)) {
+            if (! $this->validateSignature($request)) {
                 Log::warning('WhatsApp webhook signature validation failed', [
                     'ip' => $request->ip(),
-                    'signature' => $request->header(config('whatsapp-vendor-concierge.webhook.signature_header')),
+                    'signature_provided' => $request->hasHeader(config('whatsapp-vendor-concierge.webhook.signature_header')),
                 ]);
+
                 return response()->json(['error' => 'Invalid signature'], 401);
             }
         }
@@ -81,6 +83,24 @@ class WebhookController extends \App\Http\Controllers\Controller
 
                     // Process each message async
                     foreach ($value['messages'] ?? [] as $message) {
+                        if (($message['interactive']['type'] ?? '') === 'nfm_reply' || isset($message['interactive']['nfm_reply'])) {
+                            // Completion responses bypass conversation storage, AI and generic message jobs.
+                            if (! $this->validateSignature($request)) {
+                                return response()->json(['error' => 'Invalid signature'], 401);
+                            }
+                            if ((string) ($value['metadata']['phone_number_id'] ?? '') !== (string) config('whatsapp-vendor-concierge.api.phone_number_id')
+                                || (string) ($entry['id'] ?? '') !== (string) config('whatsapp-vendor-concierge.api.business_account_id')) {
+                                continue;
+                            }
+                            try {
+                                $submission = \Modules\WhatsAppVendorConcierge\app\DTOs\FlowSubmission::fromMessage($message);
+                                \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessVendorFlowSubmission::dispatch($submission);
+                            } catch (\JsonException|\InvalidArgumentException $error) {
+                                Log::notice('Malformed Flow completion rejected', ['message_id' => $message['id'] ?? null]);
+                            }
+
+                            continue;
+                        }
                         $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($message);
                         $metaContext = array_intersect_key($value, array_flip(['contacts', 'metadata']));
                         if (app()->environment('testing')) {
@@ -104,9 +124,7 @@ class WebhookController extends \App\Http\Controllers\Controller
                     }
 
                     // Process flow responses async
-                    if (isset($value['flow'])) {
-                        dispatch(ProcessIncomingWhatsAppMessage::dispatchFlow($value['flow'], $value))->afterResponse();
-                    }
+                    // Only documented interactive.nfm_reply completion messages are accepted.
                 }
             }
         }

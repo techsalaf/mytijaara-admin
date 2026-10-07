@@ -9,6 +9,7 @@ class SecureCredentialPage
 {
     public function handle(Request $request, Closure $next)
     {
+        if (app()->bound('debugbar')) app('debugbar')->disable();
         abort_if(app()->environment('production') && !$request->isSecure(), 400, 'HTTPS is required.');
         $response = $next($request);
         $response->headers->set('Cache-Control', 'no-store, private');
