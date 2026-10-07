@@ -70,6 +70,9 @@ class MySqlVendorFlowConcurrencyTest extends \Tests\TestCase
         foreach ($keys as $key) {
             \Illuminate\Support\Facades\Schema::table($key->table_name, fn ($t) => $t->dropForeign($key->constraint_name));
         }
+        // MySQL 8 MyISAM permits smaller indexes than MariaDB. Keep the empty legacy media
+        // fixture's unique index while using a compatible legacy three-byte charset.
+        DB::statement('ALTER TABLE vendor_registration_media CONVERT TO CHARACTER SET utf8');
         foreach (['vendor_security_tokens', 'vendor_registration_consents', 'vendor_registration_media', 'legal_policy_versions'] as $table) {
             DB::statement("ALTER TABLE `$table` ENGINE=MyISAM");
         }
