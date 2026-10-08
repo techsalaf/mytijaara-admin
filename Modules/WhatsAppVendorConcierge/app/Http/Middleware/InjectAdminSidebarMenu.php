@@ -125,6 +125,13 @@ class InjectAdminSidebarMenu
                 clink.href = campaignsUrl;
                 clink.innerHTML = '<span class="v2-dot v2-dot--purple"></span><span class="v2-label">Resume Campaigns</span>';
                 vendorContainer.appendChild(clink);
+
+                const flowLink = document.createElement('a');
+                flowLink.id = 'wa-flow-control-nav';
+                flowLink.className = 'v2-nav-item';
+                flowLink.href = '/admin/whatsapp/flows';
+                flowLink.innerHTML = '<span class="v2-dot v2-dot--green"></span><span class="v2-label">WhatsApp Flows</span>';
+                vendorContainer.appendChild(flowLink);
             }
         }
 
@@ -189,7 +196,7 @@ class InjectAdminSidebarMenu
 </script>
 HTML;
             if (str_contains($content, '</body>')) {
-                $content = str_replace('</body>', $script . "\n</body>", $content);
+                $content = str_replace('</body>', $script."\n</body>", $content);
                 $response->setContent($content);
             }
         }

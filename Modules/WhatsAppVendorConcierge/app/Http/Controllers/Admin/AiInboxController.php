@@ -3,51 +3,64 @@
 namespace Modules\WhatsAppVendorConcierge\app\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
-use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\Audit;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\Permissions;
+use Modules\WhatsAppVendorConcierge\app\Services\Operations\ConciergeDiagnosticService;
 use Modules\WhatsAppVendorConcierge\app\Services\SupportCaseService;
-use Brian2694\Toastr\Facades\Toastr;
+use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 
 class AiInboxController extends Controller
 {
     private function conversations(Request $request)
     {
-        $query = WhatsAppConversation::with(['contact', 'vendor.stores', 'onboardingSession', 'messages'=>fn ($q)=>$q->latest('created_at')->latest('id')->limit(1)]);
+        $query = WhatsAppConversation::with(['contact', 'vendor.stores', 'onboardingSession', 'messages' => fn ($q) => $q->latest('created_at')->latest('id')->limit(1)]);
         $filter = $request->input('filter', 'all');
-        if ($filter === 'unread') $query->whereHas('messages', fn ($q)=>$q->where('direction','inbound')->whereNull('read_at'));
-        elseif ($filter === 'stuck') {
-            $ids = app(\Modules\WhatsAppVendorConcierge\app\Services\Operations\ConciergeDiagnosticService::class)->scan('stuck')->pluck('conversation.id');
-            $query->whereIn('id',$ids);
-        } elseif (isset(['ai'=>'ai_active','human'=>'human_handoff','incomplete'=>'onboarding_active','completed'=>'onboarding_completed'][$filter])) {
-            $query->where('state',['ai'=>'ai_active','human'=>'human_handoff','incomplete'=>'onboarding_active','completed'=>'onboarding_completed'][$filter]);
+        if ($filter === 'unread') {
+            $query->whereHas('messages', fn ($q) => $q->where('direction', 'inbound')->whereNull('read_at'));
+        } elseif ($filter === 'stuck') {
+            $ids = app(ConciergeDiagnosticService::class)->scan('stuck')->pluck('conversation.id');
+            $query->whereIn('id', $ids);
+        } elseif (isset(['ai' => 'ai_active', 'human' => 'human_handoff', 'incomplete' => 'onboarding_active', 'completed' => 'onboarding_completed'][$filter])) {
+            $query->where('state', ['ai' => 'ai_active', 'human' => 'human_handoff', 'incomplete' => 'onboarding_active', 'completed' => 'onboarding_completed'][$filter]);
         }
         if ($search = $request->input('search')) {
             $query->where(function ($group) use ($search) {
-                $group->whereHas('contact', fn ($q)=>$q->where('phone_number','like',"%{$search}%")->orWhere('display_name','like',"%{$search}%"))
-                    ->orWhereHas('vendor', fn ($q)=>$q->where('f_name','like',"%{$search}%")->orWhere('l_name','like',"%{$search}%"));
+                $group->whereHas('contact', fn ($q) => $q->where('phone_number', 'like', "%{$search}%")->orWhere('display_name', 'like', "%{$search}%"))
+                    ->orWhereHas('vendor', fn ($q) => $q->where('f_name', 'like', "%{$search}%")->orWhere('l_name', 'like', "%{$search}%"));
             });
         }
+
         return $query->latest('last_activity_at')->paginate(20)->withQueryString();
     }
 
     public function index(Request $request)
     {
-        $filter=$request->input('filter','all'); $search=$request->input('search');
-        $conversations=$this->conversations($request);
-        return view('whatsappvendorconcierge::admin.inbox.index',compact('conversations','filter','search'));
+        $filter = $request->input('filter', 'all');
+        $search = $request->input('search');
+        $conversations = $this->conversations($request);
+
+        return view('whatsappvendorconcierge::admin.inbox.index', compact('conversations', 'filter', 'search'));
     }
 
     public function show(Request $request, $id)
     {
-        $filter=$request->input('filter','all'); $search=$request->input('search');
-        $conversations=$this->conversations($request);
-        $conversation=WhatsAppConversation::with(['contact','vendor.stores','onboardingSession'])->findOrFail($id);
-        $messages=$conversation->messages()->oldest('created_at')->oldest('id')->get();
-        $diag=app(\Modules\WhatsAppVendorConcierge\app\Services\Operations\ConciergeDiagnosticService::class)->diagnoseConversation($conversation);
-        $conversation->messages()->where('direction','inbound')->whereNull('read_at')->update(['read_at'=>now()]);
-        return view('whatsappvendorconcierge::admin.inbox.show',compact('conversations','conversation','messages','filter','search','diag'));
+        $filter = $request->input('filter', 'all');
+        $search = $request->input('search');
+        $conversations = $this->conversations($request);
+        $conversation = WhatsAppConversation::with(['contact', 'vendor.stores', 'onboardingSession'])->findOrFail($id);
+        $messages = $conversation->messages()->oldest('created_at')->oldest('id')->get();
+        $flowEvents = Schema::hasTable('wa_vendor_flow_events') ? DB::table('wa_vendor_flow_events')->join('wa_vendor_flow_sessions', 'wa_vendor_flow_sessions.id', '=', 'wa_vendor_flow_events.flow_session_id')->where('wa_vendor_flow_sessions.onboarding_session_id', $conversation->onboarding_session_id)->orderBy('wa_vendor_flow_events.id')->get(['wa_vendor_flow_events.event', 'wa_vendor_flow_events.screen', 'wa_vendor_flow_events.created_at']) : collect();
+        $diag = app(ConciergeDiagnosticService::class)->diagnoseConversation($conversation);
+        $conversation->messages()->where('direction', 'inbound')->whereNull('read_at')->update(['read_at' => now()]);
+
+        return view('whatsappvendorconcierge::admin.inbox.show', compact('conversations', 'conversation', 'messages', 'filter', 'search', 'diag', 'flowEvents'));
     }
 
     public function sendMessage(Request $request, $id, WhatsAppGateway $gateway)
@@ -58,21 +71,22 @@ class AiInboxController extends Controller
 
         $conversation = WhatsAppConversation::findOrFail($id);
         $contact = $conversation->contact;
-        abort_if(!$contact || $contact->is_blocked, 422, 'Messaging is disabled for this contact.');
-        $lastInbound = $conversation->messages()->where('direction','inbound')->latest('created_at')->first();
+        abort_if(! $contact || $contact->is_blocked, 422, 'Messaging is disabled for this contact.');
+        $lastInbound = $conversation->messages()->where('direction', 'inbound')->latest('created_at')->first();
         abort_unless($lastInbound && $lastInbound->created_at->gt(now()->subHours(24)), 422, 'The 24-hour reply window has closed. Use an approved resume template.');
         abort_unless($conversation->state === 'human_handoff', 409, 'Take over this conversation before sending a human reply.');
 
-
         try {
             $response = $gateway->sendTextMessage($contact->phone_number, $request->message);
-            
-            if (empty($response['messages'][0]['id'])) return response()->json(['success'=>false,'message'=>'WhatsApp rejected the message. Check delivery diagnostics.'], 502);
+
+            if (empty($response['messages'][0]['id'])) {
+                return response()->json(['success' => false, 'message' => 'WhatsApp rejected the message. Check delivery diagnostics.'], 502);
+            }
             $msg = WhatsAppMessage::logOutbound($conversation->id, [
                 'type' => 'text',
-                'text' => ['body' => $request->message]
+                'text' => ['body' => $request->message],
             ], $response);
-            
+
             $metadata = $msg->metadata ?? [];
             $metadata['origin'] = 'human_operator';
             $msg->update(['metadata' => $metadata]);
@@ -83,8 +97,8 @@ class AiInboxController extends Controller
                     'id' => $msg->id,
                     'text' => $request->message,
                     'created_at' => $msg->created_at->format('H:i'),
-                    'status' => $msg->status
-                ]
+                    'status' => $msg->status,
+                ],
             ]);
         } catch (\Throwable $e) {
             return response()->json(['success' => false, 'message' => 'Unable to send the reply. Check delivery diagnostics.'], 500);
@@ -99,25 +113,38 @@ class AiInboxController extends Controller
 
         $conversation = WhatsAppConversation::with('contact')->findOrFail($id);
         $newState = $request->state;
-
-        if ($newState === 'human_handoff') {
-            $conversation->transitionTo('human_handoff');
-            if (!$support->getActiveCase($conversation->contact)) {
-                $support->createCase($conversation->contact, "Manual takeover from Inbox", 'general', 'medium', null, $conversation);
-            }
-        } else {
-            if ($conversation->onboardingSession?->canResume() && !$conversation->contact?->vendor_id) {
-                $conversation->transitionTo('onboarding_active');
-            } else {
-                $conversation->transitionTo('ai_active');
-            }
-
-            if ($case = $support->getActiveCase($conversation->contact)) {
-                $support->resolveCase($case, "Handed back to AI via Inbox UI");
-            }
+        $flowOwned = Schema::hasTable('wa_flow_control_audits') && VendorFlowSession::where('onboarding_session_id', $conversation->onboarding_session_id)->exists();
+        if ($flowOwned) {
+            app(Permissions::class)->assert('recovery');
         }
+        DB::transaction(function () use ($conversation, $newState, $support, $flowOwned) {
+            $conversation = WhatsAppConversation::with('contact')->lockForUpdate()->findOrFail($conversation->id);
+            $previousState = $conversation->state;
 
-        Toastr::success("Conversation state changed to " . str_replace('_', ' ', strtoupper($newState)));
+            if ($newState === 'human_handoff') {
+                $conversation->transitionTo('human_handoff');
+                if (! $support->getActiveCase($conversation->contact)) {
+                    $support->createCase($conversation->contact, 'Manual takeover from Inbox', 'general', 'medium', null, $conversation);
+                }
+            } else {
+                if ($conversation->onboardingSession?->canResume() && ! $conversation->contact?->vendor_id) {
+                    $conversation->transitionTo('onboarding_active');
+                } else {
+                    $conversation->transitionTo('ai_active');
+                }
+
+                if ($case = $support->getActiveCase($conversation->contact)) {
+                    $support->resolveCase($case, 'Handed back to AI via Inbox UI');
+                }
+            }
+
+            if ($flowOwned) {
+                app(Audit::class)->record(auth('admin')->id(), 'application_handoff', 'conversation:'.$conversation->id, 'succeeded', ['before_state' => $previousState, 'after_state' => $conversation->state]);
+            }
+
+        });
+        Toastr::success('Conversation state changed to '.str_replace('_', ' ', strtoupper($newState)));
+
         return back();
     }
 }

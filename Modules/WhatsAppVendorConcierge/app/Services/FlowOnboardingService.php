@@ -2,17 +2,22 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
-use Illuminate\Support\Facades\DB;
+use App\DTOs\VendorSelfRegistrationInput;
 use App\Services\RegistrationPolicyService;
-use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
+use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
+use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppMessage;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
 
 class FlowOnboardingService
 {
     public function enabledFor(string $phone): bool
     {
+        app(RuntimeSettings::class)->apply();
         if (! config('whatsapp-vendor-flow.enabled') || ! in_array(config('whatsapp-vendor-flow.mode'), ['draft', 'published'], true) || ! preg_match('/^[0-9]+$/D', (string) config('whatsapp-vendor-flow.flow_id'))) {
             return false;
         }
@@ -25,7 +30,7 @@ class FlowOnboardingService
             } catch (\Throwable) {
                 return false;
             }
-            if (! \Illuminate\Support\Facades\Schema::hasTable('wa_vendor_flow_sync')) {
+            if (! Schema::hasTable('wa_vendor_flow_sync')) {
                 return false;
             }
             $sync = DB::table('wa_vendor_flow_sync')->where('definition_version', config('whatsapp-vendor-flow.definition_version'))->first();
@@ -35,7 +40,7 @@ class FlowOnboardingService
         }
         $allowed = config('whatsapp-vendor-flow.test_phones', []);
         if ($allowed) {
-            return in_array($phone, array_map([\App\DTOs\VendorSelfRegistrationInput::class, 'normalizePhone'], $allowed), true);
+            return in_array($phone, array_map([VendorSelfRegistrationInput::class, 'normalizePhone'], $allowed), true);
         }
         if (config('whatsapp-vendor-flow.mode') === 'draft') {
             return false;
@@ -46,7 +51,7 @@ class FlowOnboardingService
 
     public function offer(OnboardingSession $session, WhatsAppContact $contact, WhatsAppConversation $conversation): bool
     {
-        $sender = \App\DTOs\VendorSelfRegistrationInput::normalizePhone($contact->whatsapp_id);
+        $sender = VendorSelfRegistrationInput::normalizePhone($contact->whatsapp_id);
         if (! $this->enabledFor($sender)) {
             return false;
         }
@@ -71,6 +76,10 @@ class FlowOnboardingService
             app(FlowOptions::class)->modules();
             $raw = bin2hex(random_bytes(32));
             $flow = DB::transaction(function () use ($session, $contact, $sender, $locale, $manifest, $raw) {
+                app(RuntimeSettings::class)->lock();
+                if (! $this->enabledFor($sender)) {
+                    throw new \RuntimeException('Flow dispatch changed before session creation.');
+                }
                 OnboardingSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
                 $existing = VendorFlowSession::where('onboarding_session_id', $session->id)->first();
                 if ($existing && ! $existing->consumed_at) {
@@ -87,7 +96,12 @@ class FlowOnboardingService
                     'flow_id' => config('whatsapp-vendor-flow.flow_id'), 'definition_version' => config('whatsapp-vendor-flow.definition_version'), 'locale' => $locale, 'state' => 'flow_offered',
                     'draft' => [], 'policy_manifest' => $manifest, 'expires_at' => now()->addMinutes(config('whatsapp-vendor-flow.session_minutes', 60))]);
             });
-            app(FlowMetaClient::class)->offer($sender, $flow->flow_id, $raw);
+            $response = app(FlowMetaClient::class)->offer($sender, $flow->flow_id, $raw);
+            $messageId = $response['messages'][0]['id'] ?? null;
+            if (! is_string($messageId) || $messageId === '') {
+                throw new \RuntimeException('Meta did not confirm the Flow offer.');
+            }
+            WhatsAppMessage::logOutbound($conversation->id, ['type' => 'interactive', 'interactive' => ['type' => 'flow', 'body' => ['text' => 'Registration form offered.']]], ['messages' => [['id' => $messageId]]]);
             $conversation->update(['current_step' => 'flow_active']);
             $session->update(['current_step' => 'flow_active']);
             app(FlowStateMachine::class)->event($flow, 'flow_offered');

@@ -1,0 +1,1 @@
+@if($ready && ($definitionValid??false) && ($permissions[\Modules\WhatsAppVendorConcierge\app\Services\FlowControl\Lifecycle::ACTIONS[$action]]??false))<button type="button" class="btn btn-outline-primary fc-operation" data-action="{{ $action }}">{{ __($label) }}</button>@endif

@@ -3,12 +3,16 @@
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
 use Illuminate\Support\Facades\Http;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\MetaError;
 
 class FlowMetaClient
 {
     public function request(string $method, string $path, array $data = [], ?string $asset = null): array
     {
-        if (! preg_match('~^[0-9]+(?:/(?:flows|assets|publish|messages))?$~D', $path)) {
+        if (! in_array($method, ['GET', 'POST'], true)) {
+            throw new \InvalidArgumentException('Unsupported Meta method.');
+        }
+        if (! preg_match('~^[0-9]+(?:/(?:flows|assets|publish|messages|deprecate|phone_numbers|whatsapp_business_encryption|subscribed_apps))?$~D', $path)) {
             throw new \InvalidArgumentException('Invalid Meta resource.');
         }
         $version = (string) config('whatsapp-vendor-flow.graph_version', 'v26.0');
@@ -26,13 +30,8 @@ class FlowMetaClient
         }
         $body = $response->json();
         if (! $response->successful() || isset($body['error']) || ! is_array($body)) {
-            $code = (int) ($body['error']['code'] ?? $response->status());
-            $sub = (int) ($body['error']['error_subcode'] ?? 0);
             // Never echo request payload, bearer, endpoint URL, media URL or arbitrary reflected Meta text.
-            $hint = match ($response->status()) {
-                401 => ' Verify sandbox access-token validity.',403 => ' Verify account permissions and resource ownership.',429 => ' Rate limited; retry later.',default => ''
-            };
-            throw new \RuntimeException('Meta API error '.$code.' / '.$sub.' (HTTP '.$response->status().').'.$hint);
+            throw MetaError::fromResponse($response->status(), is_array($body['error'] ?? null) ? $body['error'] : []);
         }
 
         return $body;

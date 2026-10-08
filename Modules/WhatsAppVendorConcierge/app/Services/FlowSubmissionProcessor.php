@@ -2,20 +2,26 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
+use App\DTOs\VendorSelfRegistrationInput;
+use App\DTOs\VendorSelfRegistrationResult;
+use App\Models\Store;
+use App\Models\Vendor;
+use App\Services\VendorSelfRegistrationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\WhatsAppVendorConcierge\app\DTOs\FlowSubmission;
-use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
+use Modules\WhatsAppVendorConcierge\app\Jobs\SendFlowRegistrationNotification;
 use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
+use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
 use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppConversation;
-use App\DTOs\VendorSelfRegistrationResult;
-use App\Services\VendorSelfRegistrationService;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
 
 class FlowSubmissionProcessor
 {
     public function process(FlowSubmission $in): string
     {
+        app(RuntimeSettings::class)->apply();
         if (! config('whatsapp-vendor-flow.enabled')) {
             return 'flow_disabled';
         }
@@ -31,7 +37,7 @@ class FlowSubmissionProcessor
                 if ($host && in_array($host->status, ['abandoned', 'expired'], true)) {
                     throw new \InvalidArgumentException('Flow host session is no longer active.');
                 }
-                if (! $host || ! $contact || $host->contact_id !== $contact->id || \App\DTOs\VendorSelfRegistrationInput::normalizePhone($contact->whatsapp_id) !== $in->sender) {
+                if (! $host || ! $contact || $host->contact_id !== $contact->id || VendorSelfRegistrationInput::normalizePhone($contact->whatsapp_id) !== $in->sender) {
                     throw new \InvalidArgumentException('Flow session mismatch.');
                 }
                 $receipt = DB::table('wa_vendor_flow_receipts')->where('message_id', $in->messageId)->first();
@@ -100,7 +106,7 @@ class FlowSubmissionProcessor
 
                 return;
             }
-            $result = new VendorSelfRegistrationResult(\App\Models\Vendor::findOrFail($s->vendor_id), \App\Models\Store::findOrFail($s->store_id), false);
+            $result = new VendorSelfRegistrationResult(Vendor::findOrFail($s->vendor_id), Store::findOrFail($s->store_id), false);
             app(VendorSelfRegistrationService::class)->publishPreparedMedia($result);
             $sm = app(FlowStateMachine::class);
             if ($s->state === 'failed_recoverable') {
@@ -113,7 +119,7 @@ class FlowSubmissionProcessor
             DB::table('wa_vendor_flow_media')->where('flow_session_id', $s->id)->where('state', 'staged')->update(['state' => 'promoted', 'updated_at' => now()]);
             DB::table('wa_vendor_flow_receipts')->where('flow_session_id', $s->id)->update(['state' => 'completed', 'updated_at' => now()]);
             WhatsAppConversation::where('onboarding_session_id', $s->onboarding_session_id)->update(['state' => 'onboarding_completed', 'vendor_id' => $s->vendor_id, 'current_step' => null, 'collected_data' => [], 'context' => []]);
-            \Modules\WhatsAppVendorConcierge\app\Jobs\SendFlowRegistrationNotification::dispatch($s->id)->afterCommit();
+            SendFlowRegistrationNotification::dispatch($s->id)->afterCommit();
         }, 3);
     }
 

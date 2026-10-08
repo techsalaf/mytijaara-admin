@@ -2,8 +2,8 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
-use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 use Illuminate\Support\Facades\DB;
+use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
 
 class FlowStateMachine
 {
@@ -15,7 +15,8 @@ class FlowStateMachine
         'flow_submitted' => ['flow_draft', 'registration_processing', 'correction_required', 'failed_recoverable', 'failed_terminal'],
         'registration_processing' => ['registration_completed', 'correction_required', 'failed_recoverable', 'failed_terminal'],
         'registration_completed' => ['credential_setup_pending'],
-        'credential_setup_pending' => [],
+        'credential_setup_pending' => ['credential_setup_completed'],
+        'credential_setup_completed' => [],
         'correction_required' => ['flow_draft', 'media_processing', 'flow_submitted', 'failed_terminal'],
         'failed_recoverable' => ['flow_draft', 'media_processing', 'flow_submitted', 'registration_processing', 'failed_terminal'],
         'failed_terminal' => [],

@@ -2,15 +2,20 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
+use Illuminate\Support\Facades\Log;
+use Modules\WhatsAppVendorConcierge\app\DTOs\FlowSubmission;
 use Modules\WhatsAppVendorConcierge\app\Jobs\ProcessIncomingWhatsAppMessage;
-use Modules\WhatsAppVendorConcierge\app\Models\WhatsAppContact;
+use Modules\WhatsAppVendorConcierge\app\Jobs\ProcessVendorFlowSubmission;
+use Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppStatus;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
+use Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy;
+use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 
-class WebhookController extends \App\Http\Controllers\Controller
+class WebhookController extends Controller
 {
     public function __construct(
         protected WhatsAppGateway $gateway
@@ -39,6 +44,7 @@ class WebhookController extends \App\Http\Controllers\Controller
         if ($mode === 'subscribe' && is_string($expectedToken) && $expectedToken !== ''
             && is_string($token) && hash_equals($expectedToken, $token)) {
             Log::info('WhatsApp webhook verified successfully');
+
             return response($challenge, 200)
                 ->header('Content-Type', 'text/plain');
         }
@@ -56,7 +62,10 @@ class WebhookController extends \App\Http\Controllers\Controller
      */
     public function handle(Request $request): JsonResponse
     {
-        if (app()->bound('debugbar')) app('debugbar')->disable();
+        app(RuntimeSettings::class)->apply();
+        if (app()->bound('debugbar')) {
+            app('debugbar')->disable();
+        }
         // Validate signature if enabled
         if (config('whatsapp-vendor-concierge.webhook.enable_signature_validation')) {
             if (! $this->validateSignature($request)) {
@@ -93,15 +102,15 @@ class WebhookController extends \App\Http\Controllers\Controller
                                 continue;
                             }
                             try {
-                                $submission = \Modules\WhatsAppVendorConcierge\app\DTOs\FlowSubmission::fromMessage($message);
-                                \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessVendorFlowSubmission::dispatch($submission);
+                                $submission = FlowSubmission::fromMessage($message);
+                                ProcessVendorFlowSubmission::dispatch($submission);
                             } catch (\JsonException|\InvalidArgumentException $error) {
                                 Log::notice('Malformed Flow completion rejected', ['message_id' => $message['id'] ?? null]);
                             }
 
                             continue;
                         }
-                        $message = \Modules\WhatsAppVendorConcierge\app\Services\InboundPrivacy::redact($message);
+                        $message = InboundPrivacy::redact($message);
                         $metaContext = array_intersect_key($value, array_flip(['contacts', 'metadata']));
                         if (app()->environment('testing')) {
                             ProcessIncomingWhatsAppMessage::dispatch($message, $metaContext);
@@ -120,7 +129,7 @@ class WebhookController extends \App\Http\Controllers\Controller
 
                     // Process status updates async
                     foreach ($value['statuses'] ?? [] as $status) {
-                        \Modules\WhatsAppVendorConcierge\app\Jobs\ProcessWhatsAppStatus::dispatchAfterResponse($status);
+                        ProcessWhatsAppStatus::dispatchAfterResponse($status);
                     }
 
                     // Process flow responses async
@@ -140,12 +149,12 @@ class WebhookController extends \App\Http\Controllers\Controller
         $signature = $request->header(config('whatsapp-vendor-concierge.webhook.signature_header'));
         $appSecret = config('whatsapp-vendor-concierge.api.app_secret');
 
-        if (!$signature || !$appSecret) {
+        if (! $signature || ! $appSecret) {
             return false;
         }
 
         // Signature format: "sha256=<hash>"
-        if (!str_starts_with($signature, 'sha256=')) {
+        if (! str_starts_with($signature, 'sha256=')) {
             return false;
         }
 
@@ -155,5 +164,3 @@ class WebhookController extends \App\Http\Controllers\Controller
         return hash_equals($expectedHash, $providedHash);
     }
 }
-
-

@@ -171,7 +171,16 @@
 
                 <div class="wa-status-banner"><strong>{{ $diag['step_label'] }}</strong> · {{ $diag['human_diagnosis'] }}<br><span class="text-muted">{{ $diag['service_window_open'] ? 'Reply window open' : 'Reply window closed: use an approved template' }} · {{ $conversation->state === 'human_handoff' ? 'You are in human support mode.' : 'Take over before sending a human reply.' }}</span></div>
                 <div class="wa-chat-messages" id="chat-messages">
+                    @php
+                        $flowTimeline = collect($flowEvents ?? []);
+                    @endphp
                     @foreach($messages as $msg)
+                    @while($flowTimeline->isNotEmpty() && \Carbon\Carbon::parse($flowTimeline->first()->created_at)->lte($msg->created_at))
+                    @php
+                        $event = $flowTimeline->shift();
+                    @endphp
+                    <div class="text-center text-muted my-2" role="note"><small>{{ ucfirst(str_replace('_',' ',$event->event)) }}{{ $event->screen ? ' · '.$event->screen : '' }} · {{ $event->created_at }}</small></div>
+                    @endwhile
                         <div class="wa-message {{ $msg->direction === 'inbound' ? 'inbound' : 'outbound' }}">
                             @if($msg->raw_text)
                                 <div>{!! nl2br(e($msg->raw_text)) !!}</div>
@@ -208,6 +217,7 @@
                             </div>
                         </div>
                     @endforeach
+                    @foreach($flowTimeline as $event)<div class="text-center text-muted my-2" role="note"><small>{{ ucfirst(str_replace('_',' ',$event->event)) }}{{ $event->screen ? ' · '.$event->screen : '' }} · {{ $event->created_at }}</small></div>@endforeach
                 </div>
 
                 <div class="wa-composer">

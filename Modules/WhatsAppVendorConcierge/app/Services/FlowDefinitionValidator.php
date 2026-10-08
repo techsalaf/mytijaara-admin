@@ -2,19 +2,40 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
+use App\Services\PrivateRegistrationStorageGuard;
 use App\Services\RegistrationPolicyService;
+use Illuminate\Support\Facades\DB;
 
 class FlowDefinitionValidator
 {
     public function path(): string
     {
+        $version = (string) config('whatsapp-vendor-flow.definition_version');
+        if ($version !== 'vendor-onboarding-2026-10-07.1' && ! (app()->environment('testing') && ! str_starts_with($version, 'vendor-onboarding-ui-'))) {
+            if (! preg_match('/^vendor-onboarding-[a-zA-Z0-9._-]{1,60}$/D', $version)) {
+                throw new \LogicException('Invalid reviewed definition version.');
+            }
+            $revision = DB::table('wa_flow_definition_revisions')->where('version', $version)->first();
+            if (! $revision) {
+                throw new \LogicException('Reviewed definition revision unavailable.');
+            }
+            $root = (string) config('whatsapp-vendor-flow.private_root');
+            PrivateRegistrationStorageGuard::assertPrivate($root);
+            $path = $root.'/definitions/'.$version.'.json';
+            if (! is_file($path) || ! hash_equals($revision->asset_hash, hash_file('sha256', $path))) {
+                throw new \LogicException('Definition archive integrity failed.');
+            }
+
+            return $path;
+        }
+
         return module_path('WhatsAppVendorConcierge', 'resources/flows/vendor_onboarding.json');
     }
 
     public function validate(?array $definition = null): array
     {
         $f = $definition ?? json_decode(file_get_contents($this->path()), true, 64, JSON_THROW_ON_ERROR);
-        $schema = json_decode(file_get_contents(dirname($this->path()).'/vendor_onboarding.schema.json'), true, 32, JSON_THROW_ON_ERROR);
+        $schema = json_decode(file_get_contents(module_path('WhatsAppVendorConcierge', 'resources/flows/vendor_onboarding.schema.json')), true, 32, JSON_THROW_ON_ERROR);
         $this->schema($f, $schema);
         if (($f['version'] ?? '') !== '7.3' || ($f['data_api_version'] ?? '') !== '3.0') {
             throw new \InvalidArgumentException('Unsupported verified Flow schema/protocol.');

@@ -3,7 +3,11 @@
 namespace Modules\WhatsAppVendorConcierge\app\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\MetaError;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
 use Modules\WhatsAppVendorConcierge\app\Services\FlowDefinitionValidator;
 use Modules\WhatsAppVendorConcierge\app\Services\FlowMetaClient;
 
@@ -15,6 +19,7 @@ class SyncVendorFlow extends Command
 
     public function handle(FlowDefinitionValidator $v, FlowMetaClient $meta): int
     {
+        app(RuntimeSettings::class)->apply();
         $action = $this->option('action');
         if (! in_array($action, ['status', 'local', 'create', 'update', 'upload', 'remote'], true)) {
             $this->error('Unknown synchronization action.');
@@ -142,9 +147,13 @@ class SyncVendorFlow extends Command
             });
         } catch (\Throwable $e) {
             // Exception text originates only from our sanitized Meta client or local invariants.
-            $this->error($e instanceof \Illuminate\Database\QueryException ? 'Synchronization storage unavailable; apply approved migrations in the intended environment.' : ($e instanceof \RuntimeException ? $e->getMessage() : 'Synchronization failed: '.$e::class));
-            if (isset($version) && \Illuminate\Support\Facades\Schema::hasTable('wa_vendor_flow_sync')) {
-                DB::table('wa_vendor_flow_sync')->where('definition_version', $version)->update(['error_code' => 'sync_failed', 'updated_at' => now()]);
+            $this->error($e instanceof QueryException ? 'Synchronization storage unavailable; apply approved migrations in the intended environment.' : ($e instanceof \RuntimeException ? $e->getMessage() : 'Synchronization failed: '.$e::class));
+            if (isset($version) && Schema::hasTable('wa_vendor_flow_sync')) {
+                $failure = ['error_code' => 'sync_failed', 'updated_at' => now()];
+                if ($e instanceof MetaError && Schema::hasColumn('wa_vendor_flow_sync', 'last_error_metadata')) {
+                    $failure['last_error_metadata'] = json_encode($e->safe + ['action' => $this->option('publish') ? 'publish' : $action, 'observed_at' => now('UTC')->toISOString()]);
+                }
+                DB::table('wa_vendor_flow_sync')->where('definition_version', $version)->update($failure);
             }
 
             return self::FAILURE;

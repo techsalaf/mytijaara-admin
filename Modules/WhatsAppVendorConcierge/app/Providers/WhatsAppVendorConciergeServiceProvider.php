@@ -2,8 +2,42 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Providers;
 
+use App\Events\VendorApplicationStatusChanged;
+use App\Models\Vendor;
+use App\Services\RegistrationPolicyService;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Modules\WhatsAppVendorConcierge\app\Console\AiHealthCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\AiTestModelsCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\CheckTemplates;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupFlowControl;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupMedia;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeDiagnoseCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeHealthCheckCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeRecoverCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\LaunchTaxonomyCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\MigrateLegacyAiProviders;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\Preflight;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ProcessStuckSessions;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ReconcileDeliveryLogsCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\RefreshAiModelsCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ReplayInboundCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ReviewInboundCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\SendActiveStoreOutreachCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\SyncVendorFlow;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\ValidateVendorFlow;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorAccessNoticeCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorFlowOperations;
+use Modules\WhatsAppVendorConcierge\app\Http\Middleware\InjectAdminSidebarMenu;
+use Modules\WhatsAppVendorConcierge\app\Listeners\SendWhatsAppStatusNotificationOnDomainEvent;
+use Modules\WhatsAppVendorConcierge\app\Observers\VendorApprovalObserver;
+use Modules\WhatsAppVendorConcierge\app\Services\ConversationManager;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
+use Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService;
+use Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService;
+use Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway;
 
 class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
 {
@@ -26,15 +60,15 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(module_path($this->moduleName, 'routes/api.php'));
 
         // Inject admin sidebar menu without modifying core files
-        $this->app['router']->pushMiddlewareToGroup('web', \Modules\WhatsAppVendorConcierge\app\Http\Middleware\InjectAdminSidebarMenu::class);
+        $this->app['router']->pushMiddlewareToGroup('web', InjectAdminSidebarMenu::class);
 
         // Register vendor approval/denial observer for WhatsApp notifications
-        \App\Models\Vendor::observe(\Modules\WhatsAppVendorConcierge\app\Observers\VendorApprovalObserver::class);
+        Vendor::observe(VendorApprovalObserver::class);
 
         // Register canonical domain event listener for status transitions
-        \Illuminate\Support\Facades\Event::listen(
-            \App\Events\VendorApplicationStatusChanged::class,
-            \Modules\WhatsAppVendorConcierge\app\Listeners\SendWhatsAppStatusNotificationOnDomainEvent::class
+        Event::listen(
+            VendorApplicationStatusChanged::class,
+            SendWhatsAppStatusNotificationOnDomainEvent::class
         );
     }
 
@@ -43,13 +77,17 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Module-owned adapter: canonical registration keeps its core service and evidence contract.
+        $this->app->resolving(RegistrationPolicyService::class, function () {
+            app(RuntimeSettings::class)->apply();
+        });
         $this->app->register(RouteServiceProvider::class);
 
         // Bind core services
-        $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class);
-        $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class);
-        $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
-        $this->app->singleton(\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class);
+        $this->app->singleton(WhatsAppGateway::class);
+        $this->app->singleton(VendorOnboardingService::class);
+        $this->app->singleton(ConversationManager::class);
+        $this->app->singleton(SubscriptionLifecycleService::class);
     }
 
     /**
@@ -58,26 +96,27 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorFlowOperations::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ValidateVendorFlow::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\SyncVendorFlow::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReviewInboundCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReplayInboundCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\AiTestModelsCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\LaunchTaxonomyCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorAccessNoticeCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ReconcileDeliveryLogsCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\CleanupMedia::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ProcessStuckSessions::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\Preflight::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\CheckTemplates::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\MigrateLegacyAiProviders::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\AiHealthCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeDiagnoseCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeRecoverCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\ConciergeHealthCheckCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\RefreshAiModelsCommand::class,
-            \Modules\WhatsAppVendorConcierge\app\Console\Commands\SendActiveStoreOutreachCommand::class,
+            CleanupFlowControl::class,
+            VendorFlowOperations::class,
+            ValidateVendorFlow::class,
+            SyncVendorFlow::class,
+            ReviewInboundCommand::class,
+            ReplayInboundCommand::class,
+            AiTestModelsCommand::class,
+            LaunchTaxonomyCommand::class,
+            VendorAccessNoticeCommand::class,
+            ReconcileDeliveryLogsCommand::class,
+            CleanupMedia::class,
+            ProcessStuckSessions::class,
+            Preflight::class,
+            CheckTemplates::class,
+            MigrateLegacyAiProviders::class,
+            AiHealthCommand::class,
+            ConciergeDiagnoseCommand::class,
+            ConciergeRecoverCommand::class,
+            ConciergeHealthCheckCommand::class,
+            RefreshAiModelsCommand::class,
+            SendActiveStoreOutreachCommand::class,
         ]);
     }
 
@@ -87,11 +126,12 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     protected function registerCommandSchedules(): void
     {
         $this->app->booted(function () {
-            $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+            $schedule = $this->app->make(Schedule::class);
 
             $schedule->exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg(base_path('scripts/prune-releases.php')).' '.escapeshellarg(base_path()).' --force')->dailyAt('03:20')->withoutOverlapping();
 
             // Cleanup old media files daily
+            $schedule->command('whatsapp:flow-control-cleanup --execute')->everyFifteenMinutes()->withoutOverlapping();
             $schedule->command('whatsapp:cleanup-media')
                 ->dailyAt('03:00')
                 ->runInBackground()
@@ -145,7 +185,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower.'.php')], 'config');
         $this->mergeConfigFrom(module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower);
         $this->mergeConfigFrom(module_path($this->moduleName, 'config/flow.php'), 'whatsapp-vendor-flow');
-        config(['filesystems.disks.vendor_flow_private' => ['driver'=>'local','root'=>config('whatsapp-vendor-flow.private_root'),'visibility'=>'private','throw'=>true]]);
+        config(['filesystems.disks.vendor_flow_private' => ['driver' => 'local', 'root' => config('whatsapp-vendor-flow.private_root'), 'visibility' => 'private', 'throw' => true]]);
     }
 
     /**
@@ -172,10 +212,10 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
     public function provides(): array
     {
         return [
-            \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway::class,
-            \Modules\WhatsAppVendorConcierge\app\Services\VendorOnboardingService::class,
-            \Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class,
-            \Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService::class,
+            WhatsAppGateway::class,
+            VendorOnboardingService::class,
+            ConversationManager::class,
+            SubscriptionLifecycleService::class,
         ];
     }
 
@@ -191,4 +231,3 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
         return $paths;
     }
 }
-

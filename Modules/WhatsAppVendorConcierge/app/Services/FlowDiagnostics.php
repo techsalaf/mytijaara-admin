@@ -5,16 +5,22 @@ namespace Modules\WhatsAppVendorConcierge\app\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
 
 class FlowDiagnostics
 {
     public function summary(): array
     {
+        app(RuntimeSettings::class)->apply();
         $out = ['enabled' => (bool) config('whatsapp-vendor-flow.enabled'), 'flow_id' => config('whatsapp-vendor-flow.flow_id'), 'definition_version' => config('whatsapp-vendor-flow.definition_version'), 'mode' => config('whatsapp-vendor-flow.mode')];
         if (! Schema::hasTable('wa_vendor_flow_sessions')) {
             return $out + ['migration' => 'not_applied'];
         }
-        $out['synchronization'] = DB::table('wa_vendor_flow_sync')->select('definition_version', 'draft_flow_id', 'published_flow_id', 'status', 'error_code', 'updated_at')->where('definition_version', $out['definition_version'])->first();
+        $columns = ['definition_version', 'draft_flow_id', 'published_flow_id', 'status', 'error_code', 'updated_at'];
+        if (Schema::hasColumn('wa_vendor_flow_sync', 'last_error_metadata')) {
+            $columns[] = 'last_error_metadata';
+        }
+        $out['synchronization'] = DB::table('wa_vendor_flow_sync')->select($columns)->where('definition_version', $out['definition_version'])->first();
         $out['recent_submissions'] = DB::table('wa_vendor_flow_receipts')->where('created_at', '>=', now()->subDay())->count();
         $out['states'] = DB::table('wa_vendor_flow_sessions')->selectRaw('state, COUNT(*) AS count')->groupBy('state')->get()->toArray();
         $out['expired_drafts'] = DB::table('wa_vendor_flow_sessions')->whereNull('consumed_at')->where('expires_at', '<', now())->count();

@@ -12,5 +12,5 @@ class VendorFlowSession extends Model
 
     protected $hidden = ['token_hash', 'sender', 'draft', 'policy_manifest'];
 
-    protected $casts = ['draft' => 'encrypted:array', 'policy_manifest' => 'encrypted:array', 'expires_at' => 'immutable_datetime', 'consumed_at' => 'immutable_datetime'];
+    protected $casts = ['draft' => 'encrypted:array', 'policy_manifest' => 'encrypted:array', 'expires_at' => 'immutable_datetime', 'consumed_at' => 'immutable_datetime', 'credential_setup_completed_at' => 'immutable_datetime'];
 }

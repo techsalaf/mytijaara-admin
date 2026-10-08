@@ -1,0 +1,5 @@
+@if(isset($result['code']))<div class="fc-danger"><strong>{{ $result['title'] }}</strong><p>{{ $result['message'] }}</p><p>HTTP {{ $result['http_status'] }} · Meta {{ $result['code'] }} / {{ $result['subcode'] }} · Trace {{ $result['trace_id']??'—' }}</p><p>{{ $result['remediation'] }}</p><small>{{ ($result['retry_safe']??false)?__('Retry after inspection may be safe'):__('Resolve the cause before retrying') }}</small></div>
+@elseif(isset($result['message']))<p>{{ $result['message'] }}</p>
+@elseif($result)<dl>@foreach($result as $key=>$value)<dt>{{ ucfirst(str_replace('_',' ',$key)) }}</dt><dd>{{ is_array($value)?json_encode($value):$value }}</dd>@endforeach</dl>@endif
+
+@if(in_array(141010,$result['health_codes']??[],true))<div class="fc-danger"><strong>{{ __('Business verification / eligibility is limited') }}</strong><p>{{ __('Meta health code 141010: resolve the verification requirement in Business Settings or with Meta support. Repeated publication is not a remedy.') }}</p></div>@endif

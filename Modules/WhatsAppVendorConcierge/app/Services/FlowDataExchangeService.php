@@ -2,9 +2,16 @@
 
 namespace Modules\WhatsAppVendorConcierge\app\Services;
 
+use App\Models\Module;
+use App\Models\SubscriptionPackage;
+use App\Models\Zone;
+use App\Services\RegistrationPolicyService;
+use App\Services\VendorSelfRegistrationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession;
 use Modules\WhatsAppVendorConcierge\app\Models\VendorFlowSession;
+use Modules\WhatsAppVendorConcierge\app\Services\FlowControl\RuntimeSettings;
 
 class FlowDataExchangeService
 {
@@ -19,6 +26,7 @@ class FlowDataExchangeService
 
     public function handle(array $request): array
     {
+        app(RuntimeSettings::class)->apply();
         if (($request['action'] ?? '') === 'ping') {
             return ['data' => ['status' => 'active']];
         }
@@ -36,7 +44,7 @@ class FlowDataExchangeService
                 throw new \InvalidArgumentException('Flow session expired or unavailable.');
             }
             $sm = app(FlowStateMachine::class);
-            $host = \Modules\WhatsAppVendorConcierge\app\Models\OnboardingSession::find($s->onboarding_session_id);
+            $host = OnboardingSession::find($s->onboarding_session_id);
             if (! $host || in_array($host->status, ['abandoned', 'expired'], true)) {
                 throw new \InvalidArgumentException('Flow host session is no longer active.');
             }
@@ -120,12 +128,12 @@ class FlowDataExchangeService
                         throw ValidationException::withMessages(['review' => 'Details changed. Review the latest summary and agree again.']);
                     }
                     $input = app(FlowFieldMapper::class)->input($s, $draft);
-                    app(\App\Services\RegistrationPolicyService::class)->verify($input->policyEvidence);
+                    app(RegistrationPolicyService::class)->verify($input->policyEvidence);
                     $m = $s->policy_manifest;
                     if ($input->policyEvidence->presentationHash !== $m['presentation_hash']) {
                         throw ValidationException::withMessages(['policy' => 'Review the current policy versions again.']);
                     }
-                    app(\App\Services\VendorSelfRegistrationService::class)->validatePreparedInput($input);
+                    app(VendorSelfRegistrationService::class)->validatePreparedInput($input);
                     $sm->transition($s, 'flow_submitted');
 
                     return ['screen' => 'SUCCESS', 'data' => ['extension_message_response' => ['params' => ['flow_token' => $token, 'flow_id' => $s->flow_id, 'definition_version' => $s->definition_version, 'submitted' => true]]]];
@@ -168,7 +176,7 @@ class FlowDataExchangeService
         }
         if ($screen === 'LOCATION_DELIVERY') {
             $data['zones'] = $o->zones((int) ($d['module_id'] ?? 0));
-            $r = \App\Models\Module::find($d['module_id'] ?? 0)?->module_type === 'rental' && addon_published_status('Rental');
+            $r = Module::find($d['module_id'] ?? 0)?->module_type === 'rental' && addon_published_status('Rental');
             $data['is_rental'] = $r;
             $data['pickup_zones'] = $r ? $o->pickups() : [];
         }
@@ -199,14 +207,14 @@ class FlowDataExchangeService
             $data['privacy_version'] = $m['privacy']['version'];
             $data['presentation_hash'] = $m['presentation_hash'];
             $data['summary'] = 'Owner: '.($d['first_name'] ?? '').' '.($d['surname'] ?? '')."\nStore: ".($d['store_name'] ?? '')."\nAddress: ".($d['address'] ?? '')."\nDelivery: ".($d['minimum_delivery_time'] ?? '').'-'.($d['maximum_delivery_time'] ?? '').' '.($d['delivery_time_unit'] ?? '')."\nReview earlier screens using Back. Approval is required before account access.";
-            $module = \App\Models\Module::find($d['module_id'] ?? 0);
-            $zone = \App\Models\Zone::find($d['zone_id'] ?? 0);
+            $module = Module::find($d['module_id'] ?? 0);
+            $zone = Zone::find($d['zone_id'] ?? 0);
             $data['summary'] .= "\nEmail: ".($d['email'] ?? '')."\nBusiness: ".($module?->module_name ?? '')."\nZone: ".($zone?->name ?? '')."\nCoordinates: ".($d['latitude'] ?? '').', '.($d['longitude'] ?? '')."\nPlan: ".($d['business_plan'] ?? '')."\nLogo and cover: provided";
             if (($d['business_plan'] ?? null) === 'subscription-base' && ! empty($d['package_id'])) {
-                $data['summary'] .= "\nPackage: ".(\App\Models\SubscriptionPackage::find($d['package_id'])?->package_name ?? '');
+                $data['summary'] .= "\nPackage: ".(SubscriptionPackage::find($d['package_id'])?->package_name ?? '');
             }
             if (! empty($d['pickup_zone_ids'])) {
-                $data['summary'] .= "\nPickup zones: ".implode(', ', \App\Models\Zone::whereIn('id', $d['pickup_zone_ids'])->pluck('name')->all());
+                $data['summary'] .= "\nPickup zones: ".implode(', ', Zone::whereIn('id', $d['pickup_zone_ids'])->pluck('name')->all());
             }
             if (! empty($d['tin'])) {
                 $data['summary'] .= "\nTIN information: provided";
