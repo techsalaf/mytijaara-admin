@@ -424,4 +424,13 @@ class FlowControlCentreTest extends HardeningTestCase
         $this->assertCount(1, $audit);
         $this->assertSame('record:0', $audit->first()->target);
     }
+
+    public function test_generic_meta_error_does_not_invent_a_business_verification_diagnosis(): void
+    {
+        $unknown = MetaError::fromResponse(400, ['code' => 139000]);
+        $this->assertSame('Meta operation rejected', $unknown->safe['title']);
+        $restricted = MetaError::fromResponse(400, ['code' => 139000, 'error_subcode' => 4233020]);
+        $this->assertSame('Business verification or Flow eligibility restriction', $restricted->safe['title']);
+        $this->assertFalse($restricted->safe['retry_safe']);
+    }
 }

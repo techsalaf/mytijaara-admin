@@ -13,7 +13,8 @@ class MetaError extends \RuntimeException
     {
         $code = (int) ($error['code'] ?? $status);
         $sub = (int) ($error['error_subcode'] ?? 0);
-        $limited = $code === 139000 || $code === 141010 || $sub === 4233020;
+        // Business restriction requires the verified health code or specific subcode.
+        $limited = $code === 141010 || $sub === 4233020;
 
         $trace = (string) ($error['fbtrace_id'] ?? '');
         $safeTrace = preg_match('/^[A-Za-z0-9_-]{1,100}$/D', $trace) ? $trace : null;
