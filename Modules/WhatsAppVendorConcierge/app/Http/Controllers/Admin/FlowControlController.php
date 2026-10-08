@@ -49,7 +49,7 @@ class FlowControlController extends Controller
         }
         $summary = app(FlowDiagnostics::class)->summary() + ['synchronization' => null];
         $operations = $ready ? DB::table('wa_flow_control_operations')->latest('created_at')->paginate(15, ['id', 'admin_id', 'action', 'target', 'state', 'result', 'created_at', 'updated_at']) : collect();
-        $audit = $ready ? DB::table('wa_flow_control_audits')->latest('id')->limit(30)->get() : collect();
+        $audit = $ready ? DB::table('wa_flow_control_audits')->latest('id')->paginate(30, ['*'], 'audit_page') : collect();
         $permissions = collect(Permissions::ALL)->mapWithKeys(fn ($p) => [$p => app(Permissions::class)->allows(auth('admin')->user(), $p)])->all();
         $required = ['test' => 'test_send', 'applications' => 'applications', 'diagnostics' => 'diagnostics', 'policies' => 'policies', 'settings' => 'settings', 'history' => 'diagnostics'];
         if (isset($required[$request->input('tab')])) {

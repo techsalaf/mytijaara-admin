@@ -406,4 +406,22 @@ class FlowControlCentreTest extends HardeningTestCase
         $this->assertNull($error->safe['trace_id']);
         $this->assertStringNotContainsString('test-secret', json_encode($error->safe));
     }
+
+    public function test_older_immutable_audits_remain_accessible_through_independent_pagination(): void
+    {
+        $admin = new Admin;
+        $admin->forceFill(['id' => 1, 'role_id' => 1]);
+        auth('admin')->setUser($admin);
+        for ($i = 0; $i < 31; $i++) {
+            app(Audit::class)->record(1, 'fixture', 'record:'.$i, 'succeeded');
+        }
+        $request = Request::create('/admin/whatsapp/flows', 'GET', ['tab' => 'history', 'audit_page' => 2]);
+        $request->setLaravelSession(app('session')->driver());
+        app()->instance('request', $request);
+        $audit = app(FlowControlController::class)->index($request)->getData()['audit'];
+        $this->assertSame(31, $audit->total());
+        $this->assertSame(2, $audit->currentPage());
+        $this->assertCount(1, $audit);
+        $this->assertSame('record:0', $audit->first()->target);
+    }
 }
