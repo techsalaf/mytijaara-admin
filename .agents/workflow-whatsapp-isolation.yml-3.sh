@@ -1,0 +1,1 @@
+vendor/bin/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit concierge-results.xml

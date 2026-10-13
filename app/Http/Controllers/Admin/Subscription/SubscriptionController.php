@@ -9,14 +9,11 @@ use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use Illuminate\Support\Carbon;
 use App\Models\BusinessSetting;
-use App\Mail\SubscriptionCancel;
 use App\Models\StoreSubscription;
-use Illuminate\Support\Facades\DB;
 use App\Models\SubscriptionPackage;
 use App\Http\Controllers\Controller;
 use App\Mail\SubscriptionPlanUpdate;
 use Brian2694\Toastr\Facades\Toastr;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\SubscriptionTransaction;
@@ -24,12 +21,14 @@ use App\Exports\SubscritionPackageListExport;
 use App\Exports\SubscriptionTransactionsExport;
 use App\Exports\SubscriptionSubscriberListExport;
 use App\Models\SubscriptionBillingAndRefundHistory;
-use Modules\Rental\Emails\ProviderSubscriptionCancel;
 use Modules\Rental\Emails\ProviderSubscriptionPlanUpdate;
-use Modules\Service\Emails\ProviderSubscriptionCancel as ServiceProviderSubscriptionCancel;
 use Modules\Service\Emails\ProviderSubscriptionPlanUpdate as ServiceProviderSubscriptionPlanUpdate;
 use App\Contracts\Repositories\TranslationRepositoryInterface;
 use Illuminate\Validation\Rule;
+use App\Support\Notification\SendNotification;
+use App\Services\Payment\StoreSubscriptionService;
+use App\Support\Notification\NotificationMessages;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionController extends Controller
 {
@@ -77,11 +76,9 @@ class SubscriptionController extends Controller
                         ->when(isset($filter) && $filter == 'this_year', function ($query) {
                             return $query->whereYear('created_at', now()->format('Y'));
                         })
-
                         ->when(isset($filter) && $filter == 'this_month', function ($query) {
                             return $query->whereMonth('created_at', now()->format('m'))->whereYear('created_at', now()->format('Y'));
                         })
-
                         ->when(isset($filter) && $filter == 'this_week', function ($query) {
                             return $query->whereBetween('created_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
                         });
@@ -120,8 +117,8 @@ class SubscriptionController extends Controller
         ], [
             'price.required' => translate('Must enter Price for the Package'),
             'package_validity.required' => translate('Must enter a validity period for the Package in days'),
-            'package_validity.between' => translate('validity must be in 99 years'),
-            'package_name.0.required'=>translate('default_package_name_is_required'),
+            'package_validity.between' => translate('Maximum validity') . ': ' . \Carbon\CarbonInterval::years(99)->forHumans(),
+            'package_name.0.required'=>translate('Default package name is required'),
         ]);
 
         $package = new SubscriptionPackage;
@@ -142,7 +139,7 @@ class SubscriptionController extends Controller
 
         $this->translationRepo->addByModel(request: $request, model: $package, modelPath: 'App\Models\SubscriptionPackage', attribute: 'package_name');
         $this->translationRepo->addByModel(request: $request, model: $package, modelPath: 'App\Models\SubscriptionPackage', attribute: 'text');
-        Toastr::success(translate('messages.Package_successfully_Added'));
+        Toastr::success(translate('Added successfully'));
         return redirect()->route('admin.business-settings.subscriptionackage.index',[ 'module' => $package->module_type ]);
     }
 
@@ -150,7 +147,7 @@ class SubscriptionController extends Controller
 
         $subscriptionackage->status =!$subscriptionackage->status;
         $subscriptionackage->save();
-        Toastr::success($subscriptionackage->status == 1 ? translate('messages.Package_Acitvated_successfully') : translate('Package_Deacitvated_successfully'));
+        Toastr::success($subscriptionackage->status == 1 ? translate('messages.Package Activated successfully') : translate('Package Deactivated successfully'));
         return back();
     }
 
@@ -162,7 +159,7 @@ class SubscriptionController extends Controller
     }
     public function edit(SubscriptionPackage $subscriptionackage)
     {
-        $subscriptionackage->load('translations')->withoutGlobalScope('translate');
+        $subscriptionackage->load('translations')->withoutGlobalScope('translate')->with('translations');
         $language = getWebConfig('language');
         $defaultLang = str_replace('_', '-', app()->getLocale());
         return view('admin-views.subscription.package.edit', compact('language','defaultLang','subscriptionackage'));
@@ -195,8 +192,8 @@ class SubscriptionController extends Controller
         ], [
             'price.required' => translate('Must enter Price for the Package'),
             'package_validity.required' => translate('Must enter a validity period for the Package in days'),
-            'package_validity.between' => translate('validity must be in 99 years'),
-            'package_name.0.required'=>translate('default_package_name_is_required'),
+            'package_validity.between' => translate('Maximum validity') . ': ' . \Carbon\CarbonInterval::years(99)->forHumans(),
+            'package_name.0.required'=>translate('Default package name is required'),
         ]);
         $subscriptionackage->package_name = $request->package_name[array_search('default', $request->lang)];
         $subscriptionackage->text = $request->text[array_search('default', $request->lang)];
@@ -213,7 +210,7 @@ class SubscriptionController extends Controller
         $subscriptionackage->save();
         $this->translationRepo->updateByModel(request: $request, model: $subscriptionackage, modelPath: 'App\Models\SubscriptionPackage', attribute: 'package_name');
         $this->translationRepo->updateByModel(request: $request, model: $subscriptionackage, modelPath: 'App\Models\SubscriptionPackage', attribute: 'text');
-        Toastr::success(translate('messages.Package_Updated_successfully'));
+        Toastr::success(translate('Updated successfully'));
 
 
         try {
@@ -222,83 +219,37 @@ class SubscriptionController extends Controller
             foreach ($subscribers as $subscriber){
 
 
-                if($subscriber?->store?->module->module_type == 'rental' && addon_published_status('Rental')){
+                $store = $subscriber?->store;
 
+                [$pushGate, $mailGate, $audience, $key, $template, $mailable] = match (true) {
+                    $store?->module->module_type == 'rental' && addon_published_status('Rental') => [
+                        'rentalChannelEnabled', 'canSendRentalMail', 'provider', 'provider_subscription_plan_update',
+                        'rental_subscription_plan_upadte_mail_status_provider', ProviderSubscriptionPlanUpdate::class,
+                    ],
+                    $store?->module->module_type == 'service' && addon_published_status('Service') => [
+                        'serviceChannelEnabled', 'canSendServiceMail', 'provider', 'service_provider_subscription_plan_update',
+                        'service_subscription_plan_upadte_mail_status_provider', ServiceProviderSubscriptionPlanUpdate::class,
+                    ],
+                    default => [
+                        'channelEnabled', 'canSendMail', 'store', 'store_subscription_plan_update',
+                        'subscription_plan_upadte_mail_status_store', SubscriptionPlanUpdate::class,
+                    ],
+                };
 
-                    if( Helpers::getRentalNotificationStatusData('provider','provider_subscription_plan_update','push_notification_status',$subscriber?->store?->id)  &&  $subscriber?->store?->vendor?->firebase_token){
-                        $data = [
-                            'title' => translate('subscription_plan_updated'),
-                            'description' => translate('Your_subscription_plan_has_been_updated'),
-                            'order_id' => '',
-                            'image' => '',
-                            'type' => 'subscription',
-                            'order_status' => '',
-                        ];
-                        Helpers::send_push_notif_to_device($subscriber?->store?->vendor?->firebase_token, $data);
-                        DB::table('user_notifications')->insert([
-                            'data' => json_encode($data),
-                            'vendor_id' => $subscriber?->store?->vendor_id,
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
+                if (SendNotification::$pushGate($audience, $key, 'push_notification_status', $store?->id) && $store?->vendor?->firebase_token) {
+                    SendNotification::pushToVendor($store?->vendor_id, $store?->vendor?->firebase_token, NotificationMessages::subscriptionPlanUpdated());
+                }
 
-                        if(config('mail.status') && Helpers::get_mail_status('rental_subscription_plan_upadte_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_plan_update','mail_status' ,$subscriber?->store?->id)){
-                            Mail::to($subscriber?->store?->getRawOriginal('email'))->send(new ProviderSubscriptionPlanUpdate($subscriber?->store?->name));
-                        }
-
-                } elseif($subscriber?->store?->module->module_type == 'service' && addon_published_status('Service')){
-
-                    if( Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_plan_update','push_notification_status',$subscriber?->store?->id)  &&  $subscriber?->store?->vendor?->firebase_token){
-                        $data = [
-                            'title' => translate('subscription_plan_updated'),
-                            'description' => translate('Your_subscription_plan_has_been_updated'),
-                            'order_id' => '',
-                            'image' => '',
-                            'type' => 'subscription',
-                            'order_status' => '',
-                        ];
-                        Helpers::send_push_notif_to_device($subscriber?->store?->vendor?->firebase_token, $data);
-                        DB::table('user_notifications')->insert([
-                            'data' => json_encode($data),
-                            'vendor_id' => $subscriber?->store?->vendor_id,
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
-
-                        if(config('mail.status') && Helpers::get_mail_status('service_subscription_plan_upadte_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_plan_update','mail_status' ,$subscriber?->store?->id)){
-                            Mail::to($subscriber?->store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionPlanUpdate($subscriber?->store?->name));
-                        }
-
-                } else{
-
-                    if( Helpers::getNotificationStatusData('store','store_subscription_plan_update','push_notification_status',$subscriber?->store?->id)  &&  $subscriber?->store?->vendor?->firebase_token){
-                        $data = [
-                            'title' => translate('subscription_plan_updated'),
-                            'description' => translate('Your_subscription_plan_has_been_updated'),
-                            'order_id' => '',
-                            'image' => '',
-                            'type' => 'subscription',
-                            'order_status' => '',
-                        ];
-                        Helpers::send_push_notif_to_device($subscriber?->store?->vendor?->firebase_token, $data);
-                        DB::table('user_notifications')->insert([
-                            'data' => json_encode($data),
-                            'vendor_id' => $subscriber?->store?->vendor_id,
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
-                    }
-
-                        if(config('mail.status') && Helpers::get_mail_status('subscription_plan_upadte_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_subscription_plan_update','mail_status' ,$subscriber?->store?->id)){
-                            Mail::to($subscriber?->store?->getRawOriginal('email'))->send(new SubscriptionPlanUpdate($subscriber?->store?->name));
-                        }
-                    }
+                if (SendNotification::$mailGate($template, $audience, $key, $store?->id)) {
+                    SendNotification::mail($store?->getRawOriginal('email'), new $mailable($store?->name));
+                }
                 }
 
         } catch (\Exception $ex) {
-            info($ex->getMessage());
+            Log::error('subscription.subscription_controller.update_failed', [
+                'error' => $ex->getMessage(),
+                'file' => $ex->getFile().':'.$ex->getLine(),
+            ]);
         }
 
 
@@ -315,7 +266,7 @@ class SubscriptionController extends Controller
 
     private function packageOverview($subscriptionackage,$type ='all'){
         $data=[];
-        $subscription_deadline_warning_days = (int) BusinessSetting::where('key','subscription_deadline_warning_days')->first()?->value ?? 7;
+        $subscription_deadline_warning_days = (int) Helpers::get_business_settings('subscription_deadline_warning_days', false) ?? 7;
 
         $totalSubscribersData = $subscriptionackage->subscribers()
         ->when($type == 'this_month' ,function($query){
@@ -371,7 +322,8 @@ class SubscriptionController extends Controller
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
 
         $key = explode(' ', $request['search'] ?? '');
-        $transactions= SubscriptionTransaction::where('package_id',$id)
+        $transactions= SubscriptionTransaction::with(['store.translations', 'subscription'])
+        ->where('package_id',$id)
         ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -396,20 +348,18 @@ class SubscriptionController extends Controller
         ->when($filter == 'custom' , function($query) use($from,$to) {
             $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
         })
-
         ->when( in_array( $plan_type,['renew','new_plan','first_purchased','free_trial'])  , function($query) use($plan_type){
             $query->where('plan_type', $plan_type );
         })
-
         ->latest()->paginate(config('default_pagination'));
-            $subscription_deadline_warning_days = BusinessSetting::where('key','subscription_deadline_warning_days')->first()?->value ?? 7;
+            $subscription_deadline_warning_days = Helpers::get_business_settings('subscription_deadline_warning_days', false) ?? 7;
         return view('admin-views.subscription.package.transaction', compact('transactions','id','filter','subscription_deadline_warning_days'));
 
     }
     public function settings(){
 
         $key=['subscription_deadline_warning_days','subscription_deadline_warning_message','subscription_free_trial_days','subscription_free_trial_type','subscription_free_trial_status','subscription_usage_max_time'];
-        $settings=BusinessSetting::whereIn('key', $key)->pluck('value','key');
+        $settings=Helpers::get_business_settings_many($key);
         return view('admin-views.subscription.settings.setting', compact('settings'));
 
     }
@@ -419,7 +369,7 @@ class SubscriptionController extends Controller
         ]);
         $status->value =  $status->value != 1 ?  1 : 0;
         $status->save();
-        Toastr::success($status->value == 1 ? translate('messages.Free_Trial_Activated_Successfully') : translate('messages.Free_Trial_Disabled_Successfully'));
+        Toastr::success($status->value == 1 ? translate('messages.Free Trial Activated Successfully') : translate('messages.Free Trial Disabled Successfully'));
         return back();
     }
     public function settingUpdate(Request $request){
@@ -446,13 +396,20 @@ class SubscriptionController extends Controller
                 }
             }
 
-        Toastr::success( translate('messages.Settings_Saved_Successfully'));
+        Toastr::success( translate('Saved successfully'));
         return back();
     }
     public function invoice($id){
         $BusinessData= ['admin_commission' ,'business_name','address','phone','logo','email_address'];
         $transaction= SubscriptionTransaction::with(['store.vendor','package:id,package_name,price'])->find($id);
-        $BusinessData=BusinessSetting::whereIn('key', $BusinessData)->pluck('value' ,'key') ;
+
+        if (!$transaction) {
+            Toastr::error(translate('No data found'));
+
+            return back();
+        }
+
+        $BusinessData=Helpers::get_business_settings_many($BusinessData);
         $logo=BusinessSetting::where('key', "logo")->first() ;
 
         $mpdf_view = View::make('subscription-invoice', compact('transaction','BusinessData','logo'));
@@ -482,14 +439,16 @@ class SubscriptionController extends Controller
             });
         };
 
-        $subscribers= Store::has('store_sub_update_application')->whereHas('vendor',function($query){
+        $subscribers= Store::withStorage()->has('store_sub_update_application')->whereHas('vendor',function($query){
             $query->where('status', 1);
         })
         ->when(true, $applyModuleType)
         ->whereIn('store_business_model' ,['subscription','unsubscribed'])->with([
-            'store_sub_update_application.package'
+            'store_sub_update_application.package', 'vendor', 'zone:id,name', 'module:id,module_name'
         ])->withCount('store_all_sub_trans')
-
+        ->withSum(['store_all_sub_trans as store_sub_paid_total' => function ($query) {
+            $query->where('is_trial', 0);
+        }], 'paid_amount')
         ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -505,8 +464,6 @@ class SubscriptionController extends Controller
         ->when(isset($request->zone_id) && is_numeric($request->zone_id), function ($query) use ($request) {
             return $query->where('zone_id', $request->zone_id);
         })
-
-
         ->when(isset($request->subscription_type) && $request->subscription_type == 'active', function ($query)  {
             return $query->whereHas('store_sub_update_application', function ($q)  {
                 return $q->where('status',1);
@@ -530,7 +487,7 @@ class SubscriptionController extends Controller
         ->latest()->paginate(config('default_pagination'));
 
         $data=[];
-        $subscription_deadline_warning_days = (int) BusinessSetting::where('key','subscription_deadline_warning_days')->first()?->value ?? 7;
+        $subscription_deadline_warning_days = (int) Helpers::get_business_settings('subscription_deadline_warning_days', false) ?? 7;
 
         $totalSubscribersData= StoreSubscription::whereHas('store',function ($query)use($request, $applyModuleType){
             $query->whereIn('store_business_model' ,['subscription','unsubscribed'])
@@ -548,7 +505,6 @@ class SubscriptionController extends Controller
         COUNT(DISTINCT CASE WHEN status = 1 AND expiry_date <= ? THEN store_id END) AS expired_soon',
         [Carbon::today()->addDays($subscription_deadline_warning_days)])
         ->first();
-        // COUNT(DISTINCT CASE WHEN status != 0 THEN store_id END) AS expired_subscriptions,
 
         $data['total_subscribed_user']= $totalSubscribersData['total_subscribers'];
             $data['active_subscription']= $totalSubscribersData['active_subscriptions'];
@@ -588,13 +544,14 @@ class SubscriptionController extends Controller
             $data['total_transactions']= $totals['total_transactions'];
             $data['total_paid_amount']= $totals['total_paid_amount'];
             $data['current_month_paid_amount']= $totals['current_month_paid_amount'];
+            $data['deadline_warning_days']= $subscription_deadline_warning_days;
 
         return view('admin-views.subscription.subscriber.list',compact('subscribers','data'));
 
     }
     public function subscriberDetail($id){
-        $store= Store::where('id',$id)->with([
-            'store_sub_update_application.package','vendor','store_sub_update_application.last_transcations','module:id,module_type'
+        $store= Store::withStorage()->where('id',$id)->with([
+            'store_sub_update_application.package','vendor.storage','store_sub_update_application.last_transcations','module:id,module_type','store_sub'
         ])->withcount('items')
         ->first();
         if($store->module_type == 'rental') {
@@ -604,8 +561,8 @@ class SubscriptionController extends Controller
         }
 
         $packages = SubscriptionPackage::where('status',1)->where('module_type', Helpers::subscriptionPackageType($store) )->latest()->get();
-        $admin_commission=BusinessSetting::where('key', 'admin_commission')->first()?->value ;
-        $business_name=BusinessSetting::where('key', 'business_name')->first()?->value ;
+        $admin_commission=Helpers::get_business_settings('admin_commission', false) ;
+        $business_name=Helpers::get_business_settings('business_name', false) ;
         try {
             $index=  $store->store_business_model == 'commission' ? 0 : 1+ array_search($store?->store_sub_update_application?->package_id??1 ,array_column($packages->toArray() ,'id') );
         } catch (\Throwable $th) {
@@ -624,72 +581,12 @@ class SubscriptionController extends Controller
         try {
             $store=Store::where('id',$id)->first();
 
-        if($store?->module?->module_type == 'rental' && addon_published_status('Rental')){
-                if( Helpers::getRentalNotificationStatusData('provider','provider_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
-                    $data = [
-                        'title' => translate('subscription_canceled'),
-                        'description' => translate('Your_subscription_has_been_canceled'),
-                        'order_id' => '',
-                        'image' => '',
-                        'type' => 'subscription',
-                        'order_status' => '',
-                    ];
-                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $store?->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-                if (config('mail.status') && Helpers::get_mail_status('rental_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getRentalNotificationStatusData('provider','provider_subscription_cancel','mail_status' ,$store?->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionCancel($store->name));
-                }
-            } elseif($store?->module?->module_type == 'service' && addon_published_status('Service')){
-                if( Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
-                    $data = [
-                        'title' => translate('subscription_canceled'),
-                        'description' => translate('Your_subscription_has_been_canceled'),
-                        'order_id' => '',
-                        'image' => '',
-                        'type' => 'subscription',
-                        'order_status' => '',
-                    ];
-                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $store?->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-                if (config('mail.status') && Helpers::get_mail_status('service_subscription_cancel_mail_status_provider') == '1' &&  Helpers::getServiceNotificationStatusData('provider','service_provider_subscription_cancel','mail_status' ,$store?->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionCancel($store->name));
-                }
-            } else{
-                if( Helpers::getNotificationStatusData('store','store_subscription_cancel','push_notification_status',$store->id)  &&  $store?->vendor?->firebase_token){
-                    $data = [
-                        'title' => translate('subscription_canceled'),
-                        'description' => translate('Your_subscription_has_been_canceled'),
-                        'order_id' => '',
-                        'image' => '',
-                        'type' => 'subscription',
-                        'order_status' => '',
-                    ];
-                    Helpers::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $store?->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-                if (config('mail.status') && Helpers::get_mail_status('subscription_cancel_mail_status_store') == '1' &&  Helpers::getNotificationStatusData('store','store_subscription_cancel','mail_status' ,$store?->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new SubscriptionCancel($store->name));
-                }
-            }
+        app(StoreSubscriptionService::class)->notifyPlanCancellation($store);
         } catch (\Exception $ex) {
-            info($ex->getMessage());
+            Log::error('subscription.subscription_controller.cancel_subscription_failed', [
+                'error' => $ex->getMessage(),
+                'file' => $ex->getFile().':'.$ex->getLine(),
+            ]);
         }
         return response()->json(200);
 
@@ -715,20 +612,19 @@ class SubscriptionController extends Controller
     }
     public function packageView($id,$store_id){
         $store_subscription= StoreSubscription::where('store_id', $store_id)->with(['package'])->latest()->first();
-//        dd($store_subscription);
-        $package = SubscriptionPackage::where('status',1)->where('id',$id)->first();
-        $store= Store::Where('id',$store_id)->first();
+        $package = SubscriptionPackage::where('status',1)->where('id',$id)->firstOrFail();
+        $store= Store::Where('id',$store_id)->firstOrFail();
         $pending_bill= SubscriptionBillingAndRefundHistory::where(['store_id'=>$store->id,
                             'transaction_type'=>'pending_bill', 'is_success' =>0])->sum('amount') ;
 
-        $balance = BusinessSetting::where('key', 'wallet_status')->first()?->value == 1 ? StoreWallet::where('vendor_id',$store->vendor_id)->first()?->balance ?? 0 : 0;
+        $balance = Helpers::get_business_settings('wallet_status', false) == 1 ? StoreWallet::where('vendor_id',$store->vendor_id)->first()?->balance ?? 0 : 0;
         $payment_methods = Helpers::getActivePaymentGateways();
         $disable_item_count=null;
         if(data_get(Helpers::subscriptionConditionsCheck(store_id:$store->id,package_id:$package->id) , 'disable_item_count') > 0 && ( !$store_subscription || $package->id != $store_subscription->package_id)){
             $disable_item_count=data_get(Helpers::subscriptionConditionsCheck(store_id:$store->id,package_id:$package->id) , 'disable_item_count');
         }
         $store_business_model=$store->store_business_model;
-        $admin_commission=BusinessSetting::where('key', "admin_commission")->first()?->value ?? 0 ;
+        $admin_commission=Helpers::get_business_settings('admin_commission', false) ?? 0 ;
         $cash_backs=[];
         if($store->store_business_model == 'subscription' &&  $store_subscription->status == 1 && $store_subscription->is_canceled == 0 && $store_subscription->is_trial == 0  && $store_subscription->package_id !=  $package->id){
             $cash_backs= Helpers::calculateSubscriptionRefundAmount(store:$store, return_data:true);
@@ -748,7 +644,7 @@ class SubscriptionController extends Controller
             'payment_gateway' => 'required'
         ]);
         $store= Store::Where('id',$request->store_id)->first(['id','vendor_id','module_id']);
-        $package = SubscriptionPackage::withoutGlobalScope('translate')->find($request->package_id);
+        $package = SubscriptionPackage::withoutGlobalScope('translate')->with('translations')->find($request->package_id);
 
 
         $pending_bill= SubscriptionBillingAndRefundHistory::where(['store_id'=>$store->id,
@@ -761,7 +657,7 @@ class SubscriptionController extends Controller
 
         if($request->payment_gateway == 'wallet'){
         $wallet= StoreWallet::firstOrNew(['vendor_id'=> $store->vendor_id]);
-        $balance = BusinessSetting::where('key', 'wallet_status')->first()?->value == 1 ? $wallet?->balance ?? 0 : 0;
+        $balance = Helpers::get_business_settings('wallet_status', false) == 1 ? $wallet?->balance ?? 0 : 0;
 
             if($balance >= ($package?->price + $pending_bill)){
                 $reference= 'wallet_payment_by_admin';
@@ -773,7 +669,7 @@ class SubscriptionController extends Controller
 
             }
             else{
-                Toastr::error( translate('messages.Insufficient_balance_in_wallet'));
+                Toastr::error( translate('messages.Insufficient wallet balance'));
                 return back();
             }
         } elseif($request->payment_gateway == 'manual_payment_by_admin'){
@@ -781,7 +677,7 @@ class SubscriptionController extends Controller
             $plan_data=   Helpers::subscription_plan_chosen(store_id:$store->id,package_id:$package->id,payment_method:$reference,discount:0,pending_bill:$pending_bill,reference:$reference,type: $request?->type);
         }
 
-        $plan_data != false ?  Toastr::success(  $request?->type == 'renew' ?  translate('Subscription_Package_Renewed_Successfully.'): translate('Subscription_Package_Shifted_Successfully.') ) : Toastr::error( translate('Something_went_wrong!.'));
+        $plan_data != false ?  Toastr::success(  $request?->type == 'renew' ?  translate('Subscription package renewed successfully.'): translate('Subscription package shifted successfully.') ) : Toastr::error( translate('Something went wrong'));
         return back();
 
     }
@@ -794,12 +690,13 @@ class SubscriptionController extends Controller
         $from =$request['start_date'] ?? Carbon::now()->format('Y-m-d');
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
         $store= Store::where('id',$id)->with([
-            'store_sub_update_application.package'
+            'store_sub_update_application.package', 'vendor', 'module', 'store_sub'
         ])
         ->first();
 
         $key = explode(' ', $request['search'] ?? '');
-        $transactions= SubscriptionTransaction::where('store_id',$id)
+        $transaction_query= SubscriptionTransaction::with(['subscription', 'package:id,package_name'])
+        ->where('store_id',$id)
         ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -819,14 +716,19 @@ class SubscriptionController extends Controller
         ->when($filter == 'custom' , function($query) use($from,$to) {
             $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
         })
-
         ->when( in_array( $plan_type,['renew','new_plan','first_purchased','free_trial'])  , function($query) use($plan_type){
             $query->where('plan_type', $plan_type );
         })
+        ;
 
-        ->latest()->paginate(config('default_pagination'));
-            $subscription_deadline_warning_days = BusinessSetting::where('key','subscription_deadline_warning_days')->first()?->value ?? 7;
-        return view('admin-views.subscription.subscriber.transaction',compact('store','transactions','id','filter','subscription_deadline_warning_days'));
+        $summary = [
+            'paid_total' => (clone $transaction_query)->sum('paid_amount'),
+            'last_paid_at' => (clone $transaction_query)->max('created_at'),
+        ];
+
+        $transactions = $transaction_query->latest()->paginate(config('default_pagination'));
+        $subscription_deadline_warning_days = Helpers::get_business_settings('subscription_deadline_warning_days', false) ?? 7;
+        return view('admin-views.subscription.subscriber.transaction',compact('store','transactions','id','filter','subscription_deadline_warning_days','summary'));
 
     }
 
@@ -863,7 +765,7 @@ class SubscriptionController extends Controller
             }
 
         }
-        Toastr::success( translate('messages.Plan_Switch_Successful'));
+        Toastr::success( translate('messages.Plan Switch Successful'));
         return back();
     }
 
@@ -906,7 +808,8 @@ class SubscriptionController extends Controller
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
 
         $key = explode(' ', $request['search'] ?? '');
-        $transactions= SubscriptionTransaction::where('package_id',$id)
+        $transactions= SubscriptionTransaction::with(['store.translations', 'subscription'])
+        ->where('package_id',$id)
         ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -931,11 +834,9 @@ class SubscriptionController extends Controller
         ->when($filter == 'custom' , function($query) use($from,$to) {
             $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
         })
-
         ->when( in_array( $plan_type,['renew','new_plan','first_purchased','free_trial'])  , function($query) use($plan_type){
             $query->where('plan_type', $plan_type );
         })
-
         ->latest()->get();
 
         $data = [
@@ -978,9 +879,9 @@ class SubscriptionController extends Controller
         })
         ->when(true, $applyModuleType)
         ->whereIn('store_business_model' ,['subscription','unsubscribed'])->with([
-            'store_sub_update_application.package'
+            'store_sub_update_application.package',
+            'vendor',
         ])->withCount('store_all_sub_trans')
-
         ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -996,8 +897,6 @@ class SubscriptionController extends Controller
         ->when(isset($request->zone_id) && is_numeric($request->zone_id), function ($query) use ($request) {
             return $query->where('zone_id', $request->zone_id);
         })
-
-
         ->when(isset($request->subscription_type) && $request->subscription_type == 'active', function ($query) use ($request) {
             return $query->whereHas('store_sub_update_application', function ($q) use ($request) {
                 return $q->where('status',1);
@@ -1043,10 +942,11 @@ class SubscriptionController extends Controller
         $plan_type= $request['plan_type'];
         $from =$request['start_date'] ?? Carbon::now()->format('Y-m-d');
         $to =$request['end_date'] ?? Carbon::now()->format('Y-m-d');
-        $store= Store::where('id',$id)->first();
+        $store= Store::with(['vendor', 'module', 'store_sub', 'store_sub_update_application'])->where('id',$id)->first();
 
         $key = explode(' ', $request['search'] ?? '');
-        $transactions= SubscriptionTransaction::where('store_id',$store->id)
+        $transactions= SubscriptionTransaction::with(['store.translations', 'subscription'])
+        ->where('store_id',$store->id)
         ->when($request['search'], function($query) use($key){
             $query->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -1066,11 +966,9 @@ class SubscriptionController extends Controller
         ->when($filter == 'custom' , function($query) use($from,$to) {
             $query->whereBetween('created_at', [$from . " 00:00:00", $to . " 23:59:59"]);
         })
-
         ->when( in_array( $plan_type,['renew','new_plan','first_purchased','free_trial'])  , function($query) use($plan_type){
             $query->where('plan_type', $plan_type );
         })
-
         ->latest()->get();
 
         $data = [
@@ -1089,7 +987,7 @@ class SubscriptionController extends Controller
     }
 
     public function subscriberWalletTransactions($id,Request $request){
-        $store= Store::where('id',$id)->first();
+        $store= Store::with(['vendor', 'module', 'store_sub', 'store_sub_update_application'])->where('id',$id)->first();
         $transactions= SubscriptionBillingAndRefundHistory::where('store_id', $id)->with('package')
         ->where('transaction_type','refund')
         ->latest()->paginate(config('default_pagination'));

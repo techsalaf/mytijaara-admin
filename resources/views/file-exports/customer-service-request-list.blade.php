@@ -2,13 +2,13 @@
     <thead>
         <tr>
             <th>{{ translate('messages.SL') }}</th>
-            <th>{{ translate('messages.category') }}</th>
-            <th>{{ translate('messages.sub_category') }}</th>
+            <th>{{ translate('messages.Category') }}</th>
+            <th>{{ translate('Subcategory') }}</th>
             <th>{{ translate('messages.user') }}</th>
-            <th>{{ translate('messages.service_name') }}</th>
-            <th>{{ translate('messages.description') }}</th>
+            <th>{{ translate('Service name') }}</th>
+            <th>{{ translate('messages.Description') }}</th>
             <th>{{ translate('messages.feedback') }}</th>
-            <th>{{ translate('messages.status') }}</th>
+            <th>{{ translate('messages.Status') }}</th>
         </tr>
     </thead>
     <tbody>

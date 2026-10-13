@@ -2,6 +2,9 @@
 
 namespace Modules\AI\app\Traits;
 
+use App\CentralLogics\Helpers;
+use App\Support\Storage\FileStorage;
+
 trait ConversationTrait
 {
     public static function productGeneralSetconvertNamesToIds(array $data, array $resources): array
@@ -102,11 +105,11 @@ trait ConversationTrait
         ];
     }
 
-    private function descriptionEmptyValidation(string $description, $validator)
+    private function descriptionEmptyValidation(string|array|null $description, $validator)
     {
         if(!$description){
             $validator->after(function ($validator) {
-                $validator->errors()->add('description', translate('Product_description_is_required') . '!');
+                $validator->errors()->add('description', translate('Product description is required') . '!');
             });
         }
         if (is_array($description)) {
@@ -119,7 +122,7 @@ trait ConversationTrait
 
         if (empty($cleanedDescription)) {
             $validator->after(function ($validator) {
-                $validator->errors()->add('description', translate('Product_description_is_required') . '!');
+                $validator->errors()->add('description', translate('Product description is required') . '!');
             });
         }
     }
@@ -133,7 +136,6 @@ trait ConversationTrait
 
     public static function ai_product_image_full_path($image_name)
     {
-        $path = asset('storage/app/public/product/ai_product_image/' . $image_name);
-        return $path;
+        return Helpers::get_full_url('product/ai_product_image', $image_name, FileStorage::getDisk());
     }
 }

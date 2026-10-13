@@ -236,6 +236,8 @@
     function resetForm() {
         resetOffcanvasScroll($formDrawer);
         $form[0].reset();
+        $moduleSelect.val('');
+        $targetSelect.val('');
         $bannerId.val('');
         $form.attr('action', config.storeAction);
         $formTitle.text('Create Smart Banner');
@@ -324,7 +326,7 @@
     function openView(url) {
         resetOffcanvasScroll($viewDrawer);
         const $body = $('#smart_banner_view_body');
-        $body.html('<div class="text-center py-5"><img width="60" src="' + escapeHtml(config.loaderImg || '') + '" alt="loading"></div>');
+        $body.html('<div class="text-center py-5"><span class="app-loader__spinner app-loader__spinner--sm"></span></div>');
         $('#smart_banner_view_edit_btn').data('id', '').data('url', '');
 
         $.ajax({
@@ -446,7 +448,9 @@ $(document).on('click', '#smartBannerForm_offcanvas .lang_link', function (e) {
         e.preventDefault();
 
         if (!$moduleSelect.val()) {
-            if (window.toastr) toastr.error($moduleSelect.data('placeholder'));
+            if (window.toastr) {
+                toastr.error((config.labels && config.labels.pleaseSelectModule) || 'Please select a module');
+            }
             $moduleSelect.select2('open');
             return;
         }

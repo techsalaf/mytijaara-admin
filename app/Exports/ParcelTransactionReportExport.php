@@ -27,6 +27,11 @@ class ParcelTransactionReportExport implements FromView, ShouldAutoSize, WithSty
         $this->data = $data;
     }
 
+    private function rowCount(): int
+    {
+        return (int) ($this->data['order_transactions_count'] ?? $this->data['order_transactions']->count());
+    }
+
     public function view(): View
     {
         return view('file-exports.parcel-transaction-report', [
@@ -62,7 +67,7 @@ class ParcelTransactionReportExport implements FromView, ShouldAutoSize, WithSty
         $sheet->getStyle('A1:C1')->applyFromArray($styleArray);
 
         return [
-            'A1:P' . ($this->data['order_transactions']->count() + 5) => [
+            'A1:P' . ($this->rowCount() + 5) => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
@@ -94,7 +99,7 @@ class ParcelTransactionReportExport implements FromView, ShouldAutoSize, WithSty
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
-                $event->sheet->getStyle('A4:P' . ($this->data['order_transactions']->count() + 5))
+                $event->sheet->getStyle('A4:P' . ($this->rowCount() + 5))
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);

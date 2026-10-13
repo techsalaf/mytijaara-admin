@@ -52,7 +52,6 @@ class UpdateUserContextTool implements Tool
             return 'User context update skipped: empty insight.';
         }
 
-        // Determine scope tag: explicit > current module > global
         $scopeRaw = trim((string) ($args['module_scope'] ?? ''));
         $scope    = $scopeRaw !== '' && $scopeRaw !== 'null' ? $scopeRaw : $this->moduleType;
         $scope    = \in_array($scope, ['general', ''], true) ? 'global' : $scope;
@@ -76,15 +75,13 @@ class UpdateUserContextTool implements Tool
 
         $facts = $this->splitFacts($existing);
 
-        // Remove any existing fact that shares the same scope prefix and overlaps in content
-        // (first 30 chars of the bare insight used as fingerprint)
         $bareInsight = preg_replace('/^\[[^\]]+\]\s*/', '', $taggedInsight);
         $fingerprint = strtolower(substr($bareInsight, 0, 30));
 
         $facts = array_values(array_filter($facts, function (string $fact) use ($scope, $fingerprint): bool {
             $factScope = $this->extractScope($fact);
             if ($factScope !== $scope) {
-                return true; // different module — keep
+                return true;
             }
             $bareFact = strtolower(preg_replace('/^\[[^\]]+\]\s*/', '', $fact) ?? '');
             return strpos($bareFact, $fingerprint) === false;
@@ -97,8 +94,6 @@ class UpdateUserContextTool implements Tool
             return $merged;
         }
 
-        // Over limit — drop oldest facts from the front until it fits,
-        // but never drop the newly added insight (last element)
         while (count($facts) > 1 && strlen($this->joinFacts($facts)) > self::MAX_CHARS) {
             array_shift($facts);
         }
@@ -116,7 +111,6 @@ class UpdateUserContextTool implements Tool
 
     private function splitFacts(string $context): array
     {
-        // Split on newlines; each tagged fact lives on its own line
         $parts = preg_split('/\n+/', $context, -1, PREG_SPLIT_NO_EMPTY);
         return array_values(array_filter(array_map('trim', $parts ?: [])));
     }

@@ -1,0 +1,4 @@
+from pathlib import Path
+p=Path('Modules/WhatsAppVendorConcierge/app/Services/ProductListingFlow.php');s=p.read_text(encoding='utf-8').replace("$legacy=$c->context['photo_to_product_draft']??[];$data=[];$sources=[];", "$legacy=$c->context['photo_to_product_draft']??[];\n   if(empty($legacy['media_id']) && !empty($c->context['last_product_media_id']))$legacy['media_id']=$c->context['last_product_media_id'];\n   if(($legacy['stock']??null)===0)unset($legacy['stock']); // Legacy flow silently defaulted this; ask the vendor.\n   $data=[];$sources=[];")
+p.write_text(s,encoding='utf-8')
+p=Path('Modules/WhatsAppVendorConcierge/tests/Hardening/ProductListingFlowTest.php');s=p.read_text(encoding='utf-8').replace("$d->step='review';$d->save();$flow->create", "$d->data=array_merge($d->data,['media_id'=>(int)$d->data['image']]);$d->step='review';$d->save();$flow->create",1);p.write_text(s,encoding='utf-8')

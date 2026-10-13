@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\CentralLogics\Helpers;
 use App\Contracts\Repositories\BannerRepositoryInterface;
 use App\Models\Banner;
 use Illuminate\Database\Eloquent\Collection;
@@ -10,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
+use App\Support\Storage\FileStorage;
 
 class BannerRepository implements BannerRepositoryInterface
 {
@@ -29,12 +29,12 @@ class BannerRepository implements BannerRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->banner->where($params)->first();
+        return $this->banner->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->banner->paginate($dataLimit);
+        return $this->banner->with($relations)->paginate($dataLimit);
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
@@ -67,7 +67,7 @@ class BannerRepository implements BannerRepositoryInterface
         if (! $banner) {
             return false;
         }
-        Helpers::check_and_delete('banner/' , $banner['image']);
+        FileStorage::delete('banner/' , $banner['image']);
         $banner->translations()->delete();
         $banner->delete();
 
@@ -76,7 +76,7 @@ class BannerRepository implements BannerRepositoryInterface
 
     public function getFirstWithoutGlobalScopeWhere(array $params, array $relations = []): ?Model
     {
-        return $this->banner->withoutGlobalScope('translate')->where($params)->first();
+        return $this->banner->with($relations)->withoutGlobalScope('translate')->with(['translations', 'storage'])->where($params)->first();
     }
 
     public function getSearchedList(?string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection

@@ -44,7 +44,7 @@ class GetCartItemsTool implements Tool
         $query = Cart::where('user_id', $cartUserId)
             ->where('is_guest', $isGuest)
             ->where('item_type', Item::class)
-            ->with('item:id,name,price,discount,discount_type,store_id,image');
+            ->with(['item:id,name,price,discount,discount_type,store_id,image', 'item.storage']);
 
         if ($this->moduleId) {
             $query->where('module_id', $this->moduleId);
@@ -56,16 +56,11 @@ class GetCartItemsTool implements Tool
             return 'Cart is empty.';
         }
 
-        // Resolve store names in one query for the per-bucket display
-        // (matches CartController::get_all_carts grouping shape).
         $storeIds   = $carts->pluck('store_id')->filter()->unique()->values()->all();
         $storesById = $storeIds
             ? Store::whereIn('id', $storeIds)->get(['id', 'name', 'logo'])->keyBy('id')
             : collect();
 
-        // Group by store_id. Falls back to item.store_id if the cart row
-        // pre-dates the store_id column (rows written before the host
-        // migration on 2026-05-13 won't have it set).
         $grouped = $carts->groupBy(fn ($cart) => $cart->getAttribute('store_id')
             ?? data_get($cart, 'item.store_id')
             ?? 0);
@@ -137,11 +132,6 @@ class GetCartItemsTool implements Tool
             . '. Note: each store is checked out separately.';
     }
 
-    /**
-     * Human-readable label for a stored cart `variation` value (food:
-     * [{name, values:{label:[...]}}], non-food: [{type:"..."}]). Peels up to two
-     * json-encode layers because cart rows are written pre-encoded by convention.
-     */
     private function cartVariationLabel(mixed $raw): string
     {
         for ($i = 0; $i < 2 && is_string($raw); $i++) {

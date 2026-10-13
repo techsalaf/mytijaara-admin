@@ -750,14 +750,6 @@
         "isModified": false
     },
     {
-        "routeName": "Business Settings React Setup",
-        "URI": "admin/business-settings/react-setup",
-        "keywords": "React Site Setup React Site Setup React License Code React Domain Save",
-        "bladePath": "admin-views/business-settings/react-setup",
-        "moduleType": [],
-        "isModified": false
-    },
-    {
         "routeName": "Business Settings App Settings",
         "URI": "admin/business-settings/app-settings",
         "keywords": "App Settings Show User App Download Section Here You Setup Your Customer App Version & App Download URL Status Do You Want To Turn On This Section Do You Want To Turn Off This Section If You Turn On This Section Will Be Shown In The App If You Turn Off This Section Will Not Be Shown In The App Default Title Write The Title Within Characters Title Here App Download Button URL Link Is Setup Successfully Data Is Synced From Reset Save User App Version Control For Android Minimum User App Version Android The Minimum User App Version Required For The App Functionality App Minimum Version Download URL For User App Users Will Download The Latest User App Version Using This URL App Url For IOS Ios Configure The User App Download URL In This Setting The Link Will Be Shown In All Sections Where Users Can Download The App Store App Version Control Here You Setup Your Vendor App Version & App Download URL Minimum Store App Version For Store The Minimum Store App Version Required For The App Functionality Download URL For Store App For Store Users Will Download The Latest Store App Using This URL Download Url Minimum Store App Version Download URL For Store App Users Will Download The Latest Store App Version Using This URL Deliveryman App Version Control Here You Setup Your Deliveryman App Version & App Download URL Minimum Deliveryman App Version The Minimum Deliveryman App Version Required For The App Functionality Download URL For Deliveryman App Users Will Download The Latest Deliveryman App Version Using This URL Rider App Version Control Here You Setup Your Rider App Version & App Download URL Minimum Rider App Version The Minimum Rider App Version Required For The App Functionality Download URL For Rider App Users Will Download The Latest Rider App Version Using This URL Serviceman App Version Control Here You Setup Your Serviceman App Version & App Download URL Minimum Serviceman App Version The Minimum Serviceman App Version Required For The App Functionality Download URL For Serviceman App Users Will Download The Latest Serviceman App Version Using This URL",
@@ -816,7 +808,7 @@
     {
         "routeName": "Addon Activation List",
         "URI": "admin/business-settings/addon-activation",
-        "keywords": "Add On Activation Vendor App With This App Your Vendor Will Mange Their Business Through Mobile App View Want To Turn ON The Vendor App Addon Want To Turn OFF The Vendor App Addon Codcanyon User Name Ex Codcanyon Purchase Code Reset Submit Deliveryman App With This App Your All Your Deliveryman Will Mange Their Orders Through Mobile App Want To Turn ON The Deliveryman App Addon Want To Turn OFF The Deliveryman App Addon React User Website With This React Website Your Customers Will Experience Your System In A More Attractive And Seamless Way Want To Turn ON The React Website Addon Want To Turn OFF The React Website Addon",
+        "keywords": "Add On Activation Vendor App With This App Your Vendor Will Mange Their Business Through Mobile App View Want To Turn ON The Vendor App Addon Want To Turn OFF The Vendor App Addon Codcanyon User Name Ex Codcanyon Purchase Code Reset Submit Deliveryman App With This App Your All Your Deliveryman Will Mange Their Orders Through Mobile App Want To Turn ON The Deliveryman App Addon Want To Turn OFF The Deliveryman App Addon React User Website With This React Website Your Customers Will Experience Your System In A More Attractive And Seamless Way Want To Turn ON The React Website Addon Want To Turn OFF The React Website Addon React Site Setup React License Code React Domain",
         "bladePath": "admin-views/addon-activation/index",
         "moduleType": [],
         "isModified": false
@@ -1030,17 +1022,9 @@
         "isModified": false
     },
     {
-        "routeName": "Social Login View",
-        "URI": "admin/social-login/view",
-        "keywords": "Social Login Setup Toggle This Option To Enable Or Disable Login Through This Provider Login Turned ON Login Turned OFF Login Is Now Enabled Customers Will Be Able To Sign Up Or Log In Using Their Social Media Accounts Login Is Now Disabled Customers Will Not Be Able To Sign Up Or Log In Using Their Social Media Accounts Please Note That This May Affect User Experience And Registration/login Process Credential Setup Callback Uri Client Id Client Secret Reset Save Client Id For Web Client Id For App Team Id Key Id Redirect Url For Flutter Web Redirect Url For React Web Service File (Already Exists) Google Api Setup Instructions Go To The Credentials Page Click Here Create Credentials Auth Client Id Select The Web Application Type Name Your Auth Client Add Uri From Authorized Redirect Uris Provide The From Below And Click Created Copy And Past In The Input Field Below And Got It Facebook Api Set Instruction Goto The Facebook Developer Page Click Here Goto Get Started From Navbar From Register Tab Press Continue If Needed Provide Primary Email And Press Confirm Email In About Section Select Other And Press Complete Registration Create App Select An App Type And Press Next Complete The Details Form And Press Form Facebook Login Press Set Up Select Web Provide Site Url Base Url Of The Site Now Go To Setting Left Sidebar Make Sure To Check Client Auth Login Must On Valid Auth Redirect Uris Save Changes From Left Sidebar Basic Fill The Form And Press Now Copy Apple Api Set Instruction Go To Apple Developer Page Here In Top Left Corner You Can See The Team ID [Apple Developer Account Name Team ID] Click Plus Icon > Select App IDs > Click On Continue Put A Description And Also Identifier (identifier That Used For App) And This Is The Client ID Click Continue And Download The File In Device Named AuthKey ID P (Store It Safely And It Is Used For Push Notification) Again Click Plus Icon > Select Service IDs > Click On Continue Push A Description And Also Identifier And Continue Download The File In Device Named AuthKey KeyID P [This Is The Service Key ID File And Also After AuthKey That Is The Key ID] Twitter Api Set Up Instructions Instruction Will Be Available Very Soon Close Copied To The Clipboard SMS Module Mail Config Map APIs Social Logins Recaptcha Firebase OTP Storage Connection",
-        "bladePath": "admin-views/business-settings/social-login/view",
-        "moduleType": [],
-        "isModified": false
-    },
-    {
         "routeName": "Dispatch Dashboard",
         "URI": "admin/dispatch",
-        "keywords": "Dashboard Dashboard Hello Here You Can Manage Your Orders By Zone All Zones Overall Statistics Total Orders Unassigned Orders Out For Delivery Delivered Failed Orders Gross Sale Sale This Year This Month This Week User Statistics Overall Total Users Customer Delivery Man Welcome Employee Welcome Message Customer Delivery Man Admin Comission Delivery Comission All Top Deliveryman View Orders No Data Found No Available Customers Not Exist Orders top deliveryman all view all orders no data found No deliveryman available top customers view all Not exist Orders no data found No customer available",
+        "keywords": "Dashboard Dashboard Hello Here You Can Manage Your Orders By Zone All Zones Overall Statistics Total Orders Unassigned Orders Out For Delivery Delivered Failed Orders Gross Sale Sale This Year This Month This Week User Statistics Overall Total Users Customer Delivery Man Welcome Employee Welcome Message Customer Delivery Man Admin Comission Delivery Comission All Top Deliveryman View Orders No Data Found No Available Customers Not Exist Orders top deliveryman all view all orders no data found No deliveryman available top customers view all Not exist Orders no data found No customer available Top deliveryman View all Orders No deliveryman available Top customers View all Not exist Orders No customer available",
         "bladePath": "admin-views/dashboard-parcel",
         "moduleType": [
             "parcel"
@@ -1050,7 +1034,7 @@
     {
         "routeName": "Users Dashboard",
         "URI": "admin/users",
-        "keywords": "Dashboard Dashboard Hello Here You Can Manage Your Orders By Zone All Zones Overall Statistics Total Orders Unassigned Orders Out For Delivery Delivered Failed Orders Gross Sale Sale This Year This Month This Week User Statistics Overall Total Users Customer Delivery Man Welcome Employee Welcome Message Customer Delivery Man Admin Comission Delivery Comission All Top Deliveryman View Orders No Data Found No Available Customers Not Exist Orders top deliveryman all view all orders no data found No deliveryman available top customers view all Not exist Orders no data found No customer available",
+        "keywords": "Dashboard Dashboard Hello Here You Can Manage Your Orders By Zone All Zones Overall Statistics Total Orders Unassigned Orders Out For Delivery Delivered Failed Orders Gross Sale Sale This Year This Month This Week User Statistics Overall Total Users Customer Delivery Man Welcome Employee Welcome Message Customer Delivery Man Admin Comission Delivery Comission All Top Deliveryman View Orders No Data Found No Available Customers Not Exist Orders top deliveryman all view all orders no data found No deliveryman available top customers view all Not exist Orders no data found No customer available Top deliveryman View all Orders No deliveryman available Top customers View all Not exist Orders No customer available",
         "bladePath": "admin-views/dashboard-parcel",
         "moduleType": [
             "parcel"
@@ -1116,7 +1100,7 @@
     {
         "routeName": "Transactions Dashboard",
         "URI": "admin/transactions",
-        "keywords": "Dashboard Dashboard Hello Here You Can Manage Your Orders By Zone All Zones Overall Statistics Total Orders Unassigned Orders Out For Delivery Delivered Failed Orders Gross Sale Sale This Year This Month This Week User Statistics Overall Total Users Customer Delivery Man Welcome Employee Welcome Message Customer Delivery Man Admin Comission Delivery Comission All Top Deliveryman View Orders No Data Found No Available Customers Not Exist Orders top deliveryman all view all orders no data found No deliveryman available top customers view all Not exist Orders no data found No customer available",
+        "keywords": "Dashboard Dashboard Hello Here You Can Manage Your Orders By Zone All Zones Overall Statistics Total Orders Unassigned Orders Out For Delivery Delivered Failed Orders Gross Sale Sale This Year This Month This Week User Statistics Overall Total Users Customer Delivery Man Welcome Employee Welcome Message Customer Delivery Man Admin Comission Delivery Comission All Top Deliveryman View Orders No Data Found No Available Customers Not Exist Orders top deliveryman all view all orders no data found No deliveryman available top customers view all Not exist Orders no data found No customer available Top deliveryman View all Orders No deliveryman available Top customers View all Not exist Orders No customer available",
         "bladePath": "admin-views/dashboard-parcel",
         "moduleType": [
             "parcel"
@@ -1170,14 +1154,6 @@
         "URI": "admin/transactions/report/deliveryman-earning-report",
         "keywords": "Delivery Man Earning Report Delivery Man Ride Share Rider Filter Data Select Delivery Man All Date Range Time This Week Month Year Previous Custom Start End Reset Filter Earnings Summary Breakdown Of Revenue Sources And Performance Expenses Trend Performance Over Time Earning Amount Period Recent Transactions Search By Order ID Export Download Options Excel Csv Total Or Name",
         "bladePath": "admin-views/report/deliveryman-earning-report",
-        "moduleType": [],
-        "isModified": false
-    },
-    {
-        "routeName": "Stock Report",
-        "URI": "admin/transactions/report/stock-report",
-        "keywords": "Low Stock List Ex Search Name Search Here All Zones Select Store All Stores Export Download Options Excel Csv Sl Name Store Zone Current Stock Action Store Deleted Not Found Edit Quantity No Data Found Cancel Update Stock",
-        "bladePath": "admin-views/report/stock-report",
         "moduleType": [],
         "isModified": false
     },
@@ -1658,22 +1634,6 @@
         "URI": "admin/users/delivery-man/reviews",
         "keywords": "Review List Deliveryman Reviews All DeliveryMan Latest Ratings Top Ratings Low Ratings Ex Search Delivery Man Email Or Phone Search Here Reset Export Download Options Excel Csv SL Order ID Deliveryman Customer Rating Review Action Customer Not Found No Data Found Deliveryman Review Order# Review",
         "bladePath": "admin-views/delivery-man/reviews-list",
-        "moduleType": [],
-        "isModified": false
-    },
-    {
-        "routeName": "Dm Vehicle List",
-        "URI": "admin/users/delivery-man/vehicle",
-        "keywords": "Vehicle List Vehicles Category List Add Vehicle Category Ex Search By Type Reset Sl Type Total Deliveryman Minimum Coverage Area Km Maximum Coverage Area Extra Charges Status Action By Turning ON Vehicle Category! By Turning OFF Vehicle Category! Turned On This Vehicle Category Extra Charge Will Be Added On The Delivery Charge And This Categories Deliverymen Can Receives The Order Turned Off This Vehicle Category Extra Charge Will Not Be Added On The Delivery Charge And This Categories Deliverymen Can Not Receives The Order Edit Vehicle Category Want To Delete This Vehicle Category Delete Vehicle Category No Data Found Vehicle Type Maximum Coverage Area Extra Charges Delete Vehicle Edit Active Inactive",
-        "bladePath": "admin-views.dm-vehicle.list",
-        "moduleType": [],
-        "isModified": false
-    },
-    {
-        "routeName": "Vehicle Create",
-        "URI": "admin/users/delivery-man/vehicle/store",
-        "keywords": "Add Vehicle Category Default Vehicle Type Required Ex Bike Extra Charges This Amount Will Be Added With Delivery Charge Starting Coverage Area Km The Starting Coverage Area Represents The Location Where Deliveries Are Made Maximum Coverage Area The Maximum Coverage Area Represents The Farthest Or Widest Extent To Which Deliveries Can Be Made Reset Submit Vehicle Category Created",
-        "bladePath": "admin-views/dm-vehicle/index",
         "moduleType": [],
         "isModified": false
     },
@@ -2768,6 +2728,214 @@
         "URI": "admin/business-settings/pages/react-landing-page-settings/fixed-data",
         "keywords": "React Landing Page See How It Works! Default Promotional Banner Banner (size ) Warning! Are You Sure You Want To Remove This Image Reset Save Newsletter Section Content Title Write The Title Within Characters Required Title Here Sub Title Sub Title Here Footer Content Short Description",
         "bladePath": "admin-views.business-settings.landing-page-settings.react-landing-fixed-data",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Delivery Rule List",
+        "URI": "admin/delivery-management/delivery-rule",
+        "keywords": "Rules Setup What Each Zone Charges To Deliver An Order And Which Modules That Price Applies To Each Zone Can Be Create Multiple Delivery Rules But Only One Rule Can Be Active At A Time No Delivery Charge Rules Setup Is Available Add New Duplicate Configurations Are Not Allowed Each Zone And Module Combination Can Have Only One Delivery Rule Setup Delivery Rule List Search Here Export Download Options Excel Csv Add New Delivery Rule SL Rule Name Zone Module Delivery Method Status Action N/A Edit Delivery Rule View Delivery Rule Delete Delivery Rule No Data Found Want To Delete This Delivery Rule Are You Sure You Want To Delete This Delivery Rule & Remove It Permanently No Delete Do You Want To Turn On The Rule If You Turn On This Rule Current Charge Will Be Turned Off Automatically & All Calculate Based New Cancel Off Must Choose Another For Zone Please Select From Bellow Select This Has No Other To Switch Create One First Update An Unexpected Error Occurred",
+        "bladePath": "admin-views/delivery-rule/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Delivery Rule Create",
+        "URI": "admin/delivery-management/delivery-rule/create",
+        "keywords": "Delivery Rule Setup Set What A Zone Charges To Deliver And Pick The Modules The Rule Prices Basic Information Create A Delivery Pricing Rule For Specific Module And Coverage Rule Name Type Your Name Select Zone Choose Module To Connect Minimum Delivery Charge The Floor This A Charge That Works Out Lower \u2014 Including After Discount Is Lifted To Amount Ex Pricing Method How Calculates The Base How Zone Prices By Distance Travelled Flat Or Area ZIP Code Order Going Area Wise Setup Configure Fixed Charges Each Service Within All Areas Under Will Be Listed Automatically Set No Have Been Created Set Up Charges First Create An From Zip Code Codes Distance Scale With Bounded Maximum Per Unit Rate Charged Unit Of Multiplied Maximum Ceiling Leave It Blank No Upper Limit Fixed One Every This Applies In Selected Whatever Weight Dimension When Configured Are Added On Top Rules Enable Weight Based Deliveries When Enabled Calculated Package Apply Additional Ranges Total Fee It Add Define Range Ranges Matched Bottom Use Last Row Orders Exceeding Defined Yet Them Dimension These Dimensions Apply Appropriate Wise Size Previous Next Save SL Status Updated Successfully Created Your Has Updated Successfully Now Available Calculations View Details ETA Separate Scales Minimum Submit Required Please Select At Least One Method An Unexpected Error Occurred",
+        "bladePath": "admin-views/delivery-rule/create",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Area List",
+        "URI": "admin/delivery-management/area",
+        "keywords": "Area Setup The Named Parts Of A Zone A Customer Picks From So A Delivery Rule Can Charge Each One Its Own Rate Currently You Dont Have Any Area Setup To Setup Area Under A Zone You Can Use Area Wise Delivery Charge When Customer Delivery Charges Calculated Add New All Zones Search Here Search Export Download Options Excel Csv Add New Area Area Name Zone Name Stores Deliverymen Created At Status Action N/A No Store Sits In This Area Yet No Deliveryman Covers This Area Yet Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On The Area Status From Your System Are You Sure Do You Want To Turn Off The Area Status From Your System Edit Area Delete Area No Data Found Want To Delete This Area Are You Sure You Want To Delete This Area & Remove It Permanently No Delete Select Zone",
+        "bladePath": "admin-views/area/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Zip Code List",
+        "URI": "admin/delivery-management/zip-code",
+        "keywords": "Zip Code Setup The Postal Codes Each Zone Covers So A Delivery Rule Can Charge Each Code Its Own Rate Currently You Dont Have Any ZIP Code Setup To Setup ZIP Code Under A Zone You Can Use ZIP Code Wise Delivery Charge When Customer Delivery Charges Calculated Add New All Zones Search Here Search Export Download Options Excel Csv Add New Zip Code Zip Code Zone Name Stores Deliverymen Created At Status Action N/A No Store Sits In This Zip Code Yet No Deliveryman Covers This Zip Code Yet Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On The Zip Code Status From Your System Are You Sure Do You Want To Turn Off The Zip Code Status From Your System Edit Zip Code Delete Zip Code No Data Found Want To Delete This Zip Code Are You Sure You Want To Delete This Zip Code & Remove It Permanently No Delete Select Zone",
+        "bladePath": "admin-views/zip-code/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Weight List",
+        "URI": "admin/delivery-management/weight",
+        "keywords": "Weight Setup The Weight Bands A Parcel Is Priced By So A Heavier Package Can Cost More To Deliver Currently You Dont Have Any Weight Setup Set Up Weight Ranges So Parcel Deliveries Can Be Charged By How Heavy The Package Is Add New Weight List Search Here Search Export Download Options Excel Csv Add New Weight SL Weight Name Weight Range Status Action Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On The Weight Status From Your System Are You Sure Do You Want To Turn Off The Weight Status From Your System Edit Weight Delete Weight No Data Found Want To Delete This Weight Are You Sure You Want To Delete This Weight Class & Remove It Permanently No Delete",
+        "bladePath": "admin-views/weight/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Dimension List",
+        "URI": "admin/delivery-management/dimension",
+        "keywords": "Dimension Setup The Package Size Classes A Parcel Is Priced By So A Bulkier Package Can Cost More To Deliver Currently You Dont Have Any Dimension Setup Set Up Package Size Classes So Parcel Deliveries Can Be Charged By How Large The Package Is Add New Dimension List Search Here Search Export Download Options Excel Csv Add New Dimension SL Dimension Name Max Dimension Status Action Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On The Dimension Status From Your System Are You Sure Do You Want To Turn Off The Dimension Status From Your System Edit Dimension Delete Dimension No Data Found Want To Delete This Dimension Are You Sure You Want To Delete This Dimension & Remove It Permanently No Delete",
+        "bladePath": "admin-views/dimension/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Vehicle Category List",
+        "URI": "admin/delivery-management/vehicle-category",
+        "keywords": "Vehicles Category Currently You Dont Have Any Vehicles Category Setup A Vehicle Category Sets The Delivery Range Weight And Package Sizes A Delivery Man Can Take And Routes Orders To The Right Riders Add New Vehicle Coverage Area Can Overlap Each Other Vehicles Category List Search By Title Search Export Download Options Excel Csv Add New Vehicle SL Type Total Delivery Man Minimum Coverage Area Maximum Coverage Area Max Weight Dimension Status Action Turn On The Status Turn Off The Status Deliverymen In This Category Can Receive Orders Deliverymen In This Category Cannot Receive Orders Edit Vehicle Category Delete Vehicle Category No Data Found Want To Delete This Vehicle Category Are You Sure Want Delete Vehicle Category & Remove It Permanently No",
+        "bladePath": "admin-views/vehicle-category/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Vehicle Category Create",
+        "URI": "admin/delivery-management/vehicle-category/create",
+        "keywords": "Add Vehicle Category Default Vehicle Type Ex Bike Minimum Coverage Area The Shortest Delivery Distance This Vehicle Category Is Used For Bands May Overlap Each Other Maximum Farthest Must Be Greater Than The Minimum Max Weight Heaviest Load A In Trusted With Dimension Connect Package Size Classes Can Carry No Dimension Has Been Set Up Yet Add One From Setup Cancel Submit",
+        "bladePath": "admin-views/vehicle-category/create",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Free Delivery List",
+        "URI": "admin/delivery-management/free-delivery",
+        "keywords": "Free Delivery When A Zone Waives The Delivery Charge And The Modules Each Offer Covers Free Delivery Setup Currently You Dont Have Any Free Delivery Setup Set Up Free Delivery Rules To Offer Free Delivery Based On Your Defined Conditions Create Free Delivery Duplicate Configurations Are Not Allowed Each Zone And Module Combination Can Have Only One Free Delivery Setup Free Delivery List Search By Title Search Export Download Options Excel Csv Add New SL Zone Module Free Delivery Type Minimum Order Amount Status Action N/A Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On This Free Delivery Setup Are You Sure Do You Want To Turn Off This Free Delivery Setup Edit Delete No Data Found Want To Delete This Free Delivery Setup Are You Sure Want Free Delivery Setup & Remove It Permanently No",
+        "bladePath": "admin-views/free-delivery/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Free Delivery Create",
+        "URI": "admin/delivery-management/free-delivery/create",
+        "keywords": "Add New Free Delivery Pick The Zone And Modules This Offer Covers And The Condition That Makes Delivery Free Zone & Module Setup Choose Where This Free Delivery Rule Will Be Applied The Modules Setup Frees In The Chosen Zone A And Module Pair Can Hold Only One Only Free Delivery Configuration Is Allowed For Each Combination Configuration Configure When Should Become Active Type Whether On Every Order Or Once Reaches Minimum Amount Minimum Order Amount What Must Reach After Discounts Before Becomes Ex Leave Blank To Which Same As All Store Reset Save Information Stores Cost Bearer Admin Set Required Qualify Field Empty Apply Amounts Please Select A At Least Type",
+        "bladePath": "admin-views/free-delivery/create",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Additional Delivery Charge List",
+        "URI": "admin/delivery-management/additional-delivery-charge",
+        "keywords": "Additional Charge What A Customer Pays Extra To Get An Order Sooner Or Saves By Accepting It A Little Later Duplicate Configurations Are Not Allowed Each Zone And Module Combination Can Have Only One Additional Delivery Charge Setup Additional Delivery Charge Currently You Dont Have Any Additional Delivery Charge To Enable Additional Delivery Charge You Must Create At Least Additional Delivery Charge In This Page You See All The Additional Delivery Charge You Added Add New Additional Charge List Search By Zone Search Export Download Options Excel Csv SL Zone Module Express Delivery Slightly Delay Delivery Status Action N/A Eta Minute Unit Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On This Additional Delivery Charge Are You Sure Do You Want To Turn Off This Additional Delivery Charge Edit Delete No Data Found Want To Delete This Free Delivery Setup Are You Sure Want Free Delivery Setup & Remove It Permanently No",
+        "bladePath": "admin-views/additional-delivery-charge/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Additional Delivery Charge Create",
+        "URI": "admin/delivery-management/additional-delivery-charge/create",
+        "keywords": "New Additional Delivery Charge Additional Delivery Charge Pick The Zone And Modules This Covers Then Set What Express Costs And What A Delay Saves Reset Save Information Basic Information Configure The Basic Details Of Additional Delivery Charge Select Zone Choose Module Only One Additional Delivery Charge Can Be Created For Each And Combination Setup Charges This Zone Module Express Deliver Faster By Reducing Time With An Add Extra What Customer Pays On Top Standard To Have Order Delivered Sooner Ex Reduce Time How Much Arrives It Cannot Longer Than Minimum Min Hour Slightly Delay A Bit Later Offer Reduced Taken Off More In Exchange Vehicle Category Optional By When Select Will Only Show Selected Vehicles Deliveryman No Vehicle Category Has Been Added Yet",
+        "bladePath": "admin-views/additional-delivery-charge/create",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Eta Configuration List",
+        "URI": "admin/delivery-management/eta-configuration",
+        "keywords": "ETA Configuration How Long Each Zone Tells A Customer Their Order Will Take Per Module Currently You Dont Have Any ETA Configuration Setup Configure ETA Settings To Accurately Estimate Delivery Times For Customers Create ETA Configuration Duplicate Configurations Are Not Allowed Each Zone And Module Combination Can Have Only One ETA Configuration Setup ETA Configuration List Search By Title Search Export Download Options Excel Csv Add New SL Name Zone Module ETA Type Time Duration Buffer Time Status Action N/A Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On This ETA Configuration Are You Sure Do You Want To Turn Off This ETA Configuration Edit Delete No Data Found It Is The Only ETA Configuration For Modules In This Zone And A Zone And Module Pair Can Hold Just One Delete It Instead Or Disconnect Modules From The Zone Want To Delete This ETA Configuration Are You Sure Want Configuration & Remove It Permanently No This Cannot Be Turned Off Got",
+        "bladePath": "admin-views/eta-configuration/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Eta Configuration Create",
+        "URI": "admin/delivery-management/eta-configuration/create",
+        "keywords": "Create ETA Configuration Set How A Zone Estimates Delivery Time And Which Modules The Estimate Covers Basic Information Configure The Basic Details Of ETA Configuration Rule Default Name A Label For Your Own Reference It Identifies This In List And Is Never Shown To Customers Type Name Zone & Module Setup Choose Where Will Be Applied The Modules Estimate Covers Chosen Zone Module Pair Can Hold Only One Only Allowed Each Combination Calculation Method How Estimated Delivery Time (ETA) Calculated Distance Based Takes Travel From Map Widens It By Range Gap Fixed Delivery Time Uses Store Itself Quotes Ex Min Range Gap How Much Longer Maximum Runs Than Minimum So Customer A Rather Single Show Like Google Maps API Required Distance Based Calculation Reset Save Eta Minute Unit Please Select At Least An Method Minimum Preparation Buffer Transit",
+        "bladePath": "admin-views/eta-configuration/create",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Surge Price List",
+        "URI": "admin/delivery-management/surge-price",
+        "keywords": "Surge Price Temporary Uplifts On The Delivery Charge For The Zones And Hours Where Demand Outruns Supply Currently You Dont Have Any Surge Price To Enable Surge Pricing You Must Create At Least One Surge Price In This Page You See All The Surge Price You Added Create Surge Price Surge Price List Search By Title Search Export Download Options Excel Csv Add New SL Title Zone Module Price Increase Rate Surge Price Schedule Duration Status Action N/A Turn On The Status Turn Off The Status Are You Sure Do You Want To Turn On This Surge Price Are You Sure Do You Want To Turn Off This Surge Price Edit Delete No Data Found Want To Delete This Surge Price Are You Sure Want Surge Price & Remove It Permanently No",
+        "bladePath": "admin-views/surge-price/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Surge Price Create",
+        "URI": "admin/delivery-management/surge-price/create",
+        "keywords": "Create New Surge Price Set The Zone Modules And Hours A Delivery Charge Is Raised For Basic Information Configure The Basic Details Of Surge Pricing Rule Default Surge Price Name A Label For Your Own Reference It Identifies This In List And Is Never Shown To Customers Type Price Name Note For Customer Shown Customer At Checkout Explain Why Delivery Costs More Right Now About Description Zone Module & Setup Choose Where Will Be Applied The Modules Applies Chosen Zone Increase Rate How Much Charge Raised By While Running Ex Can Share A Module With Another One But Not An Overlapping Duration Reset Save Duration Schedule Daily Weekly Custom Select Suitable Time Within Range You Want Add Date Range Time Every Week From SL Title Action Edit Delete Days Your Active Date Repeat Cycle Every Assign Permanently No Yes Selected List Cancel Submit Change Update Setup Overlap! This Overlaps Please Change Or Reschedule Fix It Okay Select Least Day Both All Custom Entries",
+        "bladePath": "admin-views/surge-price/create",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Third Party Integration",
+        "URI": "admin/business-settings/third-party/integration",
+        "keywords": "Erp Integration Connect An Outside ERP So Orders Stock And Invoices Stay In Step With Your Own System Generate Token Erp Token Description Copy Base Url Erp Setup Guide Button Token Name Eg Erp Production Webhook Url Webhook Url Hint New Token Created Copy Token Warning Api Key Copy Api Secret Base Url Base Url Hint Api Tokens Tokens Count Sl Name Status Last Used Created At Action Not Set Last Dispatched Active Revoked Never Revoke Revoke Token Title Revoke Token Confirm Delete Delete Token Title Delete Token Confirm No Tokens Yet Erp Setup Guide Title Erp Guide Step Title Erp Guide Step Desc Copied How It Works SMS Module Mail Config Map APIs Social Logins Firebase OTP Storage Connection Integration Third Party Setup Sections Active",
+        "bladePath": "admin-views/business-settings/erp-integration",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Database Backup",
+        "URI": "admin/business-settings/database/backup",
+        "keywords": "Backup Database Manual Pre Restore Uploaded Take A Complete Restorable Copy Of The Platform Database How It Works Backups In The Vault Vault Size Since The Last Backup No Backup Taken Yet Create A New Backup Runs Against The Live Database And Writes One File Into The Vault Compress With Gzip Writes A Sql Gz File Typically A Fifth Of The Size Leave It Off Only If Your Tools Cannot Read Gzip Structure And Data A Full Copy \u2014 This Is The One You Restore From Structure Only Tables Views And Triggers With No Rows Useful For Setting Up A Fresh Install Not For Recovery Note Ex Before The Tax Rate Change Optional Shown In The List So You Can Tell One Backup From Another Large Databases Can Take A Few Minutes Keep This Tab Open Until It Finishes Create Backup Stored Backups Newest First Download A Copy Off This Server \u2014 A Backup Sitting Next To The Database It Protects Is Not A Backup Go To Restore SL Backup File Contents Size Created Action Not Generated Here System Download Restore This Backup Delete Delete This Backup The File Is Removed From The Server For Good Download It First If You May Still Need It The Vault Is Empty Create Your First Backup Above Backing Up The Database Close A Backup Copies Every Table View And Trigger With The Rows In Them Into One SQL File Each File Is Stored With A Checksum Restore Refuses Any Backup That No Longer Matches It Download The File And Keep It Somewhere Else A Backup On The Same Server Is Lost With The Server Uploaded Files Are Stored Not Media A Backup Does Not Include The Images And Documents In Your Storage Folder \u2014 Copy Those Separately Creating Backup",
+        "bladePath": "admin-views/business-settings/db-backup",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Database Restore",
+        "URI": "admin/business-settings/database/restore",
+        "keywords": "Restore Database Manual Pre Restore Uploaded Replace The Live Database With The Contents Of A Backup How It Works Read This First Backups You Can Restore From Since The Last Backup No Backup Taken Yet Choose A Backup Only Files In The Vault Can Be Restored Upload One First If The Copy You Need Is On Your Machine Search A Backup By Name Structure Only No Backup Matches Your Search There Is Nothing To Restore From Yet Create A Backup Upload A Backup Adds The File To The Vault It Is Checked And Then Selectable On The Left Drop A Backup Here Or Click To Browse Only Upload A File You Produced Yourself A SQL File Runs With Full Rights Over Your Database Upload To Vault Safety Options Leave These As They Are Unless You Know Why You Are Changing Them Take A Safety Backup First Dumps The Current Database Before Anything Is Overwritten So A Restore Of The Wrong File Can Be Undone Strongly Recommended Drop Every Existing Table First Clears Tables The Backup Does Not Mention Only Needed When Restoring An Older Version Whose Schema Had Different Tables Confirm It Is You Select A Backup Above To Continue Confirmation Your Admin Password Show Value Re Entered Here So A Session Left Open Cannot Be Used To Wipe The Database No Backup Selected The Restore Starts As Soon As You Press The Button Do Not Close This Tab Back To Backups Restore This Backup Restoring A Database Close Pick The Backup To Restore Or Upload One And Pick It From The List The File Is Checked Against Its Stored Checksum A Backup That No Longer Matches Is Refused Rather Than Half Restored A Safety Backup Of The Current Database Is Taken So The Wrong Choice Can Still Be Walked Back Every Table In The Backup Is Dropped And Rebuilt Then The Rows Are Inserted Foreign Key Checks Are Off While This Runs And Back On When It Ends Caches Are Cleared Afterwards If Your Admin Account Is Not In The Backup You Are Signed Out And Will Need An Account That Is Put The Site Into Maintenance Mode Before Restoring A Busy Platform Orders Placed While The Restore Runs Are Written Into A Database That Is Being Replaced Underneath Them Restoring From This Replaces The Live Database With File Confirm Below To Unlock The Button This Backup Holds No Rows So Every Table Will End Up Empty Restoring Restore The Database Everything In The Live Database Is Replaced With A Safety Backup Will Be Taken First No Safety Backup Will Be Taken This Cannot Be Undone Every Existing Table Will Be Dropped First Cancel Yes Restore Now Hide Value Show Copied To Clipboard",
+        "bladePath": "admin-views/business-settings/db-restore",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Bogo Offer Add New",
+        "URI": "admin/bogo-offer",
+        "keywords": "Create BOGO Offer Give Customers A Second Item Free When They Buy The First Reset Save BOGO Offer Created Successfully Default Title The Offer Name Customers Will See Type Title Description A Short Shown With The About BOGO Offer Image Upload Your Buy And Get Quantity Cannot Be Changed Once A Store Has Joined This Item Qty How Many Items Customer Must Buy To Qualify Ex Receives Free Start Date & Time Select End Usage Limit Total Times Can Used Across All Per Customer One Use Order Dine In Is Not Supported On Platform Add Something Went Wrong",
+        "bladePath": "admin-views/promotions/bogo-offer/index",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Bogo Offer List",
+        "URI": "admin/bogo-offer/list",
+        "keywords": "BOGO Offer Every Buy One Get One Offer With The Dates And State Of Each No BOGO Offers Yet Bogo Empty State Description Add BOGO Offer BOGO Offer List Search Here Export Download Options Excel Csv Sl Offer Name Item Qty Duration Store Status Action Buy Item Qty Get Item Qty Start Date End Date Approved Pending Want To Turn Off This BOGO Offer Want To Turn On This BOGO Offer View Edit Stores Have Joined This Offer Deleting It Removes The Offer From All Of Them Any Items Customers Added To Their Cart From This Offer Will Be Removed Too Want To Delete This BOGO Offer Delete No Data Found Are You Sure No Yes",
+        "bladePath": "admin-views/promotions/bogo-offer/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Happy Hour Add New",
+        "URI": "admin/happy-hour",
+        "keywords": "Create Happy Hour Discount A Slow Part Of The Day To Bring Orders Forward Into It Reset Submit Happy Hour Created Successfully! Something Went Wrong General Information Enter The Happy Hour Name Add A Short Description And Upload Cover Image Icon To Help Customers Recognize Offer Default Title The Will See For This Type Short Description A Line Explaining What Offers About Discount Setup Set Discount Percentage If Needed Define Minimum Order Amount Required Apply Percentage Taken Off While Runs Ex Min Order Amount Orders Below Not Get Schedule & Duration Choose When Run By Selecting Schedule Type Date Range Time Offer Daily Repeats Every Day Weekly On Chosen Weekdays Custom Picks Individual Dates When Creating Selected Must Overlap With An Existing Happy Hour In Same Module Select Date Time Your Suitable Within Range First Last Pick Start Window Always Ends One Later Opens Picker Where Are Calendar Each Gets Its Own Days Only Be Available During Days Your Active You Want Repeat Cycle Week Weekly Inside Assign Permanently No Save Selected List Clear Please Select At Least Every Yet Permanent From Them Here Remove Overlap This Overlaps Another Change Fix It Okay",
+        "bladePath": "admin-views/promotions/happy-hour/index",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Happy Hour List",
+        "URI": "admin/happy-hour/list",
+        "keywords": "Happy Hour Every Happy Hour Offer With The Hours And Discount Of Each No Happy Hours Yet Happy Hour Empty State Description Add Happy Hours Happy Hour List Search Here Export Download Options Excel Csv Create Happy Hour Sl Title Discount Duration Min Order Amount Offer Schedule Status Action Active Days Selected Permanent An Ongoing Happy Hour Cannot Be Turned Off Want To Turn Off This Happy Hour Want To Turn On This Happy Hour View An Ongoing Happy Hour Cannot Be Edited Edit An Ongoing Happy Hour Cannot Be Deleted Want To Delete This Happy Hour Delete No Data Found Are You Sure No Yes",
+        "bladePath": "admin-views/promotions/happy-hour/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Custom Role List",
+        "URI": "admin/users/custom-role",
+        "keywords": "Role List Employee Role Every Role Your Employees Can Hold What Each One Reaches And How Many People Use It Add New Role Employee Roles And The Sections Each One Can Reach Search Role Search Reset SL Role Name Permission Employee Created At Action No Data Found Unit List Measurement Units Vendors Choose From When Adding An Item No Permission View Edit Role Move Its Employees To Another Role Before Deleting This One Want Delete Delete",
+        "bladePath": "admin-views/custom-role/index",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Bundle List",
+        "URI": "admin/bundle/list",
+        "keywords": "Bundle Package Bundle Package No Packages Yet Create Your First Bundle Package By Grouping Related Products And Offering Them At A Special Price To Attract More Customers Add List Search Here Export Download Options Excel Csv Name Items Duration Base Price Discount After Status Action A Product In This Has Changed Since The Was Saved Re Save It Again N/A View Do You Want To Edit The Edit Delete This Will Be Removed From Every Cart That Already Holds No Longer See Delete Data Found Cancel Ok Something Went Wrong",
+        "bladePath": "admin-views/promotions/bundle/list",
+        "moduleType": [],
+        "isModified": false
+    },
+    {
+        "routeName": "Bundle Create",
+        "URI": "admin/bundle/create",
+        "keywords": "Create Bundle Reset Basic Setup Enter The Bundle Name Upload A Thumbnail And Set Display Schedule Default Bundle Name Type Start Date & Time Select Date End Thumbnail Image Dimension Max MB Items Pricing Pick Products \u2014 Prices Update Live You Can Add Discount Store Total Base Price After Select Items Here Shows Total Price Of Selected Discount If Give Percentage On Cost Show New Ex Or Not Provider This Belongs To Its Services Are What Search Offers Menu Is Item Service Item Search Pick Service Offer From An Your Choose Include In Updates Real Time See Final Create Description See More Addon Add This Close Variant No Found A Needs At Least Something Went Wrong You Maximum Quantities For Edit Delete Currently Unavailable Out Stock",
+        "bladePath": "admin-views/promotions/bundle/create",
         "moduleType": [],
         "isModified": false
     }

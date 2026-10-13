@@ -1,0 +1,1 @@
+vendor/bin/phpunit tests/Architecture --log-junit host-results.xml

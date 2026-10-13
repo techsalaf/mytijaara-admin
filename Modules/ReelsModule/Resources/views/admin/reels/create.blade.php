@@ -1,216 +1,85 @@
 @extends('layouts.admin.app')
 
-@section('title', translate('messages.Create_Reels'))
+@section('title', translate('Create reels'))
 @section('reels', 'active')
 @section('reels_create', 'active')
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('public/assets/admin/vendor/daterangepicker/daterangepicker.css') }}"/>
+    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/third-party-setup.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/view-pages/reel-form.css') }}">
 @endpush
 
 @section('content')
-    <div class="content container-fluid">
-        <h2 class="fs-20 text-capitalize lh-1 mb-20">{{ translate('messages.Create_Reels') }}</h2>
+    <div class="content container-fluid tps rlf">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="page-header-title">
+                    <i class="tio-play-circle-outlined"></i>
+                    <span>{{ translate('Create reels') }}</span>
+                </h1>
+                <p class="page-header-desc">{{ translate('Post a short video for a store, link it to an item and set how long it runs.') }}</p>
+            </div>
+            <button type="button" class="tps-help" data-toggle="modal" data-target="#reel-how-it-works">
+                <i class="tio-help-outlined"></i>
+                <span>{{ translate('How it works') }}</span>
+            </button>
+        </div>
 
         <form id="reel-form" action="{{ route('admin.reels.store') }}" method="POST" class="validate-form" enctype="multipart/form-data">
             @csrf
             @include('reelsmodule::admin.reels.partials._form', ['isEdit' => false])
         </form>
     </div>
+
+    <div class="modal fade" id="reel-how-it-works" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ translate('Create reels') }}</h5>
+                    <button type="button" class="close btn btn--reset btn-circle" data-dismiss="modal"
+                        aria-label="{{ translate('messages.Close') }}">
+                        <span aria-hidden="true" class="tio-clear fs-20 opacity-70"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ol class="tps-steps mb-3">
+                        <li>{{ translate('A reel is a short upright video customers swipe through in the app, posted under one store.') }}</li>
+                        <li>{{ translate('The cover image is the still shown in the feed; the video plays once the customer stops on it.') }}</li>
+                        <li>{{ translate('The caption is printed over the video, and each language tab holds its own wording.') }}</li>
+                        <li>{{ translate('A call to action button sends the customer straight to one item from that store.') }}</li>
+                    </ol>
+                    <div class="tps-note tps-note--info">
+                        <i class="tio-info-outined"></i>
+                        <div>{{ translate('Reels only reach customers browsing the module the reel was created under, and only inside the store\'s own zone.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('script_2')
-    <script type="text/javascript" src="{{ asset('public/assets/admin/js/moment.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('public/assets/admin/js/daterangepicker.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('public/assets/admin/vendor/daterangepicker/moment.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('public/assets/admin/vendor/daterangepicker/daterangepicker.min.js') }}"></script>
+    @php($reelFormConfig = [
+        'isEdit' => false,
+        'itemsUrl' => route('admin.reels.items'),
+        'selectedProductId' => null,
+        'lang' => [
+            'notSet' => translate('messages.Not set'),
+            'clear' => translate('messages.Clear'),
+            'alwaysVisible' => translate('Always visible to customers'),
+            'noAction' => translate('No action button'),
+            'selectProduct' => translate('Select') . ' ' . ($productLabel ?? translate('messages.Product')),
+            'somethingWentWrong' => translate('messages.Something went wrong'),
+        ],
+    ])
     <script>
         "use strict";
 
-        function initReelDateRange() {
-            const $dates = $('input[name="dates"]');
-            if (!$dates.length) {
-                return;
-            }
-
-            $dates.daterangepicker({
-                drops: 'up',
-                opens: 'right',
-                startDate: moment().startOf('day'),
-                endDate: moment().endOf('day'),
-                minDate: new Date(),
-                autoUpdateInput: false,
-                autoApply: false,
-                alwaysShowCalendars: true,
-                locale: {
-                    format: 'MM/DD/YYYY',
-                    cancelLabel: 'Clear'
-                },
-            });
-
-            $dates.on('apply.daterangepicker', function (ev, picker) {
-                const value = picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY');
-                $(this).val(value).data('last-value', value);
-                clearReelDateValidation(this);
-            });
-
-            $dates.on('cancel.daterangepicker', function () {
-                $(this).val('').data('last-value', '');
-            });
-        }
-
-        function clearReelDateValidation(input) {
-            if (window.FormValidation) {
-                window.FormValidation.clearError(input);
-            }
-            $(input).removeClass('is-invalid');
-        }
-
-        function toggleAlwaysVisibleState() {
-            const $dates = $('#dates');
-            const dates = $dates[0];
-            const checked = $('#is_always_visible').is(':checked');
-
-            if (checked && $dates.val()) {
-                $dates.data('last-value', $dates.val());
-            }
-
-            $dates.prop('disabled', checked).prop('required', !checked);
-            if (checked) {
-                $dates.val('');
-            } else if (!$dates.val() && $dates.data('last-value')) {
-                $dates.val($dates.data('last-value'));
-            }
-            clearReelDateValidation(dates);
-        }
-
-        function updateTextCounters() {
-            $('.reel-des-textarea').each(function () {
-                const count = $(this).val().length;
-                $(this).siblings('.text-counting').text(count + '/200');
-            });
-        }
-
-        function submitReelForm(form) {
-            const formData = new FormData(form);
-            const thumbnailInput = form.querySelector('input[name="thumbnail"]');
-            const videoInput = form.querySelector('input[name="video"]');
-
-            if (thumbnailInput && thumbnailInput.files && thumbnailInput.files[0]) {
-                formData.set('thumbnail', thumbnailInput.files[0]);
-            }
-
-            if (videoInput && videoInput.files && videoInput.files[0]) {
-                formData.set('video', videoInput.files[0]);
-            }
-
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-
-            $.ajax({
-                url: $(form).attr('action'),
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (response) {
-                    if (response.errors && response.errors.length) {
-                        response.errors.forEach(function (error) {
-                            toastr.error(error.message, {
-                                CloseButton: true,
-                                ProgressBar: true
-                            });
-                        });
-                        return;
-                    }
-
-                    toastr.success(response.message);
-                    if (response.redirect) {
-                        window.location.href = response.redirect;
-                    }
-                },
-                error: function (xhr) {
-                    const response = xhr.responseJSON || {};
-                    const errors = Array.isArray(response.errors) ? response.errors : [];
-
-                    if (errors.length) {
-                        errors.forEach(function (error) {
-                            toastr.error(error.message, {
-                                CloseButton: true,
-                                ProgressBar: true
-                            });
-                        });
-                        return;
-                    }
-
-                    toastr.error(response.message || '{{ translate('messages.Something_went_wrong') }}', {
-                        CloseButton: true,
-                        ProgressBar: true
-                    });
-                },
-                complete: function () {
-                    $('#loading').hide();
-                }
-            });
-        }
-
-        function loadReelItems(storeId, selectedId) {
-            const $item = $('#product_id');
-            if (!$item.length) {
-                return;
-            }
-
-            const noneOption = '<option value="">{{ translate('messages.select') }} {{ $productLabel ?? translate('messages.Product') }}</option>';
-
-            if (!storeId) {
-                $item.html(noneOption);
-                if ($item.hasClass('select2-hidden-accessible')) {
-                    $item.val('').trigger('change');
-                }
-                return;
-            }
-
-            $.get('{{ route('admin.reels.items') }}', { store_id: storeId }, function (response) {
-                let options = noneOption;
-                (response.items || []).forEach(function (item) {
-                    const selected = selectedId && parseInt(selectedId, 10) === parseInt(item.id, 10) ? 'selected' : '';
-                    options += '<option value="' + item.id + '" ' + selected + '>' + item.name + '</option>';
-                });
-                $item.html(options);
-                if ($item.hasClass('select2-hidden-accessible')) {
-                    $item.trigger('change');
-                }
-            });
-        }
-
-        function syncCallToActionPreview() {
-            const enabled = $('#call-to-action-toggle').is(':checked');
-            $('#product-select-wrapper').toggle(enabled);
-            $('#order-now-btn').toggle(enabled);
-        }
-
-        $(function () {
-            initReelDateRange();
-            toggleAlwaysVisibleState();
-            updateTextCounters();
-            syncCallToActionPreview();
-
-            $(document).on('change', '#is_always_visible', toggleAlwaysVisibleState);
-            $(document).on('input', '.reel-des-textarea', updateTextCounters);
-            $(document).on('change', '#call-to-action-toggle', syncCallToActionPreview);
-            $(document).on('change', '#store_id', function () {
-                loadReelItems($(this).val(), null);
-            });
-
-            $('#reel-form').on('submit', function (e) {
-                e.preventDefault();
-                submitReelForm(this);
-            });
-        });
+        window.reelFormConfig = @json($reelFormConfig);
     </script>
+    <script src="{{ asset('public/assets/admin/js/view-pages/reel-form.js') }}"></script>
 @endpush

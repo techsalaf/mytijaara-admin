@@ -11,9 +11,6 @@ class AIServiceProvider extends ServiceProvider
 
     protected string $moduleNameLower = 'ai';
 
-    /**
-     * Boot the application events.
-     */
     public function boot(): void
     {
         $this->registerCommands();
@@ -24,17 +21,11 @@ class AIServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
     }
 
-    /**
-     * Register the service provider.
-     */
     public function register(): void
     {
         $this->app->register(RouteServiceProvider::class);
     }
 
-    /**
-     * Register commands in the format of Command::class
-     */
     protected function registerCommands(): void
     {
         $this->commands([
@@ -42,9 +33,6 @@ class AIServiceProvider extends ServiceProvider
         ]);
     }
 
-    /**
-     * Register command Schedules.
-     */
     protected function registerCommandSchedules(): void
     {
         $this->app->booted(function () {
@@ -57,9 +45,6 @@ class AIServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Register translations.
-     */
     public function registerTranslations(): void
     {
         $langPath = resource_path('lang/modules/'.$this->moduleNameLower);
@@ -73,18 +58,12 @@ class AIServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Register config.
-     */
     protected function registerConfig(): void
     {
         $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower.'.php')], 'config');
         $this->mergeConfigFrom(module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower);
     }
 
-    /**
-     * Register views.
-     */
     public function registerViews(): void
     {
         $viewPath = resource_path('views/modules/'.$this->moduleNameLower);
@@ -98,9 +77,6 @@ class AIServiceProvider extends ServiceProvider
         Blade::componentNamespace($componentNamespace, $this->moduleNameLower);
     }
 
-    /**
-     * Get the services provided by the provider.
-     */
     public function provides(): array
     {
         return [];

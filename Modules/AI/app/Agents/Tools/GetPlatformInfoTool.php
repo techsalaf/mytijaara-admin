@@ -2,18 +2,14 @@
 
 namespace Modules\AI\app\Agents\Tools;
 
+use App\CentralLogics\Helpers;
 use Modules\AI\app\Agents\AiResponseContext;
-use App\Models\BusinessSetting;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
 class GetPlatformInfoTool implements Tool
 {
-    /**
-     * Only these keys may ever be read and returned to the AI.
-     * All others — API keys, payment gateways, mail config, commissions, etc. — are excluded.
-     */
     private const ALLOWED_KEYS = [
         'business_name',
         'address',
@@ -29,8 +25,11 @@ class GetPlatformInfoTool implements Tool
         'additional_charge_name',
         'additional_charge_status',
         'service_charge',
-        'free_delivery_over',
-        'free_delivery_over_status',
+        // `free_delivery_over` / `free_delivery_over_status` were removed in S6. Free delivery is
+        // a per-(zone, module) setup now, and this tool has no zone: AiResponseContext carries
+        // none. Reporting the deprecated global would have the assistant quote a threshold that
+        // no longer frees anything — worse than saying nothing. It can come back the day the
+        // context carries a zone.
     ];
 
     public function __construct(
@@ -39,7 +38,7 @@ class GetPlatformInfoTool implements Tool
 
     public function description(): string
     {
-        return 'Get public platform information: business name, contact address, phone, support email, country, currency symbol, decimal format, and any additional charges or free-delivery thresholds. Use this when the user asks about currency, pricing format, contact details, platform name, support info, delivery fees, or additional charges. Always use the returned currency when displaying prices.';
+        return 'Get public platform information: business name, contact address, phone, support email, country, currency symbol, decimal format, and any additional charges. Use this when the user asks about currency, pricing format, contact details, platform name, support info, or additional charges. It does NOT know delivery fees or free-delivery thresholds: those depend on the zone and module of the customer, which this tool has no access to. Always use the returned currency when displaying prices.';
     }
 
     public function schema(JsonSchema $schema): array
@@ -49,10 +48,7 @@ class GetPlatformInfoTool implements Tool
 
     public function handle(Request $request): string
     {
-        $rows = BusinessSetting::whereIn('key', self::ALLOWED_KEYS)
-            ->get(['key', 'value'])
-            ->pluck('value', 'key')
-            ->all();
+        $rows = Helpers::get_business_settings_many(self::ALLOWED_KEYS);
 
         $this->context->recordTool('GetPlatformInfoTool');
 
@@ -110,23 +106,14 @@ class GetPlatformInfoTool implements Tool
             $info['Timezone'] = $rows['timezone'];
         }
 
-        // Additional charge
         $additionalStatus = ($rows['additional_charge_status'] ?? '0') == '1';
         if ($additionalStatus && isset($rows['additional_charge'])) {
             $name             = $rows['additional_charge_name'] ?? 'Additional charge';
             $info[$name]      = $rows['additional_charge'];
         }
 
-        // Service charge
         if (isset($rows['service_charge']) && $rows['service_charge'] > 0) {
             $info['Service charge'] = $rows['service_charge'];
-        }
-
-        // Free delivery threshold
-        $freeDeliveryActive = ($rows['free_delivery_over_status'] ?? '0') == '1';
-        if ($freeDeliveryActive && isset($rows['free_delivery_over'])) {
-            $currency = $rows['currency'] ?? '';
-            $info['Free delivery over'] = $currency . $rows['free_delivery_over'];
         }
 
         return $info;

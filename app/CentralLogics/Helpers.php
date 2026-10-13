@@ -2,96 +2,81 @@
 
 namespace App\CentralLogics;
 
-use App\Exceptions\InvalidUploadException;
-use App\Exceptions\ZoneModuleException;
-use App\Library\Payer;
-use App\Library\Payment as PaymentInfo;
-use App\Library\Receiver;
-use App\Mail\OrderVerificationMail;
-use App\Mail\PlaceOrder;
-use App\Mail\SubscriptionRenewOrShift;
-use App\Mail\SubscriptionSuccessful;
-use App\Models\AddOn;
-use App\Models\Allergy;
-use App\Models\BusinessSetting;
-use App\Models\CashBack;
-use App\Models\Category;
-use App\Models\Currency;
-use App\Models\DataSetting;
-use App\Models\DeliveryMan;
-use App\Models\DeliverymanLoyaltyPointHistory;
-use App\Models\DeliveryManWallet;
-use App\Models\DMReview;
-use App\Models\Expense;
-use App\Models\ExternalConfiguration;
-use App\Models\FlashSaleItem;
-use App\Models\GenericName;
 use App\Models\Item;
-use App\Models\ItemCampaign;
-use App\Models\Module;
-use App\Models\NotificationMessage;
-use App\Models\NotificationSetting;
-use App\Models\Nutrition;
-use App\Models\ParcelCancellation;
-use App\Models\ParcelReturnFees;
-use App\Models\PriorityList;
-use App\Models\ReactPromotionalBanner;
-use App\Models\Review;
 use App\Models\Store;
-use App\Models\StoreCategory;
-use App\Models\StoreConfig;
-use App\Models\StoreNotificationSetting;
-use App\Models\StoreSubscription;
-use App\Models\StoreWallet;
-use App\Models\SubscriptionBillingAndRefundHistory;
-use App\Models\SubscriptionPackage;
-use App\Models\SubscriptionTransaction;
-use App\Models\Tag;
-use App\Models\Translation;
-use App\Models\User;
-use App\Models\UserNotification;
-use App\Models\Vendor;
-use App\Models\VendorEmployee;
-use App\Models\VisitorLog;
-use App\Models\Zone;
-use App\Scopes\StoreScope;
-use App\Traits\NotificationDataSetUpTrait;
-use App\Traits\Payment;
-use App\Traits\PaymentGatewayTrait;
+use App\Traits\Model\HasStorageTrait;
+use App\Traits\Notification\NotificationDataSetUpTrait;
+use App\Traits\Payment\PaymentGatewayTrait;
 use DateTime;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Encoders\WebpEncoder;
-use Intervention\Image\ImageManager;
-use MatanYadaev\EloquentSpatial\Objects\Point;
-use Modules\Gateways\Traits\SmsGateway;
-use Modules\Rental\Emails\ProviderSubscriptionRenewOrShift;
-use Modules\Rental\Emails\ProviderSubscriptionSuccessful;
-use Modules\Service\Emails\ProviderSubscriptionRenewOrShift as ServiceProviderSubscriptionRenewOrShift;
-use Modules\Service\Emails\ProviderSubscriptionSuccessful as ServiceProviderSubscriptionSuccessful;
-use Modules\Rental\Entities\Vehicle;
-use Modules\Service\Entities\Service as ServiceEntity;
 use Modules\RideShare\Entities\ReviewModule\RideReview;
-use Modules\TaxModule\Entities\SystemTaxSetup;
-use Modules\TaxModule\Entities\Tax;
 use Modules\TaxModule\Services\CalculateTaxService;
 use Mpdf\Mpdf;
+use App\Support\Cache\ApiCache;
+use App\Support\Notification\SendNotification;
+use App\Services\System\BusinessSettingService;
+use App\Services\System\DistanceService;
+use App\Services\Order\ExpenseService;
+use App\Services\Promotion\StoreDiscountResolver;
+use App\Services\Store\StoreConfigService;
+use App\Services\Store\StoreCategoryService;
+use App\Services\Store\StoreService;
+use App\Services\Item\AddonService;
+use App\Services\Item\TagService;
+use App\Services\Item\CategoryService;
+use App\Services\Zone\ZoneService;
+use App\Services\DeliveryMan\DmReviewService;
+use App\Services\System\FaqService;
+use App\Services\System\SocialMediaService;
+use App\Services\Marketing\FlashSaleItemService;
+use App\Services\Auth\PasswordResetService;
+use App\Services\System\NotificationSettingService;
+use App\Services\Parcel\ParcelReturnFeeService;
+use App\Services\Marketing\ReactPromotionalBannerService;
+use Modules\TaxModule\Services\SystemTaxSetupService;
+use App\Services\System\TranslationService;
+use App\Services\Customer\VisitorLogService;
+use App\Services\Payment\SettingService;
+use App\Services\System\CurrencyService;
+use App\Services\System\DataSettingService;
+use App\Services\System\ModuleService;
+use App\Services\Payment\StoreSubscriptionService;
+use App\Services\Payment\SubscriptionPackageService;
+use App\Services\DeliveryMan\DeliveryManService;
+use App\Services\DeliveryMan\DeliverymanLoyaltyPointHistoryService;
+use App\Services\Customer\UserService;
+use App\Support\Notification\NotificationText;
+use App\Support\Notification\StoreNotificationSettings;
+use App\Support\Notification\Sms;
+use App\Support\Storage\FileStorage;
 
 class Helpers
 {
     use NotificationDataSetUpTrait, PaymentGatewayTrait;
+
+    /**
+     * Read off the authenticated vendor's own store on essentially every vendor panel request.
+     * Loaded here rather than through Vendor::$with, which would also apply to admin vendor
+     * lists and chunked exports where none of it is needed.
+     */
+    private const VENDOR_PANEL_STORE_RELATIONS = [
+        'stores.module', 'stores.store_sub', 'stores.store_sub.package',
+        'stores.store_sub_update_application', 'stores.discount',
+        // .dates so HappyHour::isRunningNow() (asked of every approved enrolment while resolving
+        // the running window, e.g. Helpers::get_store_discount() pricing a POS product) doesn't
+        // query dates() itself per enrolment -- the N+1 Debugbar flags as
+        // "HappyHour => HappyHourDate". Loaded once here, cached on the auth guard's user model,
+        // rather than repeated with loadMissing() at each vendor-panel call site that needs it.
+        'stores.happyHourEnrollments.happyHour.dates',
+    ];
 
     public static function error_processor($validator)
     {
@@ -122,34 +107,6 @@ class Helpers
         return is_array($decoded) ? $decoded : $default;
     }
 
-    public static function formatCategoryIds($categoryIds, $withName = false)
-    {
-        $decoded = self::decodeJsonToArray($categoryIds);
-
-        $names = collect();
-        if ($withName) {
-            $ids = collect($decoded)->map(fn ($value) => (string) data_get($value, 'id'))->filter()->values();
-            $names = Category::whereIn('id', $ids)->pluck('name', 'id');
-        }
-
-        $categories = [];
-        foreach ($decoded as $value) {
-            $categoryId = (string) data_get($value, 'id');
-            $category = [
-                'id' => $categoryId,
-                'position' => data_get($value, 'position'),
-            ];
-
-            if ($withName) {
-                $category['name'] = $names->get($categoryId, 'NA');
-            }
-
-            $categories[] = $category;
-        }
-
-        return $categories;
-    }
-
     public static function schedule_order()
     {
         return (bool) self::get_business_settings('schedule_order');
@@ -173,11 +130,45 @@ class Helpers
 
     public static function variation_price($product, $variation)
     {
-        $match = json_decode($variation, true)[0];
+        $decoded = json_decode($variation ?? '', true);
+
+        return self::matched_variation($product, is_array($decoded) ? ($decoded[0] ?? []) : []);
+    }
+
+    /**
+     * The combination `type` a cart/order line's chosen variation resolves to, or null when none
+     * was chosen.
+     *
+     * BOGO lines can freeze a variation in the food-shape {"name":"variation","values":{"label":
+     * [...]}} even for non-food items (see HandlesBogoPricing::bogoCartRows()), so this falls back
+     * to that shape's label when the flat {"type":...} key isn't present. Shared by every reader
+     * of a stored variation match -- price/stock lookup here and the order-placement stock
+     * decrement in PlaceNewOrderTrait -- so a line freezing the food-shape resolves to the same
+     * type everywhere instead of only where each caller remembered to unwrap it.
+     */
+    public static function variationType($match): ?string
+    {
+        $match = is_array($match) ? $match : [];
+        $type = $match['type'] ?? implode('-', (array) data_get($match, 'values.label', []));
+
+        return $type === '' ? null : $type;
+    }
+
+    private static function matched_variation($product, $match)
+    {
         $result = ['price' => 0, 'stock' => 0];
-        foreach (json_decode($product['variations'], true) as $property => $value) {
-            if ($value['type'] == $match['type']) {
-                $result = ['price' => $value['price'], 'stock' => $value['stock'] ?? 0];
+
+        $type = self::variationType($match);
+
+        if ($type === null) {
+            return $result;
+        }
+
+        $variations = json_decode($product['variations'] ?? '', true);
+
+        foreach (is_array($variations) ? $variations : [] as $value) {
+            if (isset($value['type']) && $value['type'] == $type) {
+                $result = ['price' => $value['price'] ?? 0, 'stock' => $value['stock'] ?? 0];
             }
         }
 
@@ -186,847 +177,49 @@ class Helpers
 
     public static function pos_variation_price($product, $variation)
     {
-        $match = json_decode($variation, true);
-        $result = ['price' => 0, 'stock' => 0];
-        foreach (json_decode($product['variations'], true) as $property => $value) {
-            if ($value['type'] == $match['type']) {
-                $result = ['price' => $value['price'], 'stock' => $value['stock'] ?? 0];
-            }
-        }
+        $decoded = json_decode($variation ?? '', true);
 
-        return $result;
-    }
-
-    public static function address_data_formatting($data)
-    {
-        foreach ($data as $key => $item) {
-            $data[$key]['zone_ids'] = array_column(Zone::query()->whereContains('coordinates', new Point($item->latitude, $item->longitude, POINT_SRID))->latest()->get(['id'])->toArray(), 'id');
-        }
-
-        return $data;
-    }
-
-    public static function cart_product_data_formatting(
-        $data,
-        $selected_variation,
-        $selected_addons,
-        $selected_addon_quantity,
-        $trans = false,
-        $local = 'en'
-    ) {
-        $running_flash_sale = self::getRunningFlashSale($data['id']);
-
-        return self::format_product_item(
-            item: $data,
-            running_flash_sale: $running_flash_sale,
-            trans: $trans,
-            local: $local,
-            temp_product: false,
-            single: true,
-            translate: false,
-            cart: [
-                'selected_variation' => $selected_variation,
-                'selected_addons' => $selected_addons,
-                'selected_addon_quantity' => $selected_addon_quantity,
-            ]
-        );
-    }
-
-    public static function productListDataFormatting($data)
-    {
-        return collect($data)->map(function ($item) {
-            $discount = self::product_discount_calculate($item, $item->price, $item->store, true);
-            $module_type = $item->store?->module_type;
-            $has_variant = $module_type == 'food' ? $item->food_variations : $item->variations;
-            $has_variant = is_string($has_variant) ? json_decode($has_variant, true) : $has_variant;
-            $has_variant = is_array($has_variant) ? count($has_variant) : 0;
-
-            return [
-                'id' => (int) $item->id,
-                'name' => $item->title ?? $item->name,
-                'slug' => $item->slug,
-                'image_full_url' => $item->image_full_url,
-                'price' => $item->price,
-                'veg' => $item->veg,
-                'unit_type' => $item->unit_type,
-                'recommended' => $item->recommended,
-                'organic' => $item->organic,
-                'is_halal' => (int) $item->is_halal ?? 0,
-                'stock' => (int) $item->stock ?? 0,
-                'maximum_cart_quantity' => (int) $item->maximum_cart_quantity ?? 0,
-                'discount' => $discount['discount_percentage'],
-                'discount_type' => $discount['original_discount_type'],
-                'rating_count' => (int) ($item->rating ? array_sum(json_decode($item->rating, true)) : 0),
-                'avg_rating' => (float) ($item->avg_rating ?? 0),
-
-                'has_variant' => (int) $has_variant,
-                'available_time_starts' => ($item->start_time instanceof \Carbon\Carbon) ? $item->start_time->format('H:i') : ($item->available_time_starts ?? null),
-                'available_time_ends' => ($item->end_time instanceof \Carbon\Carbon) ? $item->end_time->format('H:i') : ($item->available_time_ends ?? null),
-
-                'halal_tag_status' => (int) $item->store->storeConfig?->halal_tag_status ?? 0,
-                'store_name' => $item->store?->name,
-                'store_id' => $item->store?->id,
-                'store_logo_full_url' => $item->store?->logo_full_url,
-                'store_category_id' => (int) $item->store_category_id,
-                'store_category_name' => $item?->storeCategory?->name,
-                'module_type' => $module_type,
-                'free_delivery' => $item->store?->free_delivery,
-                'verified_seller' => self::get_verified_seller_status($item->store, $item->store?->storeConfig),
-            ];
-        })->toArray();
-    }
-
-    public static function product_data_formatting($data, $multi_data = false, $trans = false, $local = 'en', $temp_product = false)
-    {
-        if ($multi_data == true) {
-            $running_flash_sales = self::runningFlashSaleQuery()->whereIn('item_id', collect($data)->pluck('id'))->get()->keyBy('item_id');
-
-            $storage = [];
-            foreach ($data as $item) {
-                $running_flash_sale = $running_flash_sales[$item['id']] ?? null;
-                $storage[] = self::format_product_item(item: $item, running_flash_sale: $running_flash_sale, trans: $trans, local: $local, temp_product: $temp_product, single: false);
-            }
-
-            return $storage;
-        }
-
-        $running_flash_sale = self::getRunningFlashSale($data['id']);
-
-        return self::format_product_item(item: $data, running_flash_sale: $running_flash_sale, trans: $trans, local: $local, temp_product: $temp_product, single: true);
-    }
-
-    private static function format_product_item($item, $running_flash_sale, $trans, $local, $temp_product = false, $single = false, $translate = false, $cart = false)
-    {
-        $item = self::applyScheduleFields($item);
-        $item['category_ids'] = $translate ? self::formatCategoryIds($item['category_ids']) : self::formatCategoryIds($item['category_ids'], true);
-        $original_add_ons = $cart ? $item['add_ons'] : null;
-        $add_on_ids = self::decodeJsonToArray($item['add_ons']);
-        $item['add_ons'] = empty($add_on_ids)
-            ? self::addon_data_formatting(collect(), true, $trans, $local)
-            : self::addon_data_formatting(AddOn::whereIn('id', $add_on_ids)->active()->get(), true, $trans, $local);
-        $item = self::applyDecodedJsonFields($item);
-        $item['module_type'] = $item->module?->module_type;
-        $item['store_name'] = $item->store?->name;
-        if (! $translate) {
-            $item['store_image_full_url'] = $item->store?->logo_full_url;
-            $item['is_campaign'] = $item->store?->campaigns_count > 0 ? 1 : 0;
-        }
-        $item['zone_id'] = $item->store?->zone_id;
-
-        if ($cart) {
-            $selected_addons = $cart['selected_addons'] ?? [];
-            $selected_addon_quantity = [];
-            foreach ($selected_addons as $selected_index => $selected_addon_id) {
-                $selected_addon_quantity[$selected_addon_id] = $cart['selected_addon_quantity'][$selected_index] ?? 1;
-            }
-            foreach ($item['add_ons'] as $addon) {
-                $is_checked = in_array($addon['id'], $selected_addons);
-                $addon['isChecked'] = $is_checked;
-                $addon['quantity'] = $is_checked ? $selected_addon_quantity[$addon['id']] : 0;
-            }
-            $item['addons'] = $item['add_ons'];
-            $item['add_ons'] = $original_add_ons;
-            $item['store_slug'] = $item->store?->slug;
-
-            $food_variations = is_array($item['food_variations']) ? $item['food_variations'] : [];
-            if (($item['module_type'] ?? null) == 'food') {
-                foreach (($cart['selected_variation'] ?? []) as $selected_item) {
-                    $selected_labels = $selected_item['values']['label'] ?? [];
-                    foreach ($food_variations as &$all_item) {
-                        if (($selected_item['name'] ?? null) === ($all_item['name'] ?? null)) {
-                            foreach ($all_item['values'] as &$value) {
-                                $value['isSelected'] = isset($value['label']) && in_array($value['label'], $selected_labels);
-                            }
-                            unset($value);
-                        }
-                    }
-                    unset($all_item);
-                }
-            }
-            $item['food_variations'] = $food_variations;
-        }
-
-        $has_flash_stock = $running_flash_sale && $running_flash_sale->available_stock > 0;
-        $item['flash_sale'] = (int) (($translate ? (bool) $running_flash_sale : $has_flash_stock) ? 1 : 0);
-        $item['stock'] = $has_flash_stock ? $running_flash_sale->available_stock : $item['stock'];
-
-        if ($translate) {
-            $item['discount'] = $has_flash_stock ? $running_flash_sale->discount : $item['discount'];
-            $item['discount_type'] = $has_flash_stock ? $running_flash_sale->discount_type : $item['discount_type'];
-        } else {
-            $item = self::applyDiscount($item);
-        }
-        $item['store_discount'] = $has_flash_stock ? 0 : (self::get_store_discount($item->store) ? $item->store?->discount->discount : 0);
-        $item['schedule_order'] = $item->store?->schedule_order;
-
-        if (! $single) {
-            $item['delivery_time'] = $item->store?->delivery_time;
-            $item['free_delivery'] = $item->store?->free_delivery;
-            $item['tax'] = 0;
-            $item['unit'] = $item->unit;
-            $item['recommended'] = (int) $item->recommended;
-        }
-
-        if ($translate) {
-            $item = self::applyJsonRating($item);
-        } else {
-            try {
-                $reviewsInfo = $item->rating()->where('status', 1)->first();
-            } catch (\Exception $e) {
-                $reviewsInfo = null;
-            }
-            $item['rating_count'] = (int) $reviewsInfo?->rating_count ?? 0;
-            if ($single) {
-                $item['review_count'] = (int) $reviewsInfo?->review_count ?? 0;
-            }
-            $item['avg_rating'] = (float) $reviewsInfo?->average ?? 0;
-        }
-
-        if (! $translate) {
-            $delivery_time = explode('-', (string) ($item?->store?->delivery_time ?? ''));
-            $item['min_delivery_time'] = (int) ($delivery_time[0] ?? 0);
-            $item['max_delivery_time'] = (int) ($delivery_time[1] ?? 0);
-        }
-        $item = self::applyItemDetailAttributes($item, $temp_product);
-        if (! $translate) {
-            $item = self::applyStoreCategory($item);
-        }
-        $item = self::applyTaxonomyNames($item);
-
-        if ($temp_product == true) {
-            $item['tags'] = Tag::whereIn('id', json_decode($item?->tag_ids))->get(['tag', 'id']);
-            $item['nutritions_data'] = Nutrition::whereIn('id', json_decode($item?->nutrition_ids))->get(['nutrition', 'id']);
-            $item['allergies_data'] = Allergy::whereIn('id', json_decode($item?->allergy_ids))->get(['allergy', 'id']);
-            $item['generic_name_data'] = GenericName::whereIn('id', json_decode($item?->generic_ids))->get(['generic_name', 'id']);
-        }
-
-        if ($translate) {
-            $item = self::applyTranslations($item, $trans, $local);
-            $item['tax_ids'] = $item?->taxVats ? $item?->taxVats()->pluck('tax_id')->toArray() : [];
-        } else {
-            $item['tax_data'] = $item?->taxVats ? $item?->taxVats()->pluck('tax_id')->toArray() : [];
-            $item['tax_data'] = Tax::whereIn('id', $item['tax_data'])->get(['id', 'name', 'tax_rate']);
-        }
-
-        $item = self::applyEcommerceMeta($item);
-        $item = self::applyVideoData($item);
-
-        if ($translate) {
-            if (! $trans) {
-                unset($item['translations']);
-            }
-            unset($item['ecommerce_item_details']);
-        }
-        $item = self::cleanupItemRelations($item);
-
-        return $item;
-    }
-
-    private static function applyTranslations($item, $trans, $local)
-    {
-        if ($trans) {
-            $item['translations'][] = [
-                'translationable_type' => 'App\Models\Item',
-                'translationable_id' => $item->id,
-                'locale' => 'en',
-                'key' => 'name',
-                'value' => $item->name,
-            ];
-
-            $item['translations'][] = [
-                'translationable_type' => 'App\Models\Item',
-                'translationable_id' => $item->id,
-                'locale' => 'en',
-                'key' => 'description',
-                'value' => $item->description,
-            ];
-        }
-
-        if (count($item['translations']) > 0) {
-            foreach ($item['translations'] as $translation) {
-                if ($translation['locale'] == $local) {
-                    if ($translation['key'] == 'name') {
-                        $item['name'] = $translation['value'];
-                    }
-
-                    if ($translation['key'] == 'title') {
-                        $item['name'] = $translation['value'];
-                    }
-
-                    if ($translation['key'] == 'description') {
-                        $item['description'] = $translation['value'];
-                    }
-                }
-            }
-        }
-
-        return $item;
-    }
-
-    public static function product_data_formatting_translate($data, $trans = false, $local = 'en')
-    {
-        $running_flash_sale = self::getRunningFlashSale($data['id']);
-
-        return self::format_product_item(item: $data, running_flash_sale: $running_flash_sale, trans: $trans, local: $local, temp_product: false, single: true, translate: true);
+        return self::matched_variation($product, is_array($decoded) ? $decoded : []);
     }
 
     private static function runningFlashSaleQuery()
     {
-        return FlashSaleItem::Active()->whereHas('flashSale', function ($query) {
-            $query->Active()->Running();
-        });
+        return app(FlashSaleItemService::class)->runningQuery();
     }
 
     private static function getRunningFlashSale($itemId)
     {
-        return self::runningFlashSaleQuery()->where(['item_id' => $itemId])->first();
-    }
+        // Resolved once per request. This is called per item from
+        // product_discount_calculate(), so querying per id made every product
+        // listing an N+1.
+        static $running_flash_sales = null;
 
-    private static function applyScheduleFields($item)
-    {
-        if ($item->title) {
-            $item['name'] = $item->title;
-            unset($item['title']);
-        }
-        if ($item->start_time) {
-            $item['available_time_starts'] = $item->start_time->format('H:i');
-            unset($item['start_time']);
-        }
-        if ($item->end_time) {
-            $item['available_time_ends'] = $item->end_time->format('H:i');
-            unset($item['end_time']);
-        }
-        if ($item->start_date) {
-            $item['available_date_starts'] = $item->start_date->format('Y-m-d');
-            unset($item['start_date']);
-        }
-        if ($item->end_date) {
-            $item['available_date_ends'] = $item->end_date->format('Y-m-d');
-            unset($item['end_date']);
+        if ($running_flash_sales === null) {
+            $running_flash_sales = self::runningFlashSaleQuery()->get()->keyBy('item_id');
         }
 
-        return $item;
+        return $running_flash_sales[$itemId] ?? null;
     }
 
-    private static function formatVariations($item)
-    {
-        $variations = [];
-        foreach (self::decodeJsonToArray($item['variations']) as $var) {
-            $variations[] = [
-                'type' => $var['type'],
-                'price' => (float) $var['price'],
-                'stock' => (int) ($var['stock'] ?? 0),
-            ];
-        }
-
-        return $variations;
-    }
-
-    private static function applyDecodedJsonFields($item)
-    {
-        $item['attributes'] = self::decodeJsonToArray($item['attributes']);
-        $item['choice_options'] = self::decodeJsonToArray($item['choice_options']);
-        $item['variations'] = self::formatVariations($item);
-        $item['food_variations'] = $item['food_variations'] ? self::decodeJsonToArray($item['food_variations']) : '';
-
-        return $item;
-    }
-
-    private static function applyTaxonomyNames($item)
-    {
-        $item['nutritions_name'] = $item?->nutritions ? Nutrition::whereIn('id', $item?->nutritions->pluck('id'))->pluck('nutrition') : null;
-        $item['allergies_name'] = $item?->allergies ? Allergy::whereIn('id', $item?->allergies->pluck('id'))->pluck('allergy') : null;
-        $item['generic_name'] = $item?->generic ? GenericName::whereIn('id', $item?->generic->pluck('id'))->pluck('generic_name') : null;
-
-        return $item;
-    }
-
-    private static function applyEcommerceMeta($item)
-    {
-        if ($item->module?->module_type == 'ecommerce') {
-            $item['meta_title'] = $item?->seoData?->title;
-            $item['meta_description'] = $item?->seoData?->description;
-            $item['meta_image'] = $item?->seoData?->imageFullUrl;
-            $item['meta_data'] = $item?->seoData?->meta_data;
-        }
-
-        return $item;
-    }
-
-    private static function applyItemDetailAttributes($item, $temp_product = false)
-    {
-        $item['common_condition_id'] = (int) $item->pharmacy_item_details?->common_condition_id ?? 0;
-        $item['brand_id'] = (int) $item->ecommerce_item_details?->brand_id ?? 0;
-        $item['brand_name'] = $item->ecommerce_item_details?->brand?->name;
-        $item['is_basic'] = (int) $item->pharmacy_item_details?->is_basic ?? 0;
-        $item['is_prescription_required'] = (int) $item->pharmacy_item_details?->is_prescription_required ?? 0;
-        $item['unit_value'] = $temp_product == true ? ($item->unit_value ?? null) : $item->pharmacy_item_details?->unit_value;
-        $item['manufacturer'] = $temp_product == true ? ($item->manufacturer ?? null) : $item->pharmacy_item_details?->manufacturer;
-        $item['halal_tag_status'] = (int) $item->store?->storeConfig?->halal_tag_status ?? 0;
-        $item['verified_seller'] = self::get_verified_seller_status($item->store, $item->store?->storeConfig);
-
-        return $item;
-    }
-
-    private static function applyDiscount($item)
-    {
-        $discount_data = self::product_discount_calculate($item, $item['price'], $item->store, true);
-        $item['discount'] = $discount_data['discount_percentage'];
-        $item['discount_type'] = $discount_data['original_discount_type'];
-
-        return $item;
-    }
-
-    private static function applyStoreCategory($item)
-    {
-        $item['store_category_id'] = (int) $item->store_category_id;
-        $item['store_category_name'] = $item?->storeCategory?->name;
-
-        return $item;
-    }
-
-    private static function applyJsonRating($item)
-    {
-        $item['rating_count'] = (int) ($item->rating ? array_sum(json_decode($item->rating, true)) : 0);
-        $item['avg_rating'] = (float) ($item->avg_rating ? $item->avg_rating : 0);
-
-        return $item;
-    }
-
-    private static function applyVideoData($item)
-    {
-        foreach (self::product_video_data_formatting($item) as $videoKey => $videoValue) {
-            $item[$videoKey] = $videoValue;
-        }
-
-        return $item;
-    }
-
-    private static function cleanupItemRelations($item)
-    {
-        unset($item['taxVats']);
-        unset($item['nutritions']);
-        unset($item['allergies']);
-        unset($item['generic']);
-        unset($item['pharmacy_item_details']);
-        unset($item['store']);
-        unset($item['rating']);
-
-        return $item;
-    }
-
-    public static function product_video_data_formatting($item): array
-    {
-        $videoSourceType = 'none';
-
-        if ($item?->video_full_url) {
-            $videoSourceType = 'upload';
-        } elseif ($item?->video_link) {
-            $videoSourceType = 'link';
-        }
-
-        return [
-            'video' => $item?->video,
-            'video_full_url' => $item?->video_full_url,
-            'video_link' => $item?->video_link,
-            'video_source_type' => $videoSourceType,
-            'video_preview_type' => $item?->video_preview_type,
-            'video_preview_url' => $item?->video_preview_url,
-            'video_thumbnail_url' => $item?->video_thumbnail_url,
-            'video_embed_url' => $item?->video_embed_url,
-            'video_preview_available' => (bool) ($item?->video_preview_available),
-            'video_unavailable_reason' => $item?->video_unavailable_reason,
-        ];
-    }
-
-    public static function addon_data_formatting($data, $multi_data = false, $trans = false, $local = 'en')
-    {
-        $storage = [];
-        if ($multi_data == true) {
-            foreach ($data as $item) {
-                $item['tax_ids'] = $item?->taxVats ? $item?->taxVats()->pluck('tax_id')->toArray() : [];
-                unset($item['taxVats']);
-                $storage[] = $item;
-            }
-            $data = $storage;
-        } elseif (isset($data)) {
-            $item['tax_ids'] = $data?->taxVats ? $data?->taxVats()->pluck('tax_id')->toArray() : [];
-            unset($item['taxVats']);
-        }
-
-        return $data;
-    }
-
-    public static function category_data_formatting($data, $multi_data = false, $trans = false)
-    {
-        $storage = [];
-        if ($multi_data == true) {
-            foreach ($data as $item) {
-                if (count($item->translations) > 0) {
-                    $item->name = $item->translations[0]['value'];
-                }
-
-                if (! $trans) {
-                    unset($item['translations']);
-                }
-
-                $storage[] = $item;
-            }
-            $data = $storage;
-        } elseif (isset($data)) {
-            if (count($data->translations) > 0) {
-                $data->name = $data->translations[0]['value'];
-            }
-
-            if (! $trans) {
-                unset($data['translations']);
-            }
-        }
-
-        return $data;
-    }
-
-    public static function service_data_formatting($data, $multi_data = false)
-    {
-        // Customer wishlist tag: batch-resolve the current API customer's favorited service ids
-        // once (a single query for lists), so every service response carries `is_favorite`.
-        // Guests and non-customer (vendor/admin/console) contexts resolve to false.
-        $wishlistUser = auth('api')->user();
-        $favoriteServiceIds = [];
-        if ($wishlistUser) {
-            $serviceIds = collect($multi_data ? $data : [$data])
-                ->filter()
-                ->pluck('id')
-                ->filter()
-                ->all();
-            if (! empty($serviceIds)) {
-                $favoriteServiceIds = \App\Models\Wishlist::where('user_id', $wishlistUser->id)
-                    ->whereIn('service_id', $serviceIds)
-                    ->pluck('service_id')
-                    ->map(fn ($id) => (int) $id)
-                    ->all();
-            }
-        }
-
-        $format = function ($service) use ($favoriteServiceIds) {
-            $translated = [];
-            if ($service->relationLoaded('translations')) {
-                foreach ($service->translations as $translation) {
-                    $translated[$translation['key']] = $translation['value'];
-                }
-            }
-
-            return [
-                'id' => $service->id,
-                'name' => $translated['name'] ?? $service->name,
-                'slug' => $service->slug,
-                // long_description is authored via a rich-text editor (CKEditor) in the admin/vendor
-                // panels, so these values are intentionally returned as raw HTML — do NOT wrap them in
-                // strip_tags()/e(); the app is expected to render long_description as HTML.
-                'short_description' => $translated['short_description'] ?? $service->short_description,
-                'long_description' => $translated['long_description'] ?? $service->long_description,
-                'thumbnail_full_url' => $service->thumbnail_full_url,
-                'additional_images_full_url' => $service->additional_images_full_url,
-                'base_price' => (float) $service->base_price,
-                'discount' => (float) ($service->discount ?? 0),
-                'discount_type' => $service->discount_type ?? 'percent',
-                'is_favorite' => in_array((int) $service->id, $favoriteServiceIds, true),
-                'tax_ids' => $service->tax_ids,
-                'tax_data' => $service->tax_data,
-                'variations' => $service->variations ?? [],
-                'tags' => $service->tags ?? [],
-                'recommended' => (int) $service->recommended,
-                'is_approved' => (int) $service->is_approved,
-                'status' => (int) $service->status,
-                'order_count' => (int) $service->order_count,
-                'avg_rating' => (float) $service->avg_rating,
-                'rating_count' => (int) $service->rating_count,
-                'module_id' => $service->module_id,
-                'module_type' => $service->relationLoaded('module') ? $service->module?->module_type : null,
-                'store_id' => $service->store_id,
-                'store_name' => $service->relationLoaded('store') ? $service->store?->name : null,
-                'provider_name' => $service->relationLoaded('store') ? $service->store?->name : null,
-                'provider_image_full_url' => $service->relationLoaded('store') ? $service->store?->logo_full_url : null,
-                'verified_provider' => $service->relationLoaded('store') && $service->store ? (int) ($service->store->storeConfig?->verified_seller ?? 0) : 0,
-                'category_id' => $service->category_id,
-                'sub_category_id' => $service->sub_category_id,
-                'store_category_id' => $service->store_category_id,
-                'category' => $service->relationLoaded('category') && $service->category ? [
-                    'id' => $service->category->id,
-                    'name' => $service->category->name,
-                    'slug' => $service->category->slug,
-                ] : null,
-                'sub_category' => $service->relationLoaded('subCategory') && $service->subCategory ? [
-                    'id' => $service->subCategory->id,
-                    'name' => $service->subCategory->name,
-                    'slug' => $service->subCategory->slug,
-                ] : null,
-                'store_category' => $service->relationLoaded('storeCategory') && $service->storeCategory ? [
-                    'id' => $service->storeCategory->id,
-                    'name' => $service->storeCategory->name,
-                    'slug' => $service->storeCategory->slug,
-                ] : null,
-                // Distance from the request's lat/lng to the provider's store, in meters, mirroring
-                // StoreLogic's `distance` / `distance_km` pair. Only populated when the query was
-                // built with the withDistance() scope (i.e. the request carried coordinates).
-                'distance' => isset($service->distance) ? (float) $service->distance : null,
-                'distance_km' => isset($service->distance) ? round(((float) $service->distance) / 1000, 2) : null,
-                'created_at' => $service->created_at,
-                'updated_at' => $service->updated_at,
-            ];
-        };
-
-        if ($multi_data == true) {
-            $storage = [];
-            foreach ($data as $item) {
-                $storage[] = $format($item);
-            }
-
-            return $storage;
-        }
-
-        return isset($data) ? $format($data) : $data;
-    }
-
-    public static function parcel_category_data_formatting($data, $multi_data = false)
-    {
-        $storage = [];
-        if ($multi_data == true) {
-            foreach ($data as $item) {
-                // if (count($item['translations']) > 0) {
-                //     $translate = array_column($item['translations']->toArray(), 'value', 'key');
-                //     $item['name'] = $translate['name'];
-                //     $item['description'] = $translate['description'];
-                //     unset($item['translations']);
-                // }
-                array_push($storage, $item);
-            }
-            $data = $storage;
-        } else {
-            // if (count($data['translations']) > 0) {
-            //     $translate = array_column($data['translations']->toArray(), 'value', 'key');
-            //     $data['title'] = $translate['title'];
-            //     $data['description'] = $translate['description'];
-            //     unset($data['translations']);
-            // }
-        }
-
-        return $data;
-    }
-
-    public static function basic_campaign_data_formatting($data, $multi_data = false)
-    {
-        $storage = [];
-        if ($multi_data == true) {
-            foreach ($data as $item) {
-                $variations = [];
-
-                if ($item->start_date) {
-                    $item['available_date_starts'] = $item->start_date->format('Y-m-d');
-                    unset($item['start_date']);
-                }
-                if ($item->end_date) {
-                    $item['available_date_ends'] = $item->end_date->format('Y-m-d');
-                    unset($item['end_date']);
-                }
-
-                array_push($storage, $item);
-            }
-            $data = $storage;
-        } else {
-            if ($data->start_date) {
-                $data['available_date_starts'] = $data->start_date->format('Y-m-d');
-                unset($data['start_date']);
-            }
-            if ($data->end_date) {
-                $data['available_date_ends'] = $data->end_date->format('Y-m-d');
-                unset($data['end_date']);
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * Service-module provider verified-badge gate, backed by the
-     * `service_provider_verified_badge` service_business_settings DataSetting.
-     */
     public static function serviceProviderVerifiedBadgeStatus(): bool
     {
-        return (int) DataSetting::where('type', SERVICE_BUSINESS_SETTINGS)
-            ->where('key', 'service_provider_verified_badge')->value('value') === 1;
+        return app(DataSettingService::class)->serviceProviderVerifiedBadgeStatus();
     }
 
-    /**
-     * module_type for a module id, memoized (all modules are loaded once per
-     * request) so hot store/service formatting paths never fire a per-row query.
-     */
     public static function moduleTypeById(?int $moduleId): ?string
     {
-        if (! $moduleId) {
-            return null;
-        }
-
-        static $map = null;
-        if ($map === null) {
-            $map = \App\Models\Module::pluck('module_type', 'id')->toArray();
-        }
-
-        return $map[$moduleId] ?? null;
+        return app(ModuleService::class)->memoizedTypeById($moduleId);
     }
 
     public static function get_verified_seller_status(?Store $store = null, mixed $storeConfig = null): int
     {
         $storeConfig ??= $store?->storeConfig;
 
-        // Service-module providers are gated by their own badge setting; every other
-        // module keeps the core verified_seller_badge business setting.
         $enabled = self::moduleTypeById($store?->module_id) === 'service'
             ? self::serviceProviderVerifiedBadgeStatus()
             : (bool) self::get_business_settings('verified_seller_badge');
 
         return (int) ($enabled && $storeConfig?->verified_seller);
-    }
-
-    public static function vehicle_data_formatting($data, $multi_data = false)
-    {
-        if ($multi_data == true) {
-            $vehicles = $data instanceof EloquentCollection ? $data : new EloquentCollection($data);
-            $vehicles->loadMissing('provider.storeConfig');
-
-            return $vehicles->map(function ($vehicle) {
-                $vehicle['verified_seller'] = self::get_verified_seller_status($vehicle->provider, $vehicle->provider?->storeConfig);
-
-                return $vehicle;
-            })->toArray();
-        }
-
-        if ($data) {
-            $data->loadMissing('provider.storeConfig');
-            $data['verified_seller'] = self::get_verified_seller_status($data->provider, $data->provider?->storeConfig);
-        }
-
-        return $data;
-    }
-
-    public static function store_data_formatting($data, $multi_data = false)
-    {
-        if ($multi_data == true) {
-            $storage = [];
-            foreach ($data as $item) {
-                $storage[] = self::format_store_item($item);
-            }
-
-            return $storage;
-        }
-
-        return self::format_store_item($data);
-    }
-
-    private static function format_store_item($item)
-    {
-        $item->load('storeConfig');
-        $ratings = StoreLogic::calculate_store_rating($item['rating']);
-        $item['ratings'] = $item?->rating ?? [];
-        unset($item['rating']);
-        $item['avg_rating'] = $ratings['rating'];
-
-        if (($item?->module?->module_type ?? null) === 'service') {
-            // Service providers keep their reviews in service_reviews (aggregated into the store
-            // rating bucket by ReviewLogic::syncStoreRating), not the item-based reviews() relation.
-            // Count from the same bucket that produced avg_rating so the two stay consistent.
-            $item['rating_count'] = (int) $ratings['total'];
-        } else {
-            $reviewsInfo = $item->reviews()->where('reviews.status', 1)
-                ->selectRaw('avg(reviews.rating) as average_rating, count(reviews.id) as total_reviews, items.store_id')
-                ->groupBy('items.store_id')
-                ->first();
-
-            $item['rating_count'] = (int) $reviewsInfo?->total_reviews ?? 0;
-        }
-        $item['positive_rating'] = $ratings['positive_rating'];
-        if (($item?->module?->module_type ?? null) === 'service' && service_addon_active()) {
-            $item['total_items'] = ServiceEntity::where('store_id', $item->id)
-                ->where('status', 1)->where('is_approved', 1)->count();
-        } else {
-            $item['total_items'] = $item['items_count'] ?? $item?->items()->approved()->count();
-        }
-        $item['total_campaigns'] = $item['campaigns_count'];
-        $item['min'] = (float) $item->items()->active()->min('price');
-        $item['max'] = (float) $item->items()->active()->max('price');
-        $item['is_recommended'] = false;
-        $item['halal_tag_status'] = (bool) $item?->storeConfig?->halal_tag_status;
-        $item['verified_seller'] = self::get_verified_seller_status($item, $item?->storeConfig);
-
-        $extra_packaging_data = self::get_business_settings('extra_packaging_data');
-        $item['extra_packaging_status'] = (bool) (! empty($extra_packaging_data) && data_get($extra_packaging_data, $item?->module?->module_type) == '1') ? $item?->storeConfig?->extra_packaging_status : false;
-        $item['extra_packaging_amount'] = (float) (! empty($extra_packaging_data) && (data_get($extra_packaging_data, $item?->module?->module_type) == '1') && ($item?->storeConfig?->extra_packaging_status == '1')) ? $item?->storeConfig?->extra_packaging_amount : 0;
-
-        if ($item->storeConfig && $item->storeConfig->is_recommended_deleted == 0) {
-            $item['is_recommended'] = $item->storeConfig->is_recommended;
-        }
-        $item['self_delivery_system'] = (int) $item->sub_self_delivery;
-        $item['current_opening_time'] = self::getNextOpeningTime($item['schedules']) ?? 'closed';
-        $item['show_low_stock_count'] = (int) $item?->storeConfig?->show_low_stock_count;
-        $item['minimum_stock_for_warning'] = (int) $item?->storeConfig?->minimum_stock_for_warning ?? 0;
-        $item['can_edit_order'] = (bool) (self::get_business_settings('can_vendor_edit_order') == 1 ? $item?->storeConfig?->can_edit_order : 0);
-        // Booking flags follow the can_edit_order pattern: the per-store value only applies when the
-        // corresponding global service setting is enabled; otherwise the flag is reported as off.
-        $item['can_edit_booking'] = (bool) (service_setting_enabled('service_provider_can_edit_booking') ? $item?->storeConfig?->can_edit_booking : 0);
-        $item['instant_booking'] = (bool) (service_setting_enabled('service_instant_booking') ? $item?->storeConfig?->instant_booking : 0);
-        $item['repeat_booking'] = (bool) (service_setting_enabled('service_repeat_booking') ? $item?->storeConfig?->repeat_booking : 0);
-        $item['schedule_booking'] = (bool) (service_setting_enabled('service_schedule_booking') ? $item?->storeConfig?->schedule_booking : 0);
-        $item['manage_service_setup'] = (bool) ($item?->storeConfig?->manage_service_setup ?? true);
-        $item['show_reviews_provider_panel'] = (bool) ($item?->storeConfig?->show_reviews_provider_panel ?? true);
-        $serviceLocations = $item?->storeConfig?->choose_service_location ?: ['customer'];
-        $item['choose_service_location'] = $serviceLocations;
-        // Explicit per-option flags for easier app consumption. Provider location is true only when the
-        // global "Service at Provider Place" setting is on AND the provider selected it.
-        $item['service_location_customer_status'] = in_array('customer', $serviceLocations);
-        $item['service_location_provider_status'] = service_setting_enabled('service_at_provider_place') && in_array('provider', $serviceLocations);
-        // Serviceman "Can Cancel Booking" — per-store value applies only when the global serviceman setting is on.
-        $item['serviceman_can_cancel_booking'] = (bool) (service_setting_enabled('service_serviceman_cancel_booking_req') ? $item?->storeConfig?->serviceman_can_cancel_booking : 0);
-
-        unset($item['items_count']);
-        unset($item['campaigns_count']);
-        unset($item['storeConfig']);
-        unset($item['campaigns']);
-        unset($item['pivot']);
-
-        return $item;
-    }
-
-    public static function wishlist_data_formatting($data, $multi_data = false)
-    {
-        $items = [];
-        $stores = [];
-        $services = [];
-        if ($multi_data == true) {
-
-            foreach ($data as $temp) {
-                if ($temp->item) {
-                    $items[] = self::product_data_formatting($temp->item, false, false, app()->getLocale());
-                }
-                if ($temp->store) {
-                    $stores[] = self::store_data_formatting($temp->store);
-                }
-                if ($temp->service) {
-                    $services[] = self::service_data_formatting($temp->service, false);
-                }
-            }
-        } else {
-            if ($data->item) {
-                $items[] = self::product_data_formatting($data->item, false, false, app()->getLocale());
-            }
-            if ($data->store) {
-                $stores[] = self::store_data_formatting($data->store);
-            }
-            if ($data->service) {
-                $services[] = self::service_data_formatting($data->service, false);
-            }
-        }
-
-        return ['item' => $items, 'store' => $stores, 'service' => $services];
     }
 
     public static function pro_discount_data($order): array
@@ -1041,100 +234,12 @@ class Helpers
         ];
     }
 
-    public static function order_data_formatting($data, $multi_data = false)
-    {
-        if ($multi_data) {
-            $storage = [];
-            foreach ($data as $item) {
-                $storage[] = self::format_order_item($item);
-            }
-
-            return $storage;
-        }
-
-        $data = self::format_order_item($data);
-
-        return gettype($data) == 'object' ? $data->toArray() : $data;
-    }
-
-    private static function format_order_item($item)
-    {
-        if (isset($item['store'])) {
-            $item['store_name'] = $item['store']['name'];
-            $item['store_address'] = $item['store']['address'];
-            $item['store_phone'] = $item['store']['phone'];
-            $item['store_lat'] = $item['store']['latitude'];
-            $item['store_lng'] = $item['store']['longitude'];
-            $item['store_logo'] = $item['store']['logo'];
-            $item['store_logo_full_url'] = $item['store']['logo_full_url'];
-            $item['min_delivery_time'] = $item['store'] ? (int) explode('-', $item['store']['delivery_time'])[0] ?? 0 : 0;
-            $item['max_delivery_time'] = $item['store'] ? (int) explode('-', $item['store']['delivery_time'])[1] ?? 0 : 0;
-            $item['vendor_id'] = $item['store']['vendor_id'];
-            $item['chat_permission'] = $item['store']['chat_permission'] ?? 0;
-            $item['review_permission'] = $item['store']['review_permission'] ?? 0;
-            $item['store_business_model'] = $item['store']['store_business_model'];
-
-            unset($item['store']);
-        } else {
-            $item['store_name'] = null;
-            $item['store_address'] = null;
-            $item['store_phone'] = null;
-            $item['store_lat'] = null;
-            $item['store_lng'] = null;
-            $item['store_logo'] = null;
-            $item['store_logo_full_url'] = null;
-            $item['min_delivery_time'] = null;
-            $item['max_delivery_time'] = null;
-            $item['vendor_id'] = null;
-            $item['chat_permission'] = null;
-            $item['review_permission'] = null;
-            $item['store_business_model'] = null;
-        }
-
-        $item['item_campaign'] = 0;
-        foreach ($item->details as $d) {
-            if ($d->item_campaign_id != null) {
-                $item['item_campaign'] = 1;
-            }
-        }
-
-        $item['delivery_address'] = is_array($item->delivery_address) ? $item->delivery_address : json_decode($item->delivery_address, true);
-        $item['details_count'] = (int) $item->details->count();
-        foreach (self::pro_discount_data($item) as $pro_key => $pro_value) {
-            $item[$pro_key] = $pro_value;
-        }
-
-        unset($item['details']);
-        unset($item['orderProDiscount']);
-
-        return $item;
-    }
-
-    public static function order_details_data_formatting($data)
-    {
-        $storage = [];
-        foreach ($data as $item) {
-            $item['add_ons'] = json_decode($item['add_ons']);
-            $item['variation'] = json_decode($item['variation'], true);
-            $item['item_details'] = json_decode($item['item_details'], true);
-            if ($item['item_id']) {
-                $product = Item::where(['id' => $item['item_details']['id']])->first();
-                $item['image_full_url'] = $product?->image_full_url;
-                $item['images_full_url'] = $product?->images_full_url;
-            } else {
-                $product = ItemCampaign::where(['id' => $item['item_details']['id']])->first();
-                $item['image_full_url'] = $product?->image_full_url;
-                $item['images_full_url'] = [];
-            }
-            array_push($storage, $item);
-        }
-        $data = $storage;
-
-        return $data;
-    }
-
     public static function deliverymen_list_formatting($data)
     {
+        if ($data instanceof EloquentCollection) {
+            $data->loadMissing(['storage', 'last_location']);
+        }
+
         $storage = [];
         foreach ($data as $item) {
             $storage_type = 'public';
@@ -1163,115 +268,60 @@ class Helpers
         return $data;
     }
 
-    public static function deliverymen_data_formatting($data)
-    {
-        $storage = [];
-        foreach ($data as $item) {
-            $item['avg_rating'] = (float) (count($item->rating) ? (float) $item->rating[0]->average : 0) ?? 0;
-            $item['rating_count'] = (int) (count($item->rating) ? $item->rating[0]->rating_count : 0) ?? 0;
-            $item['lat'] = $item->last_location ? $item->last_location->latitude : null;
-            $item['lng'] = $item->last_location ? $item->last_location->longitude : null;
-            $item['location'] = $item->last_location ? $item->last_location->location : null;
-            if ($item['rating']) {
-                unset($item['rating']);
-            }
-            if ($item['last_location']) {
-                unset($item['last_location']);
-            }
-            $storage[] = $item;
-        }
-        $data = $storage;
+ 
 
-        return $data;
+    public static function clearReferenceLookupMemo(): void
+    {
+        foreach ([ModuleService::class, AddonService::class, TagService::class, CategoryService::class] as $service) {
+            $service::forgetMemo();
+        }
+    }
+
+    /**
+     * module_type is read off Store from shared partials that have no say in how the store was
+     * queried, so resolving it through the relation makes every one of those a lazy load. The
+     * modules table is small and fixed for the request, so it is resolved from a memoized map.
+     */
+    public static function module_type_by_id($module_id): ?string
+    {
+        return app(ModuleService::class)->memoizedTypeById($module_id);
+    }
+
+    public static function clearBusinessSettingsCache(): void
+    {
+        BusinessSettingService::forgetCache();
+        BusinessSettingService::forgetModelMemo();
+        self::deleteCacheData('business_settings_all_data');
+
+        // The distance unit is memoised per request inside DistanceService; drop it here so a
+        // save-then-render request cannot keep quoting the old unit. This method is already
+        // called from BusinessSetting::saved(), so every write path is covered.
+        app(DistanceService::class)->forgetUnit();
     }
 
     public static function get_business_settings($key, $json_decode = true, $relations = [])
     {
-        try {
-            static $allSettings = null;
+        return app(BusinessSettingService::class)->value($key, $json_decode, $relations);
+    }
 
-            $configKey = $key.'_conf';
-            if (Config::has($configKey)) {
-                $data = Config::get($configKey);
-            } else {
-                if (is_null($allSettings)) {
-                    $allSettings = Cache::rememberForever('business_settings_all_data', function () {
-                        return BusinessSetting::select('key', 'value')->get();
-                    });
-                }
-
-                $data = $allSettings->firstWhere('key', $key);
-                if ($data && ! empty($relations)) {
-                    $data->loadMissing($relations);
-                }
-                Config::set($configKey, $data);
-            }
-
-            if (! isset($data['value'])) {
-                return null;
-            }
-
-            $value = $data['value'];
-            if ($json_decode && is_string($value)) {
-                $decoded = json_decode($value, true);
-
-                return is_null($decoded) ? $value : $decoded;
-            }
-
-            return $value;
-        } catch (\Throwable $th) {
-            return null;
+    public static function get_business_settings_many(array $keys, $json_decode = false): array
+    {
+        $data = [];
+        foreach ($keys as $key) {
+            $data[$key] = self::get_business_settings($key, $json_decode);
         }
 
+        return $data;
     }
 
     public static function copyright_text()
     {
-        return translate('Copyright').' '.date('Y').' '.self::get_business_settings('business_name', false).'. '.translate('All right reserved');
+        return translate('Copyright').' '.date('Y').' '.self::get_business_settings('business_name', false).'. '.translate('All rights reserved');
     }
 
     public static function copyright_placeholder()
     {
-        return translate('Ex:').' '.self::copyright_text();
-    }
-
-    public static function getPriorityList($name, $type, $relations = [], $json_decode = false)
-    {
-        try {
-            static $allSettings = null;
-
-            $configKey = $name.'_'.$type.'_conf';
-            if (Config::has($configKey)) {
-                $data = Config::get($configKey);
-            } else {
-                if (is_null($allSettings)) {
-                    $allSettings = Cache::rememberForever('priority_settings_all_data', function () {
-                        return PriorityList::select('name', 'value', 'type')->get();
-                    });
-                }
-                $data = $allSettings->where('name', $name)->where('type', $type)->first();
-                if ($data && ! empty($relations)) {
-                    $data->loadMissing($relations);
-                }
-                Config::set($configKey, $data);
-            }
-
-            if (! isset($data['value'])) {
-                return null;
-            }
-
-            $value = $data['value'];
-            if ($json_decode && is_string($value)) {
-                $decoded = json_decode($value, true);
-
-                return is_null($decoded) ? $value : $decoded;
-            }
-
-            return $value;
-        } catch (\Throwable $th) {
-            return null;
-        }
-
+        return translate('Ex').':'.' '.self::copyright_text();
     }
 
     public static function get_business_data($name)
@@ -1281,275 +331,32 @@ class Helpers
 
     public static function toggle_verified_seller(Store $store, ?int $status = null): int
     {
-        $storeConfig = StoreConfig::firstOrNew(['store_id' => $store->id]);
-        $storeConfig->verified_seller = is_null($status) ? (int) ! ($storeConfig->verified_seller ?? 0) : (int) $status;
-        if ((int) $storeConfig->verified_seller === 1) {
-            $storeConfig->has_seen_verified_badge_popup = 0;
-        }
-        $storeConfig->save();
-
-        Helpers::deleteCacheData('verified_seller_eligible_providers_');
-        Helpers::deleteCacheData('verified_seller_eligible_stores_');
-
-        try {
-            $vendor = $store->vendor;
-            if (isset($vendor->firebase_token) && $vendor->firebase_token != '@') {
-                if ($storeConfig->verified_seller == 1) {
-                    $data = [
-                        'title' => translate('Verified'),
-                        'description' => translate('Congratulations! Your seller account is now verified.'),
-                        'order_id' => '',
-                        'image' => '',
-                        'type' => 'verified_badge',
-                    ];
-                    Helpers::send_push_notif_to_device($vendor->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $vendor->id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    $data = [
-                        'title' => translate('Removed'),
-                        'description' => translate('Your seller account is no longer verified.'),
-                        'order_id' => '',
-                        'image' => '',
-                        'type' => 'verified_badge',
-                    ];
-                    Helpers::send_push_notif_to_device($vendor->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $vendor->id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-
-            }
-        } catch (\Throwable $th) {
-
-        }
-
-        return (int) $storeConfig->verified_seller;
+        return app(StoreConfigService::class)->toggleVerifiedSeller($store, $status);
     }
 
     public static function mark_verified_badge_popup_seen(Store $store): int
     {
-        $storeConfig = StoreConfig::firstOrNew(['store_id' => $store->id]);
-        $storeConfig->has_seen_verified_badge_popup = 1;
-        $storeConfig->save();
-
-        return (int) $storeConfig->has_seen_verified_badge_popup;
+        return app(StoreConfigService::class)->markVerifiedBadgePopupSeen($store);
     }
 
     public static function get_verified_seller_eligible_stores(bool $countOnly = false, ?string $moduleId = null): mixed
     {
-        $config = config('verified_seller.stores', []);
-        $minimumOrders = (int) ($config['minimum_total_orders'] ?? 10);
-        $minimumRating = (float) ($config['minimum_avg_rating'] ?? 2);
-        $minimumSuccessRate = (float) ($config['minimum_success_rate'] ?? 40);
-        $minimumAccountAgeMonths = (int) ($config['minimum_account_age_months'] ?? 3);
-        $cacheKey = 'verified_seller_eligible_stores_'.md5(json_encode([
-            $countOnly,
-            $moduleId ?? 'all',
-            $minimumOrders,
-            $minimumRating,
-            $minimumSuccessRate,
-            $minimumAccountAgeMonths,
-        ]));
-
-        return Cache::remember($cacheKey, 3600, function () use ($countOnly, $moduleId) {
-            $config = config('verified_seller.stores', []);
-            $minimumOrders = (int) ($config['minimum_total_orders'] ?? 10);
-            $minimumRating = (float) ($config['minimum_avg_rating'] ?? 2);
-            $minimumSuccessRate = (float) ($config['minimum_success_rate'] ?? 40);
-            $minimumAccountAgeMonths = (int) ($config['minimum_account_age_months'] ?? 3);
-
-            $orderStats = DB::table('orders')
-                ->selectRaw('store_id, COUNT(*) as total_orders, SUM(CASE WHEN order_status = "delivered" THEN 1 ELSE 0 END) as delivered_orders, SUM(CASE WHEN order_status = "canceled" THEN 1 ELSE 0 END) as canceled_orders')
-                ->groupBy('store_id');
-
-            // Service providers keep their ratings in service_reviews (no items), every other
-            // module rates via item-based reviews.
-            $moduleType = $moduleId ? \App\Models\Module::where('id', $moduleId)->value('module_type') : null;
-            if ($moduleType === 'service' && service_addon_active()) {
-                $reviewStats = DB::table('service_reviews')
-                    ->where('status', 1)
-                    ->selectRaw('store_id, COALESCE(AVG(rating), 0) as avg_rating')
-                    ->groupBy('store_id');
-            } else {
-                $reviewStats = DB::table('reviews')
-                    ->join('items', 'items.id', '=', 'reviews.item_id')
-                    ->where('reviews.status', 1)
-                    ->selectRaw('items.store_id, COALESCE(AVG(reviews.rating), 0) as avg_rating')
-                    ->groupBy('items.store_id');
-            }
-
-            $stores = Store::withoutGlobalScopes()
-                ->select('stores.id', 'stores.name', 'stores.logo', 'stores.created_at')
-                ->when(! $countOnly, function ($query) {
-                    $query->with(['storage' => function ($storageQuery) {
-                        $storageQuery->where('key', 'logo')->select('id', 'data_type', 'data_id', 'key', 'value');
-                    }]);
-                })
-                ->addSelect(DB::raw('COALESCE(order_stats.total_orders, 0) as total_orders'))
-                ->addSelect(DB::raw('COALESCE(review_stats.avg_rating, 0) as avg_rating'))
-                ->leftJoin('store_configs', 'store_configs.store_id', '=', 'stores.id')
-                ->leftJoin('modules', 'modules.id', '=', 'stores.module_id')
-                ->joinSub($orderStats, 'order_stats', function ($join) {
-                    $join->on('order_stats.store_id', '=', 'stores.id');
-                })
-                ->joinSub($reviewStats, 'review_stats', function ($join) {
-                    $join->on('review_stats.store_id', '=', 'stores.id');
-                })
-                ->when($moduleId, function ($query) use ($moduleId) {
-                    $query->where('modules.id', $moduleId);
-                })
-                ->where(function ($query) {
-                    $query->whereNull('store_configs.id')
-                        ->orWhere('store_configs.verified_seller', '!=', 1);
-                })
-                ->where('stores.created_at', '<=', now()->subMonths($minimumAccountAgeMonths))
-                ->whereRaw('COALESCE(order_stats.total_orders, 0) >= ?', [$minimumOrders])
-                ->whereRaw('COALESCE(review_stats.avg_rating, 0) >= ?', [$minimumRating])
-                ->whereRaw('COALESCE((order_stats.delivered_orders / NULLIF(order_stats.delivered_orders + order_stats.canceled_orders, 0)) * 100, 0) >= ?', [$minimumSuccessRate]);
-
-            if ($countOnly) {
-                return $stores->count('stores.id');
-            }
-
-            return $stores->get()->map(function ($store) {
-                return [
-                    'id' => $store->id,
-                    'name' => $store->name,
-                    'logo_full_url' => self::get_full_url('store', $store->logo, $store->storage->pluck('value')->first() ?? 'public'),
-                    'total_orders' => (int) $store->total_orders,
-                    'avg_rating' => (float) $store->avg_rating,
-                ];
-            });
-        });
+        return app(StoreService::class)->getVerifiedSellerEligibleStores($countOnly, $moduleId);
     }
 
     public static function get_verified_seller_eligible_providers(bool $countOnly = false, ?string $moduleId = null): mixed
     {
-        $config = config('verified_seller.providers', []);
-        $minimumTrips = (int) ($config['minimum_total_trips'] ?? 10);
-        $minimumRating = (float) ($config['minimum_avg_rating'] ?? 2);
-        $minimumSuccessRate = (float) ($config['minimum_success_rate'] ?? 40);
-        $minimumAccountAgeMonths = (int) ($config['minimum_account_age_months'] ?? 3);
-        $cacheKey = 'verified_seller_eligible_providers_'.md5(json_encode([
-            $countOnly,
-            $moduleId ?? 'all',
-            $minimumTrips,
-            $minimumRating,
-            $minimumSuccessRate,
-            $minimumAccountAgeMonths,
-        ]));
-
-        return Cache::remember($cacheKey, 3600, function () use ($countOnly, $moduleId) {
-            $config = config('verified_seller.providers', []);
-            $minimumTrips = (int) ($config['minimum_total_trips'] ?? 10);
-            $minimumRating = (float) ($config['minimum_avg_rating'] ?? 2);
-            $minimumSuccessRate = (float) ($config['minimum_success_rate'] ?? 40);
-            $minimumAccountAgeMonths = (int) ($config['minimum_account_age_months'] ?? 3);
-
-            $tripStats = DB::table('trips')
-                ->selectRaw('provider_id, COUNT(*) as total_trips, SUM(CASE WHEN trip_status = "completed" THEN 1 ELSE 0 END) as completed_trips, SUM(CASE WHEN trip_status = "canceled" THEN 1 ELSE 0 END) as canceled_trips')
-                ->when($moduleId, function ($query) use ($moduleId) {
-                    $query->where('module_id', $moduleId);
-                })
-                ->groupBy('provider_id');
-
-            $reviewStats = DB::table('vehicle_reviews')
-                ->where('status', 1)
-                ->selectRaw('provider_id, COALESCE(AVG(rating), 0) as avg_rating')
-                ->when($moduleId, function ($query) use ($moduleId) {
-                    $query->where('module_id', $moduleId);
-                })
-                ->groupBy('provider_id');
-
-            $stores = Store::withoutGlobalScopes()
-                ->where('stores.status', 1)
-                ->select('stores.id', 'stores.name', 'stores.logo', 'stores.created_at')
-                ->when(! $countOnly, function ($query) {
-                    $query->with(['storage' => function ($storageQuery) {
-                        $storageQuery->where('key', 'logo')->select('id', 'data_type', 'data_id', 'key', 'value');
-                    }]);
-                })
-                ->addSelect(DB::raw('COALESCE(trip_stats.total_trips, 0) as total_trips'))
-                ->addSelect(DB::raw('COALESCE(review_stats.avg_rating, 0) as avg_rating'))
-                ->leftJoin('store_configs', 'store_configs.store_id', '=', 'stores.id')
-                ->leftJoin('modules', 'modules.id', '=', 'stores.module_id')
-                ->joinSub($tripStats, 'trip_stats', function ($join) {
-                    $join->on('trip_stats.provider_id', '=', 'stores.id');
-                })
-                ->joinSub($reviewStats, 'review_stats', function ($join) {
-                    $join->on('review_stats.provider_id', '=', 'stores.id');
-                })
-                ->when($moduleId, function ($query) use ($moduleId) {
-                    $query->where('modules.id', $moduleId);
-                })
-                ->where(function ($query) {
-                    $query->whereNull('store_configs.id')
-                        ->orWhere('store_configs.verified_seller', '!=', 1);
-                })
-                ->where('stores.created_at', '<=', now()->subMonths($minimumAccountAgeMonths))
-                ->whereRaw('COALESCE(trip_stats.total_trips, 0) >= ?', [$minimumTrips])
-                ->whereRaw('COALESCE(review_stats.avg_rating, 0) >= ?', [$minimumRating])
-                ->whereRaw('COALESCE((trip_stats.completed_trips / NULLIF(trip_stats.completed_trips + trip_stats.canceled_trips, 0)) * 100, 0) >= ?', [$minimumSuccessRate]);
-
-            if ($countOnly) {
-                return $stores->count('stores.id');
-            }
-
-            return $stores->get()->map(function ($store) {
-                return [
-                    'id' => $store->id,
-                    'name' => $store->name,
-                    'logo_full_url' => self::get_full_url('store', $store->logo, $store->storage->pluck('value')->first() ?? 'public'),
-                    'total_trips' => (int) $store->total_trips,
-                    'avg_rating' => (float) $store->avg_rating,
-                ];
-            });
-        });
-    }
-
-    public static function get_external_data($name)
-    {
-        $config = null;
-
-        $paymentmethod = ExternalConfiguration::where('key', $name)->first();
-
-        if ($paymentmethod) {
-            $config = $paymentmethod?->value;
-        }
-
-        return $config;
+        return app(StoreService::class)->getVerifiedSellerEligibleProviders($countOnly, $moduleId);
     }
 
     public static function currency_code()
     {
-        if (! config('currency')) {
-            $currency = self::get_business_settings('currency');
-            Config::set('currency', $currency);
-        } else {
-            $currency = config('currency');
-        }
-
-        return $currency;
+        return app(CurrencyService::class)->code();
     }
 
     public static function currency_symbol()
     {
-        if (! config('currency_symbol')) {
-            $currency_symbol = Currency::where(['currency_code' => Helpers::currency_code()])->first()?->currency_symbol;
-            Config::set('currency_symbol', $currency_symbol);
-        } else {
-            $currency_symbol = config('currency_symbol');
-        }
-
-        return $currency_symbol;
+        return app(CurrencyService::class)->symbol();
     }
 
     public static function highlight($text)
@@ -1563,220 +370,12 @@ class Helpers
 
     public static function format_currency($value)
     {
-        if (! config('currency_symbol_position')) {
-            $currency_symbol_position = self::get_business_settings('currency_symbol_position');
-            Config::set('currency_symbol_position', $currency_symbol_position);
-        } else {
-            $currency_symbol_position = config('currency_symbol_position');
-        }
-
-        return $currency_symbol_position == 'right' ? number_format($value, config('round_up_to_digit')).' '.self::currency_symbol() : self::currency_symbol().' '.number_format($value, config('round_up_to_digit'));
-    }
-
-    public static function sendNotificationToHttp(?array $data)
-    {
-        $config = self::get_business_settings('push_notification_service_file_content');
-        $key = (array) $config;
-        if (data_get($key, 'project_id')) {
-            $url = 'https://fcm.googleapis.com/v1/projects/'.$key['project_id'].'/messages:send';
-            $headers = [
-                'Authorization' => 'Bearer '.self::getAccessToken($key),
-                'Content-Type' => 'application/json',
-            ];
-            try {
-                Http::withHeaders($headers)->post($url, $data);
-            } catch (\Exception $exception) {
-                return false;
-            }
-        }
-
-        return false;
-    }
-
-    public static function getAccessToken($key)
-    {
-        $jwtToken = [
-            'iss' => $key['client_email'],
-            'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-            'aud' => 'https://oauth2.googleapis.com/token',
-            'exp' => time() + 3600,
-            'iat' => time(),
-        ];
-        $jwtHeader = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-        $jwtPayload = base64_encode(json_encode($jwtToken));
-        $unsignedJwt = $jwtHeader.'.'.$jwtPayload;
-        openssl_sign($unsignedJwt, $signature, $key['private_key'], OPENSSL_ALGO_SHA256);
-        $jwt = $unsignedJwt.'.'.base64_encode($signature);
-
-        $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $jwt,
-        ]);
-
-        return $response->json('access_token');
-    }
-
-    public static function send_push_notif_to_device($fcm_token, $data, $web_push_link = null)
-    {
-        $conversation_id = $data['conversation_id'] ?? '';
-        $sender_type = $data['sender_type'] ?? '';
-        $module_id = $data['module_id'] ?? '';
-        $order_id = $data['order_id'] ?? '';
-        $trip_id = $data['trip_id'] ?? '';
-        $order_type = $data['order_type'] ?? '';
-        $data_id = $data['data_id'] ?? '';
-        $status = $data['status'] ?? '';
-        $advertisement_id = $data['advertisement_id'] ?? '';
-
-        $postData = [
-            'message' => [
-                'token' => $fcm_token,
-                'data' => [
-                    'title' => (string) $data['title'],
-                    'body' => (string) $data['description'],
-                    'image' => (string) $data['image'],
-                    'order_id' => (string) $order_id,
-                    'trip_id' => (string) $trip_id,
-                    'status' => (string) $status,
-                    'type' => (string) $data['type'],
-                    'data_id' => (string) $data_id,
-                    'advertisement_id' => (string) $advertisement_id,
-                    'conversation_id' => (string) $conversation_id,
-                    'module_id' => (string) $module_id,
-                    'sender_type' => (string) $sender_type,
-                    'order_type' => (string) $order_type,
-                    'click_action' => $web_push_link ? (string) $web_push_link : '',
-                    'sound' => 'notification.wav',
-                ],
-                'notification' => [
-                    'title' => (string) $data['title'],
-                    'body' => (string) $data['description'],
-                    'image' => (string) $data['image'],
-                ],
-                'android' => [
-                    'notification' => [
-                        'channelId' => '6ammart',
-                    ],
-                ],
-                'apns' => [
-                    'payload' => [
-                        'aps' => [
-                            'sound' => 'notification.wav',
-                        ],
-                    ],
-                ],
-            ],
-        ];
-
-        return self::sendNotificationToHttp($postData);
-    }
-
-    public static function send_push_notif_to_topic($data, $topic, $type, $web_push_link = null)
-    {
-        if (isset($data['module_id'])) {
-            $module_id = $data['module_id'];
-        } else {
-            $module_id = '';
-        }
-        if (isset($data['order_type'])) {
-            $order_type = $data['order_type'];
-        } else {
-            $order_type = '';
-        }
-        if (isset($data['zone_id'])) {
-            $zone_id = $data['zone_id'];
-        } else {
-            $zone_id = '';
-        }
-
-        //        $click_action = "";
-        //        if($web_push_link){
-        //            $click_action = ',
-        //            "click_action": "'.$web_push_link.'"';
-        //        }
-
-        if (isset($data['order_id'])) {
-            $postData = [
-                'message' => [
-                    'topic' => $topic,
-                    'data' => [
-                        'title' => (string) $data['title'],
-                        'body' => (string) $data['description'],
-                        'order_id' => (string) $data['order_id'],
-                        'order_type' => (string) $order_type,
-                        'type' => (string) $type,
-                        'image' => (string) $data['image'],
-                        'module_id' => (string) $module_id,
-                        'zone_id' => (string) $zone_id,
-                        'title_loc_key' => (string) $data['order_id'],
-                        'body_loc_key' => (string) $type,
-                        'click_action' => $web_push_link ? (string) $web_push_link : '',
-                        'sound' => 'notification.wav',
-                    ],
-                    'notification' => [
-                        'title' => (string) $data['title'],
-                        'body' => (string) $data['description'],
-                        'image' => (string) $data['image'],
-                    ],
-                    'android' => [
-                        'notification' => [
-                            'channelId' => '6ammart',
-                        ],
-                    ],
-                    'apns' => [
-                        'payload' => [
-                            'aps' => [
-                                'sound' => 'notification.wav',
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-        } else {
-            $postData = [
-                'message' => [
-                    'topic' => $topic,
-                    'data' => [
-                        'title' => (string) $data['title'],
-                        'body' => (string) $data['description'],
-                        'type' => (string) $type,
-                        'image' => (string) $data['image'],
-                        'body_loc_key' => (string) $type,
-                        'click_action' => $web_push_link ? (string) $web_push_link : '',
-                        'sound' => 'notification.wav',
-                    ],
-                    'notification' => [
-                        'title' => (string) $data['title'],
-                        'body' => (string) $data['description'],
-                        'image' => (string) $data['image'],
-                    ],
-                    'android' => [
-                        'notification' => [
-                            'channelId' => '6ammart',
-                        ],
-                    ],
-                    'apns' => [
-                        'payload' => [
-                            'aps' => [
-                                'sound' => 'notification.wav',
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-        }
-
-        return self::sendNotificationToHttp($postData);
-    }
-
-    public static function rating_count($item_id, $rating)
-    {
-        return Review::where(['item_id' => $item_id, 'rating' => $rating])->count();
+        return app(CurrencyService::class)->format($value);
     }
 
     public static function dm_rating_count($deliveryman_id, $rating)
     {
-        return DMReview::where(['delivery_man_id' => $deliveryman_id, 'rating' => $rating])->count();
+        return app(DmReviewService::class)->countByRating($deliveryman_id, $rating);
     }
 
     public static function rider_rating_count($rider_id, $rating)
@@ -1828,7 +427,7 @@ class Helpers
         $store_discount_percentage = 0;
         $store_discount = null;
 
-        $running_flash_sale = self::getRunningFlashSale($product->id);
+        $running_flash_sale = self::getRunningFlashSale($product['id']);
 
         if ($running_flash_sale) {
             $discount_percentage = $running_flash_sale['discount'];
@@ -1847,7 +446,15 @@ class Helpers
                 'original_discount_type' => $running_flash_sale['discount_type'],
             ];
         }
+        return self::item_store_discount_calculate($product, $price, $store, $check_store_discount, 'product_discount');
+    }
+
+    private static function item_store_discount_calculate($item, $price, $store, $check_store_discount, string $ownDiscountType)
+    {
+        $store_discount = null;
+        $store_discount_percentage = 0;
         $store_price_discount = 0;
+
         if ($check_store_discount) {
             $store_discount = self::get_store_discount($store);
             if (isset($store_discount)) {
@@ -1855,59 +462,30 @@ class Helpers
                 $store_discount_percentage = $store_discount['discount'];
             }
         }
-        $discount_percentage = $product['discount'];
-        if ($product['discount_type'] == 'percent') {
-            $price_discount = ($price / 100) * $product['discount'];
+
+        $discount_percentage = $item['discount'];
+        if ($item['discount_type'] == 'percent') {
+            $price_discount = ($price / 100) * $item['discount'];
         } else {
-            $price_discount = $product['discount'];
+            $price_discount = $item['discount'];
         }
 
         $discount_percentage = isset($store_discount) && $price_discount == $store_price_discount ? $store_discount_percentage : $discount_percentage ?? 0;
 
         $price_discount = max($store_price_discount, $price_discount);
-        $discount_type = isset($store_discount) && $price_discount == $store_price_discount ? 'store_discount' : 'product_discount';
+        $discount_type = isset($store_discount) && $price_discount == $store_price_discount ? 'store_discount' : $ownDiscountType;
 
         return [
             'discount_type' => $discount_type,
             'discount_amount' => $price_discount,
-            'discount_percentage' => $discount_type == 'store_discount' ? $store_discount['discount'] : $product['discount'],
-            'original_discount_type' => $discount_type == 'store_discount' ? 'percent' : $product['discount_type'],
+            'discount_percentage' => $discount_type == 'store_discount' ? $store_discount['discount'] : $item['discount'],
+            'original_discount_type' => $discount_type == 'store_discount' ? 'percent' : $item['discount_type'],
         ];
     }
 
     public static function service_discount_calculate($service, $price, $store, $check_store_discount = true)
     {
-        $discount_percentage = 0;
-        $store_discount_percentage = 0;
-        $store_discount = null;
-        $store_price_discount = 0;
-
-        if ($check_store_discount) {
-            $store_discount = self::get_store_discount($store);
-            if (isset($store_discount)) {
-                $store_price_discount = ($price / 100) * $store_discount['discount'];
-                $store_discount_percentage = $store_discount['discount'];
-            }
-        }
-
-        $discount_percentage = $service['discount'];
-        if ($service['discount_type'] == 'percent') {
-            $price_discount = ($price / 100) * $service['discount'];
-        } else {
-            $price_discount = $service['discount'];
-        }
-
-        $discount_percentage = isset($store_discount) && $price_discount == $store_price_discount ? $store_discount_percentage : $discount_percentage ?? 0;
-
-        $price_discount = max($store_price_discount, $price_discount);
-        $discount_type = isset($store_discount) && $price_discount == $store_price_discount ? 'store_discount' : 'service_discount';
-
-        return [
-            'discount_type' => $discount_type,
-            'discount_amount' => $price_discount,
-            'discount_percentage' => $discount_type == 'store_discount' ? $store_discount['discount'] : $service['discount'],
-            'original_discount_type' => $discount_type == 'store_discount' ? 'percent' : $service['discount_type'],
-        ];
+        return self::item_store_discount_calculate($service, $price, $store, $check_store_discount, 'service_discount');
     }
 
     public static function get_price_range($product, $discount = false)
@@ -1952,454 +530,22 @@ class Helpers
         return $lowest_price;
     }
 
+    /**
+     * The store-wide rate in force right now, or null.
+     *
+     * Both product_discount_calculate() and service_discount_calculate() call this, which is why
+     * Happy Hour is resolved HERE rather than in either of them: one insertion point, and the two
+     * near-identical folds downstream cannot drift apart on which promotion won.
+     *
+     * The returned array gains a 'source' key -- 'happy_hour' or 'store_discount'. Additive, so
+     * callers reading only discount / min_purchase / max_discount are unaffected, but it is what
+     * lets a caller label the discount_type correctly and lets accounting find the right bearer:
+     * a happy hour is borne 100% by the vendor under its own expense type, while an ordinary
+     * store discount is split with the admin on commission stores.
+     */
     public static function get_store_discount($store)
     {
-        if ($store?->discount) {
-            if (date('Y-m-d', strtotime($store->discount->start_date)) <= now()->format('Y-m-d') && date('Y-m-d', strtotime($store->discount->end_date)) >= now()->format('Y-m-d') && date('H:i', strtotime($store->discount->start_time)) <= now()->format('H:i') && date('H:i', strtotime($store->discount->end_time)) >= now()->format('H:i')) {
-                return [
-                    'discount' => $store->discount->discount,
-                    'min_purchase' => $store->discount->min_purchase,
-                    'max_discount' => $store->discount->max_discount,
-                ];
-            }
-        }
-
-        return null;
-    }
-
-    public static function order_status_update_message($status, $module_type, $lang = 'en')
-    {
-        if ($status == 'pending') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_pending_message')->first();
-        } elseif ($status == 'confirmed') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_confirmation_msg')->first();
-        } elseif ($status == 'processing') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_processing_message')->first();
-        } elseif ($status == 'picked_up') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'out_for_delivery_message')->first();
-        } elseif ($status == 'handover') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_handover_message')->first();
-        } elseif ($status == 'delivered') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_delivered_message')->first();
-        } elseif ($status == 'delivery_boy_delivered') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'delivery_boy_delivered_message')->first();
-        } elseif ($status == 'accepted') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'delivery_boy_assign_message')->first();
-        } elseif ($status == 'canceled') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_cancled_message')->first();
-        } elseif ($status == 'refunded') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'order_refunded_message')->first();
-        } elseif ($status == 'refund_request_canceled') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'refund_request_canceled')->first();
-        } elseif ($status == 'offline_verified') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'offline_order_accept_message')->first();
-        } elseif ($status == 'offline_denied') {
-            $data = NotificationMessage::with([
-                'translations' => function ($query) use ($lang) {
-                    $query->where('locale', $lang);
-                },
-            ])->where('module_type', $module_type)->where('key', 'offline_order_deny_message')->first();
-        } else {
-            $data = ['status' => '0', 'message' => '', 'translations' => []];
-        }
-
-        if ($data) {
-            if ($data['status'] == 0) {
-                return 0;
-            }
-
-            return count($data->translations) > 0 ? $data->translations[0]->value : $data['message'];
-        } else {
-            return false;
-        }
-    }
-
-    public static function send_order_notification($order)
-    {
-        $push_notification_status = self::getNotificationStatusData('store', 'store_order_notification', 'push_notification_status', $order?->store?->id);
-
-        try {
-
-            if (
-                (in_array($order->payment_method, ['cash_on_delivery', 'offline_payment'])
-                    && $order->order_status == 'pending') ||
-                (! in_array($order->payment_method, ['cash_on_delivery', 'offline_payment'])
-                    && $order->order_status == 'confirmed')
-            ) {
-
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => translate('New order alert, confirm to proceed'),
-                    'order_id' => $order->id,
-                    'image' => '',
-                    'module_id' => $order->module_id,
-                    'order_type' => $order->order_type,
-                    'zone_id' => $order->zone_id,
-                    'type' => 'new_order',
-                ];
-
-                self::send_push_notif_to_topic($data, 'admin_message', 'order_request', url('/').'/admin/order/list/all');
-            }
-
-            $status = ($order->order_status == 'delivered' && $order->delivery_man) ? 'delivery_boy_delivered' : $order->order_status;
-
-            if ($order->is_guest) {
-                $customer_details = json_decode($order['delivery_address'], true);
-                $value = self::order_status_update_message($status, $order->module->module_type, 'en');
-                $value = self::text_variable_data_format(value: $value, store_name: $order->store?->name, order_id: $order->id, user_name: "{$customer_details['contact_person_name']}", delivery_man_name: "{$order->delivery_man?->f_name} {$order->delivery_man?->l_name}");
-                $user_fcm = $order->guest->fcm_token;
-
-            } else {
-
-                $value = self::order_status_update_message($status, $order->module->module_type, $order->customer ?
-                    $order->customer->current_language_key : 'en');
-                $value = self::text_variable_data_format(value: $value, store_name: $order->store?->name, order_id: $order->id, user_name: "{$order->customer?->f_name} {$order->customer?->l_name}", delivery_man_name: "{$order->delivery_man?->f_name} {$order->delivery_man?->l_name}");
-                $user_fcm = $order?->customer?->cm_firebase_token;
-            }
-
-            if (self::getNotificationStatusData('customer', 'customer_order_notification', 'push_notification_status') && $value && $user_fcm) {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => $value,
-                    'order_id' => $order->id,
-                    'image' => '',
-                    'type' => 'order_status',
-                ];
-                self::send_push_notif_to_device($user_fcm, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'user_id' => $order->user_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            if ($status == 'picked_up') {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => $order->id.' '.translate('order_is_picked_up'),
-                    'order_id' => $order->id,
-                    'image' => '',
-                    'type' => 'order_status',
-                ];
-                if ($order->store && $order->store->vendor && $push_notification_status) {
-                    self::send_push_notif_to_device($order->store->vendor->firebase_token, $data);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $order->store->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    self::sendStoreEmployeeNotification($order, $data);
-                }
-            }
-
-            if ($order->order_type == 'delivery' && ! $order->scheduled && $status == 'pending' && $order->payment_method == 'cash_on_delivery' && config('order_confirmation_model') == 'deliveryman') {
-                if ($order->store->sub_self_delivery && $push_notification_status) {
-                    $data = [
-                        'title' => translate('Order_Notification'),
-                        'description' => translate('New order alert, confirm to proceed'),
-                        'order_id' => $order->id,
-                        'module_id' => $order->module_id,
-                        'order_type' => $order->order_type,
-                        'image' => '',
-                        'type' => 'new_order',
-                    ];
-                    if ($order->store && $order->store->vendor && $push_notification_status) {
-                        self::send_push_notif_to_device($order->store->vendor->firebase_token, $data);
-                        $web_push_link = url('/').'/vendor-panel/order/list/all';
-                        self::send_push_notif_to_topic($data, "store_panel_{$order->store_id}_message", 'new_order', $web_push_link);
-                        DB::table('user_notifications')->insert([
-                            'data' => json_encode($data),
-                            'vendor_id' => $order->store->vendor_id,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        self::sendStoreEmployeeNotification($order, $data);
-                    }
-                } else {
-                    $data = [
-                        'title' => translate('Order_Notification'),
-                        'description' => translate('New order alert, confirm to proceed'),
-                        'order_id' => $order->id,
-                        'module_id' => $order->module_id,
-                        'order_type' => $order->order_type,
-                        'image' => '',
-                    ];
-                    if ($order->zone && self::getNotificationStatusData('deliveryman', 'deliveryman_order_notification', 'push_notification_status')) {
-                        if ($order->dm_vehicle_id) {
-
-                            $topic = 'delivery_man_'.$order->zone_id.'_'.$order->dm_vehicle_id;
-                            self::send_push_notif_to_topic($data, $topic, 'order_request');
-                        }
-                        self::send_push_notif_to_topic($data, $order->zone->deliveryman_wise_topic, 'order_request');
-
-                    }
-                }
-                // self::send_push_notif_to_topic($data, 'admin_message', 'order_request', url('/').'/admin/order/list/all');
-            }
-
-            if ($order->order_type == 'parcel' && in_array($order->order_status, ['pending', 'confirmed'])) {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => translate('New order alert, confirm to proceed'),
-                    'order_id' => $order->id,
-                    'module_id' => $order->module_id,
-                    'order_type' => 'parcel_order',
-                    'image' => '',
-                ];
-                if ($order->zone && self::getNotificationStatusData('deliveryman', 'deliveryman_order_notification', 'push_notification_status')) {
-                    if ($order->dm_vehicle_id) {
-
-                        $topic = 'delivery_man_'.$order->zone_id.'_'.$order->dm_vehicle_id;
-                        self::send_push_notif_to_topic($data, $topic, 'order_request');
-                    }
-                    self::send_push_notif_to_topic($data, $order->zone->deliveryman_wise_topic, 'order_request');
-
-                }
-                // self::send_push_notif_to_topic($data, 'admin_message', 'order_request');
-            }
-
-            if ($order->order_type == 'delivery' && ! $order->scheduled && $order->order_status == 'pending' && $order->payment_method == 'cash_on_delivery' && config('order_confirmation_model') == 'store') {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => translate('New order alert, confirm to proceed'),
-                    'order_id' => $order->id,
-                    'module_id' => $order->module_id,
-                    'order_type' => $order->order_type,
-                    'image' => '',
-                    'type' => 'new_order',
-                ];
-                if ($order->store && $order->store->vendor && $push_notification_status) {
-                    self::send_push_notif_to_device($order->store->vendor->firebase_token, $data);
-                    $web_push_link = url('/').'/vendor-panel/order/list/all';
-                    self::send_push_notif_to_topic($data, "store_panel_{$order->store_id}_message", 'new_order', $web_push_link);
-                    // self::send_push_notif_to_topic($data, 'admin_message', 'order_request');
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $order->store->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    self::sendStoreEmployeeNotification($order, $data);
-                }
-            }
-
-            if (! $order->scheduled && (($order->order_type == 'take_away' && $order->order_status == 'pending') || ($order->payment_method != 'cash_on_delivery' && $order->order_status == 'confirmed'))) {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => translate('New order alert, confirm to proceed'),
-                    'order_id' => $order->id,
-                    'image' => '',
-                    'type' => 'new_order',
-                ];
-                if ($order->store && $order->store->vendor && $push_notification_status) {
-                    self::send_push_notif_to_device($order->store->vendor->firebase_token, $data);
-                    $web_push_link = url('/').'/vendor-panel/order/list/all';
-                    self::send_push_notif_to_topic($data, "store_panel_{$order->store_id}_message", 'new_order', $web_push_link);
-                    DB::table('user_notifications')->insert([
-                        'data' => json_encode($data),
-                        'vendor_id' => $order->store->vendor_id,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    self::sendStoreEmployeeNotification($order, $data);
-                }
-            }
-
-            if ($order->order_status == 'confirmed' && $order->order_type != 'take_away' && config('order_confirmation_model') == 'deliveryman' && $order->payment_method == 'cash_on_delivery') {
-                if ($order->store->sub_self_delivery && $push_notification_status) {
-                    $data = [
-                        'title' => translate('Order_Notification'),
-                        'description' => translate('New order alert, confirm to proceed'),
-                        'order_id' => $order->id,
-                        'module_id' => $order->module_id,
-                        'order_type' => $order->order_type,
-                        'image' => '',
-                    ];
-
-                    self::send_push_notif_to_topic($data, 'restaurant_dm_'.$order->store_id, 'new_order', null);
-                } else {
-                    $data = [
-                        'title' => translate('Order_Notification'),
-                        'description' => translate('New order alert, confirm to proceed'),
-                        'order_id' => $order->id,
-                        'module_id' => $order->module_id,
-                        'order_type' => $order->order_type,
-                        'image' => '',
-                        'type' => 'new_order',
-                    ];
-                    if ($order->store && $order->store->vendor && $push_notification_status) {
-                        self::send_push_notif_to_device($order->store->vendor->firebase_token, $data);
-                        $web_push_link = url('/').'/vendor-panel/order/list/all';
-                        self::send_push_notif_to_topic($data, "store_panel_{$order->store_id}_message", 'new_order', $web_push_link);
-                        DB::table('user_notifications')->insert([
-                            'data' => json_encode($data),
-                            'vendor_id' => $order->store->vendor_id,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-
-                        self::sendStoreEmployeeNotification($order, $data);
-                    }
-                }
-            }
-
-            if ($order->order_type == 'delivery' && ! $order->scheduled && $order->order_status == 'confirmed' && ($order->payment_method != 'cash_on_delivery' || config('order_confirmation_model') == 'store')) {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => translate('New order alert, confirm to proceed'),
-                    'order_id' => $order->id,
-                    'module_id' => $order->module_id,
-                    'order_type' => $order->order_type,
-                    'image' => '',
-                ];
-                if ($order->store->sub_self_delivery && $push_notification_status) {
-                    self::send_push_notif_to_topic($data, 'restaurant_dm_'.$order->store_id, 'order_request', null);
-                } else {
-                    if ($order->zone && self::getNotificationStatusData('deliveryman', 'deliveryman_order_notification', 'push_notification_status')) {
-                        if ($order->dm_vehicle_id) {
-
-                            $topic = 'delivery_man_'.$order->zone_id.'_'.$order->dm_vehicle_id;
-                            self::send_push_notif_to_topic($data, $topic, 'order_request');
-                        }
-                        self::send_push_notif_to_topic($data, $order->zone->deliveryman_wise_topic, 'order_request');
-                    }
-                }
-            }
-
-            if (in_array($order->order_status, ['processing', 'handover']) && $order->delivery_man && $order->delivery_man->status == 1 && self::getNotificationStatusData('deliveryman', 'deliveryman_order_notification', 'push_notification_status')) {
-                $data = [
-                    'title' => translate('Order_Notification'),
-                    'description' => $order->order_status == 'processing' ? translate('order_is_processing') : translate('messages.ready_for_delivery'),
-                    'order_id' => $order->id,
-                    'image' => '',
-                    'type' => 'order_status',
-                ];
-                self::send_push_notif_to_device($order->delivery_man->fcm_token, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'delivery_man_id' => $order->delivery_man->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            try {
-                if ($order->order_status == 'confirmed' && $order->payment_method != 'cash_on_delivery' && config('mail.status') && Helpers::get_mail_status('place_order_mail_status_user') == '1' && $order->is_guest == 0 && Helpers::getNotificationStatusData('customer', 'customer_order_notification', 'mail_status')) {
-                    Mail::to($order->customer?->getRawOriginal('email'))->send(new PlaceOrder($order->id));
-                }
-                $order_verification_mail_status = Helpers::get_mail_status('order_verification_mail_status_user');
-                if ($order->order_status == 'pending' && config('order_delivery_verification') == 1 && config('mail.status') && $order_verification_mail_status == '1' && $order->is_guest == 0 && Helpers::getNotificationStatusData('customer', 'customer_delivery_verification', 'mail_status')) {
-                    Mail::to($order->customer?->getRawOriginal('email'))->send(new OrderVerificationMail($order->otp, $order->customer->f_name));
-                }
-            } catch (\Exception $ex) {
-                info($ex->getMessage());
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            info($e->getMessage());
-        }
-
-        return false;
-    }
-
-    public static function day_part()
-    {
-        $part = '';
-        $morning_start = date('h:i:s', strtotime('5:00:00'));
-        $afternoon_start = date('h:i:s', strtotime('12:01:00'));
-        $evening_start = date('h:i:s', strtotime('17:01:00'));
-        $evening_end = date('h:i:s', strtotime('21:00:00'));
-
-        if (time() >= $morning_start && time() < $afternoon_start) {
-            $part = 'morning';
-        } elseif (time() >= $afternoon_start && time() < $evening_start) {
-            $part = 'afternoon';
-        } elseif (time() >= $evening_start && time() <= $evening_end) {
-            $part = 'evening';
-        } else {
-            $part = 'night';
-        }
-
-        return $part;
-    }
-
-    public static function env_update($key, $value)
-    {
-        $path = base_path('.env');
-        if (file_exists($path)) {
-            file_put_contents($path, str_replace(
-                $key.'='.env($key),
-                $key.'='.$value,
-                file_get_contents($path)
-            ));
-        }
-    }
-
-    public static function env_key_replace($key_from, $key_to, $value)
-    {
-        $path = base_path('.env');
-        if (file_exists($path)) {
-            file_put_contents($path, str_replace(
-                $key_from.'='.env($key_from),
-                $key_to.'='.$value,
-                file_get_contents($path)
-            ));
-        }
+        return app(StoreDiscountResolver::class)->resolve($store);
     }
 
     public static function remove_dir($dir)
@@ -2422,19 +568,22 @@ class Helpers
 
     public static function get_store_id()
     {
-        if (auth('vendor_employee')->check()) {
-            return auth('vendor_employee')->user()->store->id;
-        }
-
-        return auth('vendor')->user()->stores[0]->id;
+        return self::get_store_data()?->id;
     }
 
     public static function get_vendor_id()
     {
+        return self::vendor_panel_actor(fn ($vendor) => $vendor->id, fn ($employee) => $employee->vendor_id);
+    }
+
+    private static function vendor_panel_actor(callable $fromVendor, callable $fromEmployee)
+    {
         if (auth('vendor')->check()) {
-            return auth('vendor')->id();
-        } elseif (auth('vendor_employee')->check()) {
-            return auth('vendor_employee')->user()->vendor_id;
+            return $fromVendor(auth('vendor')->user());
+        }
+
+        if (auth('vendor_employee')->check()) {
+            return $fromEmployee(auth('vendor_employee')->user());
         }
 
         return 0;
@@ -2442,33 +591,38 @@ class Helpers
 
     public static function get_vendor_data()
     {
-        if (auth('vendor')->check()) {
-            return auth('vendor')->user();
-        } elseif (auth('vendor_employee')->check()) {
-            return auth('vendor_employee')->user()->vendor;
-        }
-
-        return 0;
+        return self::vendor_panel_actor(fn ($vendor) => $vendor, fn ($employee) => $employee->vendor);
     }
 
     public static function get_loggedin_user()
     {
-        if (auth('vendor')->check()) {
-            return auth('vendor')->user();
-        } elseif (auth('vendor_employee')->check()) {
-            return auth('vendor_employee')->user();
-        }
-
-        return 0;
+        return self::vendor_panel_actor(fn ($vendor) => $vendor, fn ($employee) => $employee);
     }
 
     public static function get_store_data()
     {
         if (auth('vendor_employee')->check()) {
-            return auth('vendor_employee')->user()?->store;
+            return auth('vendor_employee')->user()?->loadMissing('store.module')?->store;
         }
 
-        return auth('vendor')->user()?->stores[0];
+        $store = auth('vendor')->user()?->loadMissing(self::VENDOR_PANEL_STORE_RELATIONS)?->stores[0];
+
+        self::shareSubscriptionPackage($store);
+
+        return $store;
+    }
+
+    private static function shareSubscriptionPackage(?Store $store): void
+    {
+        $application = $store?->store_sub_update_application;
+
+        if (! $application || $application->relationLoaded('package')) {
+            return;
+        }
+
+        if ($store->store_sub?->getKey() === $application->getKey()) {
+            $application->setRelation('package', $store->store_sub->package);
+        }
     }
 
     public static function storeCategoryStatus(): bool
@@ -2476,126 +630,40 @@ class Helpers
         return (bool) (self::get_business_settings('store_category_status') ?? 0);
     }
 
-    /**
-     * Module-wise catalog noun for shared labels: "Service" for the service
-     * module, "Item" for every other module. Resolves the module type from the
-     * current request config, falling back to the logged-in vendor's store, so
-     * non-service modules render exactly as before.
-     */
     public static function moduleItemLabel(?string $moduleType = null): string
     {
-        $moduleType = $moduleType
-            ?? config('module.current_module_type')
-            ?? self::get_store_data()?->module?->module_type;
-
-        return $moduleType === 'service' ? translate('Service') : translate('Item');
+        return self::resolved_module_type($moduleType) === 'service' ? translate('Service') : translate('item');
     }
 
-    /**
-     * Module-aware label for the "Store" entity. In the service module a store is
-     * conceptually a "Provider", so admin screens read "Provider" instead of
-     * "Store". Resolves the module type from the current request config, falling
-     * back to the logged-in vendor's store, so non-service modules are unchanged.
-     */
+    private static function resolved_module_type(?string $moduleType = null): ?string
+    {
+        return $moduleType
+            ?? config('module.current_module_type')
+            ?? self::get_store_data()?->module?->module_type;
+    }
+
     public static function moduleStoreLabel(?string $moduleType = null): string
     {
-        $moduleType = $moduleType
-            ?? config('module.current_module_type')
-            ?? self::get_store_data()?->module?->module_type;
-
-        return $moduleType === 'service' ? translate('messages.Provider') : translate('messages.Store');
+        return self::resolved_module_type($moduleType) === 'service' ? translate('messages.Provider') : translate('messages.Store');
     }
 
-    /**
-     * Returns true when the store has at least one StoreCategory row AND the
-     * feature is enabled globally. When `$storeId` is null the id is resolved
-     * from the auth context (vendor or vendor_employee). Returns false safely
-     * in any context where a store id cannot be resolved (e.g. admin or
-     * unauthenticated requests).
-     *
-     * Per-request memoization keeps repeated calls cheap (one SQL exists()).
-     */
     public static function hasAnyStoreCategory(?int $storeId = null): bool
     {
-        if (! self::storeCategoryStatus()) {
-            return false;
-        }
-
-        if ($storeId === null) {
-            if (auth('vendor_employee')->check()) {
-                $storeId = auth('vendor_employee')->user()->store->id ?? null;
-            } elseif (auth('vendor')->check()
-                && auth('vendor')->user()
-                && auth('vendor')->user()->stores
-                && auth('vendor')->user()->stores->isNotEmpty()
-            ) {
-                $storeId = (int) auth('vendor')->user()->stores[0]->id;
-            }
-        }
-
-        if (! $storeId) {
-            return false;
-        }
-
-        static $cache = [];
-        if (! isset($cache[$storeId])) {
-            $cache[$storeId] = StoreCategory::where('store_id', $storeId)->exists();
-        }
-
-        return $cache[$storeId];
+        return self::storeCategoryStatus()
+            && app(StoreCategoryService::class)->existsForResolvedStore($storeId);
     }
 
-    /**
-     * Service-module provider "can manage categories" gate, backed by the
-     * `service_provider_category_status` row of the service_business_settings
-     * DataSetting. This is the service twin of storeCategoryStatus().
-     */
     public static function serviceProviderCategoryStatus(): bool
     {
-        return (int) DataSetting::where('type', SERVICE_BUSINESS_SETTINGS)
-            ->where('key', 'service_provider_category_status')->value('value') === 1;
+        return app(DataSettingService::class)->serviceProviderCategoryStatus();
     }
 
-    /**
-     * Service twin of hasAnyStoreCategory(): true when the provider owns at least
-     * one category AND service_provider_category_status is on. Resolves the store
-     * id from the vendor auth context when not given.
-     */
     public static function serviceProviderHasAnyCategory(?int $storeId = null): bool
     {
-        if (! self::serviceProviderCategoryStatus()) {
-            return false;
-        }
-
-        if ($storeId === null) {
-            if (auth('vendor_employee')->check()) {
-                $storeId = auth('vendor_employee')->user()->store->id ?? null;
-            } elseif (auth('vendor')->check()
-                && auth('vendor')->user()
-                && auth('vendor')->user()->stores
-                && auth('vendor')->user()->stores->isNotEmpty()
-            ) {
-                $storeId = (int) auth('vendor')->user()->stores[0]->id;
-            }
-        }
-
-        if (! $storeId) {
-            return false;
-        }
-
-        static $cache = [];
-        if (! isset($cache[$storeId])) {
-            $cache[$storeId] = StoreCategory::where('store_id', $storeId)->exists();
-        }
-
-        return $cache[$storeId];
+        return self::serviceProviderCategoryStatus()
+            && app(StoreCategoryService::class)->existsForResolvedStore($storeId);
     }
 
-    /**
-     * Vendor-facing category gate, module-aware: service-module providers use
-     * service_provider_category_status; every other module keeps the global
-     * store_category_status. Used by the shared vendor StoreCategory controllers.
-     */
     public static function vendorCategoryStatus(): bool
     {
         return (self::get_store_data()?->module?->module_type === 'service')
@@ -2605,91 +673,99 @@ class Helpers
 
     public static function getDisk()
     {
-        $config = self::get_business_settings('local_storage');
-
-        return isset($config) ? ($config == 0 ? 's3' : 'public') : 'public';
+        return FileStorage::getDisk();
     }
 
     public static function upload(string $dir, string $format, $image = null, ?int $maxSizeMb = null, ?string $allowedExtensions = null)
     {
-        $validExtForWebp = ['jpg', 'jpeg', 'png'];
-        try {
-            if ($image != null) {
-                self::validateFile($image, $maxSizeMb, $allowedExtensions);
-
-                $format = $image->getClientOriginalExtension();
-                if (in_array($format, $validExtForWebp)) {
-                    $manager = new ImageManager(Driver::class);
-                    $image = $manager->read($image);
-                    $image = $image->encode(new WebpEncoder(quality: 80));
-                    $format = 'webp';
-                }
-                $imageName = \Carbon\Carbon::now()->toDateString().'-'.uniqid().'.'.$format;
-
-                if (! Storage::disk(self::getDisk())->exists($dir)) {
-                    Storage::disk(self::getDisk())->makeDirectory($dir);
-                }
-
-                if ($image instanceof UploadedFile) {
-                    Storage::disk(self::getDisk())->putFileAs($dir, $image, $imageName);
-                } else {
-                    Storage::disk(self::getDisk())->put($dir.'/'.$imageName, $image->toString());
-                }
-
-            } else {
-                $imageName = 'def.png';
-            }
-        } catch (InvalidUploadException $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw new InvalidUploadException(
-                'Image upload failed. Please try again.'
-            );
-        }
-
-        return $imageName;
+        return FileStorage::upload($dir, $image, $maxSizeMb, $allowedExtensions);
     }
 
     public static function update(string $dir, $old_image, string $format, $image = null, ?int $maxSizeMb = null, ?string $allowedExtensions = null)
     {
-        if ($image == null) {
-            return $old_image;
-        }
-        try {
-            if ($old_image && Storage::disk(self::getDisk())->exists($dir.$old_image)) {
-                Storage::disk(self::getDisk())->delete($dir.$old_image);
-            }
-        } catch (\Exception $e) {
-        }
-        $imageName = Helpers::upload($dir, $format, $image, $maxSizeMb, $allowedExtensions);
-
-        return $imageName;
+        return FileStorage::update($dir, $old_image, $image, $maxSizeMb, $allowedExtensions);
     }
 
     public static function check_and_delete(string $dir, $old_image)
     {
-
-        try {
-            if (Storage::disk('public')->exists($dir.$old_image)) {
-                Storage::disk('public')->delete($dir.$old_image);
-            }
-            if (Storage::disk('s3')->exists($dir.$old_image)) {
-                Storage::disk('s3')->delete($dir.$old_image);
-            }
-        } catch (\Exception $e) {
-        }
-
-        return true;
+        return FileStorage::delete($dir, $old_image);
     }
 
-    public static function format_coordiantes($coordinates)
+    public static function addons_by_ids($ids)
     {
-        $data = [];
-        foreach ($coordinates as $coord) {
-            $data[] = (object) ['lat' => $coord[1], 'lng' => $coord[0]];
-        }
+        return app(AddonService::class)->getMemoizedActiveByIds($ids);
+    }
 
-        return $data;
+    public static function tags_by_ids($ids)
+    {
+        return app(TagService::class)->getMemoizedByIds($ids);
+    }
+
+    public static function store_addons($storeId = null)
+    {
+        return app(AddonService::class)->getCachedForStore($storeId);
+    }
+
+    public static function cached_list(string $model, array $conditions = [], ?string $orderBy = null, array $columns = ['*'])
+    {
+        // Models with a storage relation append *_full_url attributes that read it, so the
+        // cached rows have to arrive with storage already loaded — every caller renders them
+        // in a view, and lazy loading throws outside production. The flag is part of the key
+        // so entries cached before this eager load are not handed back without the relation.
+        $withStorage = in_array(HasStorageTrait::class, class_uses_recursive($model), true)
+            && (in_array('*', $columns, true) || in_array('id', $columns, true));
+
+        $context = [$model, $conditions, $orderBy, $columns, $withStorage, app()->getLocale()];
+
+        return ApiCache::remember('reference_list', $context, function () use ($model, $conditions, $orderBy, $columns, $withStorage) {
+            $query = $model::query();
+            if ($withStorage) {
+                $query->withStorage();
+            }
+            foreach ($conditions as $column => $value) {
+                $query->where($column, $value);
+            }
+            if ($orderBy) {
+                $query->orderBy($orderBy);
+            }
+
+            return $query->get($columns);
+        });
+    }
+
+    public static function modules_list()
+    {
+        return app(ModuleService::class)->getCachedList();
+    }
+
+    public static function landing_meta_data()
+    {
+        return app(DataSettingService::class)->getLandingMetaData();
+    }
+
+    public static function faqs_by_user_type(string $userType, int $limit = 5)
+    {
+        return app(FaqService::class)->getCachedByUserType($userType, $limit);
+    }
+
+    public static function landing_policy_statuses()
+    {
+        return app(DataSettingService::class)->getLandingPolicyStatuses();
+    }
+
+    public static function social_media_active()
+    {
+        return app(SocialMediaService::class)->getActiveCached();
+    }
+
+    public static function customers_by_ids($ids)
+    {
+        return app(UserService::class)->getBasicByIds($ids);
+    }
+
+    public static function zones_dropdown($activeOnly = false)
+    {
+        return app(ZoneService::class)->getDropdown($activeOnly);
     }
 
     public static function module_permission_check($mod_name)
@@ -2722,8 +798,86 @@ class Helpers
             'finance' => ['collect_cash', 'disbursement', 'provide_dm_earning', 'withdraw_list', 'withdraw_method', 'report', 'admin_text_module', 'vendor_vat_report'],
             'reports' => ['report', 'sales_report', 'performance_report', 'expense_report', 'disbursement_report', 'earning_report'],
             'dispatch' => ['dispatch'],
-            'settings' => ['module', 'settings', 'subscription', 'pro_customer_subscription', 'customer_management', 'system_tax', 'social_media', 'landing_pages', 'business_pages', 'seo', 'gallery', 'login_setup', 'email_setups', 'notification_setup', 'service_settings', 'third_party-ms', 'clean_database', 'system_config', 'ride_settings', 'service_management'],
+            'settings' => ['module', 'settings', 'subscription', 'pro_customer_subscription', 'customer_management', 'system_tax', 'social_media', 'landing_pages', 'business_pages', 'seo', 'gallery', 'login_setup', 'email_setups', 'notification_setup', 'service_settings', 'third_party-ms', 'clean_database', 'database_backup', 'system_config', 'ride_settings', 'service_management'],
         ];
+    }
+
+    /**
+     * Which top-level workspace a request path belongs to.
+     *
+     * The header tab strip, the sidebar shell and the breadcrumb all have to
+     * agree on this, so the rules live here rather than being restated in each
+     * view. Returns one of: module, users, finance, reports, dispatch, settings.
+     */
+    public static function admin_workspace_for_path($path = null)
+    {
+        $path = $path ?? request()->path();
+
+        $is = fn ($pattern) => \Illuminate\Support\Str::is($pattern, $path);
+
+        // `delivery-management` is a Settings workspace path that does not start with
+        // `business-settings`. Its screens moved out from under /zone/ on 2026-09-09 to get a URL
+        // matching the section they were already shown in; without this line they fall through to
+        // 'module' below, which puts them on the wrong sidebar, the wrong top-nav tab and a
+        // "Grocery > Module overview" breadcrumb.
+        if ($is('admin/business-settings*') || $is('admin/delivery-management*')
+            || $is('admin/payment/configuration*')
+            || $is('admin/sms/configuration*') || $is('taxvat/*') || $is('admin/pro-customer*')) {
+            return 'settings';
+        }
+
+        if ($is('admin/users*')) {
+            return 'users';
+        }
+
+        if ($is('admin/dispatch*')) {
+            return 'dispatch';
+        }
+
+        if (! $is('admin/transactions*')) {
+            return 'module';
+        }
+
+        // Tax lives with Finance even though it is filed under the report
+        // routes, and a module-scoped order/trip detail reached from a
+        // transaction stays in the module workspace.
+        $is_tax = $is('admin/transactions/report/*tax*')
+            || $is('admin/transactions/rental/report/*tax*')
+            || $is('admin/transactions/service/report/*tax*')
+            || $is('admin/transactions/ride-share/report/*tax*');
+
+        if (! $is_tax && ($is('admin/transactions/report/*') || $is('admin/transactions/rental/report/*')
+            || $is('admin/transactions/service/report/*') || $is('admin/transactions/ride-share/*'))) {
+            return 'reports';
+        }
+
+        if ($is('admin/transactions/parcel/order/details/*') || $is('admin/transactions/rental/trip/details/*')
+            || $is('admin/transactions/rental/trip/generate-invoice/*')) {
+            return 'module';
+        }
+
+        return 'finance';
+    }
+
+    /**
+     * Landing URL for a workspace, honouring the admin's own permissions.
+     */
+    public static function workspace_landing_url($workspace)
+    {
+        switch ($workspace) {
+            case 'users':
+                return self::users_workspace_landing_url();
+            case 'finance':
+                return self::finance_workspace_landing_url();
+            case 'reports':
+                return self::reports_workspace_landing_url();
+            case 'dispatch':
+                return route('admin.dispatch.dashboard');
+            case 'settings':
+                return self::settings_workspace_landing_url();
+            default:
+                return route('admin.dashboard').'?module_id='.Config::get('module.current_module_id');
+        }
     }
 
     public static function admin_can_access_workspace($workspace)
@@ -2748,11 +902,11 @@ class Helpers
     public static function reports_workspace_landing_url()
     {
         $map = [
-            'report'             => 'admin.transactions.report.day-wise-report',
-            'earning_report'     => 'admin.transactions.report.admin-earning-report',
-            'disbursement_report'=> 'admin.transactions.report.disbursement_report',
-            'expense_report'     => 'admin.transactions.report.expense-report',
-            'sales_report'       => 'admin.transactions.report.order-report',
+            'report' => 'admin.transactions.report.day-wise-report',
+            'earning_report' => 'admin.transactions.report.admin-earning-report',
+            'disbursement_report' => 'admin.transactions.report.disbursement_report',
+            'expense_report' => 'admin.transactions.report.expense-report',
+            'sales_report' => 'admin.transactions.report.order-report',
             'performance_report' => 'admin.transactions.report.store-summary-report',
         ];
 
@@ -2768,13 +922,13 @@ class Helpers
     public static function finance_workspace_landing_url()
     {
         $map = [
-            'withdraw_list'      => 'admin.transactions.store.withdraw_list',
-            'disbursement'       => 'admin.transactions.store-disbursement.list',
-            'collect_cash'       => 'admin.transactions.account-transaction.index',
+            'withdraw_list' => 'admin.transactions.store.withdraw_list',
+            'disbursement' => 'admin.transactions.store-disbursement.list',
+            'collect_cash' => 'admin.transactions.account-transaction.index',
             'provide_dm_earning' => 'admin.transactions.provide-deliveryman-earnings.index',
-            'withdraw_method'    => 'admin.transactions.withdraw-method.list',
-            'admin_text_module'  => 'admin.transactions.report.getTaxReport',
-            'vendor_vat_report'  => 'admin.transactions.report.vendorWiseTaxes',
+            'withdraw_method' => 'admin.transactions.withdraw-method.list',
+            'admin_text_module' => 'admin.transactions.report.getTaxReport',
+            'vendor_vat_report' => 'admin.transactions.report.vendorWiseTaxes',
         ];
 
         foreach ($map as $key => $route) {
@@ -2786,16 +940,21 @@ class Helpers
         return route('admin.transactions.store.withdraw_list');
     }
 
+    public static function ride_share_module_id(): ?int
+    {
+        return app(ModuleService::class)->findRideShareModuleId();
+    }
+
     public static function users_workspace_landing_url()
     {
         $map = [
-            'user_overview'       => 'admin.users.dashboard',
+            'user_overview' => 'admin.users.dashboard',
             'customer_management' => 'admin.users.customer.list',
-            'customer_wallet'     => 'admin.users.customer.wallet.add-fund',
+            'customer_wallet' => 'admin.users.customer.wallet.add-fund',
             'customer_loyalty_point' => 'admin.users.customer.loyalty-point.report',
-            'cashback'            => 'admin.users.cashback.add-new',
-            'deliveryman'         => 'admin.users.delivery-man.list',
-            'employee'            => 'admin.users.employee.list',
+            'cashback' => 'admin.users.cashback.add-new',
+            'deliveryman' => 'admin.users.delivery-man.list',
+            'employee' => 'admin.users.employee.list',
         ];
 
         foreach ($map as $key => $route) {
@@ -2839,7 +998,7 @@ class Helpers
             ['order', 'admin.order.list', ['all']],
             ['item', 'admin.item.list', []],
             ['store', 'admin.store.list', []],
-            ['employee_role', 'admin.users.custom-role.create', []],
+            ['employee_role', 'admin.users.custom-role.list', []],
             ['employee', 'admin.users.employee.list', []],
             ['customer_management', 'admin.users.customer.list', []],
             ['cashback', 'admin.users.cashback.add-new', []],
@@ -2865,6 +1024,12 @@ class Helpers
     public static function employee_module_permission_check($mod_name)
     {
         if (auth('vendor')->check()) {
+            // The menu asks this once per entry, so the store is loaded once here rather than
+            // lazily on whichever entry happens to be checked first. module comes with it for
+            // the addon branch below. One query for the signed-in vendor, reused by the rest of
+            // the request -- and lazy loading throws outside production.
+            auth('vendor')->user()->loadMissing('stores.module');
+
             if ($mod_name == 'reviews') {
                 return auth('vendor')->user()->stores[0]->reviews_section;
             } elseif ($mod_name == 'deliveryman' || $mod_name == 'deliveryman_list') {
@@ -2917,7 +1082,7 @@ class Helpers
             ['advertisement', 'vendor.advertisement.index', []],
             ['wallet', 'vendor.wallet.index', []],
             ['employee', 'vendor.employee.list', []],
-            ['role', 'vendor.custom-role.create', []],
+            ['role', 'vendor.custom-role.index', []],
             ['reviews', 'vendor.reviews', []],
             ['my_shop', 'vendor.shop.view', []],
             ['store_setup', 'vendor.store-category.list', []],
@@ -3025,10 +1190,28 @@ class Helpers
         return $envValue;
     }
 
+    public static function setEnvironmentValueIfMissing($envKey, $envValue)
+    {
+        $envFile = app()->environmentFilePath();
+
+        if (! file_exists($envFile) || ! is_writable($envFile)) {
+            return null;
+        }
+
+        $contents = file_get_contents($envFile);
+
+        if (preg_match('/^\s*'.preg_quote($envKey, '/').'\s*=/m', $contents) === 1) {
+            return null;
+        }
+
+        file_put_contents($envFile, rtrim($contents, "\r\n")."\n".$envKey.'='.$envValue."\n", LOCK_EX);
+
+        return $envValue;
+    }
+
     public static function system_permission_check(): array
     {
         $permission['curl_enabled'] = function_exists('curl_version');
-        // extensions
         $permission['curl'] = function_exists('curl_version');
         $permission['bcmath'] = extension_loaded('bcmath');
         $permission['ctype'] = extension_loaded('ctype');
@@ -3046,45 +1229,58 @@ class Helpers
         $permission['db_file_write_perm'] = is_writable(base_path('.env'));
         $permission['config_file_write_perm'] = is_writable(base_path('config/system-addons.php'));
         $permission['routes_file_write_perm'] = is_writable(base_path('app/Providers/RouteServiceProvider.php'));
+        // Not a permission, but the same class of blocker. Install and update both leave
+        // wizard mode by copying this file over RouteServiceProvider.php; without it the
+        // copy has no source and every URL keeps redirecting to the wizard. It is the one
+        // non-.php file under app/, so FTP filters and rsync --include=*.php rules drop it.
+        // Checked here so the wizard's submit button disables instead of dead-ending.
+        $permission['routes_backup_file_exists'] = is_readable(base_path('app/Providers/RouteServiceProvider.txt'));
 
         return $permission;
+    }
+
+    /**
+     * Is this file one of the wizard stubs from installation/activate_*_routes.txt?
+     *
+     * The stubs group routes/install.php or routes/update.php and nothing else; the real
+     * provider groups routes/web.php and never mentions either. Used to keep a stub from
+     * being snapshotted into - or restored from - RouteServiceProvider.txt, which leaves
+     * the wizard restoring itself over itself and the site stuck in wizard mode.
+     */
+    public static function is_wizard_route_provider(string $path): bool
+    {
+        if (!is_readable($path)) {
+            return false;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            return false;
+        }
+
+        return (str_contains($contents, 'routes/install.php') || str_contains($contents, 'routes/update.php'))
+            && !str_contains($contents, 'routes/web.php');
     }
 
     public static function system_file_checks(): array
     {
         return [
-            'db_file_write_perm' => ['label' => '.env File Permission', 'path' => base_path('.env')],
-            'config_file_write_perm' => ['label' => 'config/system-addons.php File Permission', 'path' => base_path('config/system-addons.php')],
-            'routes_file_write_perm' => ['label' => 'RouteServiceProvider.php File Permission', 'path' => base_path('app/Providers/RouteServiceProvider.php')],
+            'db_file_write_perm' => ['label' => '.env File Permission', 'path' => base_path('.env'), 'requirement' => 'Write permission is required for:'],
+            'config_file_write_perm' => ['label' => 'config/system-addons.php File Permission', 'path' => base_path('config/system-addons.php'), 'requirement' => 'Write permission is required for:'],
+            'routes_file_write_perm' => ['label' => 'RouteServiceProvider.php File Permission', 'path' => base_path('app/Providers/RouteServiceProvider.php'), 'requirement' => 'Write permission is required for:'],
+            'routes_backup_file_exists' => ['label' => 'RouteServiceProvider.txt File', 'path' => base_path('app/Providers/RouteServiceProvider.txt'), 'requirement' => 'This file restores normal routing when the wizard finishes. Re-upload it from the package to:'],
         ];
     }
 
     public static function insert_business_settings_key($key, $value = null)
     {
-        $data = BusinessSetting::where('key', $key)->first();
-        if (! $data) {
-            Helpers::businessUpdateOrInsert(['key' => $key], [
-                'value' => $value,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return true;
+        return app(BusinessSettingService::class)->insertKeyIfMissing($key, $value);
     }
 
     public static function insert_data_settings_key($key, $type, $value = null)
     {
-        $data = DataSetting::where('key', $key)->where('type', $type)->first();
-        if (! $data) {
-            DataSetting::updateOrCreate(['key' => $key, 'type' => $type], [
-                'value' => $value,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return true;
+        return app(DataSettingService::class)->insertKeyIfMissing($key, $type, $value);
     }
 
     public static function get_language_name($key)
@@ -3094,10 +1290,13 @@ class Helpers
 
     public static function get_view_keys()
     {
-        $keys = BusinessSetting::whereIn('key', ['toggle_veg_non_veg', 'toggle_dm_registration', 'toggle_store_registration'])->get();
         $data = [];
-        foreach ($keys as $key) {
-            $data[$key->key] = (bool) $key->value;
+        foreach (['toggle_veg_non_veg', 'toggle_dm_registration', 'toggle_store_registration'] as $key) {
+            $value = self::get_business_settings($key, false);
+
+            if ($value !== null) {
+                $data[$key] = (bool) $value;
+            }
         }
         $data['MAX_FILE_SIZE'] = self::maxUploadSizeMb();
         $data['PRODUCT_VIDEO_MAX_FILE_SIZE'] = self::productVideoMaxUploadSizeMb();
@@ -3105,19 +1304,59 @@ class Helpers
         return $data;
     }
 
+    private static array $dataSettingsMemo = [];
+
+    /**
+     * Memoized per (type, key) for the request: the landing page layout and its `home` child view
+     * both read the same setting (e.g. toggle_rider_registration) independently -- the layout's
+     * top-level @php runs after the child's @section content is already captured, so the child
+     * can't just reuse a variable the layout sets, and re-queries instead. Caching here fixes that
+     * without restructuring the Blade inheritance.
+     */
     public static function get_data_settings($type, $key)
     {
-        return DataSetting::where('type', $type)->where('key', $key)->first();
+        $memoKey = $type . ':' . $key;
+
+        if (! array_key_exists($memoKey, self::$dataSettingsMemo)) {
+            self::$dataSettingsMemo[$memoKey] = app(DataSettingService::class)->findByTypeAndKey($type, $key);
+        }
+
+        return self::$dataSettingsMemo[$memoKey];
     }
 
     public static function system_default_language()
     {
+        return self::system_language_field('code');
+    }
+
+    /**
+     * The extra-language codes (default excluded) that are both configured for content
+     * translation and still active. `business_settings.language` is append-only — disabling a
+     * language via LanguageController::update_status() only flips its `status` inside the
+     * separate `system_language` key and never removes the code here — so a screen that builds
+     * its translation tabs from `language` alone keeps offering a tab for a language an admin has
+     * already turned off (TC_57).
+     *
+     * @return array<int, string>
+     */
+    public static function active_extra_languages(): array
+    {
+        $activeCodes = collect(self::get_business_settings('system_language') ?? [])
+            ->where('status', 1)
+            ->pluck('code')
+            ->all();
+
+        return array_values(array_intersect(self::get_business_settings('language') ?? [], $activeCodes));
+    }
+
+    private static function system_language_field(string $field)
+    {
         $languages = self::get_business_settings('system_language');
         $lang = 'en';
 
-        foreach ($languages as $key => $language) {
+        foreach ($languages as $language) {
             if ($language['default']) {
-                $lang = $language['code'];
+                $lang = $language[$field];
             }
         }
 
@@ -3126,82 +1365,55 @@ class Helpers
 
     public static function system_default_direction()
     {
-        $languages = self::get_business_settings('system_language');
-        $lang = 'en';
-
-        foreach ($languages as $key => $language) {
-            if ($language['default']) {
-                $lang = $language['direction'];
-            }
-        }
-
-        return $lang;
+        return self::system_language_field('direction');
     }
-
-    // Mail Config Check
-    public static function remove_invalid_charcaters($str)
-    {
-        return str_ireplace(['\'', '"', ';', '<', '>'], ' ', $str);
-    }
-
-    // Generate referer code
 
     public static function generate_referer_code($type = null)
     {
-        $ref_code = strtoupper(Str::random(10));
-
-        if (self::referer_code_exists($ref_code, $type)) {
-            return self::generate_referer_code($type);
-        }
-
-        return $ref_code;
+        return self::unique_random_code(10, fn ($code) => self::referer_code_exists($code, $type));
     }
 
-    public static function referer_code_exists($ref_code, $type = null)
+    private static function unique_random_code(int $length, callable $exists): string
     {
-        if ($type == 'deliveryman') {
-            return DeliveryMan::where('ref_code', '=', $ref_code)->exists();
-        }
-
-        return User::where('ref_code', '=', $ref_code)->exists();
-    }
-
-    public static function generate_reset_password_code()
-    {
-        $code = strtoupper(Str::random(15));
-
-        if (self::reset_password_code_exists($code)) {
-            return self::generate_reset_password_code();
-        }
+        do {
+            $code = strtoupper(Str::random($length));
+        } while ($exists($code));
 
         return $code;
     }
 
+    public static function referer_code_exists($ref_code, $type = null)
+    {
+        return $type == 'deliveryman'
+            ? app(DeliveryManService::class)->refCodeExists($ref_code)
+            : app(UserService::class)->refCodeExists($ref_code);
+    }
+
+    public static function generate_reset_password_code()
+    {
+        return self::unique_random_code(15, fn ($code) => self::reset_password_code_exists($code));
+    }
+
     public static function reset_password_code_exists($code)
     {
-        return DB::table('password_resets')->where('token', '=', $code)->exists();
+        return app(PasswordResetService::class)->tokenExists($code);
     }
 
     public static function number_format_short($n)
     {
         if ($n < 900) {
-            // 0 - 900
             $n = $n;
             $suffix = '';
         } elseif ($n < 900000) {
-            // 0.9k-850k
             $n = $n / 1000;
             $suffix = 'K';
         } elseif ($n < 900000000) {
-            // 0.9m-850m
             $n = $n / 1000000;
             $suffix = 'M';
         } elseif ($n < 900000000000) {
-            // 0.9b-850b
             $n = $n / 1000000000;
             $suffix = 'B';
         } else {
-            // 0.9t+
             $n = $n / 1000000000000;
             $suffix = 'T';
         }
@@ -3225,20 +1437,17 @@ class Helpers
 
     public static function expenseCreate($amount, $type, $datetime, $created_by, $order_id = null, $store_id = null, $description = '', $delivery_man_id = null, $user_id = null, $ride_id = null)
     {
-        $expense = new Expense;
-        $expense->amount = $amount;
-        $expense->type = $type;
-        $expense->order_id = $order_id;
-        $expense->created_by = $created_by;
-        $expense->store_id = $store_id;
-        $expense->delivery_man_id = $delivery_man_id;
-        $expense->user_id = $user_id;
-        $expense->description = $description;
-        $expense->ride_id = $ride_id;
-        $expense->created_at = now();
-        $expense->updated_at = now();
-
-        return $expense->save();
+        return app(ExpenseService::class)->create([
+            'amount' => $amount,
+            'type' => $type,
+            'created_by' => $created_by,
+            'order_id' => $order_id,
+            'store_id' => $store_id,
+            'description' => $description,
+            'delivery_man_id' => $delivery_man_id,
+            'user_id' => $user_id,
+            'ride_id' => $ride_id,
+        ]);
     }
 
     public static function get_varient(array $product_variations, $variations)
@@ -3330,73 +1539,181 @@ class Helpers
 
     public static function auto_translator($q, $sl, $tl)
     {
-        $response = Http::timeout(5)->get('https://translate.googleapis.com/translate_a/single', [
-            'client' => 'gtx',
-            'ie' => 'UTF-8',
-            'oe' => 'UTF-8',
-            'dt' => 't',
-            'sl' => $sl,
-            'tl' => $tl,
-            'q' => $q,
-        ]);
+        $q = (string) $q;
 
-        if (! $response->successful()) {
+        if (trim($q) === '' || $sl === $tl) {
             return $q;
         }
 
-        $data = $response->json();
+        $tokens = [];
+        $base = 0;
+        $masked = $q;
 
-        return $data[0][0][0] ?? $q;
+        if (preg_match_all('/:[a-zA-Z_][a-zA-Z0-9_]*/', $q, $matches)) {
+            $tokens = array_values(array_unique($matches[0]));
+
+            if (preg_match_all('/#(\d+)#/', $q, $existing)) {
+                $base = max(array_map('intval', $existing[1])) + 1;
+            }
+
+            $mask = [];
+            foreach ($tokens as $i => $token) {
+                $mask[$token] = '#' . ($base + $i) . '#';
+            }
+
+            uksort($mask, fn ($a, $b) => strlen($b) <=> strlen($a));
+
+            $masked = strtr($q, $mask);
+        }
+
+        $translated = self::translateRemotely($masked, $sl, $tl);
+
+        if ($translated === null) {
+            return $q;
+        }
+
+        if (! $tokens) {
+            return $translated;
+        }
+
+        $restored = preg_replace_callback('/#\s*(\d+)\s*#/', function ($match) use ($tokens, $base) {
+            return $tokens[(int) $match[1] - $base] ?? $match[0];
+        }, $translated);
+
+        foreach ($tokens as $token) {
+            if (! str_contains($restored, $token)) {
+                return $q;
+            }
+        }
+
+        return $restored;
+    }
+
+    /**
+     * The client ids the endpoint accepts, tried in order.
+     *
+     * `gtx` is the one this has always used and stays first. Google throttles these per client id
+     * per source IP, and it started answering `gtx` with a 429 "Sorry..." page for server traffic
+     * — which `auto_translator()` could only report as "unchanged", so the bulk translator saw
+     * twenty rows come back in English and gave up with "Translation service did not respond".
+     * The other two answer normally and return byte-identical JSON, so falling through to them
+     * turns a hard stop back into a translation.
+     *
+     * Not a retry of the same request: each entry is a different id, so a throttled one is
+     * skipped rather than hammered.
+     */
+    private const TRANSLATE_CLIENTS = ['gtx', 'dict-chrome-ex', 'at'];
+
+    /** Why the last remote call failed, for a caller that wants to say something specific. */
+    private static ?string $translateFailure = null;
+
+    /** 'rate_limited' | 'unreachable' | null when the last call succeeded. */
+    public static function lastTranslationFailure(): ?string
+    {
+        return self::$translateFailure;
+    }
+
+    /**
+     * One phrase through the endpoint, or NULL when no client id could answer.
+     *
+     * The working client is remembered for the rest of the request: the bulk translator makes
+     * twenty calls, and without this every one of them would pay a round trip to a throttled
+     * `gtx` before falling through.
+     */
+    private static function translateRemotely(string $masked, string $sl, string $tl): ?string
+    {
+        static $preferred = null;
+
+        $options = self::curl_supports_http2() ? ['version' => 2.0] : [];
+        $clients = $preferred
+            ? array_merge([$preferred], array_diff(self::TRANSLATE_CLIENTS, [$preferred]))
+            : self::TRANSLATE_CLIENTS;
+
+        $failure = 'unreachable';
+
+        foreach ($clients as $client) {
+            try {
+                $response = Http::timeout(10)->withOptions($options)->get('https://translate.googleapis.com/translate_a/single', [
+                    'client' => $client,
+                    'ie' => 'UTF-8',
+                    'oe' => 'UTF-8',
+                    'dt' => 't',
+                    'sl' => $sl,
+                    'tl' => $tl,
+                    'q' => $masked,
+                ]);
+            } catch (\Throwable $exception) {
+                continue;
+            }
+
+            if (! $response->successful()) {
+                // 429 is the throttle, and it is worth telling apart from an outage: the advice
+                // is "wait", not "try again now".
+                if ($response->status() === 429) {
+                    $failure = 'rate_limited';
+                }
+
+                continue;
+            }
+
+            $data = $response->json();
+
+            if (! isset($data[0]) || ! is_array($data[0])) {
+                continue;
+            }
+
+            $translated = '';
+            foreach ($data[0] as $segment) {
+                if (is_array($segment) && isset($segment[0]) && is_string($segment[0])) {
+                    $translated .= $segment[0];
+                }
+            }
+
+            if (trim($translated) === '') {
+                continue;
+            }
+
+            $preferred = $client;
+            self::$translateFailure = null;
+
+            return $translated;
+        }
+
+        self::$translateFailure = $failure;
+
+        return null;
+    }
+
+    /*
+     * Checked rather than retried: a fallback retry would double the wait on
+     * every call, and the bulk translator makes 20 of them per request.
+     */
+    private static function curl_supports_http2(): bool
+    {
+        static $supported = null;
+
+        if ($supported === null) {
+            $supported = function_exists('curl_version')
+                && defined('CURL_VERSION_HTTP2')
+                && (bool) ((curl_version()['features'] ?? 0) & CURL_VERSION_HTTP2);
+        }
+
+        return $supported;
     }
 
     public static function language_load()
     {
-        if (\session()->has('language_settings')) {
-            $language = \session('language_settings');
-        } else {
-            $language = BusinessSetting::where('key', 'system_language')->first();
-            \session()->put('language_settings', $language);
-        }
-
-        return $language;
+        return app(BusinessSettingService::class)->findSystemLanguage('language_settings');
     }
 
     public static function vendor_language_load()
     {
-        if (\session()->has('vendor_language_settings')) {
-            $language = \session('vendor_language_settings');
-        } else {
-            $language = BusinessSetting::where('key', 'system_language')->first();
-            \session()->put('vendor_language_settings', $language);
-        }
-
-        return $language;
+        return app(BusinessSettingService::class)->findSystemLanguage('vendor_language_settings');
     }
 
     public static function landing_language_load()
     {
-        if (\session()->has('landing_language_settings')) {
-            $language = \session('landing_language_settings');
-        } else {
-            $language = BusinessSetting::where('key', 'system_language')->first();
-            \session()->put('landing_language_settings', $language);
-        }
-
-        return $language;
-    }
-
-    public static function product_tax($price, $tax, $is_include = false)
-    {
-        $price_tax = ($price * $tax) / (100 + ($is_include ? $tax : 0));
-
-        return $price_tax;
-    }
-
-    public static function error_formater($key, $mesage, $errors = [])
-    {
-        $errors[] = ['code' => $key, 'message' => $mesage];
-
-        return $errors;
+        return app(BusinessSettingService::class)->findSystemLanguage('landing_language_settings');
     }
 
     public static function Export_generator($datas)
@@ -3408,190 +1725,43 @@ class Helpers
         return true;
     }
 
-    public static function get_mail_status($name)
-    {
-        return self::get_business_settings($name);
-    }
-
-    public static function text_variable_data_format($value, $user_name = null, $store_name = null, $delivery_man_name = null, $transaction_id = null, $order_id = null, $add_id = null)
-    {
-        $data = $value;
-        if ($value) {
-            if ($user_name) {
-                $data = str_replace('{userName}', $user_name, $data);
-            }
-
-            if ($store_name) {
-                $data = str_replace('{storeName}', $store_name, $data);
-                $data = str_replace('{providerName}', $store_name, $data);
-            }
-
-            if ($delivery_man_name) {
-                $data = str_replace('{deliveryManName}', $delivery_man_name, $data);
-                $data = str_replace('{riderName}', $delivery_man_name, $data);
-                $data = str_replace('{servicemanName}', $delivery_man_name, $data);
-            }
-
-            if ($transaction_id) {
-                $data = str_replace('{transactionId}', $transaction_id, $data);
-            }
-
-            if ($order_id) {
-                $data = str_replace('{orderId}', $order_id, $data);
-                $data = str_replace('{tripId}', $order_id, $data);
-                $data = str_replace('{rideId}', $order_id, $data);
-                $data = str_replace('{bookingId}', $order_id, $data);
-            }
-            if ($add_id) {
-                $data = str_replace('{advertisementId}', $add_id, $data);
-            }
-        }
-
-        return $data;
-    }
-
-    public static function isRideShareMailLabelEnabled(): bool
-    {
-        return function_exists('addon_published_status') && addon_published_status('RideShare') == 1;
-    }
-
     public static function formatDeliverymanText(?string $value, $deliveryMan = null, bool $includeRiderOption = false): ?string
     {
-        if (! $value) {
-            return $value;
-        }
-
-        if ($includeRiderOption && self::isRideShareMailLabelEnabled()) {
-            return self::replaceDeliverymanTextByContext($value, 'combined');
-        }
-
-        if (
-            $deliveryMan
-            && self::isRideShareMailLabelEnabled()
-            && (int) data_get($deliveryMan, 'is_ride', 0) === 1
-            && (int) data_get($deliveryMan, 'is_delivery', 0) !== 1
-        ) {
-            return self::replaceDeliverymanTextByContext($value, 'rider');
-        }
-
-        return $value;
-    }
-
-    private static function replaceDeliverymanTextByContext(string $value, string $mode): string
-    {
-        $replacements = match ($mode) {
-            'combined' => [
-                '/\bdelivery men\b/u' => 'delivery men / riders',
-                '/\bDelivery Men\b/u' => 'Delivery Men / Riders',
-                '/\bDELIVERY MEN\b/u' => 'DELIVERY MEN / RIDERS',
-                '/\bdeliveryman\b/u' => 'deliveryman / rider',
-                '/\bDeliveryman\b/u' => 'Deliveryman / Rider',
-                '/\bDELIVERYMAN\b/u' => 'DELIVERYMAN / RIDER',
-                '/\bdelivery man\b/u' => 'delivery man / rider',
-                '/\bDelivery Man\b/u' => 'Delivery Man / Rider',
-                '/\bDELIVERY MAN\b/u' => 'DELIVERY MAN / RIDER',
-                '/\bdeliverymen\b/u' => 'deliverymen / riders',
-                '/\bDeliverymen\b/u' => 'Deliverymen / Riders',
-                '/\bDELIVERYMEN\b/u' => 'DELIVERYMEN / RIDERS',
-            ],
-            default => [
-                '/\bdelivery men\b/u' => 'riders',
-                '/\bDelivery Men\b/u' => 'Riders',
-                '/\bDELIVERY MEN\b/u' => 'RIDERS',
-                '/\bdeliveryman\b/u' => 'rider',
-                '/\bDeliveryman\b/u' => 'Rider',
-                '/\bDELIVERYMAN\b/u' => 'RIDER',
-                '/\bdelivery man\b/u' => 'rider',
-                '/\bDelivery Man\b/u' => 'Rider',
-                '/\bDELIVERY MAN\b/u' => 'RIDER',
-                '/\bdeliverymen\b/u' => 'riders',
-                '/\bDeliverymen\b/u' => 'Riders',
-                '/\bDELIVERYMEN\b/u' => 'RIDERS',
-            ],
-        };
-
-        foreach ($replacements as $pattern => $replacement) {
-            $value = preg_replace($pattern, $replacement, $value);
-        }
-
-        return $value;
+        return NotificationText::forDeliveryman($value, $deliveryMan, $includeRiderOption);
     }
 
     public static function get_login_url($type)
     {
-        $data = DataSetting::whereIn('key', [
-            'store_employee_login_url',
-            'store_login_url',
-            'admin_employee_login_url',
-            'admin_login_url',
-        ])->pluck('key', 'value')->toArray();
-
-        return array_search($type, $data);
+        return app(DataSettingService::class)->findLoginUrlKey($type);
     }
-
-    public static function react_activation_check($react_domain, $react_license_code)
-    {
-        // NulledMaster: Always return true, no server verification
-        return true;
-    }
-
-    public static function activation_submit($purchase_key)
-    {
-        // NulledMaster: Always return true, no server verification
-        return true;
-    }
-
-    public static function react_domain_status_check()
-    {
-        // NulledMaster: Always set status to 1 (active)
-        $data = self::get_business_settings('react_setup');
-        if ($data && isset($data['react_domain'])) {
-            $data['status'] = 1;
-            Helpers::businessUpdateOrInsert(['key' => 'react_setup'], [
-                'value' => json_encode($data),
-            ]);
-        }
-    }
-
 
     public static function get_zones_name($zones)
     {
-        if (is_array($zones)) {
-            $data = Zone::whereIn('id', $zones)->pluck('name')->toArray();
-        } else {
-            $data = Zone::where('id', $zones)->pluck('name')->toArray();
-        }
-        $data = implode(', ', $data);
-
-        return $data;
+        return app(ZoneService::class)->getNamesByIds($zones);
     }
 
     public static function get_stores_name($stores)
     {
-        if (is_array($stores)) {
-            $data = Store::whereIn('id', $stores)->pluck('name')->toArray();
-        } else {
-            $data = Store::where('id', $stores)->pluck('name')->toArray();
-        }
-        $data = implode(', ', $data);
-
-        return $data;
+        return app(StoreService::class)->getNamesByIds($stores);
     }
 
     public static function get_category_name($id)
     {
         $id = json_decode($id, true);
-        $id = data_get($id, '0.id', 'NA');
 
-        return Category::where('id', $id)->first()?->name;
+        return self::category_name_by_id(data_get($id, '0.id', 'NA'));
     }
 
     public static function get_sub_category_name($id)
     {
         $id = json_decode($id, true);
-        $id = data_get($id, '1.id', 'NA');
 
-        return Category::where('id', $id)->first()?->name;
+        return self::category_name_by_id(data_get($id, '1.id', 'NA'));
+    }
+
+    private static function category_name_by_id($id)
+    {
+        return app(CategoryService::class)->findMemoizedNameById($id);
     }
 
     public static function get_attributes($choice_options)
@@ -3602,7 +1772,7 @@ class Helpers
                 $data[$choice->title] = $choice->options;
             }
 
-            return str_ireplace(['\'', '"', '{', '}', '[', ']', ';', '<', '>', '?'], ' ', json_encode($data));
+            return self::sanitized_json_text($data, true);
         } catch (\Exception $ex) {
             info(["line___{$ex->getLine()}", $ex->getMessage()]);
 
@@ -3612,7 +1782,7 @@ class Helpers
 
     public static function get_module_name($id)
     {
-        return Module::where('id', $id)->first()?->module_name;
+        return self::modules_list()->firstWhere('id', $id)?->module_name;
     }
 
     public static function get_food_variations($variations)
@@ -3623,14 +1793,11 @@ class Helpers
             foreach ((array) json_decode($variations, true) as $key => $choice) {
                 foreach ($choice['values'] as $k => $v) {
                     $data2[$k] = $v['label'];
-                    // if(!next($choice['values'] )) {
-                    //     $data2[$k] =  $v['label'].";";
-                    // }
                 }
                 $data[$choice['name']] = $data2;
             }
 
-            return str_ireplace(['\'', '"', '{', '}', '[', ']', '<', '>', '?'], ' ', json_encode($data));
+            return self::sanitized_json_text($data);
         } catch (\Exception $ex) {
             info(["line___{$ex->getLine()}", $ex->getMessage()]);
 
@@ -3641,21 +1808,19 @@ class Helpers
 
     public static function get_customer_name($id)
     {
-        $user = User::where('id', $id)->first();
-
-        return $user->f_name.' '.$user->l_name;
+        return app(UserService::class)->findFullName($id);
     }
 
     public static function get_addon_data($id)
     {
         try {
             $data = [];
-            $addon = AddOn::whereIn('id', json_decode($id, true))->get(['name', 'price'])->toArray();
+            $addon = app(AddonService::class)->getMemoizedNameAndPriceByIds(json_decode($id, true));
             foreach ($addon as $key => $value) {
                 $data[$key] = $value['name'].' - '.Helpers::format_currency($value['price']);
             }
 
-            return str_ireplace(['\'', '"', '{', '}', '[', ']', '<', '>', '?'], ' ', json_encode($data, JSON_UNESCAPED_UNICODE));
+            return self::sanitized_json_text($data, false, JSON_UNESCAPED_UNICODE);
         } catch (\Exception $ex) {
             info(["line___{$ex->getLine()}", $ex->getMessage()]);
 
@@ -3665,107 +1830,96 @@ class Helpers
 
     public static function add_or_update_translations($request, $key_data, $name_field, $model_name, $data_id, $data_value, $model_class = false)
     {
-        try {
-
-            if ($model_class === true) {
-                $model = $model_name;
-            } else {
-                $model = 'App\\Models\\'.$model_name;
-            }
-
-            $default_lang = str_replace('_', '-', app()->getLocale());
-            foreach ($request->lang as $index => $key) {
-                if ($default_lang == $key && ! ($request->{$name_field}[$index])) {
-                    if ($key != 'default') {
-                        Translation::updateorcreate(
-                            [
-                                'translationable_type' => $model,
-                                'translationable_id' => $data_id,
-                                'locale' => $key,
-                                'key' => $key_data,
-                            ],
-                            ['value' => $data_value]
-                        );
-                    }
-                } else {
-                    if ($request->{$name_field}[$index] && $key != 'default') {
-                        Translation::updateorcreate(
-                            [
-                                'translationable_type' => $model,
-                                'translationable_id' => $data_id,
-                                'locale' => $key,
-                                'key' => $key_data,
-                            ],
-                            ['value' => $request->{$name_field}[$index]]
-                        );
-                    }
-                }
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            info(["line___{$e->getLine()}", $e->getMessage()]);
-
-            return false;
-        }
+        return app(TranslationService::class)->addOrUpdate($request, $key_data, $name_field, $model_name, $data_id, $data_value, $model_class);
     }
 
-    public static function offline_payment_formater($user_data)
+    /**
+     * Row count and id / created_at bounds for a bulk export or import screen, so
+     * the form can show the ranges its filters accept. One aggregate query, and
+     * the caller passes the already scoped query.
+     */
+    public static function bulkDataSummary($query): array
     {
-        $userInputs = [];
+        $summary = $query
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('MIN(id) as min_id, MAX(id) as max_id')
+            ->selectRaw('MIN(created_at) as first_created_at, MAX(created_at) as last_created_at')
+            ->first();
 
-        $user_inputes = json_decode($user_data->payment_info, true);
-        $method_name = $user_inputes['method_name'];
-        $method_id = $user_inputes['method_id'];
-
-        foreach ($user_inputes as $key => $value) {
-            if (! in_array($key, ['method_name', 'method_id'])) {
-                $userInput = [
-                    'user_input' => $key,
-                    'user_data' => $value,
-                ];
-                $userInputs[] = $userInput;
-            }
-        }
-
-        $data = [
-            'status' => $user_data->status,
-            'method_id' => $method_id,
-            'method_name' => $method_name,
-            'customer_note' => $user_data->customer_note,
-            'admin_note' => $user_data->note,
+        return [
+            'total' => (int) ($summary?->total ?? 0),
+            'min_id' => $summary?->min_id,
+            'max_id' => $summary?->max_id,
+            'first_created_at' => $summary?->first_created_at,
+            'last_created_at' => $summary?->last_created_at,
         ];
-
-        $result = [
-            'input' => $userInputs,
-            'data' => $data,
-            'method_fields' => json_decode($user_data->method_fields, true),
-        ];
-
-        return $result;
     }
 
     public static function time_date_format($data)
     {
-        $time = config('timeformat') ?? 'H:i';
+        return self::translated_date_format($data, 'd M Y '.self::time_format_pattern());
+    }
 
-        return Carbon::parse($data)->locale(app()->getLocale())->translatedFormat('d M Y '.$time);
+    private static function time_format_pattern(): string
+    {
+        return config('timeformat') ?? 'H:i';
+    }
+
+    private static function translated_date_format($data, string $format)
+    {
+        return Carbon::parse($data)->locale(app()->getLocale())->translatedFormat($format);
     }
 
     public static function date_format($data)
     {
-        return Carbon::parse($data)->locale(app()->getLocale())->translatedFormat('d M Y');
+        return self::translated_date_format($data, 'd M Y');
     }
 
     public static function time_format($data)
     {
-        $time = config('timeformat') ?? 'H:i';
+        return self::translated_date_format($data, self::time_format_pattern());
+    }
 
-        return Carbon::parse($data)->locale(app()->getLocale())->translatedFormat($time);
+    /**
+     * How long a BOGO offer runs, in the largest unit that still reads as a duration.
+     *
+     * Days are counted inclusively -- an offer that starts and ends on the same date runs for one
+     * day, not zero -- and anything shorter than a day is given in hours, because a same-day offer
+     * shown as "1 Days" told the admin nothing about a two-hour window.
+     */
+    public static function bogo_offer_duration($offer): string
+    {
+        if (! $offer?->start_date || ! $offer?->end_date) {
+            return 'N/A';
+        }
+
+        $hours = (int) round($offer->start_date->diffInHours($offer->end_date));
+
+        if ($hours < 24) {
+            return max(1, $hours).' '.translate('messages.Hours');
+        }
+
+        return ($offer->start_date->copy()->startOfDay()->diffInDays($offer->end_date->copy()->startOfDay()) + 1)
+            .' '.translate('messages.Days');
     }
 
     public static function get_full_url($path, $data, $type, $placeholder = null)
     {
+        if ($data && $type === 's3') {
+            try {
+                return Storage::disk('s3')->url($path.'/'.$data);
+            } catch (\Exception $e) {
+            }
+        }
+
+        if ($data && Storage::disk('public')->exists($path.'/'.$data)) {
+            return asset('storage/app/public').'/'.$path.'/'.$data;
+        }
+
+        if (request()->is('api/*')) {
+            return null;
+        }
+
         $place_holders = [
             'default' => asset('public/assets/admin/img/100x100/2.jpg'),
             'business' => asset('public/assets/admin/img/160x160/img2.jpg'),
@@ -3807,142 +1961,12 @@ class Helpers
             'payment_modules/gateway_image' => asset('/public/assets/admin/img/payment/placeholder.png'),
             'email_template' => asset('/public/assets/admin/img/blank1.png'),
         ];
-        try {
-            if ($data && $type == 's3' && Storage::disk('s3')->exists($path.'/'.$data)) {
-                return Storage::disk('s3')->url($path.'/'.$data);
-                //                $awsUrl = config('filesystems.disks.s3.url');
-                //                $awsBucket = config('filesystems.disks.s3.bucket');
-                //                return rtrim($awsUrl, '/') . '/' . ltrim($awsBucket . '/' . $path . '/' . $data, '/');
-            }
-        } catch (\Exception $e) {
-        }
-
-        if ($data && Storage::disk('public')->exists($path.'/'.$data)) {
-            return asset('storage/app/public').'/'.$path.'/'.$data;
-        }
-
-        if (request()->is('api/*')) {
-            return null;
-        }
 
         if (isset($placeholder) && array_key_exists($placeholder, $place_holders)) {
             return $place_holders[$placeholder];
-        } elseif (array_key_exists($path, $place_holders)) {
-            return $place_holders[$path];
-        } else {
-            return $place_holders['default'];
         }
 
-        return 'def.png';
-    }
-
-    public static function create_storage($model, $data_id)
-    {
-        $config = self::get_business_settings('local_storage');
-        $value = isset($config) ? ($config == 0 ? 's3' : 'public') : 'public';
-
-        return DB::table('storages')->updateOrInsert(['data_type' => $model, 'data_id' => $data_id], [
-            'value' => $value,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    public static function getCalculatedCashBackAmount($amount, $customer_id, $type = null)
-    {
-        $data = [
-            'calculated_amount' => (float) 0,
-            'cashback_amount' => 0,
-            'cashback_type' => '',
-            'min_purchase' => 0,
-            'max_discount' => 0,
-            'id' => 0,
-        ];
-
-        try {
-            $percent_bonus = CashBack::active()->when($type, function ($query) use ($type) {
-                $type === 'service' ? $query->service() : $query->rental();
-            })
-                ->where('cashback_type', 'percentage')
-                ->Running()
-                ->where('min_purchase', '<=', $amount)
-                ->where(function ($query) use ($customer_id) {
-                    $query->whereJsonContains('customer_id', [(string) $customer_id])->orWhereJsonContains('customer_id', ['all']);
-                })
-                ->when(is_numeric($customer_id), function ($q) use ($customer_id) {
-                    $q->where('same_user_limit', '>', function ($query) use ($customer_id) {
-                        $query->select(DB::raw('COUNT(*)'))
-                            ->from('cash_back_histories')
-                            ->where('user_id', $customer_id)
-                            ->whereColumn('cash_back_id', 'cash_backs.id');
-                    });
-                })
-                ->orderBy('cashback_amount', 'desc')
-                ->first();
-
-            $amount_bonus = CashBack::active()->where('cashback_type', 'amount')->when($type, function ($query) use ($type) {
-                $type === 'service' ? $query->service() : $query->rental();
-            })
-                ->Running()
-                ->where(function ($query) use ($customer_id) {
-                    $query->whereJsonContains('customer_id', [(string) $customer_id])->orWhereJsonContains('customer_id', ['all']);
-                })
-                ->where('min_purchase', '<=', $amount)
-                ->when(is_numeric($customer_id), function ($q) use ($customer_id) {
-                    $q->where('same_user_limit', '>', function ($query) use ($customer_id) {
-                        $query->select(DB::raw('COUNT(*)'))
-                            ->from('cash_back_histories')
-                            ->where('user_id', $customer_id)
-                            ->whereColumn('cash_back_id', 'cash_backs.id');
-                    });
-                })
-                ->orderBy('cashback_amount', 'desc')->first();
-
-            if ($percent_bonus && ($amount >= $percent_bonus->min_purchase)) {
-                $p_bonus = ($amount * $percent_bonus->cashback_amount) / 100;
-                $p_bonus = $p_bonus > $percent_bonus->max_discount ? $percent_bonus->max_discount : $p_bonus;
-                $p_bonus = round($p_bonus, config('round_up_to_digit'));
-            } else {
-                $p_bonus = 0;
-            }
-
-            if ($amount_bonus && ($amount >= $amount_bonus->min_purchase)) {
-                $a_bonus = $amount_bonus ? $amount_bonus->cashback_amount : 0;
-                $a_bonus = round($a_bonus, config('round_up_to_digit'));
-            } else {
-                $a_bonus = 0;
-            }
-
-            $cashback_amount = max([$p_bonus, $a_bonus]);
-
-            if ($p_bonus == $cashback_amount) {
-                $data = [
-                    'calculated_amount' => (float) $cashback_amount,
-                    'cashback_amount' => $percent_bonus?->cashback_amount ?? 0,
-                    'cashback_type' => $percent_bonus?->cashback_type ?? '',
-                    'min_purchase' => $percent_bonus?->min_purchase ?? 0,
-                    'max_discount' => $percent_bonus?->max_discount ?? 0,
-                    'id' => $percent_bonus?->id,
-                ];
-
-            } elseif ($a_bonus == $cashback_amount) {
-                $data = [
-                    'calculated_amount' => (float) $cashback_amount,
-                    'cashback_amount' => $amount_bonus?->cashback_amount ?? 0,
-                    'cashback_type' => $amount_bonus?->cashback_type ?? '',
-                    'min_purchase' => $amount_bonus?->min_purchase ?? 0,
-                    'max_discount' => $amount_bonus?->max_discount ?? 0,
-                    'id' => $amount_bonus?->id,
-                ];
-            }
-
-            return $data;
-        } catch (\Exception $exception) {
-            info([$exception->getFile(), $exception->getLine(), $exception->getMessage()]);
-
-            return $data;
-        }
-
+        return $place_holders[$path] ?? $place_holders["default"];
     }
 
     public static function getCusromerFirstOrderDiscount($order_count, $user_creation_date, $refby, $price = null)
@@ -3958,7 +1982,7 @@ class Helpers
         if ($order_count > 0 || ! $refby) {
             return $data ?? [];
         }
-        $settings = array_column(BusinessSetting::whereIn('key', ['new_customer_discount_status', 'new_customer_discount_amount', 'new_customer_discount_amount_type', 'new_customer_discount_amount_validity', 'new_customer_discount_validity_type'])->get()->toArray(), 'value', 'key');
+        $settings = self::get_business_settings_many(['new_customer_discount_status', 'new_customer_discount_amount', 'new_customer_discount_amount_type', 'new_customer_discount_amount_validity', 'new_customer_discount_validity_type']);
 
         $validity_value = data_get($settings, 'new_customer_discount_amount_validity');
         $validity_unit = data_get($settings, 'new_customer_discount_validity_type');
@@ -4001,472 +2025,50 @@ class Helpers
         return $data ?? [];
     }
 
-    public static function send_push_notif_for_demo_reset($data, $topic, $type)
-    {
-        $postData = [
-            'message' => [
-                'topic' => $topic,
-                'data' => [
-                    'title' => (string) $data['title'],
-                    'body' => (string) $data['description'],
-                    'type' => (string) $type,
-                    'image' => (string) $data['image'],
-                    'body_loc_key' => (string) $type,
-                ],
-            ],
-        ];
-
-        return self::sendNotificationToHttp($postData);
-    }
-
     public static function subscriptionPackageType($store)
     {
-        if ($store?->module_type == 'rental' && addon_published_status('Rental')) {
-            return 'rental';
-        }
-        if ($store?->module_type == 'service' && addon_published_status('Service')) {
-            return 'service';
-        }
-
-        return 'all';
+        return app(SubscriptionPackageService::class)->typeFor($store);
     }
 
     public static function subscriptionConditionsCheck($store_id, $package_id)
     {
-        $store = Store::findOrFail($store_id);
-        $package = SubscriptionPackage::withoutGlobalScope('translate')->find($package_id);
-        if ($store->module_type == 'rental') {
-            $total_food = $store->vehicles()->count();
-        } elseif ($store->module_type == 'service') {
-            $total_food = $store->services()->count();
-        } else {
-            $total_food = $store->items()->withoutGlobalScope(StoreScope::class)->count();
-        }
-        if ($package->max_product != 'unlimited' && $total_food >= $package->max_product) {
-            return ['disable_item_count' => $total_food - $package->max_product];
-        }
-
-        return null;
+        return app(StoreSubscriptionService::class)->conditionsCheck($store_id, $package_id);
     }
 
     public static function subscription_plan_chosen($store_id, $package_id, $payment_method, $discount = 0, $pending_bill = 0, $reference = null, $type = null)
     {
-        $store = Store::find($store_id);
-        $package = SubscriptionPackage::withoutGlobalScope('translate')->find($package_id);
-        $add_days = 0;
-        $add_orders = 0;
-
-        try {
-            $store_subscription = $store->store_sub;
-            $store_old_subscription = $store->store_sub_update_application;
-            if (isset($store_subscription) && $type == 'renew') {
-                $store_subscription->total_package_renewed = $store_subscription->total_package_renewed + 1;
-
-                $day_left = $store_subscription->expiry_date_parsed->format('Y-m-d');
-                if (Carbon::now()->diffInDays($day_left, false) > 0 && $store_subscription->is_canceled != 1) {
-                    $add_days = Carbon::now()->subDays(1)->diffInDays($day_left, false);
-                }
-                if ($store_subscription->max_order != 'unlimited' && $store_subscription->max_order > 0) {
-                    $add_orders = $store_subscription->max_order;
-                }
-
-            } elseif ($store_old_subscription && $store_old_subscription->package_id == $package->id && $type == 'renew') {
-                $store_subscription = $store_old_subscription;
-                $store_subscription->total_package_renewed = $store_subscription->total_package_renewed + 1;
-            } else {
-                self::calculateSubscriptionRefundAmount($store);
-                StoreSubscription::where('store_id', $store->id)->update([
-                    'status' => 0,
-                ]);
-                $store_subscription = new StoreSubscription;
-                $store_subscription->total_package_renewed = 0;
-
-            }
-
-            $store_subscription->is_trial = 0;
-            $store_subscription->renewed_at = now();
-            $store_subscription->package_id = $package->id;
-            $store_subscription->store_id = $store->id;
-            if ($payment_method == 'free_trial') {
-
-                $free_trial_period = (int) self::get_business_settings('subscription_free_trial_days') ?? 1;
-
-                $store_subscription->expiry_date = Carbon::now()->addDays($free_trial_period)->format('Y-m-d');
-                $store_subscription->validity = $free_trial_period;
-            }
-
-            $store_subscription->is_trial = 0;
-            $store_subscription->renewed_at = now();
-            $store_subscription->package_id = $package->id;
-            $store_subscription->store_id = $store->id;
-            if ($payment_method == 'free_trial') {
-
-                $free_trial_period = (int) self::get_business_settings('subscription_free_trial_days') ?? 1;
-
-                $store_subscription->expiry_date = Carbon::now()->addDays($free_trial_period)->format('Y-m-d');
-                $store_subscription->validity = $free_trial_period;
-            } else {
-                $store_subscription->expiry_date = Carbon::now()->addDays((int) ($package->validity + $add_days))->format('Y-m-d');
-                $store_subscription->validity = $package->validity + $add_days;
-            }
-            if ($package->max_order != 'unlimited') {
-                $store_subscription->max_order = $package->max_order + $add_orders;
-            } else {
-                $store_subscription->max_order = $package->max_order;
-            }
-
-            $store_subscription->max_product = $package->max_product;
-            $store_subscription->pos = $package->pos;
-            $store_subscription->mobile_app = $package->mobile_app;
-            $store_subscription->chat = $package->chat;
-            $store_subscription->review = $package->review;
-            $store_subscription->self_delivery = $package->self_delivery;
-            $store_subscription->is_canceled = 0;
-            $store_subscription->canceled_by = 'none';
-
-            $store->item_section = 1;
-            $store->pos_system = 1;
-            // Payment never approves or reactivates a store. Re-evaluate under locks below.
-            $store_subscription->status = 0;
-
-            // For Store Free Delivery
-            if ($store->free_delivery == 1 && $package->self_delivery == 1) {
-                $store->free_delivery = 1;
-            } else {
-                $store->free_delivery = 0;
-                $store->coupon()->where('created_by', 'vendor')->where('coupon_type', 'free_delivery')->delete();
-            }
-
-            $store->package_id = $package->id;
-            $store->reviews_section = 1;
-            $store->self_delivery_system = 1;
-            $store->store_business_model = 'subscription';
-
-            $subscription_transaction = new SubscriptionTransaction;
-
-            $subscription_transaction->package_id = $package->id;
-            $subscription_transaction->store_id = $store->id;
-            $subscription_transaction->price = $package->price;
-
-            $subscription_transaction->validity = $package->validity;
-            $subscription_transaction->paid_amount = $package->price - (($package->price * $discount) / 100) + $pending_bill;
-
-            $subscription_transaction->payment_status = 'success';
-            $subscription_transaction->created_by = in_array($payment_method, ['wallet_payment_by_admin', 'manual_payment_by_admin', 'plan_shift_by_admin']) ? 'Admin' : 'Store';
-
-            if ($payment_method == 'free_trial') {
-                $subscription_transaction->validity = $free_trial_period;
-                $subscription_transaction->paid_amount = 0;
-                $subscription_transaction->is_trial = 1;
-                $store_subscription->is_trial = 1;
-            } elseif ($payment_method == 'pay_now') {
-                $subscription_transaction->payment_status = 'on_hold';
-                $subscription_transaction->transaction_status = 0;
-                $store_subscription->status = 0;
-            }
-
-            $subscription_transaction->payment_method = $payment_method;
-            $subscription_transaction->reference = $reference ?? null;
-            $subscription_transaction->discount = $discount ?? 0;
-            if (in_array($type, ['renew', 'free_trial'])) {
-                $subscription_transaction->plan_type = $type;
-            } elseif (StoreSubscription::where('store_id', $store->id)->where('is_trial', 0)->count() > 0 || $reference == 'plan_shift_by_admin') {
-                $subscription_transaction->plan_type = 'new_plan';
-            }
-
-            $subscription_transaction->package_details = [
-                'pos' => $package->pos,
-                'review' => $package->review,
-                'self_delivery' => $package->self_delivery,
-                'chat' => $package->chat,
-                'mobile_app' => $package->mobile_app,
-                'max_order' => $package->max_order,
-                'max_product' => $package->max_product,
-            ];
-            DB::beginTransaction();
-            $currentStore = Store::withoutGlobalScopes()->whereKey($store->id)->lockForUpdate()->firstOrFail();
-            $currentVendor = Vendor::withoutGlobalScopes()->whereKey($currentStore->vendor_id)->lockForUpdate()->firstOrFail();
-            $store->status = $currentStore->status;
-            $store_subscription->status = (int) $currentStore->status === 1 && (int) $currentVendor->status === 1 && $payment_method !== 'pay_now' ? 1 : 0;
-            $store->save();
-            $subscription_transaction->save();
-            $store_subscription->save();
-            DB::commit();
-            $subscription_transaction->store_subscription_id = $store_subscription->id;
-            $subscription_transaction->save();
-
-            SubscriptionBillingAndRefundHistory::where([
-                'store_id' => $store->id,
-                'transaction_type' => 'pending_bill',
-                'is_success' => 0,
-            ])->update([
-                'is_success' => 1,
-                'reference' => 'payment_via_'.$payment_method.' _transaction_id_'.$subscription_transaction->id,
-            ]);
-
-            if ($reference == 'plan_shift_by_admin') {
-                $billing = new SubscriptionBillingAndRefundHistory;
-                $billing->store_id = $store->id;
-                $billing->subscription_id = $store_subscription->id;
-                $billing->package_id = $store_subscription->package_id;
-                $billing->transaction_type = 'pending_bill';
-                $billing->is_success = 0;
-                $billing->amount = $package->price;
-                $billing->save();
-            }
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            info(["line___{$e->getLine()}", $e->getMessage()]);
-
-            return false;
-        }
-
-        if (data_get(self::subscriptionConditionsCheck(store_id: $store->id, package_id: $package->id), 'disable_item_count') > 0) {
-            $disable_item_count = data_get(Helpers::subscriptionConditionsCheck(store_id: $store->id, package_id: $package->id), 'disable_item_count');
-            $store->item_section = 0;
-            $store->save();
-            if ($store->module_type == 'rental') {
-                Vehicle::where('provider_id', $store->id)->oldest()->take($disable_item_count)->update([
-                    'status' => 0,
-                ]);
-            } elseif ($store->module_type == 'service' && service_addon_active()) {
-                ServiceEntity::where('store_id', $store->id)->oldest()->take($disable_item_count)->update([
-                    'status' => 0,
-                ]);
-            } else {
-                Item::where('store_id', $store->id)->oldest()->take($disable_item_count)->update([
-                    'status' => 0,
-                ]);
-            }
-        }
-
-        if (! (in_array($payment_method, ['manual_payment_by_admin', 'plan_shift_by_admin']) && $store_old_subscription == null)) {
-            DB::afterCommit(static fn () => self::subscriptionNotifications($store, $type, $subscription_transaction));
-        }
-
-        return $subscription_transaction->id;
-    }
-
-
-    public static function subscriptionNotifications($store, $type, $subscription_transaction)
-    {
-        try {
-            $module_type = $store->module->module_type;
-            if ($type == 'renew') {
-                if ($module_type == 'rental') {
-                    $push_notification_status = self::getRentalNotificationStatusData('provider', 'provider_subscription_renew', 'push_notification_status', $store->id);
-                } elseif ($module_type == 'service') {
-                    $push_notification_status = self::getServiceNotificationStatusData('provider', 'service_provider_subscription_renew', 'push_notification_status', $store->id);
-                } else {
-                    $push_notification_status = self::getNotificationStatusData('store', 'store_subscription_renew', 'push_notification_status', $store->id);
-                }
-                $title = translate('subscription_renewed');
-                $des = translate('Your_subscription_successfully_renewed');
-            } elseif ($type != 'renew') {
-                $des = translate('Your_subscription_successfully_shifted');
-                $title = translate('subscription_shifted');
-                if ($module_type == 'rental') {
-                    $push_notification_status = self::getRentalNotificationStatusData('provider', 'provider_subscription_shift', 'push_notification_status', $store->id);
-                } elseif ($module_type == 'service') {
-                    $push_notification_status = self::getServiceNotificationStatusData('provider', 'service_provider_subscription_shift', 'push_notification_status', $store->id);
-                } else {
-                    $push_notification_status = self::getNotificationStatusData('store', 'store_subscription_shift', 'push_notification_status', $store->id);
-                }
-            }
-
-            if ($push_notification_status && $store?->vendor?->firebase_token) {
-                $data = [
-                    'title' => $title ?? '',
-                    'description' => $des ?? '',
-                    'order_id' => '',
-                    'image' => '',
-                    'type' => 'subscription',
-                    'order_status' => '',
-                ];
-                self::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'vendor_id' => $store?->vendor_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            if ($module_type == 'rental' && config('mail.status')) {
-
-                if (self::get_mail_status('rental_subscription_renew_mail_status_provider') == '1' && $type == 'renew' && self::getRentalNotificationStatusData('provider', 'provider_subscription_renew', 'mail_status', $store->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionRenewOrShift($type, $store->name));
-                }
-                if (self::get_mail_status('rental_subscription_shift_mail_status_provider') == '1' && $type != 'renew' && self::getRentalNotificationStatusData('provider', 'provider_subscription_shift', 'mail_status', $store->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionRenewOrShift($type, $store->name));
-                }
-                if (self::get_mail_status('rental_subscription_successful_mail_status_provider') == '1' && self::getRentalNotificationStatusData('provider', 'provider_subscription_success', 'mail_status', $store->id)) {
-                    $url = route('subscription_invoice', ['id' => base64_encode($subscription_transaction->id)]);
-                    Mail::to($store?->getRawOriginal('email'))->send(new ProviderSubscriptionSuccessful($store->name, $url));
-                }
-
-            } elseif ($module_type == 'service' && service_addon_active() && config('mail.status')) {
-
-                if (self::get_mail_status('service_subscription_renew_mail_status_provider') == '1' && $type == 'renew' && self::getServiceNotificationStatusData('provider', 'service_provider_subscription_renew', 'mail_status', $store->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionRenewOrShift($type, $store->name));
-                }
-                if (self::get_mail_status('service_subscription_shift_mail_status_provider') == '1' && $type != 'renew' && self::getServiceNotificationStatusData('provider', 'service_provider_subscription_shift', 'mail_status', $store->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionRenewOrShift($type, $store->name));
-                }
-                if (self::get_mail_status('service_subscription_successful_mail_status_provider') == '1' && self::getServiceNotificationStatusData('provider', 'service_provider_subscription_success', 'mail_status', $store->id)) {
-                    $url = route('subscription_invoice', ['id' => base64_encode($subscription_transaction->id)]);
-                    Mail::to($store?->getRawOriginal('email'))->send(new ServiceProviderSubscriptionSuccessful($store->name, $url));
-                }
-
-            } elseif (config('mail.status')) {
-
-                if (self::get_mail_status('subscription_renew_mail_status_store') == '1' && $type == 'renew' && self::getNotificationStatusData('store', 'store_subscription_renew', 'mail_status', $store->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new SubscriptionRenewOrShift($type, $store->name));
-                }
-                if (self::get_mail_status('subscription_shift_mail_status_store') == '1' && $type != 'renew' && self::getNotificationStatusData('store', 'store_subscription_shift', 'mail_status', $store->id)) {
-                    Mail::to($store?->getRawOriginal('email'))->send(new SubscriptionRenewOrShift($type, $store->name));
-                }
-                if (self::get_mail_status('subscription_successful_mail_status_store') == '1' && self::getNotificationStatusData('store', 'store_subscription_success', 'mail_status', $store->id)) {
-                    $url = route('subscription_invoice', ['id' => base64_encode($subscription_transaction->id)]);
-                    Mail::to($store?->getRawOriginal('email'))->send(new SubscriptionSuccessful($store->name, $url));
-                }
-            }
-
-            if ($module_type == 'rental') {
-                $success_push_status = self::getRentalNotificationStatusData('provider', 'provider_subscription_success', 'push_notification_status', $store->id);
-            } elseif ($module_type == 'service') {
-                $success_push_status = self::getServiceNotificationStatusData('provider', 'service_provider_subscription_success', 'push_notification_status', $store->id);
-            } else {
-                $success_push_status = self::getNotificationStatusData('store', 'store_subscription_success', 'push_notification_status', $store->id);
-            }
-            if ($success_push_status && $store?->vendor?->firebase_token) {
-                $data = [
-                    'title' => translate('subscription_successful'),
-                    'description' => translate('You_are_successfully_subscribed'),
-                    'order_id' => '',
-                    'image' => '',
-                    'type' => 'subscription',
-                    'order_status' => '',
-                ];
-                self::send_push_notif_to_device($store?->vendor?->firebase_token, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'vendor_id' => $store?->vendor_id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-        } catch (\Exception $ex) {
-            info($ex->getMessage());
-        }
-
-        return true;
+        return app(StoreSubscriptionService::class)->applyPlan($store_id, $package_id, $payment_method, $discount, $pending_bill, $reference, $type);
     }
 
     public static function subscriptionPayment($store_id, $package_id, $payment_gateway, $url, $pending_bill = 0, $type = 'payment', $payment_platform = 'web')
     {
-        $store = Store::where('id', $store_id)->first();
-        $package = SubscriptionPackage::where('id', $package_id)->first();
-        $type == null ? 'payment' : $type;
-
-        $payer = new Payer(
-            $store->name,
-            $store->email,
-            $store->phone,
-            ''
-        );
-        $store_logo = BusinessSetting::where(['key' => 'logo'])->first();
-        $additional_data = [
-            'business_name' => self::get_business_settings('business_name'),
-            'business_logo' => self::get_full_url('business', $store_logo?->value, $store_logo?->storage[0]?->value ?? 'public'),
-        ];
-        $payment_info = new PaymentInfo(
-            success_hook: 'sub_success',
-            failure_hook: 'sub_fail',
-            currency_code: Helpers::currency_code(),
-            payment_method: $payment_gateway,
-            payment_platform: $payment_platform,
-            payer_id: $store->id,
-            receiver_id: $package->id,
-            additional_data: $additional_data,
-            payment_amount: $package->price + $pending_bill,
-            external_redirect_link: $url,
-            attribute: 'store_subscription_'.$type,
-            attribute_id: $package->id,
-        );
-        $receiver_info = new Receiver('Admin', 'example.png');
-        $redirect_link = Payment::generate_link($payer, $payment_info, $receiver_info);
-
-        return $redirect_link;
+        return app(StoreSubscriptionService::class)->generatePaymentLink($store_id, $package_id, $payment_gateway, $url, $pending_bill, $type, $payment_platform);
     }
 
     public static function subscription_check()
     {
-        $subscription_business_model = self::get_business_settings('subscription_business_model');
-        if ($subscription_business_model == null) {
-            Helpers::insert_business_settings_key('subscription_business_model', '1');
-            $subscription_business_model = self::get_business_settings('subscription_business_model');
+        return self::business_model_flag('subscription_business_model');
+    }
+
+    private static function business_model_flag(string $key)
+    {
+        $value = self::get_business_settings($key);
+        if ($value == null) {
+            self::insert_business_settings_key($key, '1');
+            $value = self::get_business_settings($key);
         }
 
-        return $subscription_business_model ?? 1;
-
+        return $value ?? 1;
     }
 
     public static function commission_check()
     {
-        $commission_business_model = self::get_business_settings('commission_business_model');
-        if ($commission_business_model == null) {
-            Helpers::insert_business_settings_key('commission_business_model', '1');
-            $commission_business_model = self::get_business_settings('commission_business_model');
-        }
-
-        return $commission_business_model ?? 1;
+        return self::business_model_flag('commission_business_model');
     }
 
     public static function calculateSubscriptionRefundAmount($store, $return_data = null)
     {
-
-        $store_subscription = $store->store_sub;
-        if ($store_subscription && $store_subscription?->is_canceled === 0 && $store_subscription?->is_trial === 0) {
-            $day_left = $store_subscription->expiry_date_parsed->format('Y-m-d');
-            if (Carbon::now()->diffInDays($day_left, false) > 0) {
-                $add_days = Carbon::now()->diffInDays($day_left, false);
-                $validity = $store_subscription?->validity;
-                $subscription_usage_max_time = self::get_business_settings('subscription_usage_max_time') ?? 50;
-                $subscription_usage_max_time = ($validity * $subscription_usage_max_time) / 100;
-
-                if (($validity - $add_days) < $subscription_usage_max_time) {
-                    $per_day = $store->store_sub_trans->price / $store->store_sub_trans->validity;
-                    $back_amount = $per_day * $add_days;
-
-                    if ($return_data == true) {
-                        return ['back_amount' => $back_amount, 'days' => $add_days];
-                    }
-
-                    $vendorWallet = StoreWallet::firstOrNew(
-                        ['vendor_id' => $store->vendor_id]
-                    );
-                    $vendorWallet->total_earning = $vendorWallet->total_earning + $back_amount;
-                    $vendorWallet->save();
-
-                    $refund = new SubscriptionBillingAndRefundHistory;
-                    $refund->store_id = $store->id;
-                    $refund->subscription_id = $store_subscription->id;
-                    $refund->package_id = $store_subscription->package_id;
-                    $refund->transaction_type = 'refund';
-                    $refund->is_success = 1;
-                    $refund->amount = $back_amount;
-                    $refund->reference = 'validity_left_'.$add_days;
-                    $refund->save();
-
-                }
-            }
-
-        }
-
-        return true;
+        return app(StoreSubscriptionService::class)->calculateRefundAmount($store, $return_data);
     }
 
     public static function increment_order_count($store)
@@ -4479,116 +2081,24 @@ class Helpers
         return true;
     }
 
-    public static function getDefaultPaymentMethods()
-    {
-        if (! Schema::hasTable('addon_settings')) {
-            return [];
-        }
-
-        $digital_payment = Helpers::get_business_settings('digital_payment');
-
-        if ($digital_payment && $digital_payment['status'] == 0) {
-            return [];
-        }
-
-        $methods = DB::table('addon_settings')->where('is_active', 1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago'])->get();
-        $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-        $credentials = $env.'_values';
-
-        $data = [];
-        foreach ($methods as $method) {
-            $credentialsData = json_decode($method->$credentials);
-            $additional_data = json_decode($method->additional_data);
-            if ($credentialsData->status == 1) {
-                $data[] = [
-                    'gateway' => $method->key_name,
-                    'gateway_title' => $additional_data?->gateway_title,
-                    'gateway_image' => $additional_data?->gateway_image,
-                    'storage' => $additional_data?->storage ?? 'public',
-                ];
-            }
-        }
-
-        return $data;
-    }
-
-    public static function getNotificationStatusData($user_type, $key, $notification_type, $store_id = null)
-    {
-        $data = NotificationSetting::where('type', $user_type)->where('key', $key)->select($notification_type)->first();
-        $data = $data?->{$notification_type} === 'active' ? 1 : 0;
-
-        if ($store_id && $user_type == 'store' && $data === 1) {
-            $data = self::getStoreNotificationStatusData(store_id: $store_id, key: $key, notification_type: $notification_type);
-            $data = $data?->{$notification_type} === 'active' ? 1 : 0;
-        }
-
-        return $data;
-    }
-
-    public static function getRentalNotificationStatusData($user_type, $key, $notification_type, $store_id = null)
-    {
-        $data = NotificationSetting::where(['type' => $user_type, 'module_type' => 'rental', 'key' => $key])->select($notification_type)->first();
-        $data = $data?->{$notification_type} === 'active' ? 1 : 0;
-
-        if ($store_id && $user_type == 'provider' && $data === 1) {
-            $data = self::getRentalStoreNotificationStatusData(store_id: $store_id, key: $key, notification_type: $notification_type);
-            $data = $data?->{$notification_type} === 'active' ? 1 : 0;
-        }
-
-        return $data;
-    }
-
-    public static function getServiceNotificationStatusData($user_type, $key, $notification_type, $store_id = null)
-    {
-        $data = NotificationSetting::where(['type' => $user_type, 'module_type' => 'service', 'key' => $key])->select($notification_type)->first();
-        $data = $data?->{$notification_type} === 'active' ? 1 : 0;
-
-        if ($store_id && $user_type == 'provider' && $data === 1) {
-            $data = self::getServiceStoreNotificationStatusData(store_id: $store_id, key: $key, notification_type: $notification_type);
-            $data = $data?->{$notification_type} === 'active' ? 1 : 0;
-        }
-
-        return $data;
-    }
-
-    public static function getNotificationStatusDataAdmin($user_type, $key)
-    {
-        $data = NotificationSetting::where(['type' => $user_type, 'key' => $key])->select(['mail_status', 'push_notification_status', 'sms_status'])->first();
-
-        return $data ?? null;
-    }
-
     public static function notificationDataSetup()
     {
-
-        $data = self::getAdminNotificationSetupData();
-        $data = NotificationSetting::upsert($data, ['key', 'type'], ['title', 'mail_status', 'sms_status', 'push_notification_status', 'sub_title']);
-
-        return true;
+        return app(NotificationSettingService::class)->upsertAdminSetupData(self::getAdminNotificationSetupData());
     }
 
     public static function storeNotificationDataSetup($id)
     {
-        $data = self::getStoreNotificationSetupData($id);
-        $data = StoreNotificationSetting::upsert($data, ['key', 'store_id'], ['title', 'mail_status', 'sms_status', 'push_notification_status', 'sub_title']);
-
-        return true;
+        return StoreNotificationSettings::install($id);
     }
 
     public static function storeRentalNotificationDataSetup($id)
     {
-        $data = self::getRentalStoreNotificationSetupData($id);
-        $data = StoreNotificationSetting::upsert($data, ['key', 'store_id', 'module_type'], ['title', 'mail_status', 'sms_status', 'push_notification_status', 'sub_title']);
-
-        return true;
+        return StoreNotificationSettings::install($id, 'rental');
     }
 
     public static function storeServiceNotificationDataSetup($id)
     {
-        $data = self::getServiceStoreNotificationSetupData($id);
-        $data = StoreNotificationSetting::upsert($data, ['key', 'store_id', 'module_type'], ['title', 'mail_status', 'sms_status', 'push_notification_status', 'sub_title']);
-
-        return true;
+        return StoreNotificationSettings::install($id, 'service');
     }
 
     public static function updateAdminNotificationSetupDataSetup()
@@ -4605,124 +2115,14 @@ class Helpers
         return true;
     }
 
-    public static function getRentalAdminNotificationSetupDatasetup()
-    {
-        self::getRentalAdminNotificationSetupData();
-
-        return true;
-    }
-
-    public static function getServiceAdminNotificationSetupDatasetup()
-    {
-        self::getServiceAdminNotificationSetupData();
-
-        return true;
-    }
-
-    public static function getStoreNotificationStatusData($store_id, $key, $notification_type)
-    {
-        $data = StoreNotificationSetting::where('store_id', $store_id)->where('key', $key)->select($notification_type)->first();
-        if (! $data) {
-            self::storeNotificationDataSetup($store_id);
-            $data = StoreNotificationSetting::where('store_id', $store_id)->where('key', $key)->select($notification_type)->first();
-        }
-
-        return $data ?? null;
-    }
-
-    public static function getRentalStoreNotificationStatusData($store_id, $key, $notification_type)
-    {
-        $data = StoreNotificationSetting::where('store_id', $store_id)->where('key', $key)->select($notification_type)->first();
-        if (! $data) {
-            self::storeRentalNotificationDataSetup($store_id);
-            $data = StoreNotificationSetting::where('store_id', $store_id)->where('key', $key)->select($notification_type)->first();
-        }
-
-        return $data ?? null;
-    }
-
-    public static function getServiceStoreNotificationStatusData($store_id, $key, $notification_type)
-    {
-        $data = StoreNotificationSetting::where('store_id', $store_id)->where('key', $key)->select($notification_type)->first();
-        if (! $data) {
-            self::storeServiceNotificationDataSetup($store_id);
-            $data = StoreNotificationSetting::where('store_id', $store_id)->where('key', $key)->select($notification_type)->first();
-        }
-
-        return $data ?? null;
-    }
-
     public static function add_fund_push_notification($user_id)
     {
-        $customer_push_notification_status = self::getNotificationStatusData('customer', 'customer_add_fund_to_wallet', 'push_notification_status');
-
-        $user = User::where('id', $user_id)->first();
-        if ($customer_push_notification_status && $user?->cm_firebase_token) {
-            $data = [
-                'title' => translate('messages.Fund_added'),
-                'description' => translate('messages.Fund_added_to_your_wallet'),
-                'order_id' => '',
-                'image' => '',
-                'type' => 'add_fund',
-                'order_status' => '',
-            ];
-            self::send_push_notif_to_device($user?->cm_firebase_token, $data);
-
-            DB::table('user_notifications')->insert([
-                'data' => json_encode($data),
-                'user_id' => $user_id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        return true;
+        return app(UserService::class)->notifyFundAdded($user_id);
     }
 
     public static function getActivePaymentGateways()
     {
-
-        if (! Schema::hasTable('addon_settings')) {
-            return [];
-        }
-
-        $digital_payment = Helpers::get_business_settings('digital_payment');
-        if ($digital_payment && $digital_payment['status'] == 0) {
-            return [];
-        }
-
-        $published_status = 0;
-        $payment_published_status = config('get_payment_publish_status');
-        if (isset($payment_published_status[0]['is_published'])) {
-            $published_status = $payment_published_status[0]['is_published'];
-        }
-
-        if ($published_status == 1) {
-            $methods = DB::table('addon_settings')->where('is_active', 1)->where('settings_type', 'payment_config')->get();
-            $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-            $credentials = $env.'_values';
-
-        } else {
-            $methods = DB::table('addon_settings')->where('is_active', 1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago'])->get();
-            $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-            $credentials = $env.'_values';
-
-        }
-
-        $data = [];
-        foreach ($methods as $method) {
-            $credentialsData = json_decode($method->$credentials);
-            $additional_data = json_decode($method->additional_data);
-            $data[] = [
-                'gateway' => $method->key_name,
-                'gateway_title' => $additional_data?->gateway_title,
-                'gateway_image' => $additional_data?->gateway_image,
-                'gateway_image_full_url' => Helpers::get_full_url('payment_modules/gateway_image', $additional_data?->gateway_image, $additional_data?->storage ?? 'public'),
-            ];
-        }
-
-        return $data;
-
+        return app(SettingService::class)->getActiveGateways();
     }
 
     public static function checkCurrency($data, $type = null)
@@ -4753,16 +2153,7 @@ class Helpers
 
     public static function updateStorageTable($dataType, $dataId, $image)
     {
-        $value = Helpers::getDisk();
-        DB::table('storages')->updateOrInsert([
-            'data_type' => $dataType,
-            'data_id' => $dataId,
-            'key' => 'image',
-        ], [
-            'value' => $value,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        FileStorage::updateStorageTable($dataType, $dataId, $image);
     }
 
     public static function getNextOpeningTime($schedule)
@@ -4783,148 +2174,36 @@ class Helpers
         return 'closed';
     }
 
-    public static function checkExternalConfiguration($externalBaseUrl, $externalTokem, $martToken)
-    {
-        $activationMode = ExternalConfiguration::where('key', 'activation_mode')->first()?->value;
-        $driveMondBaseUrl = ExternalConfiguration::where('key', 'drivemond_base_url')->first()?->value;
-        $driveMondToken = ExternalConfiguration::where('key', 'drivemond_token')->first()?->value;
-        $systemSelfToken = ExternalConfiguration::where('key', 'system_self_token')->first()?->value;
-
-        return $activationMode == 1 && $driveMondBaseUrl == $externalBaseUrl && $driveMondToken == $externalTokem && $systemSelfToken == $martToken;
-    }
-
-    public static function checkSelfExternalConfiguration()
-    {
-        $activationMode = ExternalConfiguration::where('key', 'activation_mode')->first()?->value;
-        $driveMondBaseUrl = ExternalConfiguration::where('key', 'drivemond_base_url')->first()?->value;
-        $driveMondToken = ExternalConfiguration::where('key', 'drivemond_token')->first()?->value;
-        $systemSelfToken = ExternalConfiguration::where('key', 'system_self_token')->first()?->value;
-
-        return $activationMode == 1 && $driveMondBaseUrl != null && $driveMondToken != null && $systemSelfToken != null;
-    }
-
     public static function businessUpdateOrInsert($key, $value)
     {
-        $businessSetting = BusinessSetting::firstOrNew(['key' => $key['key']]);
-        $businessSetting->value = $value['value'];
-        $businessSetting->save();
+        app(BusinessSettingService::class)->saveValue($key['key'], $value['value']);
     }
 
     public static function businessInsert($data)
     {
-        $businessSetting = BusinessSetting::firstOrNew(['key' => $data['key']]);
-        $businessSetting->value = $data['value'];
-        $businessSetting->save();
+        app(BusinessSettingService::class)->saveValue($data['key'], $data['value']);
     }
 
     public static function dataUpdateOrInsert($key, $value)
     {
-        $dataSetting = DataSetting::firstOrNew([
-            'key' => $key['key'],
-            'type' => $key['type'],
-        ]);
-
-        $dataSetting->value = $value['value'];
-        $dataSetting->save();
+        app(DataSettingService::class)->saveValue($key['key'], $key['type'], $value['value']);
     }
 
     public static function getSettingsDataFromConfig($settings, $relations = [])
     {
-        try {
-            if (! config($settings.'_conf')) {
-                $data = BusinessSetting::where('key', $settings)->with($relations)->first();
-                Config::set($settings.'_conf', $data);
-            } else {
-                $data = config($settings.'_conf');
-            }
-
-            return $data;
-        } catch (\Throwable $th) {
-            return null;
-        }
-    }
-
-    public static function disableStoreForOrderCancellation()
-    {
-        if (addon_published_status('Rental') && self::get_business_settings('order_cancelation_rate_limit_status') && self::get_business_settings('order_cancelation_rate_block_limit') > 0) {
-            $stores = Store::where('status', 1)
-                ->wherehas('module', function ($query) {
-                    $query->where('module_type', 'rental');
-                })
-                ->withoutGlobalScopes()->select('id')->withCount([
-                    'orders as total_orders',
-                    'orders as canceled_orders' => function ($query) {
-                        $query->where('order_status', 'canceled');
-                    },
-                ])->get()->filter(function ($store) {
-                    if ($store->canceled_orders > 0) {
-                        $cancellationRate = ($store->canceled_orders / $store->total_orders) * 100;
-                        $store['cancellation_rate'] = $cancellationRate;
-
-                        return $cancellationRate >= self::get_business_settings('order_cancelation_rate_block_limit');
-                    }
-
-                    return false;
-                });
-            $storeIds = $stores->pluck('id');
-
-            Store::whereIn('id', $storeIds)->update(['status' => 0]);
-        }
-
-        return true;
-    }
-
-    public static function preparePaginatedResponse($pagination, $limit, $offset, $key = 'data', $extraData = []): array
-    {
-        $items = $pagination->items();
-
-        if (
-            ! empty($items)
-            && class_exists(Vehicle::class)
-            && $items[0] instanceof Vehicle
-        ) {
-            $items = self::vehicle_data_formatting($items, true);
-        }
-
-        $response = [
-            'total_size' => (int) $pagination->total(),
-            'limit' => (int) $limit,
-            'offset' => (int) $offset,
-            $key => $items,
-        ];
-
-        return array_merge($response, $extraData);
+        return app(BusinessSettingService::class)->findModelByKey($settings, $relations);
     }
 
     public static function sendTripPaymentNotificationCustomerMain($trip)
     {
-        if ($trip->is_guest) {
-            $user_fcm = $trip?->guest?->fcm_token;
-        } else {
-            $user_fcm = $trip?->customer?->cm_firebase_token;
-        }
-        $value = $trip->payment_status == 'paid' ? translate('Your transaction has been completed') : translate('Your payment has not been received yet');
-
-        if (Helpers::getRentalNotificationStatusData('customer', 'customer_trip_notification', 'push_notification_status') && $value && $user_fcm) {
-            $data = [
-                'title' => translate('Trip_Notification_payment'),
-                'description' => $value,
-                'order_id' => $trip->id,
-                'module_id' => $trip->module_id,
-                'order_type' => 'trip',
-                'image' => '',
-                'type' => 'trip_status',
-                'zone_id' => $trip->zone_id,
-            ];
-            self::send_push_notif_to_device($user_fcm, $data);
-            UserNotification::create([
-                'data' => json_encode($data),
-                'user_id' => $trip->user_id,
-                'order_type' => 'trip',
-            ]);
+        if (is_dir('Modules/Rental') && file_exists('Modules/Rental/Traits/RentalPushNotification.php')) {
+            $traitUser = 'Modules\\Rental\\Traits\\RentalPushNotification';
+            if (trait_exists($traitUser)) {
+                return \Modules\Rental\Support\RentalNotifier::sendTripPaymentNotificationCustomer($trip);
+            }
         }
 
-        return true;
+        return null;
     }
 
     public static function createTransactionForTrip($trip, $received_by = false, $status = null)
@@ -4945,21 +2224,7 @@ class Helpers
 
     public static function deleteCacheData($prefix)
     {
-        $cacheKeys = DB::table('cache')
-            ->where('key', 'like', '%'.$prefix.'%')
-            ->pluck('key');
-        $appName = env('APP_NAME').'_cache';
-        $remove_prefix = strtolower(str_replace('=', '', $appName));
-        $sanitizedKeys = $cacheKeys->map(function ($key) use ($remove_prefix) {
-            $key = str_replace($remove_prefix, '', $key);
-
-            return $key;
-        });
-        foreach ($sanitizedKeys as $key) {
-            Cache::forget($key);
-        }
-        Artisan::call('cache:clear');
-        Artisan::call('config:clear');
+        ApiCache::bustPrefix((string) $prefix);
     }
 
     public static function minDiscountCheck($productPrice, $discount)
@@ -4972,13 +2237,26 @@ class Helpers
 
     public static function checkAdminDiscount($price, $discount, $max_discount, $min_purchase, $item_wise_price = null)
     {
-        if ($price > 0 && $discount > 0) {
-            $discount = ($price * $discount) / 100;
-            $discount = $discount > $max_discount ? $max_discount : $discount;
-            $discount = $price >= $min_purchase ? $discount : 0;
+        // Nothing to discount, so nothing is discounted. Without this the method falls straight
+        // through to the return, where $discount still holds the *percentage* it arrived as --
+        // so a caller asking what 20% of nothing comes to was told 20, and booked it as twenty
+        // currency off. Reachable as soon as an order has no discountable amount in it at all,
+        // which is any order that is nothing but a BOGO bundle.
+        if ($price <= 0 || $discount <= 0) {
+            return 0;
         }
 
-        if ($discount > 0 && $item_wise_price > 0) {
+        $discount = ($price * $discount) / 100;
+        // null means no cap -- what a happy hour carries, since it has no ceiling. A 0 still
+        // clamps to 0, so vendor discounts configured that way keep behaving exactly as before;
+        // only an explicitly uncapped rate skips the clamp.
+        $discount = ($max_discount !== null && $discount > $max_discount) ? $max_discount : $discount;
+        $discount = $price >= $min_purchase ? $discount : 0;
+
+        // null means the caller wants the order-wide figure, so leave it whole. An explicit 0 is
+        // a real line that costs nothing -- a BOGO free item -- and its share of the discount is
+        // 0, not the entire order's. Testing for > 0 handed such a line the whole amount.
+        if ($discount > 0 && $item_wise_price !== null) {
             $discount = ($item_wise_price / $price) * $discount;
         }
 
@@ -5016,7 +2294,12 @@ class Helpers
 
             foreach ($details_data as $item) {
                 $item_id = $item['item_id'] ?? $item['item_campaign_id'];
-                $itemWiseDiscount = $item['discount_type'] === 'product_discount' ? $item['discount_on_item'] * $item['quantity'] : $item['discount_on_item'];
+                // Always times the quantity, whatever set the rate. discount_on_item is a UNIT
+                // discount for every discount_type now; it used to be written per line by the
+                // store-wide branch alone, and this conditional was what kept the two straight.
+                // Leaving it in place after that was made uniform taxed a store-wide discount on
+                // any line of two or more as though only one unit had been discounted.
+                $itemWiseDiscount = $item['discount_on_item'] * $item['quantity'];
                 $productDiscountTotal += $itemWiseDiscount;
 
                 $itemTotal = $item['price'] * $item['quantity'];
@@ -5036,7 +2319,6 @@ class Helpers
 
                 $totalAfterOwnDiscounts += $itemFinal;
 
-                // --- Addons
                 $addons = json_decode($item['add_ons'], true) ?? [];
                 $addonDiscount = $item['addon_discount'] ?? 0;
                 $addonTotalPrice = ($item['total_add_on_price'] ?? 0) > 0 ? $item['total_add_on_price'] : 1;
@@ -5124,70 +2406,43 @@ class Helpers
         ];
     }
 
-    public static function sendStoreEmployeeNotification($order, $data)
-    {
-        $employees = VendorEmployee::where('store_id', $order->store->id)->get();
-        foreach ($employees as $employee) {
-            self::send_push_notif_to_device($employee->firebase_token, $data);
-        }
-
-    }
-
     public static function getTaxSystemType($getTaxVatList = true, $tax_payer = 'vendor')
     {
-        if (addon_published_status('TaxModule')) {
-            $SystemTaxVat = SystemTaxSetup::where('is_active', 1)
-                ->where('tax_payer', $tax_payer)->where('is_default', 1)->first();
-            if (! $SystemTaxVat || ($SystemTaxVat && $SystemTaxVat?->is_included == 1)) {
-                return ['productWiseTax' => false, 'categoryWiseTax' => false, 'taxVats' => []];
-            }
-            if ($getTaxVatList) {
-                $taxVats = Tax::where('is_active', 1)->where('is_default', 1)->get(['id', 'name', 'tax_rate']);
-            }
-
-            if ($SystemTaxVat?->tax_type == 'product_wise') {
-                $productWiseTax = true;
-            } elseif ($SystemTaxVat?->tax_type == 'category_wise') {
-                $categoryWiseTax = true;
-            }
-        }
-
-        return ['productWiseTax' => $productWiseTax ?? false, 'categoryWiseTax' => $categoryWiseTax ?? false, 'taxVats' => $taxVats ?? []];
+        return app(SystemTaxSetupService::class)->getTaxSystemType($getTaxVatList, $tax_payer);
     }
 
     public static function sendOrderDeliveryVerificationOtp($order)
     {
-        if (self::getNotificationStatusData('customer', 'customer_delivery_verification_otp', 'sms_status')) {
-            $published_status = 0;
-            $payment_published_status = config('get_payment_publish_status');
-            if (isset($payment_published_status[0]['is_published'])) {
-                $published_status = $payment_published_status[0]['is_published'];
-            }
+        if (SendNotification::channelEnabled('customer', 'customer_delivery_verification_otp', 'sms_status')) {
             $address = json_decode($order->delivery_address, true);
             $phone = $order->is_guest ? data_get($address, 'contact_person_number') : $order?->customer?->phone;
 
-            if ($published_status == 1) {
-                $response = SmsGateway::send($phone, $order->otp);
-            } else {
-                $response = SMS_module::send($phone, $order->otp);
-            }
+            $response = Sms::deliver($phone, $order->otp);
         }
 
         return $response ?? null;
     }
 
+    private static function brandAssetSetting(string $key)
+    {
+        return app(BusinessSettingService::class)->findBrandAsset($key);
+    }
+
     public static function logoFullUrl()
     {
-        $logo = self::getSettingsDataFromConfig('logo', ['storage']);
+        return self::brandAssetUrl('logo');
+    }
 
-        return self::get_full_url('business', $logo?->value ?? '', $logo?->storage[0]?->value ?? 'public', 'favicon');
+    private static function brandAssetUrl(string $key)
+    {
+        $asset = self::brandAssetSetting($key);
+
+        return self::get_full_url('business', $asset?->value ?? '', $asset?->storage[0]?->value ?? 'public', 'favicon');
     }
 
     public static function iconFullUrl()
     {
-        $icon = self::getSettingsDataFromConfig('icon', ['storage']);
-
-        return self::get_full_url('business', $icon?->value ?? '', $icon?->storage[0]?->value ?? 'public', 'favicon');
+        return self::brandAssetUrl('icon');
     }
 
     public static function highlightWords($text, $colorClass = 'text-base-clr')
@@ -5203,143 +2458,19 @@ class Helpers
 
     public static function promotionalImage()
     {
-
-        if (
-            DataSetting::where([
-                'key' => 'promotion_banner',
-                'type' => 'react_landing_page',
-            ])->exists()
-        ) {
-            return DB::transaction(function () {
-                $oldBanners = DataSetting::where([
-                    'key' => 'promotion_banner',
-                    'type' => 'react_landing_page',
-                ])->first();
-
-                $newRecords = [];
-
-                $banners = json_decode($oldBanners->value, true);
-
-                if (is_array($banners)) {
-                    foreach ($banners as $banner) {
-                        if (! empty($banner['img'])) {
-                            $newRecords[] = [
-                                'image' => $banner['img'],
-                                'status' => 1,
-                            ];
-                        }
-                    }
-                }
-
-                if (! empty($newRecords)) {
-                    ReactPromotionalBanner::upsert(
-                        $newRecords,
-                        ['image'],
-                        ['status']
-                    );
-                }
-                $oldBanners->delete();
-            });
-        }
-
-        return false;
+        return app(ReactPromotionalBannerService::class)->migrateFromLegacyDataSetting();
     }
 
     public static function getCoordinatesZone($lat, $lng)
     {
-        return Zone::whereContains('coordinates', new Point($lat, $lng, POINT_SRID))->where('status', 1)->first();
+        return app(ZoneService::class)->findActiveContaining($lat, $lng);
     }
 
     public static function deliverymanLoyaltyPointHistory($deliveryManId, $amount, $transactionType, $pointConversionType = 'credit', $reference = null)
     {
-        $settings = array_column(BusinessSetting::whereIn('key', ['dm_loyality_point_status', 'dm_loyality_point_per_order', 'dm_loyality_point_conversion_rate'])->get()->toArray(), 'value', 'key');
-        if (data_get($settings, 'dm_loyality_point_status') != 1 || (data_get($settings, 'dm_loyality_point_per_order', 0) <= 0 && $pointConversionType == 'credit') || $amount <= 0) {
-            return ['status_code' => 403, 'code' => 'loyalty_point', 'message' => translate('loyalty_point_not_enabled')];
-        }
-
-        $deliveryMan = DeliveryMan::find($deliveryManId);
-        if (! $deliveryMan) {
-            return ['status_code' => 403, 'code' => 'loyalty_point', 'message' => translate('delivery_man_not_found')];
-        } elseif ($deliveryMan->earning != 1) {
-            return ['status_code' => 403, 'code' => 'loyalty_point', 'message' => translate('wallet_not_enabled')];
-        }
-
-        $loyalty_point_transaction = new DeliverymanLoyaltyPointHistory;
-        $loyalty_point_transaction->delivery_man_id = $deliveryMan->id;
-        $loyalty_point_transaction->transaction_id = Str::uuid();
-        $loyalty_point_transaction->transaction_type = $transactionType;
-        $loyalty_point_transaction->point_conversion_type = $pointConversionType;
-        $point = $amount;
-        if ($pointConversionType == 'credit') {
-            $point = (int) ($settings['dm_loyality_point_per_order'] ?? 0);
-            $deliveryMan->loyalty_point = $deliveryMan->loyalty_point + $point;
-        } else {
-            $deliveryMan->loyalty_point = $deliveryMan->loyalty_point - $point;
-            if ($deliveryMan->loyalty_point < 0) {
-                return ['status_code' => 403, 'code' => 'loyalty_point', 'message' => translate('messages.insufficient_point')];
-            }
-
-            $convertedAmount = $settings['dm_loyality_point_conversion_rate'] ?? 0;
-            if ($convertedAmount == 0) {
-                $convertedAmount = (int) ($amount / 1);
-            } else {
-                $convertedAmount = (float) ($amount / $convertedAmount);
-            }
-
-            $loyalty_point_transaction->converted_amount = $convertedAmount;
-
-            $dmWallet = DeliveryManWallet::firstOrNew(
-                ['delivery_man_id' => $deliveryMan->id]
-            );
-            $dmWallet->total_earning = $dmWallet->total_earning + $convertedAmount;
-        }
-        $loyalty_point_transaction->point = $point;
-        $loyalty_point_transaction->reference = $reference;
-
-        try {
-            DB::beginTransaction();
-            $deliveryMan->save();
-            $loyalty_point_transaction->save();
-            $loyalty_point_transaction->transaction_id = self::generate_transaction_id($loyalty_point_transaction);
-            $loyalty_point_transaction->save();
-
-            if (isset($dmWallet)) {
-                $dmWallet?->save();
-            }
-            DB::commit();
-
-        } catch (\Exception $exception) {
-            info(["line___{$exception->getLine()}", $exception->getMessage()]);
-            DB::rollback();
-
-            return ['status_code' => 403, 'code' => 'loyalty_point', 'message' => translate('messages.something_went_wrong')];
-        }
-
-        try {
-            $data = [
-                'title' => translate('Loyalty Point Transaction'),
-                'description' => $pointConversionType == 'credit' ? translate('You have earned').' '.$point.' '.translate('loyalty_points') : translate('You have converted').' '.$point.' '.translate('loyalty_points'),
-                'data_id' => $loyalty_point_transaction->id,
-                'image' => '',
-                'type' => 'loyalty_point',
-            ];
-            if (self::getNotificationStatusData('deliveryman', 'deliveryman_loyalty_point_transaction', 'push_notification_status') && $deliveryMan->fcm_token) {
-                self::send_push_notif_to_device($deliveryMan->fcm_token, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'delivery_man_id' => $deliveryMan->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-            }
-
-        } catch (\Exception $exception) {
-            info(["line___{$exception->getLine()}", $exception->getMessage()]);
-        }
-
-        return ['status_code' => 200, 'code' => 'loyalty_point', 'data' => $loyalty_point_transaction];
-
+        return app(DeliverymanLoyaltyPointHistoryService::class)->recordDeliverymanLoyaltyPoint(
+            $deliveryManId, $amount, $transactionType, $pointConversionType, $reference
+        );
     }
 
     public static function generate_transaction_id($model, $column = 'transaction_id')
@@ -5358,96 +2489,17 @@ class Helpers
 
     public static function deliverymanReferralNotification($referal_user)
     {
-        try {
-            $data = [
-                'title' => translate('New Referral'),
-                'description' => translate('Your referral code is used by new delivery man. Wait for their first order to get your rewards.'),
-                'data_id' => '',
-                'image' => '',
-                'type' => 'deliveryman_referral',
-            ];
-            if (Helpers::getNotificationStatusData('deliveryman', 'deliveryman_referral_notification', 'push_notification_status') && $referal_user->fcm_token) {
-                Helpers::send_push_notif_to_device($referal_user->fcm_token, $data);
-                DB::table('user_notifications')->insert([
-                    'data' => json_encode($data),
-                    'delivery_man_id' => $referal_user->id,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-            }
-
-        } catch (\Exception $exception) {
-            info(["line___{$exception->getLine()}", $exception->getMessage()]);
-        }
+        app(DeliveryManService::class)->notifyReferralUsed($referal_user);
     }
 
     public static function validateFile($image, ?int $maxSizeMb = null, ?string $allowedExtensionsString = null)
     {
-        if (! $image instanceof UploadedFile) {
-            throw new InvalidUploadException('Invalid file upload.');
-        }
-
-        $maxSizeMb = $maxSizeMb ?? MAX_FILE_SIZE;
-
-        if ($image->getSize() > $maxSizeMb * 1024 * 1024) {
-            throw new InvalidUploadException('File size exceeds the limit of '.$maxSizeMb.'MB');
-        }
-
-        $allowedExtensions = explode(',', $allowedExtensionsString ?? (IMAGE_EXTENSION.','.VIDEO_EXTENSION.','.DOCUMENT_EXTENSION.','.AUDIO_EXTENSION.','.FILE_EXTENSION));
-        $allowedExtensions = array_map(function ($ext) {
-            return str_replace('.', '', trim($ext));
-        }, $allowedExtensions);
-
-        $extension = strtolower($image->getClientOriginalExtension());
-
-        if (! $extension || $extension == '') {
-            $extension = self::extensionFromMimeType($image->getMimeType());
-        }
-
-        if (! in_array($extension, $allowedExtensions)) {
-            throw new InvalidUploadException('File type not allowed.');
-        }
+        return FileStorage::validateFile($image, $maxSizeMb, $allowedExtensionsString);
     }
 
-    public static function extensionFromMimeType(string $mimeType): string
+    public static function extensionFromMimeType(string $mimeType)
     {
-        $mimeType = strtolower($mimeType);
-
-        $map = [
-            // images
-            'image/jpeg' => 'jpg',   // jpeg / jpg
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            'image/webp' => 'webp',
-
-            // video
-            'video/mp4' => 'mp4',
-            'video/webm' => 'webm',
-            'video/ogg' => 'ogg',
-
-            // audio
-            'audio/mpeg' => 'mp3',
-            'audio/wav' => 'wav',
-            'audio/ogg' => 'ogg',
-
-            // documents
-            'application/pdf' => 'pdf',
-            'application/msword' => 'doc',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-            'application/vnd.ms-excel' => 'excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'excel',
-
-            // archive / misc
-            'application/zip' => 'zip',
-            'application/octet-stream' => 'p8',
-        ];
-
-        if (isset($map[$mimeType])) {
-            return $map[$mimeType];
-        }
-
-        return explode('/', $mimeType)[1] ?? '';
+        return FileStorage::extensionFromMimeType($mimeType);
     }
 
     public static function reel_matches_product(?int $reelId, ?string $productType, ?int $productId): bool
@@ -5526,65 +2578,9 @@ class Helpers
         return COUNTIRES;
     }
 
-    public static function setZoneIds($request)
-    {
-
-        if (! $request->hasHeader('zoneId') || empty($request->header('zoneId'))) {
-            $zone = Zone::where('status', 1)->where('is_default', 1)->first() ?? Zone::first();
-
-            if (! $zone) {
-                throw new ZoneModuleException(translate('No zone is available'));
-            }
-
-            if ($request->hasHeader('moduleId')) {
-                $moduleId = getModuleId($request->header('moduleId'));
-                if (! in_array($moduleId, $zone->modules()?->pluck('module_id')?->toArray())) {
-                    throw new ZoneModuleException(translate('Currently this module is available'));
-                }
-            }
-            $request->headers->set('zoneId', json_encode([$zone->id]));
-        } elseif ($request->hasHeader('zoneId') && ! empty($request->header('zoneId'))) {
-            $zoneIds = json_decode($request->header('zoneId'), true);
-            if (is_int($zoneIds)) {
-                $zoneIds = [$zoneIds];
-            }
-            $zoneIds = Zone::whereIn('id', $zoneIds)->where('status', 1)->pluck('id')->toArray();
-
-            if (empty($zoneIds)) {
-                $zone = Zone::where('status', 1)->where('is_default', 1)->first() ?? Zone::first();
-                $request->headers->set('zoneId', json_encode([$zone->id]));
-            } else {
-                $request->headers->set('zoneId', json_encode($zoneIds));
-            }
-
-        }
-
-        return true;
-    }
-
     public static function addPreviousParcelReturnFees()
     {
-        if (ParcelReturnFees::query()->doesntExist()) {
-            ParcelCancellation::where('return_fee_payment_status', 'paid')
-                ->where('return_fee', '>', 0)
-                ->with('order:id,delivery_man_id,user_id')
-                ->chunk(500, function ($cancellations) {
-
-                    foreach ($cancellations as $cancellation) {
-
-                        $returnFeeLog = ParcelReturnFees::create([
-                            'order_id' => $cancellation->order_id,
-                            'delivery_man_id' => $cancellation->order->delivery_man_id ?? null,
-                            'user_id' => $cancellation->order->user_id,
-                            'amount' => $cancellation->return_fee,
-                        ]);
-
-                        $returnFeeLog->update([
-                            'transaction_id' => self::generate_transaction_id($returnFeeLog),
-                        ]);
-                    }
-                });
-        }
+        app(ParcelReturnFeeService::class)->backfillFromPaidCancellations();
     }
 
     public static function maxUploadSizeMb(int $configuredLimit = MAX_FILE_SIZE): int
@@ -5616,58 +2612,20 @@ class Helpers
             return $host;
         }
 
-        // Keep three labels when the second-to-last is a known second-level
-        // registrar label (co.uk, co.tz, com.bd, com.ng, org.uk, …). Matching
-        // the LABEL instead of a hardcoded full-suffix list covers every
-        // country's ccTLD — a fixed list of full suffixes always misses some
-        // (that's how sokogrocery.co.tz collapsed to "co.tz").
         $secondLevelLabels = ['co', 'com', 'net', 'org', 'gov', 'edu', 'ac', 'go', 'or', 'ne', 'me', 'gen'];
         $take = in_array($labels[count($labels) - 2], $secondLevelLabels, true) ? 3 : 2;
 
         return implode('.', array_slice($labels, -$take));
     }
 
-    public static function getStorageDiskByKey($model, string $key, string $default = 'public'): string
+    public static function getStorageDiskByKey($model, string $key, string $default = 'public')
     {
-        if (! $model || ! isset($model->storage) || count($model->storage) < 1) {
-            return $default;
-        }
-
-        foreach ($model->storage as $storage) {
-            if (($storage['key'] ?? null) === $key) {
-                return $storage['value'] ?? $default;
-            }
-        }
-
-        return $default;
+        return FileStorage::getStorageDiskByKey($model, $key, $default);
     }
 
-    public static function copyStorageFile(string $dir, ?string $fileName, string $sourceDisk = 'public'): ?string
+    public static function copyStorageFile(string $dir, ?string $fileName, string $sourceDisk = 'public')
     {
-        if (! $fileName) {
-            return null;
-        }
-
-        $extension = pathinfo($fileName, PATHINFO_EXTENSION) ?: 'tmp';
-        $newFileName = \Carbon\Carbon::now()->toDateString().'-'.uniqid().'.'.$extension;
-        $sourcePath = $dir.$fileName;
-        $targetDisk = self::getDisk();
-
-        try {
-            if (! Storage::disk($sourceDisk)->exists($sourcePath)) {
-                return null;
-            }
-
-            if (! Storage::disk($targetDisk)->exists($dir)) {
-                Storage::disk($targetDisk)->makeDirectory($dir);
-            }
-
-            Storage::disk($targetDisk)->put($dir.$newFileName, Storage::disk($sourceDisk)->get($sourcePath));
-
-            return $newFileName;
-        } catch (\Throwable $e) {
-            return null;
-        }
+        return FileStorage::copyStorageFile($dir, $fileName, $sourceDisk);
     }
 
     public static function duplicateProductVideoData($product): array
@@ -5692,23 +2650,6 @@ class Helpers
         ];
     }
 
-    public static function getStoredFileSize(string $dir, ?string $fileName, string $disk = 'public'): int
-    {
-        if (! $fileName) {
-            return 0;
-        }
-
-        try {
-            $path = $dir.$fileName;
-            if (Storage::disk($disk)->exists($path)) {
-                return (int) Storage::disk($disk)->size($path);
-            }
-        } catch (\Throwable $e) {
-        }
-
-        return 0;
-    }
-
     public static function sizeToMb($value): int
     {
         $value = trim((string) $value);
@@ -5727,56 +2668,6 @@ class Helpers
         }
     }
 
-    public static function deleteUnUsesdSettings()
-    {
-        $businessSettingKeys = ['landing_page_text', 'landing_page_links', 'speciality', 'join_as_images', 'download_app_section', 'counter_section',
-            'promotion_banner', 'module_section', 'feature', 'testimonial', 'landing_page_images', 'web_app_landing_page_settings',
-            'react_header_banner', 'hero_section', 'app_download_button', 'banner_section_full', 'delivery_service_section',
-            'discount_banner', 'banner_section_half', 'app_section_image', 'footer_logo', 'react_feature', 'about_us', 'privacy_policy',
-            'terms_and_conditions', 'tax', 'tax_included', 'shipping_policy', 'refund', 'cancelation', 'minimum_shipping_charge', 'per_km_shipping_charge',
-            'order_pending_message', 'order_confirmation_msg', 'order_processing_message', 'out_for_delivery_message', 'order_delivered_message',
-            'delivery_boy_assign_message', 'delivery_boy_start_message', 'delivery_boy_delivered_message', 'customer_verification', 'order_handover_message',
-            'order_cancled_message', 'order_refunded_message'];
-
-        $deleteSettingWithRelations = function ($setting) {
-            $setting->storage()->delete();
-            $setting->translations()->delete();
-            $setting->delete();
-        };
-
-        BusinessSetting::whereIn('key', $businessSettingKeys)
-            ->get()
-            ->each($deleteSettingWithRelations);
-
-        $dataSettingGroups = [
-            'admin_landing_page' => [
-                'earning_seller_image',
-                'earning_delivery_image',
-                'earning_rider_image',
-            ],
-            // 'react_landing_page' => [
-            //     'react_landing_page_settings',
-            //     'react_landing_page_img',
-            // ],
-        ];
-
-        foreach ($dataSettingGroups as $type => $keys) {
-            if (empty($keys)) {
-                continue;
-            }
-
-            DataSetting::withoutGlobalScopes()
-                ->where('type', $type)
-                ->whereIn('key', $keys)
-                ->get()
-                ->each($deleteSettingWithRelations);
-        }
-
-        return true;
-
-        // @php(\App\CentralLogics\Helpers::deleteUnUsesdSettings())
-    }
-
     public static function getStoreLabelByModuleType(?string $moduleType = null, bool $lowercase = false): string
     {
         $resolvedModuleType = $moduleType
@@ -5785,10 +2676,10 @@ class Helpers
             ?? self::get_store_data()?->module?->module_type;
 
         $label = match ($resolvedModuleType) {
-            'food' => translate('messages.restaurant'),
-            'rental' => translate('messages.provider'),
-            'service' => translate('messages.provider'),
-            default => translate('messages.store'),
+            'food' => translate('messages.Restaurant'),
+            'rental' => translate('messages.Provider'),
+            'service' => translate('messages.Provider'),
+            default => translate('messages.Store'),
         };
 
         return $lowercase ? strtolower($label) : ucfirst($label);
@@ -5796,75 +2687,30 @@ class Helpers
 
     public static function visitor_log($model, $user_id, $visitor_log_id, $order_count = false)
     {
-        switch ($model) {
-            case 'item':
-                $visitor_log_type = 'App\Models\Item';
-                break;
-
-            case 'store':
-                $visitor_log_type = 'App\Models\Store';
-                break;
-
-            default:
-                $visitor_log_type = 'App\Models\Item';
-                break;
-        }
-        VisitorLog::updateOrInsert(
-            ['visitor_log_type' => $visitor_log_type,
-                'user_id' => $user_id,
-                'visitor_log_id' => $visitor_log_id,
-            ],
-            [
-                'visit_count' => $order_count == false ? DB::raw('visit_count + 1') : DB::raw('visit_count'),
-                'order_count' => $order_count == true ? DB::raw('order_count + 1') : DB::raw('order_count'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
+        app(VisitorLogService::class)->record($model, $user_id, $visitor_log_id, (bool) $order_count);
     }
 
     public static function check_website_builder_status()
     {
-        // The vendor website builder targets storefront vendors only. Rental
-        // providers don't have a product storefront, so they never get the
-        // builder — regardless of the per-store flag.
         $store = self::get_store_data();
         if (($store?->module_type ?? null) === 'rental') {
             return false;
         }
 
         $admin_website_builder_status = self::get_business_settings('admin_website_builder_status');
-        $vendor_website_builder_status = StoreConfig::where('store_id', self::get_store_id())->value('website_builder_status');
+        $store?->loadMissing('storeConfig');
+        $vendor_website_builder_status = $store?->storeConfig?->website_builder_status;
 
         return $vendor_website_builder_status == 1 && $admin_website_builder_status == 1;
     }
 
-    public static function send_push_notif_for_maintenance_mode($data, $topic, $type)
-    {
-        $postData = [
-            'message' => [
-                'topic' => $topic,
-                'data' => [
-                    'title' => (string) ($data['title'] ?? ''),
-                    'body' => (string) ($data['description'] ?? ''),
-                    'type' => (string) $type,
-                    'image' => (string) ($data['image'] ?? ''),
-                    'body_loc_key' => (string) $type,
-                ],
-            ],
-        ];
-
-        return self::sendNotificationToHttp($postData);
-    }
-
     public static function is_vendor_panel_maintenance_active(): bool
     {
-        if (! Cache::has('maintenance')) {
+        if (! ApiCache::has('maintenance')) {
             return false;
         }
 
-        $maintenance = Cache::get('maintenance');
+        $maintenance = ApiCache::get('maintenance');
 
         if (empty($maintenance['vendor_panel'])) {
             return false;
@@ -5879,5 +2725,15 @@ class Helpers
         }
 
         return true;
+    }
+
+    private static function sanitized_json_text($data, bool $stripSemicolon = false, int $flags = 0): string
+    {
+        $chars = ['\'', '"', '{', '}', '[', ']', '<', '>', '?'];
+        if ($stripSemicolon) {
+            $chars[] = ';';
+        }
+
+        return str_ireplace($chars, ' ', json_encode($data, $flags));
     }
 }

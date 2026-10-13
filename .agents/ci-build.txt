@@ -1,0 +1,22 @@
+
+> build
+> vite build && npm run ensure:symlink
+
+vite v5.4.21 building for production...
+transforming...
+✓ 634 modules transformed.
+rendering chunks...
+computing gzip size...
+public/build/manifest.json              0.28 kB │ gzip:   0.15 kB
+public/build/assets/app-VGlbpKwI.css    0.99 kB │ gzip:   0.37 kB
+public/build/assets/app-BuGVxeZf.js   486.58 kB │ gzip: 160.24 kB
+✓ built in 13.22s
+
+> ensure:symlink
+> node scripts/ensure-build-link.cjs
+
+npm notice
+npm notice New major version of npm available! 11.16.0 -> 12.0.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+npm notice To update run: npm install -g npm@12.0.2
+npm notice

@@ -11,10 +11,18 @@ class StoreConfig extends Model
     use HasFactory;
 
     protected $table;
+
+    /**
+     * Resolved once per process. The constructor runs on every hydration of a
+     * row, so calling Schema::hasTable() here fired an information_schema query
+     * for each model instance.
+     */
+    private static ?string $resolvedTable = null;
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->table = Schema::hasTable('storeConfigs') ? 'storeConfigs' : 'store_configs';
+        $this->table = self::$resolvedTable ??= (Schema::hasTable('storeConfigs') ? 'storeConfigs' : 'store_configs');
     }
 
     protected $guarded = ['id'];

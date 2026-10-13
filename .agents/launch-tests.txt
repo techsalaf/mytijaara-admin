@@ -1,0 +1,18 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+...F                                                                4 / 4 (100%)
+
+Time: 00:06.859, Memory: 70.00 MB
+
+There was 1 failure:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\LaunchOperationsTest::cleanup_preserves_unfinished_releases_and_never_follows_links
+Failed asserting that actual size 0 matches expected size 1.
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\LaunchOperationsTest.php:55
+
+FAILURES!
+Tests: 4, Assertions: 18, Failures: 1, PHPUnit Deprecations: 1.

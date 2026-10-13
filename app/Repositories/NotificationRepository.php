@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\CentralLogics\Helpers;
 use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Models\Notification;
 use Illuminate\Database\Eloquent\Collection;
@@ -10,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
+use App\Support\Storage\FileStorage;
 
 class NotificationRepository implements NotificationRepositoryInterface
 {
@@ -29,12 +29,12 @@ class NotificationRepository implements NotificationRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->notification->where($params)->first();
+        return $this->notification->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->notification->paginate($dataLimit);
+        return $this->notification->with($relations)->paginate($dataLimit);
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
@@ -66,7 +66,7 @@ class NotificationRepository implements NotificationRepositoryInterface
     {
         $notification = $this->notification->find($id);
 
-        Helpers::check_and_delete('notification/' , $notification['image']);
+        FileStorage::delete('notification/' , $notification['image']);
         
         $notification->delete();
 
@@ -76,7 +76,7 @@ class NotificationRepository implements NotificationRepositoryInterface
     public function getExportList(Request $request): Collection
     {
         $key = explode(' ', $request['search'] ?? '');
-        return $this->notification->when(isset($key ), function ($q) use ($key){
+        return $this->notification->with(['zone'])->when(isset($key ), function ($q) use ($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
                         $q->orWhere('title', 'like', "%{$value}%");

@@ -2,22 +2,35 @@
 
 namespace Modules\AI\app\Agents;
 
-/**
- * Request-scoped context that tools write structured data into.
- * The service reads it after the agent prompt completes to include
- * product/store cards in the API response and to log which tools ran.
- */
 class AiResponseContext
 {
     private array $products     = [];
     private array $stores       = [];
     private array $categories   = [];
     private array $cartItems    = [];
+    private array $bogoOffers   = [];
+    private array $bundles      = [];
+    private array $happyHours   = [];
     private array $toolsInvoked = [];
 
     public function addProducts(array $products): void
     {
         $this->products = array_merge($this->products, $products);
+    }
+
+    public function addBogoOffers(array $offers): void
+    {
+        $this->bogoOffers = array_merge($this->bogoOffers, $offers);
+    }
+
+    public function addBundles(array $bundles): void
+    {
+        $this->bundles = array_merge($this->bundles, $bundles);
+    }
+
+    public function addHappyHours(array $happyHours): void
+    {
+        $this->happyHours = array_merge($this->happyHours, $happyHours);
     }
 
     public function addStores(array $stores): void
@@ -62,7 +75,21 @@ class AiResponseContext
         return $this->cartItems;
     }
 
-    /** Returns the unique names of every tool that was called during this turn. */
+    public function getBogoOffers(): array
+    {
+        return $this->bogoOffers;
+    }
+
+    public function getBundles(): array
+    {
+        return $this->bundles;
+    }
+
+    public function getHappyHours(): array
+    {
+        return $this->happyHours;
+    }
+
     public function getToolsInvoked(): array
     {
         return $this->toolsInvoked;
@@ -74,6 +101,9 @@ class AiResponseContext
         $this->stores       = [];
         $this->categories   = [];
         $this->cartItems    = [];
+        $this->bogoOffers   = [];
+        $this->bundles      = [];
+        $this->happyHours   = [];
         $this->toolsInvoked = [];
     }
 }

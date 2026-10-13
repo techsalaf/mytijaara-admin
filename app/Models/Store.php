@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Model\InvalidatesCacheTrait;
 use App\CentralLogics\Helpers;
-use App\Mail\SubscriptionDeadLineWarning;
 use App\Scopes\ZoneScope;
-use App\Traits\ItemFilter;
-use App\Traits\ReportFilter;
+use App\Services\Marketing\AdvertisementService;
+use App\Traits\Item\ItemFilterTrait;
+use App\Traits\Report\ReportFilterTrait;
 use Illuminate\Contracts\Database\Query\Expression as ExpressionContract;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -18,8 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
-use App\Traits\DemoMaskable;
+use App\Traits\Model\DemoMaskableTrait;
 use Modules\Rental\Entities\Trips;
 use Modules\Rental\Entities\TripTransaction;
 use Modules\Rental\Entities\Vehicle;
@@ -30,8 +29,12 @@ use Modules\Service\Entities\Service;
 use Modules\Service\Entities\ServiceBooking;
 use Modules\Service\Entities\ServiceReview;
 use Modules\TaxModule\Entities\OrderTax;
-use App\Traits\GeneratesSlug;
-use App\Traits\HandlesMissingAddonRelations;
+use App\Traits\Model\SlugTrait;
+use App\Traits\Item\MissingAddonRelationsTrait;
+use App\Traits\Model\HasStorageTrait;
+use App\Traits\Model\HasTranslationsTrait;
+use App\Traits\System\SidebarCountsTrait;
+use App\Traits\Store\StoreSubscriptionValidityTrait;
 
 /**
  * Class Store
@@ -90,7 +93,12 @@ use App\Traits\HandlesMissingAddonRelations;
  */
 class Store extends Model
 {
-    use ReportFilter, DemoMaskable, GeneratesSlug, ItemFilter, HandlesMissingAddonRelations;
+    use ReportFilterTrait, DemoMaskableTrait, SlugTrait, ItemFilterTrait, MissingAddonRelationsTrait, HasStorageTrait, HasTranslationsTrait, SidebarCountsTrait, InvalidatesCacheTrait;
+
+    protected static array $cacheTags = ['store'];
+
+    public const IMAGE_URL_APPENDS = ['logo_full_url', 'cover_photo_full_url', 'meta_image_full_url', 'tin_certificate_image_full_url'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -196,7 +204,7 @@ class Store extends Model
     /**
      * @var string[]
      */
-    protected $appends = ['gst_status', 'gst_code', 'logo_full_url', 'cover_photo_full_url', 'meta_image_full_url', 'tin_certificate_image_full_url', 'ad'];
+    protected $appends = ['gst_status', 'gst_code', 'ad'];
 
     /**
      * The attributes that should be hidden for arrays.
@@ -205,48 +213,26 @@ class Store extends Model
      */
     protected $hidden = [
         'gst',
+        'storeConfig',
     ];
 
-    public function translations(): MorphMany
-    {
-        return $this->morphMany(Translation::class, 'translationable');
-    }
+    protected $with = ['storeConfig'];
 
     /**
      * @return mixed
      */
     public function getNameAttribute($value)
     {
-        if (count($this->translations) > 0) {
-            foreach ($this->translations as $translation) {
-                if ($translation['key'] == 'name') {
-                    return $translation['value'];
-                }
-            }
-        }
-
-        return $value;
+        return $this->translatedAttribute('name', $value);
     }
 
     public function getAddressAttribute($value): mixed
     {
-        if (count($this->translations) > 0) {
-            foreach ($this->translations as $translation) {
-                if ($translation['key'] == 'address') {
-                    return $translation['value'];
-                }
-            }
-        }
-
-        return $value;
+        return $this->translatedAttribute('address', $value);
     }
 
     public function getSubSelfDeliveryAttribute(): mixed
     {
-        // GEMINI-MYTJ START: Global delivery override includes subscription stores.
-        $globalDelivery = \App\Services\StoreManagedDeliveryPolicy::forStore($this);
-        if ($globalDelivery !== null) return $globalDelivery;
-        // GEMINI-MYTJ END: Global delivery override.
         if ($this->store_business_model == 'subscription' && isset($this->store_sub)) {
             return (int) $this->store_sub?->self_delivery;
             unset($this->store_sub);
@@ -296,7 +282,11 @@ class Store extends Model
 
     public function getModuleTypeAttribute(): mixed
     {
-        return $this->module?->module_type;
+        if ($this->relationLoaded('module')) {
+            return $this->module?->module_type;
+        }
+
+        return Helpers::module_type_by_id($this->module_id);
     }
 
     public function getProductUploaadCheckAttribute(): mixed
@@ -320,58 +310,22 @@ class Store extends Model
 
     public function getLogoFullUrlAttribute()
     {
-        $value = $this->logo;
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] == 'logo') {
-                    return Helpers::get_full_url('store', $value, $storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('store', $value, 'public');
+        return $this->storageFullUrl('store', 'logo', $this->logo);
     }
 
     public function getTinCertificateImageFullUrlAttribute()
     {
-        $value = $this->tin_certificate_image;
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] == 'tin_certificate_image') {
-                    return Helpers::get_full_url('store', $value, $storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('store', $value, 'public');
+        return $this->storageFullUrl('store', 'tin_certificate_image', $this->tin_certificate_image);
     }
 
     public function getCoverPhotoFullUrlAttribute()
     {
-        $value = $this->cover_photo;
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] == 'cover_photo') {
-                    return Helpers::get_full_url('store/cover', $value, $storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('store/cover', $value, 'public');
+        return $this->storageFullUrl('store/cover', 'cover_photo', $this->cover_photo);
     }
 
     public function getMetaImageFullUrlAttribute()
     {
-        $value = $this->meta_image;
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] == 'meta_image') {
-                    return Helpers::get_full_url('store', $value, $storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('store', $value, 'public');
+        return $this->storageFullUrl('store', 'meta_image', $this->meta_image);
     }
 
 
@@ -432,11 +386,18 @@ class Store extends Model
             return (int) $this->attributes['ad'];
         }
 
+        // Present only when the caller opted in with withAdExists().
+        if (array_key_exists('advertisements_exists', $this->attributes)) {
+            return (int) $this->attributes['advertisements_exists'];
+        }
+
         if ($this->relationLoaded('advertisements')) {
             return $this->advertisements->isNotEmpty() ? 1 : 0;
         }
 
-        return $this->advertisements()->exists() ? 1 : 0;
+        // One cached set for the whole request instead of a per-row EXISTS
+        // subquery on every store query, or a per-model exists() N+1 here.
+        return (int) in_array((int) $this->getKey(), app(AdvertisementService::class)->validStoreIds(), true);
     }
 
     public function items(): HasMany
@@ -447,36 +408,6 @@ class Store extends Model
     public function visibleItems(): HasMany
     {
         return $this->items()->where('status', 1)->where('is_approved', 1);
-    }
-
-    public static function topItemsByIds(array $storeIds, int $limit = 5): \Illuminate\Support\Collection
-    {
-        $storeIds = array_values(array_unique(array_filter(array_map('intval', $storeIds))));
-        if (empty($storeIds)) {
-            return collect();
-        }
-
-        return Item::active()
-            ->whereIn('store_id', $storeIds)
-            ->orderBy('store_id')
-            ->orderByDesc('order_count')
-            ->get(['id', 'name', 'image', 'store_id', 'price', 'discount', 'discount_type', 'order_count', 'avg_rating'])
-            ->groupBy('store_id')
-            ->map(fn ($g) => $g->take(max(1, $limit))->values());
-    }
-
-    public static function activeItemCountsByIds(array $storeIds): \Illuminate\Support\Collection
-    {
-        $storeIds = array_values(array_unique(array_filter(array_map('intval', $storeIds))));
-        if (empty($storeIds)) {
-            return collect();
-        }
-
-        return Item::active()
-            ->whereIn('store_id', $storeIds)
-            ->selectRaw('store_id, COUNT(*) as items_count')
-            ->groupBy('store_id')
-            ->pluck('items_count', 'store_id');
     }
 
     public function storeCategories(): HasMany
@@ -491,7 +422,10 @@ class Store extends Model
 
     public function activeCoupons(): HasMany
     {
-        return $this->hasMany(Coupon::class)->where('status', '=', 1)->whereDate('expire_date', '>=', date('Y-m-d'))->whereDate('start_date', '<=', date('Y-m-d'));
+        // Bare column comparison, not whereDate() -- see Advertisement::scopeValid().
+        $today = date('Y-m-d');
+
+        return $this->hasMany(Coupon::class)->where('status', '=', 1)->where('expire_date', '>=', $today)->where('start_date', '<=', $today);
     }
 
     public function coupon(): HasMany
@@ -555,7 +489,11 @@ class Store extends Model
 
     public function getPickupZones()
     {
-        return Zone::whereIn('id', json_decode($this->pickup_zone_id))->get();
+        $zoneIds = is_array($this->pickup_zone_id)
+            ? $this->pickup_zone_id
+            : json_decode($this->pickup_zone_id ?? '', true);
+
+        return Zone::whereIn('id', is_array($zoneIds) ? $zoneIds : [])->get();
     }
 
     public function campaigns(): BelongsToMany
@@ -566,6 +504,29 @@ class Store extends Model
     public function itemCampaigns(): HasMany
     {
         return $this->hasMany(ItemCampaign::class);
+    }
+
+    /**
+     * The store's side of the two promotion enrolment conversations.
+     *
+     * Both return every enrolment whatever its state, not just the approved ones: the vendor
+     * panel has to show a pending request and a rejection with its reason, and filtering here
+     * would make "approved" the only thing the relation can express. Callers narrow with
+     * ->approved() when they mean live.
+     */
+    public function happyHourEnrollments(): HasMany
+    {
+        return $this->hasMany(HappyHourStore::class);
+    }
+
+    public function bogoOfferEnrollments(): HasMany
+    {
+        return $this->hasMany(BogoOfferStore::class);
+    }
+
+    public function bundles(): HasMany
+    {
+        return $this->hasMany(Bundle::class);
     }
 
     public function reviews(): HasManyThrough
@@ -587,10 +548,6 @@ class Store extends Model
         return $this->hasMany(ServiceReview::class, 'store_id');
     }
 
-    /**
-     * Service-module catalog: a service store's offerings live in the `services` table
-     * (Modules\Service\Entities\Service), the service equivalent of items().
-     */
     public function services(): HasMany
     {
         if (! service_addon_active()) {
@@ -600,19 +557,11 @@ class Store extends Model
         return $this->hasMany(Service::class, 'store_id');
     }
 
-    /**
-     * Catalog from the module-appropriate source: a service store uses its own Service rows
-     * (services), every other module keeps the shared item-based items().
-     */
     public function module_items()
     {
         return $this->module?->module_type === 'service' ? $this->services() : $this->items();
     }
 
-    /**
-     * Reviews from the module-appropriate source: a service store uses its own ServiceReview rows
-     * (service_reviews), every other module keeps the shared item-based reviews().
-     */
     public function module_reviews()
     {
         return $this->module?->module_type === 'service' ? $this->service_reviews() : $this->reviews();
@@ -626,6 +575,28 @@ class Store extends Model
     public function disbursement_method(): HasOne
     {
         return $this->hasOne(DisbursementWithdrawalMethod::class)->where('is_default', 1);
+    }
+
+    public function pickupZoneIds(): array
+    {
+        $stored = $this->pickup_zone_id;
+
+        if (empty($stored)) {
+            return [];
+        }
+
+        return is_string($stored) ? ((array) json_decode($stored, true)) : (array) $stored;
+    }
+
+    public function scopeServingPickupZones($query, array $zoneIds): void
+    {
+        $query->when($zoneIds, fn ($builder) => $builder->where(function ($group) use ($zoneIds) {
+            foreach (array_values($zoneIds) as $index => $zoneId) {
+                $index === 0
+                    ? $group->whereJsonContains('pickup_zone_id', (string) $zoneId)
+                    : $group->orWhereJsonContains('pickup_zone_id', (string) $zoneId);
+            }
+        }));
     }
 
     public function scopeWithoutModule($query, $moduleType)
@@ -652,14 +623,25 @@ class Store extends Model
         return [$rating5, $rating4, $rating3, $rating2, $rating1];
     }
 
+    private function decodedGst(): array
+    {
+        if (blank($this->gst)) {
+            return [];
+        }
+
+        $decoded = is_array($this->gst) ? $this->gst : json_decode($this->gst, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
     public function getGstStatusAttribute(): bool
     {
-        return (bool) ($this->gst ? json_decode($this->gst, true)['status'] : 0);
+        return (bool) ($this->decodedGst()['status'] ?? 0);
     }
 
     public function getGstCodeAttribute(): string
     {
-        return (string) ($this->gst ? json_decode($this->gst, true)['code'] : '');
+        return (string) ($this->decodedGst()['code'] ?? '');
     }
 
     public function scopeModule($query, $module_id): mixed
@@ -730,66 +712,28 @@ class Store extends Model
         return $query->where('off_day', 'not like', '%'.now()->dayOfWeek.'%');
     }
 
+    public function scopeWithAdExists($query): mixed
+    {
+        return $query->withExists('advertisements');
+    }
+
     protected static function booted(): void
     {
         static::addGlobalScope(new ZoneScope);
-        // GEMINI-MYTJ START: New and edited stores inherit the global delivery policy.
-        static::saving(function (Store $store) {
-            $mode = \App\Services\StoreManagedDeliveryPolicy::forStore($store);
-            if ($mode !== null) $store->self_delivery_system = $mode;
-        });
-        // GEMINI-MYTJ END: Global delivery inheritance.
-
-        static::addGlobalScope('translate', function (Builder $builder) {
-            $builder->with(['translations' => function ($query) {
-                return $query->where('locale', app()->getLocale());
-            }]);
-        });
-
-        static::addGlobalScope('storage', function ($builder) {
-            $builder->with('storage');
-        });
 
         static::retrieved(function () {
-            // Helpers::disableStoreForOrderCancellation();
-            $current_date = date('Y-m-d');
-            $check_daily_subscription_validity_check = Helpers::getSettingsDataFromConfig(settings: 'check_daily_subscription_validity_check');
-            if (! $check_daily_subscription_validity_check) {
-                Helpers::insert_business_settings_key('check_daily_subscription_validity_check', $current_date);
-                $check_daily_subscription_validity_check = BusinessSetting::where('key', 'check_daily_subscription_validity_check')->first();
+            static $checkedDate = null;
+
+            $today = date('Y-m-d');
+            if ($checkedDate === $today) {
+                return;
             }
+            $checkedDate = $today;
 
-            if ($check_daily_subscription_validity_check && $check_daily_subscription_validity_check?->value != $current_date) {
-
-                Store::whereHas('store_subs', function ($query) use ($current_date) {
-                    $query->where('status', 1)->whereDate('expiry_date', '<=', $current_date);
-                })->update(['status' => 0,
-                    'pos_system' => 1,
-                    'self_delivery_system' => 1,
-                    'reviews_section' => 1,
-                    'free_delivery' => 0,
-                    'store_business_model' => 'unsubscribed',
-                ]);
-                StoreSubscription::where('status', 1)->whereDate('expiry_date', '<=', $current_date)->update([
-                    'status' => 0,
-                ]);
-
-                // if (config('mail.status') && Helpers::get_mail_status('subscription_deadline_mail_status_store') == '1') {
-                //     $subscription_deadline_warning_days = BusinessSetting::where('key','subscription_deadline_warning_days')->first()?->value ?? 7;
-
-                //     $expire_soon= StoreSubscription::with('store:id,name,email')->where('status',1)->whereDate('expiry_date', Carbon::today()->addDays($subscription_deadline_warning_days))->get();
-
-                //     try {
-                //         foreach($expire_soon as $store){
-                //             Mail::to($store?->getRawOriginal('email'))->send(new SubscriptionDeadLineWarning($store->name));
-                //         }
-                //     } catch (\Exception $ex) {
-                //         info($ex->getMessage());
-                //     }
-                // }
-
-                $check_daily_subscription_validity_check->value = $current_date;
-                $check_daily_subscription_validity_check->save();
+            try {
+                (new class { use StoreSubscriptionValidityTrait; })->expireDueStoreSubscriptions();
+            } catch (\Throwable $e) {
+                info('store_subscription_validity_sweep: '.$e->getMessage());
             }
         });
 
@@ -956,10 +900,13 @@ class Store extends Model
                     ->whereHas('storeConfig', fn ($q) => $q->where('verified_seller', 1))
                     ->reorder()
                     ->orderBy('name', 'asc'),
+                // stores.total_order rather than withCount('orders'), which counted the
+                // orders table per candidate store and, alongside
+                // applyStoreFilterAction('popular'), added orders_count twice -- failing the
+                // request with "Duplicate column name orders_count".
                 'popular' => $query
-                    ->withCount('orders')
                     ->reorder()
-                    ->orderByDesc('orders_count'),
+                    ->orderByDesc('total_order'),
                 'newly_joined' => $query->reorder()->latest(),
                 default => null,
             };
@@ -991,7 +938,7 @@ class Store extends Model
             'discounted' => $query->whereHas('discount', function ($q) {
                 $q->validate();
             }),
-            'popular' => $query->withCount('orders')->orderBy('orders_count', 'desc'),
+            'popular' => $query->orderBy('total_order', 'desc'),
             'new_arrivals' => $query->latest(),
             'top_rated' => $query->withItemRatingAvg('avg_rating_all')->having('avg_rating_all', '>', 0)->orderBy('avg_rating_all', 'desc'),
             'veg' => $query->where('veg', 1),
@@ -1156,11 +1103,6 @@ class Store extends Model
         }, $alias);
     }
 
-    public function storage()
-    {
-        return $this->morphMany(Storage::class, 'data');
-    }
-
     protected static function boot(): void
     {
         parent::boot();
@@ -1169,52 +1111,9 @@ class Store extends Model
             $store->save();
         });
         static::saved(function ($model) {
-            Helpers::deleteCacheData('advertisement_');
-            Helpers::deleteCacheData('banner_');
-
-            if ($model->isDirty('logo')) {
-                $value = Helpers::getDisk();
-
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'logo',
-                ], [
-                    'value' => $value,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            foreach (['logo', 'cover_photo', 'meta_image', 'tin_certificate_image'] as $key) {
+                self::recordStorageDisk($model, $key, $key);
             }
-            if ($model->isDirty('cover_photo')) {
-                $value = Helpers::getDisk();
-
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'cover_photo',
-                ], [
-                    'value' => $value,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-            if ($model->isDirty('meta_image')) {
-                $value = Helpers::getDisk();
-
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'meta_image',
-                ], [
-                    'value' => $value,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        });
-        static::updated(function () {
-            Helpers::deleteCacheData('advertisement_');
-            Helpers::deleteCacheData('banner_');
         });
     }
 
@@ -1228,9 +1127,6 @@ class Store extends Model
         return Helpers::get_verified_seller_status($this, $this->storeConfig);
     }
 
-    /**
-     * Get all of the comments for the Store
-     */
     public function vehicle_identity(): HasManyThrough
     {
         return $this->hasManyThrough(VehicleIdentity::class, Vehicle::class, 'provider_id', 'vehicle_id', 'id', 'id');

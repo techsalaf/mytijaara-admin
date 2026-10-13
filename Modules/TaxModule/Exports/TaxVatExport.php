@@ -19,7 +19,6 @@ class TaxVatExport implements  FromView, ShouldAutoSize, WithStyles ,WithHeading
 
     use Exportable, VatTaxConfiguration;
     protected $data;
-    // protected $search;
 
     public function __construct($data) {
         $this->data = $data;
@@ -55,12 +54,11 @@ class TaxVatExport implements  FromView, ShouldAutoSize, WithStyles ,WithHeading
         ];
         $sheet->getStyle('A1:D1')->applyFromArray($styleArray);
         return [
-            // Define the style for cells with data
             'A1:D'.$this->data['data']->count() +3 => [
                 'borders' => [
                     'allBorders' => [
                         'borderStyle' => Border::BORDER_THIN,
-                        'color' => ['argb' => '000000'], // Specify the color of the border (optional)
+                        'color' => ['argb' => '000000'],
                     ],
                 ],
             ],
@@ -72,7 +70,7 @@ class TaxVatExport implements  FromView, ShouldAutoSize, WithStyles ,WithHeading
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $event->sheet->getStyle('A1:D1') // Adjust the range as per your needs
+                $event->sheet->getStyle('A1:D1')
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
                     ->setVertical(Alignment::VERTICAL_CENTER);

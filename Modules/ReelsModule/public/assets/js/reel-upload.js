@@ -96,6 +96,7 @@ function updatePreviewBackground(src) {
     }
 
     previewBox.style.backgroundImage = src ? `url('${src}')` : "";
+    previewBox.classList.toggle("has-thumbnail", Boolean(src));
 }
 
 function initStorePreview() {
@@ -221,7 +222,7 @@ function restoreOriginalReelUploader(box) {
             updatePreviewBackground("");
         }
 
-        togglePreviewPlayButton(true);
+        togglePreviewPlayButton(hasPreviewVideo());
         applyVendorDefault();
         return;
     }
@@ -255,7 +256,6 @@ function restoreOriginalReelUploader(box) {
             restoreUploadPlaceholder(box);
             updatePreviewBackground("");
             clearPreviewVideo();
-            togglePreviewPlayButton(true);
         }
 
         clearVendorDefaultIfEmpty();
@@ -449,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initReelUploader();
     initStorePreview();
     initDescriptionPreview();
-    togglePreviewPlayButton(true);
+    togglePreviewPlayButton(hasPreviewVideo());
 });
 
 const resetBtn = document.querySelector("#resetBtn");

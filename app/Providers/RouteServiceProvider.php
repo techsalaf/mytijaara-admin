@@ -8,6 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * Update mode.
+ *
+ * prepare:updatable copies this file over app/Providers/RouteServiceProvider.php, so a prepared
+ * package boots serving routes/update.php and nothing else. UpdateController::update_software()
+ * copies app/Providers/RouteServiceProvider.txt back over it once the wizard finishes, which is
+ * what returns the site to normal routing.
+ */
 class RouteServiceProvider extends ServiceProvider
 {
     /**
@@ -19,7 +27,6 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected $namespace = 'App\Http\Controllers';
 
-
     /**
      * The path to the "home" route for your application.
      *
@@ -30,64 +37,36 @@ class RouteServiceProvider extends ServiceProvider
     public const HOME = '/home';
 
     /**
-     * The controller namespace for the application.
-     *
-     * When present, controller route declarations will automatically be prefixed with this namespace.
-     *
-     * @var string|null
-     */
-    // protected $namespace = 'App\\Http\\Controllers';
-
-    /**
      * Define your route model bindings, pattern filters, etc.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->configureRateLimiting();
 
-        $this->routes(function () {
-
+        // booted(), so the wizard registers after every module provider and keeps `/`. The
+        // Builder storefront claims `/` with no domain constraint and boots later, and a
+        // later registration replaces an earlier one for the same method + domain + URI -
+        // which left the wizard 404ing from the storefront with this file correctly in place.
+        // The core copy of that module guards the panel host, but an update package carries
+        // no Modules/, so the add-on already on disk may predate the guard.
+        //
+        // $this->routes() is unusable here: it only stores a callback for the parent's
+        // booting hook, which has already fired. The lookups need refreshing for the same
+        // reason - route() will not resolve without it.
+        $this->app->booted(function () {
             Route::middleware('web')
                 ->namespace($this->namespace)
-                ->group(base_path('routes/web.php'));
+                ->group(base_path('routes/update.php'));
 
-            Route::prefix('admin')
-                ->middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/admin.php'));
-
-            Route::prefix('vendor-panel')
-                ->middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/vendor.php'));
-
-            Route::prefix('api/v1')
-                ->middleware('api')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/api/v1/api.php'));
-
-            Route::prefix('api/v2')
-                ->middleware('api')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/api/v2/api.php'));
-
-
-            //new routes
-            Route::prefix('admin')
-                ->middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/admin/routes.php'));
+            $this->app['router']->getRoutes()->refreshNameLookups();
+            $this->app['router']->getRoutes()->refreshActionLookups();
         });
     }
 
     /**
      * Configure the rate limiters for the application.
-     *
-     * @return void
      */
-    protected function configureRateLimiting()
+    protected function configureRateLimiting(): void
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(600)->by(optional($request->user())->id ?: $request->ip());

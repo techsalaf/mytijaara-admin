@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('aiAssistantModal');
+
+    if (!modal) {
+        return;
+    }
+
     const modalTitle = document.getElementById('modalTitle');
     const mainContent = document.getElementById('mainAiContent');
     const uploadContent = document.getElementById('uploadImageContent');

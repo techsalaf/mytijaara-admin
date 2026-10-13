@@ -2,9 +2,9 @@
 /public/hot
 /public/storage
 /public/build
-/build
 /storage/*.key
 /vendor
+/postman
 
 # Builder addon release zips produced by `npm run package:addon`
 /releases
@@ -45,26 +45,7 @@ storage/app/dummy-service-seed.json
 # Ignore all Markdown files
 *.md
 
-# Local credentials, runtime uploads and temporary agent work are never source.
-/.agents/
-/storage/app/public/
-/config/system-addons.php
-
-# Scratch/debug scripts
-/check_*.php
-/test_*.php
-/verify_*.php
-/audit.php
-/fix.php
-/get_*.php
-/reset_*.php
-/run_log.txt
-/test_db.php
-/app/Console/Commands/Fix*.php
-/app/Models/Modules/
-/app/Modules/
-
-/public/downloads/*.apk
-
-# OpenSSL runtime randomness state is never source.
-/.rnd
+# Database dumps written by the Backup & Restore screens. The vault also
+# carries its own .gitignore, but a dump is the entire platform in one file
+# and must never depend on a nested rule to stay out of the repository.
+/storage/app/backups

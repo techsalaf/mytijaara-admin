@@ -15,6 +15,14 @@ interface ModuleRepositoryInterface extends RepositoryInterface
     public function getExportList(Request $request): Collection;
 
     /**
+     * Totals for the list screen summary strip: total, active, inactive, types.
+     *
+     * @param array $filters
+     * @return array
+     */
+    public function getStatusSummary(array $filters = []): array;
+
+    /**
      * @param array $params
      * @param array $relations
      * @return Model|null

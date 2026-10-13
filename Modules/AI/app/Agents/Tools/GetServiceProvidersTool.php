@@ -2,23 +2,14 @@
 
 namespace Modules\AI\app\Agents\Tools;
 
-use App\CentralLogics\StoreLogic;
 use App\Models\Store;
+use App\Services\Store\StoreService;
 use Modules\AI\app\Agents\AiResponseContext;
 use Modules\Service\Entities\Service;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Service-module provider lookup. Read-only — suggestion data only.
- * Registered only when the conversation's moduleType is 'service'.
- * Use this when the user asks for "providers", "vendors", "companies",
- * "professionals", "top providers" — NOT for individual services.
- *
- * Returns text with provider name, rating, booking volume and active
- * service count so the LLM can compare providers meaningfully.
- */
 class GetServiceProvidersTool implements Tool
 {
     /**
@@ -64,7 +55,6 @@ class GetServiceProvidersTool implements Tool
             return 'No service providers available.';
         }
 
-        // Order by booking volume from $providerStats (stores has no avg_rating column).
         $orderedIds = $providerStats->keys()->all();
 
         $stores = Store::whereIn('id', $orderedIds)
@@ -89,11 +79,10 @@ class GetServiceProvidersTool implements Tool
             $serviceCount  = (int) ($stats->service_count ?? 0);
             $totalBookings = (int) ($stats->total_bookings ?? 0);
 
-            // Store::getRatingAttribute() already returns [r5, r4, r3, r2, r1].
             $rating  = 0.0;
             $buckets = $s->getAttribute('rating');
             if (is_array($buckets) && count($buckets) === 5 && array_sum($buckets) > 0) {
-                $rating = (float) (StoreLogic::calculate_store_rating($buckets)['rating'] ?? 0);
+                $rating = (float) (app(StoreService::class)->calculateRating($buckets)['rating'] ?? 0);
             }
 
             $parts = [$s->getAttribute('name')];

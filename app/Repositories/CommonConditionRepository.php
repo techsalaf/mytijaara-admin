@@ -27,19 +27,19 @@ class CommonConditionRepository implements CommonConditionRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->condition->where($params)->first();
+        return $this->condition->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->condition->get();
+        return $this->condition->with($relations)->get();
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         $key = explode(' ', $searchValue ?? '');
 
-        return $this->condition->orderBy('name')
+        return $this->condition->with($relations)->withCount('items')->orderBy('name')
             ->when($searchValue , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
@@ -84,7 +84,7 @@ class CommonConditionRepository implements CommonConditionRepositoryInterface
 
     public function getFirstWithoutGlobalScopeWhere(array $params, array $relations = []): ?Model
     {
-        return $this->condition->withoutGlobalScope('translate')->where($params)->first();
+        return $this->condition->with($relations)->withoutGlobalScope('translate')->with('translations')->where($params)->first();
     }
 
     public function getDropdownList(Request $request, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection

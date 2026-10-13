@@ -13,8 +13,8 @@ use App\Http\Requests\Admin\CategoryAddRequest;
 use App\Http\Requests\Admin\CategoryBulkExportRequest;
 use App\Http\Requests\Admin\CategoryBulkImportRequest;
 use App\Http\Requests\Admin\CategoryUpdateRequest;
-use App\Services\CategoryService;
-use App\Traits\ImportExportTrait;
+use App\Services\Item\CategoryService;
+use App\Traits\Report\ImportExportTrait;
 use Brian2694\Toastr\Facades\Toastr;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -51,12 +51,6 @@ class CategoryController extends BaseController
         return $this->getCategoryView($request);
     }
 
-    /**
-     * Category-wise tax follows the active workspace module: service categories are taxed under the
-     * `service_provider` setup (the one the service cart/booking compute against), while every other
-     * module keeps the default `vendor` setup. Keeps the form input and the saved Taxable rows on the
-     * same setup, so the tax the admin picks is the tax that actually gets charged.
-     */
     private function categoryTaxPayer(): string
     {
         return Config::get('module.current_module_type') === 'service' ? 'service_provider' : 'vendor';
@@ -72,8 +66,6 @@ class CategoryController extends BaseController
 
     private function getCategoryView(Request $request): View
     {
-        // All / Active / Inactive list tabs. `status` rides through the repository's exact-match
-        // `filters` (status column: 1 = active, 0 = inactive); 'all' leaves it unfiltered.
         $status = $request->query('status', 'all');
         $position = $request['position'] ?? 0;
         $filters = ['position' => $position];
@@ -83,46 +75,86 @@ class CategoryController extends BaseController
             $filters['status'] = 0;
         }
 
+        $isSubCategory = $position == 1;
+        $isAjax = $request->ajax();
+        $taxData = $isSubCategory
+            ? ['categoryWiseTax' => false, 'taxVats' => []]
+            : Helpers::getTaxSystemType(getTaxVatList: !$isAjax, tax_payer: $this->categoryTaxPayer());
+        $categoryWiseTax = $taxData['categoryWiseTax'];
+
+        $relations = [];
+        if ($isSubCategory) {
+            $relations = ['parent'];
+        } elseif ($categoryWiseTax) {
+            $relations = ['taxVats.tax'];
+        }
+
         $categories = $this->categoryRepo->getListWhere(
             searchValue: $request['search'],
             filters: $filters,
-            relations: ['module'],
-            dataLimit: config('default_pagination')
+            relations: $relations,
+            dataLimit: config('default_pagination'),
+            withStorage: !$isSubCategory
         );
 
-        // The status tabs (and search/pagination) fetch this list via AJAX so switching them never
-        // reloads the "Add New" card above — that card carries its own unsaved language-tab state
-        // (Default/EN/AR) and typed input, which a full page reload would otherwise wipe out.
-        if ($request->ajax()) {
-            $categoryWiseTax = $position == 0
-                ? Helpers::getTaxSystemType(tax_payer: $this->categoryTaxPayer())['categoryWiseTax']
-                : null;
+        $listData = $this->getListColumnData($categories, isSubCategory: $isSubCategory);
 
-            return view($position == 1
+        if ($isAjax) {
+            return view($isSubCategory
                 ? 'admin-views.category.partials._list-sub'
                 : 'admin-views.category.partials._list-main',
-                compact('categories', 'status', 'categoryWiseTax'));
+                array_merge(compact('categories', 'status', 'categoryWiseTax'), $listData));
         }
 
-        $mainCategories = $this->categoryRepo->getMainList(
-            filters: ['position' => 0],
-            relations: ['module'],
-        );
+        $mainCategories = $isSubCategory
+            ? $this->categoryRepo->getMainList(filters: ['position' => 0], withStorage: false)
+            : collect();
 
         $language = getWebConfig('language');
-        $taxData = Helpers::getTaxSystemType(tax_payer: $this->categoryTaxPayer());
-        $categoryWiseTax = $taxData['categoryWiseTax'];
         $taxVats = $taxData['taxVats'];
 
-        return view($this->categoryService->getViewByPosition($position), compact('categories', 'language', 'mainCategories', 'categoryWiseTax', 'taxVats', 'status'));
+        return view($this->viewByPosition($position), array_merge(
+            compact('categories', 'language', 'mainCategories', 'categoryWiseTax', 'taxVats', 'status'),
+            $listData
+        ));
+    }
+
+    /**
+     * Per-row aggregates for the category lists. Kept out of the paginator query so each lookup
+     * stays one query over the page's ids rather than a subquery per row.
+     *
+     * A sub category has no children, so it gets no sub-category count; and its items are counted
+     * over items.category_id rather than top_category_id — see CategoryService::getItemCounts().
+     */
+    private function getListColumnData(LengthAwarePaginator $categories, bool $isSubCategory): array
+    {
+        $categoryIds = $categories->pluck('id')->all();
+
+        return [
+            'subCategoryCounts' => $isSubCategory
+                ? []
+                : $this->categoryService->getSubCategoryCounts(categoryIds: $categoryIds),
+            'itemCounts' => $this->categoryService->getItemCounts(
+                categoryIds: $categoryIds,
+                column: $isSubCategory ? 'category_id' : 'top_category_id'
+            ),
+            'translatedLocales' => $this->categoryService->getTranslatedLocales(categoryIds: $categoryIds),
+        ];
+    }
+
+    private function viewByPosition(int $position): string
+    {
+        return match ($position) {
+            1 => CategoryViewPath::SUB_CATEGORY_INDEX['view'],
+            default => CategoryViewPath::INDEX['view'],
+        };
     }
 
     public function add(CategoryAddRequest $request): RedirectResponse
     {
         $parentCategory = $this->categoryRepo->getFirstWhere(params: ['id' => $request['parent_id']]);
         $category = $this->categoryRepo->add(
-            data: $this->categoryService->getAddData(
-                request: $request,
+            data: $this->categoryService->getAddData($request->all(),
                 parentCategory: $parentCategory
             )
         );
@@ -145,27 +177,25 @@ class CategoryController extends BaseController
             }
         }
 
-        Toastr::success($request['position'] == 0 ? translate('messages.category_added_successfully') : translate('messages.Sub_category_added_successfully'));
+        Toastr::success($request['position'] == 0 ? translate('Added successfully') : translate('Added successfully'));
 
         return back();
     }
 
     public function getUpdateView(string|int $id): JsonResponse
     {
-        $category = $this->categoryRepo->getFirstWithoutGlobalScopeWhere(params: ['id' => $id]);
+        // `parent` eager loaded: the edit panel names the main category a sub sits under, and
+        // AdminLazyLoadSweepTest fails a view that reaches for it lazily.
+        $category = $this->categoryRepo->getFirstWithoutGlobalScopeWhere(params: ['id' => $id], relations: ['parent']);
         $language = getWebConfig('language');
 
         $taxData = Helpers::getTaxSystemType(tax_payer: $this->categoryTaxPayer());
         $categoryWiseTax = $taxData['categoryWiseTax'];
         $taxVats = $taxData['taxVats'];
         $taxVatIds = $categoryWiseTax ? $category->taxVats()->pluck('tax_id')->toArray() : [];
-        $mainCategories = $this->categoryRepo->getMainList(
-            filters: ['position' => 0],
-            relations: ['module'],
-        );
 
         return response()->json([
-            'view' => view('admin-views.category._edit', compact('mainCategories', 'category', 'taxVats', 'categoryWiseTax', 'language', 'taxVatIds'))->render(),
+            'view' => view('admin-views.category._edit', compact('category', 'taxVats', 'categoryWiseTax', 'language', 'taxVatIds'))->render(),
         ]);
     }
 
@@ -181,7 +211,7 @@ class CategoryController extends BaseController
     public function updateFeatured(Request $request): RedirectResponse
     {
         $this->categoryRepo->update(id: $request['id'], data: ['featured' => $request['featured']]);
-        Toastr::success(translate('messages.category_featured_updated'));
+        Toastr::success(translate('messages.Category featured updated'));
 
         return back();
     }
@@ -189,7 +219,7 @@ class CategoryController extends BaseController
     public function update(CategoryUpdateRequest $request, string|int $id): RedirectResponse
     {
         $mainCategory = $this->categoryRepo->getFirstWhere(params: ['id' => $id]);
-        $category = $this->categoryRepo->update(id: $id, data: $this->categoryService->getUpdateData(request: $request, object: $mainCategory));
+        $category = $this->categoryRepo->update(id: $id, data: $this->categoryService->getUpdateData($request->all(), object: $mainCategory));
         $this->translationRepo->updateByModel(request: $request, model: $category, modelPath: 'App\Models\Category', attribute: 'name');
 
         if (addon_published_status('TaxModule') && $category['position'] == 0) {
@@ -215,7 +245,7 @@ class CategoryController extends BaseController
             }
         }
 
-        Toastr::success($category['position'] == 0 ? translate('messages.category_updated_successfully') : translate('messages.Sub_category_updated_successfully'));
+        Toastr::success($category['position'] == 0 ? translate('Updated successfully') : translate('Updated successfully'));
 
         return redirect()->route('admin.category.add', ['position' => $mainCategory->position]);
     }
@@ -226,9 +256,9 @@ class CategoryController extends BaseController
         $isSubCategory = $category && $category->position == 1;
 
         if ($this->categoryRepo->delete(id: $request['id'])) {
-            Toastr::success(translate($isSubCategory ? 'messages.sub_category_removed_successfully' : 'messages.category_removed_successfully'));
+            Toastr::success(translate($isSubCategory ? 'messages.Deleted successfully' : 'messages.Deleted successfully'));
         } else {
-            Toastr::warning(translate('messages.remove_sub_categories_first'));
+            Toastr::warning(translate('Remove subcategories first'));
         }
 
         return back();
@@ -237,7 +267,7 @@ class CategoryController extends BaseController
     public function getNameList(Request $request): JsonResponse
     {
         $data = $this->categoryRepo->getNameList(request: $request, dataLimit: 8);
-        $data[] = (object) ['id' => 'all', 'text' => translate('messages.all')];
+        $data[] = (object) ['id' => 'all', 'text' => translate('All')];
 
         return response()->json($data);
     }
@@ -246,46 +276,49 @@ class CategoryController extends BaseController
     {
         $this->categoryRepo->update(id: $request['category'], data: ['priority' => $request['priority']]);
         $category = $this->categoryRepo->getFirstWhere(params: ['id' => $request['category']]);
-        Toastr::success(translate($category && $category->position == 1 ? 'messages.sub_category_priority_updated_successfully' : 'messages.category_priority_updated successfully'));
+        Toastr::success(translate($category && $category->position == 1 ? 'messages.Updated successfully' : 'messages.Updated successfully'));
 
         return back();
     }
 
     public function getBulkImportView(): View
     {
-        return view(CategoryViewPath::BULK_IMPORT['view']);
+        return view(CategoryViewPath::BULK_IMPORT['view'], [
+            'summary' => $this->categoryRepo->getBulkDataSummary(),
+            'parents' => $this->categoryRepo->getMainList(filters: ['position' => 0], withStorage: false)->sortBy('id'),
+        ]);
     }
 
     public function importBulkData(CategoryBulkImportRequest $request): RedirectResponse
     {
-        $data = $this->categoryService->getImportData(request: $request);
+        $data = $this->categoryService->getImportData(file: $request->file('products_file'));
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'wrong_format') {
-            Toastr::error(translate('messages.you_have_uploaded_a_wrong_format_file'));
+            Toastr::error(translate('messages.You have uploaded a wrong format file'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'required_fields') {
-            Toastr::error(translate('messages.please_fill_all_required_fields'));
+            Toastr::error(translate('messages.Please fill all required fields'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'invalid_position') {
-            Toastr::error(translate('messages.invalid_category_position_in_file'));
+            Toastr::error(translate('messages.Invalid category position in file'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'invalid_parent') {
-            Toastr::error(translate('messages.invalid_parent_category_in_file'));
+            Toastr::error(translate('messages.Invalid parent category in file'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'duplicate_name') {
-            Toastr::error(translate('messages.duplicate_category_name_in_file'));
+            Toastr::error(translate('messages.Duplicate category name in file'));
 
             return back();
         }
@@ -296,46 +329,46 @@ class CategoryController extends BaseController
             DB::commit();
         } catch (Exception) {
             DB::rollBack();
-            Toastr::error(translate('messages.failed_to_import_data'));
+            Toastr::error(translate('messages.Failed to import data'));
 
             return back();
         }
 
-        Toastr::success(translate('messages.category_imported_successfully', ['count' => count($data)]));
+        Toastr::success(translate('messages.category_imported_successfully'));
 
         return back();
     }
 
     public function updateBulkData(CategoryBulkImportRequest $request): RedirectResponse
     {
-        $data = $this->categoryService->getImportData(request: $request, toAdd: false);
+        $data = $this->categoryService->getImportData(file: $request->file('products_file'), toAdd: false);
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'wrong_format') {
-            Toastr::error(translate('messages.you_have_uploaded_a_wrong_format_file'));
+            Toastr::error(translate('messages.You have uploaded a wrong format file'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'required_fields') {
-            Toastr::error(translate('messages.please_fill_all_required_fields'));
+            Toastr::error(translate('messages.Please fill all required fields'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'invalid_position') {
-            Toastr::error(translate('messages.invalid_category_position_in_file'));
+            Toastr::error(translate('messages.Invalid category position in file'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'invalid_parent') {
-            Toastr::error(translate('messages.invalid_parent_category_in_file'));
+            Toastr::error(translate('messages.Invalid parent category in file'));
 
             return back();
         }
 
         if (array_key_exists('flag', $data) && $data['flag'] == 'duplicate_name') {
-            Toastr::error(translate('messages.duplicate_category_name_in_file'));
+            Toastr::error(translate('messages.Duplicate category name in file'));
 
             return back();
         }
@@ -346,19 +379,21 @@ class CategoryController extends BaseController
             DB::commit();
         } catch (Exception) {
             DB::rollBack();
-            Toastr::error(translate('messages.failed_to_import_data'));
+            Toastr::error(translate('messages.Failed to import data'));
 
             return back();
         }
 
-        Toastr::success(translate('messages.category_updated_successfully', ['count' => count($data)]));
+        Toastr::success(translate('Updated successfully'));
 
         return back();
     }
 
     public function getBulkExportView(): View
     {
-        return view(CategoryViewPath::BULK_EXPORT['view']);
+        return view(CategoryViewPath::BULK_EXPORT['view'], [
+            'summary' => $this->categoryRepo->getBulkDataSummary(),
+        ]);
     }
 
     /**

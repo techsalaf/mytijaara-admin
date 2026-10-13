@@ -106,7 +106,6 @@ class ServiceExport implements FromView, ShouldAutoSize, WithColumnWidths, WithE
                 $worksheet = $sheet->getDelegate();
                 $highestRow = $worksheet->getHighestRow();
 
-                // Alignment
                 $sheet->getStyle("A1:H{$highestRow}")
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER)
@@ -117,21 +116,17 @@ class ServiceExport implements FromView, ShouldAutoSize, WithColumnWidths, WithE
                     ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                     ->setVertical(Alignment::VERTICAL_CENTER);
 
-                // Merge cells
                 $sheet->mergeCells('A1:H1');
                 $sheet->mergeCells('A2:C2');
                 $sheet->mergeCells('D2:H2');
 
-                // Row heights
                 $worksheet->getRowDimension(1)->setRowHeight(50);
                 $worksheet->getRowDimension(2)->setRowHeight(100);
 
-                // Apply row height to data rows
                 for ($i = 4; $i <= $highestRow; $i++) {
                     $worksheet->getRowDimension($i)->setRowHeight(30);
                 }
 
-                // Insert images
                 $this->setImage($worksheet);
             },
         ];

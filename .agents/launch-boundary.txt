@@ -1,0 +1,1 @@
+Core boundary passed: no forbidden host dependencies; changed core paths and protected write owners checked.

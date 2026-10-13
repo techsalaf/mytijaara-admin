@@ -41,7 +41,7 @@ class TaxVatController extends Controller
     {
         $this->validateRequest($request);
         $this->createTaxVatData($request);
-        $this->showNotification('successMessage', translate('messages.New_Tax_Added_Successfully'));
+        $this->showNotification('successMessage', translate('Added successfully'));
         return back();
     }
 
@@ -49,7 +49,7 @@ class TaxVatController extends Controller
     {
         $this->validateRequest($request, $taxVat->id);
         $this->updatetaxVat($request, $taxVat);
-        $this->showNotification('successMessage',$taxVat->name . ' ' . translate('messages.updated_successfully'));
+        $this->showNotification('successMessage',$taxVat->name . ' ' . translate('messages.Updated successfully'));
         return to_route('taxvat.index');
     }
 
@@ -88,7 +88,7 @@ class TaxVatController extends Controller
     public function status(Tax $taxVat): JsonResponse
     {
         $taxVat->update(['is_active' => !$taxVat->is_active]);
-        return response()->json(['id' => $taxVat->id ,'status' =>  $taxVat->is_active , 'message' => translate('messages.tax_status_updated')]);
+        return response()->json(['id' => $taxVat->id ,'status' =>  $taxVat->is_active , 'message' => translate('messages.Tax status updated')]);
     }
 
     public function export(Request $request): BinaryFileResponse

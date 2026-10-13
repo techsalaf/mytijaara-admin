@@ -2,8 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\ImageFile;
+use App\Rules\PhoneNumber;
+use App\Rules\EmailAddress;
+use App\Rules\StrongPassword;
+use App\Models\Zone;
 use App\Models\Store;
 use App\Models\Module;
+use App\Models\Vendor;
+use App\Services\Store\StoreService;
+use App\Services\Vendor\VendorService;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
@@ -15,7 +23,8 @@ use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rules\Password;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use App\Support\Storage\FileStorage;
 
 class VendorController extends Controller
 {
@@ -24,7 +33,7 @@ class VendorController extends Controller
         $status = Helpers::get_business_settings ('toggle_store_registration');
         if(!isset($status) || $status == '0')
         {
-            Toastr::error(translate('messages.not_found'));
+            Toastr::error(translate('No data found'));
             return back();
         }
         $admin_commission= Helpers::get_business_settings ('admin_commission');
@@ -34,16 +43,31 @@ class VendorController extends Controller
         $custome_recaptcha->build();
         Session::put('six_captcha', $custome_recaptcha->getPhrase());
 
-        return view('vendor-views.auth.general-info', compact('custome_recaptcha','admin_commission','business_name','packages' ));
+        $zones = Zone::active()->get(['id', 'name', 'display_name']);
+        $default_location = BusinessSetting::where('key', 'default_location')->first();
+        // general-info.blade.php resolved all of this itself, and re-ran
+        // subscription_check() on five separate lines.
+        $default_location = $default_location->value ? json_decode($default_location->value, true) : 0;
+        $language = Helpers::get_business_settings('language');
+        $language_labels = [];
+        foreach ((array) $language as $lang) {
+            $language_labels[$lang] = Helpers::get_language_name($lang).'('.strtoupper($lang).')';
+        }
+        $admin_zone_id = auth('admin')?->user()?->zone_id;
+        $subscription_check = Helpers::subscription_check();
+        $commission_check = Helpers::commission_check();
+        $map_api_key = Helpers::get_business_settings('map_api_key');
+
+        return view('vendor-views.auth.general-info', compact('custome_recaptcha','admin_commission','business_name','packages','zones','default_location','language','language_labels','subscription_check','commission_check','map_api_key','admin_zone_id' ));
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make([], []);
-        $status = Helpers::get_business_settings('toggle_store_registration');
-        if (! isset($status) || $status == '0') {
-            $validator->getMessageBag()->add('latitude', translate('messages.not_found'));
-
+        $status = Helpers::get_business_settings ('toggle_store_registration');
+        if(!isset($status) || $status == '0')
+        {
+            $validator->getMessageBag()->add('latitude', translate('No data found'));
             return response()->json(['errors' => Helpers::error_processor($validator)]);
 
         }
@@ -61,112 +85,140 @@ class VendorController extends Controller
                             'remoteip' => \request()->ip(),
                         ]);
 
-                        if (! $gResponse->successful()) {
+                        if (!$gResponse->successful()) {
                             $fail(translate('ReCaptcha Failed'));
                         }
                     },
                 ],
             ]);
-        } elseif (strtolower(session('six_captcha')) != strtolower($request->custome_recaptcha)) {
-            $validator->getMessageBag()->add('ReCAPTCHA', translate('ReCAPTCHA Failed'));
-
-            return response()->json(['errors' => Helpers::error_processor($validator)]);
+        } else if(strtolower(session('six_captcha')) != strtolower($request->custome_recaptcha))
+        {
+              $validator->getMessageBag()->add('ReCAPTCHA', translate('reCAPTCHA failed'));
+                 return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
 
         $validator = Validator::make($request->all(), [
-            'f_name' => 'required|string|max:100',
-            'l_name' => 'required|string|max:100',
-            'lang' => 'required|array|min:1',
-            'lang.*' => 'required|string|distinct',
-            'name' => 'required|array',
-            'name.*' => 'nullable|string|max:250',
-            'address' => 'required|array',
-            'address.*' => 'nullable|string',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'email' => 'required|email|max:191|unique:vendors',
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:vendors',
-            'minimum_delivery_time' => 'required|numeric|min:0',
-            'maximum_delivery_time' => 'required|numeric|gte:minimum_delivery_time',
-            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()],
+            'f_name' => 'required',
+            'name' => 'required',
+            'address' => 'required',
+            'latitude' => 'required',
+            'longitude' => 'required',
+            'email' => EmailAddress::rules('required', 'vendors'),
+            'phone' => PhoneNumber::rules('required', 'vendors'),
+            'minimum_delivery_time' => 'required',
+            'maximum_delivery_time' => 'required',
+            'password' => StrongPassword::rules('required'),
             'zone_id' => 'required',
             'module_id' => 'required',
-            'logo' => 'required|image|max:2048|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
-            'cover_photo' => 'required|image|max:2048|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
-            'delivery_time_type' => 'required|in:min,hours,days',
-            'business_plan' => 'required|in:commission-base,subscription-base',
-            'pickup_zone_id' => 'nullable|array',
-            'terms_accepted' => 'required|accepted',
-            'privacy_accepted' => 'required|accepted',
-        ], [
-            'password.min_length' => translate('The password must be at least :min characters long'),
-            'password.mixed' => translate('The password must contain both uppercase and lowercase letters'),
-            'password.letters' => translate('The password must contain letters'),
-            'password.numbers' => translate('The password must contain numbers'),
-            'password.symbols' => translate('The password must contain symbols'),
-            'password.uncompromised' => translate('The password is compromised. Please choose a different one'),
-            'password.custom' => translate('The password cannot contain white spaces.'),
+            'logo' => ImageFile::rules('required'),
+            'cover_photo' => ImageFile::rules('nullable'),
+            'delivery_time_type'=>'required',
+        ],[
         ]);
-        $validator->after(function ($validator) use ($request) {
-            if (! is_array($request->lang) || ! is_array($request->name) || ! is_array($request->address)) {
-                return;
-            }
-            if (! in_array('default', $request->lang, true)
-                || count($request->lang) !== count($request->name)
-                || count($request->lang) !== count($request->address)) {
-                $validator->errors()->add('lang', 'Provide matching names and addresses including the default language.');
-            }
-        });
         if ($validator->fails()) {
-            return response()->json(['errors' => Helpers::error_processor($validator)]);
+                 return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
-        try {
-            $names = array_combine($request->lang, $request->name);
-            $addresses = array_combine($request->lang, $request->address);
-            $result = app(\App\Services\VendorSelfRegistrationService::class)->register(
-                new \App\DTOs\VendorSelfRegistrationInput(
-                    firstName: $request->f_name, lastName: $request->l_name,
-                    email: $request->email, phone: $request->phone,
-                    names: $names, addresses: $addresses,
-                    latitude: $request->latitude, longitude: $request->longitude,
-                    zoneId: (int) $request->zone_id, moduleId: (int) $request->module_id,
-                    minimumDeliveryTime: (string) $request->minimum_delivery_time,
-                    maximumDeliveryTime: (string) $request->maximum_delivery_time,
-                    deliveryTimeUnit: $request->delivery_time_type,
-                    businessPlan: $request->business_plan,
-                    packageId: $request->filled('package_id') ? (int) $request->package_id : null,
-                    logo: $request->file('logo'), cover: $request->file('cover_photo'),
-                    passwordHash: bcrypt($request->password),
-                    termsAccepted: $request->boolean('terms_accepted'),
-                    privacyAccepted: $request->boolean('privacy_accepted'), source: 'web',
-                    pickupZoneIds: $request->input('pickup_zone_id', []),
-                    tin: $request->tin, tinExpireDate: $request->tin_expire_date,
-                    tinCertificate: $request->file('tin_certificate_image'),
-                    policyEvidence: app(\App\Services\RegistrationPolicyService::class)->evidence($request->only(['policy_locale', 'terms_version', 'privacy_version', 'presentation_hash'])),
-                )
-            );
-        } catch (\Illuminate\Validation\ValidationException $error) {
-            foreach ($error->errors() as $field => $messages) {
-                foreach ($messages as $message) {
-                    $validator->getMessageBag()->add($field, $message);
-                }
+        if($request->zone_id)
+        {
+            $zone = Zone::query()
+            ->whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))
+            ->where('id',$request->zone_id)
+            ->first();
+            if(!$zone){
+              $validator->getMessageBag()->add('zone', translate('Coordinates out of zone'));
+                 return response()->json(['errors' => Helpers::error_processor($validator)]);
             }
 
+            // D7's rule, applied here the same way it already is on Free Delivery / ETA / Delivery
+            // Rule setup: a module the zone does not serve could never be connected, so a store
+            // for it is refused rather than created unreachable. The module picker on this form is
+            // filtered client-side by a separate AJAX endpoint; this is the server saying so too.
+            if ($request->module_id && ! in_array((int) $request->module_id, app(\App\Services\Zone\ModuleZoneService::class)->connectedModuleIds($request->zone_id), true)) {
+                $validator->getMessageBag()->add('module_id', translate('messages.This zone is not connected to the selected module'));
+                return response()->json(['errors' => Helpers::error_processor($validator)]);
+            }
+        }
+
+        $module = Module::find($request['module_id']);
+        if ($module?->module_type == 'rental' && addon_published_status('Rental') && empty($request['pickup_zone_id'])){
+            $validator->getMessageBag()->add('pickup_zone_id', translate('messages.You must select a pickup zone'));
             return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
 
-        if ($request->hasSession()) {
-            $request->session()->put('vendor_registration_store_id', $result->store->id);
-            $request->session()->put('vendor_registration_expires_at', now()->addMinutes(15)->timestamp);
+        if ($request->business_plan == 'subscription-base' && $request->package_id == null ) {
+            $validator->getMessageBag()->add('package_id', translate('messages.You must select a package'));
+             return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
 
-        return response()->json(['redirect_url' => route('restaurant.secondStep', [
-            'store_id' => $result->store->id, 'business_plan' => $request->business_plan,
-        ])]);
+        $vendor = new Vendor();
+        $vendor->f_name = $request->f_name;
+        $vendor->l_name = $request->l_name;
+        $vendor->email = $request->email;
+        $vendor->phone = $request->phone;
+        $vendor->password = bcrypt($request->password);
+        $vendor->status = null;
+        $vendor->save();
+
+        $store = new Store;
+        $store->name =  $request->name[array_search('default', $request->lang)];
+        $store->phone = $request->phone;
+        $store->email = $request->email;
+        $store->logo = FileStorage::upload('store/', $request->file('logo'));
+        $store->cover_photo = FileStorage::upload('store/cover/', $request->file('cover_photo'));
+        $store->address = $request->address[array_search('default', $request->lang)];
+        $store->latitude = $request->latitude;
+        $store->longitude = $request->longitude;
+        $store->vendor_id = $vendor->id;
+        $store->zone_id = $request->zone_id;
+        $store->module_id = $request->module_id;
+        $store->pickup_zone_id = json_encode($request['pickup_zone_id']?? []) ;
+        $store->tin = $request->tin;
+        $store->tin_expire_date = $request->tin_expire_date;
+        $extension = $request->has('tin_certificate_image') ? $request->file('tin_certificate_image')->getClientOriginalExtension() : 'png';
+        $store->tin_certificate_image = FileStorage::upload('store/', $request->file('tin_certificate_image'));
+        $store->delivery_time = $request->minimum_delivery_time .'-'. $request->maximum_delivery_time.' '.$request->delivery_time_type;
+        $store->status = 0;
+        $store->store_business_model = 'none';
+        $store->save();
+
+        Helpers::add_or_update_translations(request: $request, key_data: 'name', name_field: 'name', model_name: 'Store', data_id: $store->id, data_value: $store->name);
+        Helpers::add_or_update_translations(request: $request, key_data: 'address', name_field: 'address', model_name: 'Store', data_id: $store->id, data_value: $store->address);
+
+
+        app(VendorService::class)->notifyRegistration($vendor, $module, $request['email']);
+
+
+        if(config('module.'.$store->module?->module_type.'.always_open'))
+        {
+            app(StoreService::class)->createSchedule($store->id);
+        }
+
+        if (Helpers::subscription_check()) {
+            if ($request->business_plan == 'subscription-base' && $request->package_id != null ) {
+
+                $store->package_id = $request->package_id;
+                $store->save();
+
+            }
+            elseif($request->business_plan == 'commission-base' ){
+                $store->store_business_model = 'commission';
+                $store->save();
+
+            }
+        } else{
+            $store->store_business_model = 'commission';
+            $store->save();
+
+        }
+
+    return response()->json(['redirect_url' => route('restaurant.secondStep',['store_id' => $store->id,'business_plan'=>$request->business_plan])]);
+
     }
 
     public function get_all_modules(Request $request){
-        $module_data = Module::Active()->whereHas('zones', function($query)use ($request){
+        $module_data = Module::translateOnly('module_name')
+        ->select('modules.id', 'modules.module_name')
+        ->Active()->whereHas('zones', function($query)use ($request){
             $query->where('zone_id', $request->zone_id);
         })->notParcel()->notRideShare()
         ->where('modules.module_name', 'like', '%'.$request->q.'%')
@@ -222,7 +274,7 @@ class VendorController extends Controller
 
         if ($request->business_plan == 'subscription-base' && $request->package_id != null ) {
             $key=['subscription_free_trial_days','subscription_free_trial_type','subscription_free_trial_status'];
-            $free_trial_settings=BusinessSetting::whereIn('key', $key)->pluck('value','key');
+            $free_trial_settings=Helpers::get_business_settings_many($key);
 
             return view('vendor-views.auth.register-subscription-payment',[
             'package_id'=> $request->package_id,
@@ -243,7 +295,7 @@ class VendorController extends Controller
             $admin_commission= BusinessSetting::where('key','admin_commission')->first();
             $business_name= BusinessSetting::where('key','business_name')->first();
             $packages= SubscriptionPackage::where('status',1)->where('module_type', Helpers::subscriptionPackageType($store))->get();
-            Toastr::error(translate('messages.please_follow_the_steps_properly.'));
+            Toastr::error(translate('messages.Please follow the steps properly.'));
             return view('vendor-views.auth.register-step-2',[
                 'admin_commission'=> $admin_commission?->value,
                 'business_name'=> $business_name?->value,
@@ -260,7 +312,7 @@ class VendorController extends Controller
         if ($request->business_plan == 'subscription-base' && $store->package_id != null ) {
 
             $key=['subscription_free_trial_days','subscription_free_trial_type','subscription_free_trial_status'];
-            $free_trial_settings=BusinessSetting::whereIn('key', $key)->pluck('value','key');
+            $free_trial_settings=Helpers::get_business_settings_many($key);
 
             return view('vendor-views.auth.register-subscription-payment',[
             'package_id'=> $store->package_id,
@@ -299,19 +351,17 @@ class VendorController extends Controller
             'payment' => 'required'
         ]);
 
-        $store= Store::Where('id',$request->store_id)->first();
-        $package = SubscriptionPackage::withoutGlobalScope('translate')->find($request->package_id);
-        abort_unless($store && $package && (int) $package->status === 1 && $package->module_type === Helpers::subscriptionPackageType($store->module), 403);
+        $store= Store::Where('id',$request->store_id)->first(['id','vendor_id']);
+        $package = SubscriptionPackage::withoutGlobalScope('translate')->with('translations')->find($request->package_id);
 
         if(!in_array($request->payment,['free_trial'])){
             $url= route('restaurant.final_step',['store_id' => $store->id?? null]);
             return redirect()->away(Helpers::subscriptionPayment(store_id:$store->id,package_id:$package->id,payment_gateway:$request->payment,payment_platform:'web',url:$url,type: 'new_join'));
         }
-        if ($request->payment == 'free_trial' && BusinessSetting::where('key', 'subscription_free_trial_status')->value('value') != '1') abort(403);
         if($request->payment == 'free_trial'){
             $plan_data=   Helpers::subscription_plan_chosen(store_id:$store->id,package_id:$package->id,payment_method:'free_trial',discount:0,reference:'free_trial',type: 'new_join');
         }
-        $plan_data != false ?  Toastr::success( translate('Successfully_Subscribed.')) : Toastr::error( translate('Something_went_wrong!.'));
+        $plan_data != false ?  Toastr::success( translate('Successfully subscribed.')) : Toastr::error( translate('Something went wrong'));
         return to_route('restaurant.final_step');
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\EmailAddress;
 use App\Models\DeliveryMan;
 use App\Models\OrderTransaction;
 use App\Models\Zone;
@@ -11,7 +12,6 @@ use App\Models\DataSetting;
 use App\Models\AdminFeature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
 use App\Models\AdminTestimonial;
@@ -25,13 +25,13 @@ use App\Models\AdminPromotionalBanner;
 use App\Models\DeliverymanLoyaltyPointHistory;
 use App\Models\DeliverymanReferralHistory;
 use App\Models\SubscriptionTransaction;
-use App\Traits\ActivationClass;
+use App\Traits\System\ActivationTrait;
 use FontLib\Table\Type\name;
 use Illuminate\Support\Facades\Session;
 
 class HomeController extends Controller
 {
-      use ActivationClass;
+      use ActivationTrait;
 
     /**
      * Show the application dashboard.
@@ -73,17 +73,16 @@ class HomeController extends Controller
             }
         }
 
-        // $settings =  DataSetting::with('translations')->where('type','admin_landing_page')->pluck('value','key')->toArray();
         $opening_time =Helpers::get_business_settings('opening_time');
         $closing_time = Helpers::get_business_settings('closing_time');
         $opening_day =   Helpers::get_business_settings('opening_day');
         $closing_day = Helpers::get_business_settings('closing_day');
-        $promotional_banners = AdminPromotionalBanner::where('status', 1)->get()->toArray();
-        $features = AdminFeature::where('status', 1)->get()->toArray();
-        $criterias = AdminSpecialCriteria::where('status', 1)->get();
-        $testimonials = AdminTestimonial::where('status', 1)->get();
+        $promotional_banners = AdminPromotionalBanner::withStorage()->where('status', 1)->get()->toArray();
+        $features = AdminFeature::withStorage()->where('status', 1)->get()->toArray();
+        $criterias = AdminSpecialCriteria::withStorage()->where('status', 1)->get();
+        $testimonials = AdminTestimonial::withStorage()->where('status', 1)->get();
 
-        $zones = Zone::where('status', 1)->with('modules')->get();
+        $zones = Zone::where('status', 1)->with('modules.storage')->get();
         $zones = self::zone_format($zones);
 
         $landing_data = [
@@ -125,32 +124,32 @@ class HomeController extends Controller
                 $links = isset($settings['seller_app_earning_links']) ? json_decode($settings['seller_app_earning_links'], true) : [];
                 $links['playstore_url_status'] = (int)($links['playstore_url_status'] ?? 0);
                 $links['apple_store_url_status'] = (int)($links['apple_store_url_status'] ?? 0);
-                $links['playstore_url'] = BusinessSetting::where('key', 'app_url_android_store')->value('value');
-                $links['apple_store_url'] = BusinessSetting::where('key', 'app_url_ios_store')->value('value');
+                $links['playstore_url'] = Helpers::get_business_settings('app_url_android_store', false);
+                $links['apple_store_url'] = Helpers::get_business_settings('app_url_ios_store', false);
                 return $links;
             })(),
             'dm_app_earning_links' => (function() use ($settings) {
                 $links = isset($settings['dm_app_earning_links']) ? json_decode($settings['dm_app_earning_links'], true) : [];
                 $links['playstore_url_status'] = (int)($links['playstore_url_status'] ?? 0);
                 $links['apple_store_url_status'] = (int)($links['apple_store_url_status'] ?? 0);
-                $links['playstore_url'] = BusinessSetting::where('key', 'app_url_android_deliveryman')->value('value');
-                $links['apple_store_url'] = BusinessSetting::where('key', 'app_url_ios_deliveryman')->value('value');
+                $links['playstore_url'] = Helpers::get_business_settings('app_url_android_deliveryman', false);
+                $links['apple_store_url'] = Helpers::get_business_settings('app_url_ios_deliveryman', false);
                 return $links;
             })(),
             'rider_app_earning_links' => (function() use ($settings) {
                 $links = isset($settings['rider_app_earning_links']) ? json_decode($settings['rider_app_earning_links'], true) : [];
                 $links['playstore_url_status'] = (int)($links['playstore_url_status'] ?? 0);
                 $links['apple_store_url_status'] = (int)($links['apple_store_url_status'] ?? 0);
-                $links['playstore_url'] = BusinessSetting::where('key', 'app_url_android_rider')->value('value');
-                $links['apple_store_url'] = BusinessSetting::where('key', 'app_url_ios_rider')->value('value');
+                $links['playstore_url'] = Helpers::get_business_settings('app_url_android_rider', false);
+                $links['apple_store_url'] = Helpers::get_business_settings('app_url_ios_rider', false);
                 return $links;
             })(),
             'download_user_app_links' => (function() use ($settings) {
                 $links = isset($settings['download_user_app_links']) ? json_decode($settings['download_user_app_links'], true) : [];
                 $links['playstore_url_status'] = (int)($links['playstore_url_status'] ?? 0);
                 $links['apple_store_url_status'] = (int)($links['apple_store_url_status'] ?? 0);
-                $links['playstore_url'] = BusinessSetting::where('key', 'app_url_android')->value('value');
-                $links['apple_store_url'] = BusinessSetting::where('key', 'app_url_ios')->value('value');
+                $links['playstore_url'] = Helpers::get_business_settings('app_url_android', false);
+                $links['apple_store_url'] = Helpers::get_business_settings('app_url_ios', false);
                 return $links;
             })(),
             'fixed_link' => (isset($settings['fixed_link']))  ? json_decode($settings['fixed_link'], true) : null,
@@ -162,7 +161,6 @@ class HomeController extends Controller
             'available_zone_image_full_url' => Helpers::get_full_url('available_zone_image', (isset($settings['available_zone_image'])) ? $settings['available_zone_image'] : null, (isset($settings['available_zone_image_storage'])) ? $settings['available_zone_image_storage'] : 'public'),
             'available_zone_list' => $zones,
 
-            // Earn section card content
             'seller_card_title' => (isset($settings['seller_app_earning_title'])) ? $settings['seller_app_earning_title'] : null,
             'seller_card_subtitle' => (isset($settings['seller_app_earning_sub_title'])) ? $settings['seller_app_earning_sub_title'] : null,
             'seller_card_image' => (isset($settings['seller_app_earning_image'])) ? Helpers::get_full_url('seller_app_earning_image', $settings['seller_app_earning_image'], (isset($settings['seller_app_earning_image_storage'])) ? $settings['seller_app_earning_image_storage'] : 'public', 'aspect_1') : null,
@@ -272,7 +270,7 @@ class HomeController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'email' => 'required',
+            'email' => EmailAddress::rules('required'),
             'subject' => 'required',
             'message' => 'required',
         ]);
@@ -296,7 +294,7 @@ class HomeController extends Controller
                 ],
             ]);
         } else if (strtolower(session('six_captcha')) != strtolower($request->custome_recaptcha)) {
-            Toastr::error(translate('messages.ReCAPTCHA Failed'));
+            Toastr::error(translate('reCAPTCHA failed'));
             return back();
         }
 
@@ -419,8 +417,7 @@ class HomeController extends Controller
 
     public function lang($local)
     {
-        $direction = BusinessSetting::where('key', 'site_direction')->first();
-        $direction = $direction->value ?? 'ltr';
+        $direction = Helpers::get_business_settings('site_direction', false) ?? 'ltr';
         $language = BusinessSetting::where('key', 'system_language')->first();
         foreach (json_decode($language['value'], true) as $key => $data) {
             if ($data['code'] == $local) {
@@ -460,7 +457,7 @@ class HomeController extends Controller
         $id = base64_decode($id);
         $BusinessData = ['admin_commission', 'business_name', 'address', 'phone', 'logo', 'email_address'];
         $transaction = SubscriptionTransaction::with(['store.vendor', 'package:id,package_name,price'])->findOrFail($id);
-        $BusinessData = BusinessSetting::whereIn('key', $BusinessData)->pluck('value', 'key');
+        $BusinessData = Helpers::get_business_settings_many($BusinessData);
         $logo = BusinessSetting::where('key', "logo")->first();
         $mpdf_view = View::make('subscription-invoice', compact('transaction', 'BusinessData', 'logo'));
         Helpers::gen_mpdf(view: $mpdf_view, file_prefix: 'Subscription', file_postfix: $id);
@@ -470,8 +467,10 @@ class HomeController extends Controller
     {
         $id = base64_decode($id);
         $BusinessData = ['footer_text', 'email_address'];
-        $order = Order::findOrFail($id);
-        $BusinessData = BusinessSetting::whereIn('key', $BusinessData)->pluck('value', 'key');
+        // The parcel block prints the category and both tiers; loaded here rather than left to
+        // the blade to pull one at a time.
+        $order = Order::with(['parcel_category', 'weight', 'dimension'])->findOrFail($id);
+        $BusinessData = Helpers::get_business_settings_many($BusinessData);
         $logo = BusinessSetting::where('key', "logo")->first();
         $mpdf_view = View::make('order-invoice', compact('order', 'BusinessData', 'logo'));
         Helpers::gen_mpdf(view: $mpdf_view, file_prefix: 'OrderInvoice', file_postfix: $id);
@@ -488,7 +487,7 @@ class HomeController extends Controller
         $dm   = DeliveryMan::findOrFail($id);
 
         $businessDataKeys = ['footer_text', 'email_address', 'phone', 'app_url'];
-        $businessData     = BusinessSetting::whereIn('key', $businessDataKeys)->pluck('value', 'key');
+        $businessData     = Helpers::get_business_settings_many($businessDataKeys);
 
 
         $date_range=$request->date_range;
@@ -551,7 +550,7 @@ class HomeController extends Controller
             email: $request['email'],
             username: $request['username'],
             purchaseKey: $request['purchase_key'],
-            softwareType: $request->get('software_type', base64_decode('cHJvZHVjdA=='))
+            softwareType: $request->input('software_type', base64_decode('cHJvZHVjdA=='))
         );
         $this->updateActivationConfig(app: 'admin_panel', response: $response);
         return redirect(url('/'));

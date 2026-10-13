@@ -1,41 +1,4 @@
 <script>
-    $('.plan-slider').owlCarousel({
-        loop: false,
-        margin: 30,
-        responsiveClass:true,
-        nav:false,
-        dots:false,
-        items: 3,
-        center: true,
-        startPosition: '{{ $index }}',
-
-        responsive:{
-            0: {
-                items:1.1,
-                margin: 10,
-            },
-            375: {
-                items:1.3,
-                margin: 30,
-            },
-            576: {
-                items:1.7,
-            },
-            768: {
-                items:2.2,
-                margin: 40,
-            },
-            992: {
-                items: 3,
-                margin: 40,
-            },
-            1200: {
-                items: 4,
-                margin: 40,
-            }
-        }
-    })
-
     "use strict";
     $('.status_change_alert').on('click', function (event) {
         let url = $(this).data('url');
@@ -46,14 +9,14 @@
     function status_change_alert(url, message, e) {
         e.preventDefault();
         Swal.fire({
-            title: '{{ translate('Are_you_sure?') }}',
+            title: '{{ translate('Are you sure?') }}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: '{{ translate('no') }}',
-            confirmButtonText: '{{ translate('yes') }}',
+            cancelButtonText: '{{ translate('No') }}',
+            confirmButtonText: '{{ translate('Yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {
@@ -72,7 +35,7 @@
                         $('#loading').show()
                     },
                     success: function (data) {
-                        toastr.success('{{ translate('Successfully_canceled_the_subscription') }}!');
+                        toastr.success('{{ translate('Successfully canceled the subscription') }}!');
                     },
                     complete: function () {
                         $('#loading').hide();
@@ -92,14 +55,14 @@
     function shift_to_commission(url, message, e) {
         e.preventDefault();
         Swal.fire({
-            title: '{{ translate('Are_you_sure?') }}',
+            title: '{{ translate('Are you sure?') }}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: '{{ translate('no') }}',
-            confirmButtonText: '{{ translate('yes') }}',
+            cancelButtonText: '{{ translate('No') }}',
+            confirmButtonText: '{{ translate('Yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {
@@ -117,7 +80,7 @@
                         $('#loading').show()
                     },
                     success: function (data) {
-                        toastr.success('{{ translate('Successfully_Switched_To_Commission') }}!');
+                        toastr.success('{{ translate('Successfully switched to commission') }}!');
                     },
                     complete: function () {
                         $('#loading').hide();

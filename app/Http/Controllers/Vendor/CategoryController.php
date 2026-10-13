@@ -18,7 +18,7 @@ class CategoryController extends Controller
     function index(Request $request)
     {
         $key = explode(' ', $request['search'] ?? '');
-        $categories=Category::where(['position'=>0])->module(Helpers::get_store_data()->module_id)
+        $categories=Category::withStorage()->withCount('childes')->where(['position'=>0])->module(Helpers::get_store_data()->module_id)
         ->when($request['search'] , function($q) use($key){
             $q->where(function ($q) use ($key) {
                 foreach ($key as $value) {
@@ -34,10 +34,10 @@ class CategoryController extends Controller
     }
 
     public function get_all(Request $request){
-        $data = Category::where('name', 'like', '%'.$request->q.'%')->module(Helpers::get_store_data()->module_id)->limit(8)->get([DB::raw('id, CONCAT(name, " (", if(position = 0, "'.translate('messages.main').'", "'.translate('messages.sub').'"),")") as text')]);
+        $data = Category::withoutTranslation()->where('name', 'like', '%'.$request->q.'%')->module(Helpers::get_store_data()->module_id)->limit(8)->get([DB::raw('id, CONCAT(name, " (", if(position = 0, "'.translate('messages.main').'", "'.translate('messages.sub').'"),")") as text')])->makeHidden('image_full_url');
         if(isset($request->all))
         {
-            $data[]=(object)['id'=>'all', 'text'=>translate('messages.all')];
+            $data[]=(object)['id'=>'all', 'text'=>translate('All')];
         }
         return response()->json($data);
     }
@@ -45,7 +45,7 @@ class CategoryController extends Controller
     function sub_index(Request $request)
     {
         $key = explode(' ', $request['search'] ?? '');
-        $categories=Category::with(['parent'])
+        $categories=Category::withStorage()->with(['parent'])
         ->whereHas('parent',function($query){
             $query->module(Helpers::get_store_data()->module_id);
         })
@@ -61,38 +61,7 @@ class CategoryController extends Controller
         return view('vendor-views.category.sub-index',compact('categories'));
     }
 
-    // public function search(Request $request){
-    //     $key = explode(' ', $request['search'] ?? '');
-    //     $categories=Category::where(['position'=>0])
-    //     ->module(Helpers::get_store_data()->module_id)
-    //     ->where(function ($q) use ($key) {
-    //         foreach ($key as $value) {
-    //             $q->orWhere('name', 'like', "%{$value}%");
-    //         }
-    //     })
-    //     ->latest()
-    //     ->limit(50)->get();
-    //     return response()->json([
-    //         'view'=>view('vendor-views.category.partials._table',compact('categories'))->render(),
-    //         'count'=>$categories->count()
-    //     ]);
-    // }
 
-//    public function sub_search(Request $request){
-//        $key = explode(' ', $request['search'] ?? '');
-//        $categories=Category::with(['parent'])
-//        ->where(function ($q) use ($key) {
-//            foreach ($key as $value) {
-//                $q->orWhere('name', 'like', "%{$value}%");
-//            }
-//        })
-//        ->where(['position'=>1])->limit(50)->get();
-//
-//        return response()->json([
-//            'view'=>view('vendor-views.category.partials._sub_table',compact('categories'))->render(),
-//            'count'=>$categories->count()
-//        ]);
-//    }
 
     public function export_categories(Request $request){
         $key = explode(' ', $request['search'] ?? '');

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\HandlesMissingAddonRelations;
+use App\Traits\Item\MissingAddonRelationsTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Rental\Entities\Trips;
@@ -11,7 +11,7 @@ use Modules\Service\Entities\ServiceBooking;
 
 class OrderProDiscount extends Model
 {
-    use HandlesMissingAddonRelations, HasFactory;
+    use MissingAddonRelationsTrait, HasFactory;
 
     protected $guarded = ['id'];
 

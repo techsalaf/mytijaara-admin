@@ -2,8 +2,9 @@
 
 namespace Modules\AI\app\Agents\Tools;
 
+use App\Services\Store\StoreService;
+use App\Services\Promotion\HappyHourCatalog;
 use Modules\AI\app\Agents\AiResponseContext;
-use App\CentralLogics\StoreLogic;
 use App\Models\Store;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
@@ -38,11 +39,12 @@ class GetStoreDetailsTool implements Tool
         $storeId = (int) ($args['store_id'] ?? 0);
 
         /** @var Store|null $store */
-        // Scope to the customer's own module + zone so an arbitrary store_id
-        // can't pull a store (and its phone/email/address/shipping config) from
-        // another module or delivery zone. Without this the tool would expose
-        // any store's contact + config by ID.
-        $store = Store::with(['schedules', 'discount', 'activeCoupons'])
+        $store = Store::withStorage()->with([
+                'schedules',
+                'discount',
+                'activeCoupons',
+                'happyHourEnrollments.happyHour.dates',
+            ])
             ->where('id', $storeId)
             ->when($this->moduleId, fn ($q) => $q->where('module_id', $this->moduleId))
             ->when(!empty($this->zoneIds), fn ($q) => $q->whereIn('zone_id', $this->zoneIds))
@@ -60,10 +62,6 @@ class GetStoreDetailsTool implements Tool
             return "Store #{$storeId} not found.";
         }
 
-        // Build schedule summary. store_schedule.day is an INTEGER day-of-week
-        // (0=Sun..6=Sat, matching Carbon's dayOfWeek and the host's `open`
-        // computation) — NOT a day name, so we must compare against
-        // now()->dayOfWeek, not strtolower(format('l')) (which never matched).
         $schedules = $store->schedules->map(fn ($s) => [
             'day'        => (int) $s->getAttribute('day'),
             'open_time'  => $s->getAttribute('opening_time'),
@@ -77,7 +75,6 @@ class GetStoreDetailsTool implements Tool
             ? "Today ({$todayName}): opens {$todaySched['open_time']}, closes {$todaySched['close_time']}"
             : 'No schedule listed for today';
 
-        // Active store-level discount
         $storeDiscount = null;
         if ($store->discount) {
             $storeDiscount = [
@@ -88,7 +85,6 @@ class GetStoreDetailsTool implements Tool
             ];
         }
 
-        // Active coupons
         $coupons = $store->activeCoupons->map(fn ($c) => [
             'code'          => $c->getAttribute('code'),
             'discount'      => $c->getAttribute('discount'),
@@ -97,28 +93,42 @@ class GetStoreDetailsTool implements Tool
         ])->values()->all();
 
         $name         = $store->getAttribute('name');
-        // `rating` is the bucket array [5★,4★,3★,2★,1★]; derive a real average via
-        // StoreLogic (casting the array straight to float yields 1.0 for every
-        // store) and the count from the bucket sum. (`stores` has no rating_count
-        // column — selecting it previously 500'd this whole tool.)
         $ratingBuckets = $store->getAttribute('rating');
         $ratingCount   = is_array($ratingBuckets) ? (int) array_sum($ratingBuckets) : 0;
         $avgRating     = (is_array($ratingBuckets) && count($ratingBuckets) === 5)
-            ? (float) (StoreLogic::calculate_store_rating($ratingBuckets)['rating'] ?? 0)
+            ? (float) (app(StoreService::class)->calculateRating($ratingBuckets)['rating'] ?? 0)
             : 0.0;
         $deliveryTime = $store->getAttribute('delivery_time');
         $minOrder     = $store->getAttribute('minimum_order');
 
-        // Open status mirrors the storefront's `open` column: the store is open
-        // when it's active AND today's schedule window covers the current time.
-        // (Previously this reflected only the manual `active` toggle and could
-        // report OPEN outside business hours.)
         $nowT   = now()->format('H:i:s');
         $isOpen = (bool) $store->getAttribute('active')
             && $todaySched
             && !empty($todaySched['open_time']) && !empty($todaySched['close_time'])
             && $todaySched['open_time'] <= $nowT
             && $todaySched['close_time'] >= $nowT;
+
+        // Resolve active Happy Hour for this store using the same catalog the storefront uses.
+        $runningHappyHour = null;
+        $happyHourInfo    = null;
+        if ($store->relationLoaded('happyHourEnrollments')) {
+            /** @var HappyHourCatalog $catalog */
+            $catalog          = app(HappyHourCatalog::class);
+            $runningHappyHour = $catalog->runningHappyHour($store);
+            if ($runningHappyHour) {
+                $window          = $catalog->windowPayload($runningHappyHour, $this->zoneIds, $this->moduleId);
+                $happyHourInfo   = [
+                    'id'               => $runningHappyHour->getKey(),
+                    'title'            => $runningHappyHour->getAttribute('title'),
+                    'discount'         => (float) $runningHappyHour->getAttribute('discount'),
+                    'min_order_amount' => $runningHappyHour->min_order_amount !== null
+                        ? (float) $runningHappyHour->getAttribute('min_order_amount')
+                        : null,
+                    'ends_at'          => $window['ends_at'] ?? null,
+                    'remaining_seconds' => (int) ($window['remaining_seconds'] ?? 0),
+                ];
+            }
+        }
 
         $formatted = [
             'id'                      => $store->getKey(),
@@ -153,6 +163,7 @@ class GetStoreDetailsTool implements Tool
             'schedules'               => $schedules,
             'store_discount'          => $storeDiscount,
             'coupons'                 => $coupons,
+            'happy_hour'              => $happyHourInfo,
         ];
 
         $this->context->recordTool('GetStoreDetailsTool');
@@ -166,10 +177,16 @@ class GetStoreDetailsTool implements Tool
             ? ' — Store discount: ' . $storeDiscount['discount'] . ($storeDiscount['discount_type'] === 'percent' ? '%' : ' flat') . ' off'
             : '';
 
+        $happyHourNote = $happyHourInfo
+            ? ' — 🎉 Happy Hour LIVE: ' . $happyHourInfo['discount'] . '% off'
+                . ($happyHourInfo['min_order_amount'] ? ' (min order ' . number_format((float) $happyHourInfo['min_order_amount'], 2) . ')' : '')
+                . ($happyHourInfo['ends_at'] ? ', ends ' . $happyHourInfo['ends_at'] : '')
+            : '';
+
         return "{$name} — Rating: {$avgRating}/5 — {$schedInfo} — "
             . "Min order: {$minOrder} — Delivery: {$deliveryTime} min — "
             . ((bool) $store->getAttribute('free_delivery') ? 'FREE delivery' : 'Paid delivery')
-            . $discountInfo . $couponInfo
+            . $discountInfo . $couponInfo . $happyHourNote
             . ' — ' . ($isOpen ? 'Currently OPEN' : 'Currently CLOSED');
     }
 }

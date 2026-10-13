@@ -33,12 +33,10 @@ class ReportController extends Controller
             $to = $request->to ?? null;
         }
         $key = explode(' ', $request['search'] ?? '');
-        $expense = Expense::with('order')->where('created_by','vendor')->where('store_id',Helpers::get_store_id())->where('amount', '>' ,0)
-
+        $query = Expense::with(['order.customer', 'trip.customer', 'serviceBooking.customer'])->notRefunded()->where('created_by','vendor')->where('store_id',Helpers::get_store_id())->where('amount', '>' ,0)
         ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
         })
-
         ->when($request['search'] && is_array($key), function ($query) use ($key) {
 
             $query->where(function ($q) use ($key) {
@@ -49,18 +47,15 @@ class ReportController extends Controller
 
                         $sub->where('type', 'like', "%{$value}%")
                             ->orWhere('order_id', 'like', "%{$value}%")
-
                             ->orWhereHas('order.customer', function ($customer) use ($value) {
                                 $customer->where('f_name', 'like', "%{$value}%")
                                         ->orWhere('l_name', 'like', "%{$value}%")
                                         ->orWhere('phone', 'like', "%{$value}%");
                             })
-
                             ->orWhereHas('order', function ($order) use ($value) {
                                 $order->where('delivery_address->contact_person_name', 'like', "%{$value}%")
                                     ->orWhere('delivery_address->contact_person_phone', 'like', "%{$value}%");
                             })
-
                             ->orWhereHas('user', function ($user) use ($value) {
                                 $user->where('f_name', 'like', "%{$value}%")
                                     ->orWhere('l_name', 'like', "%{$value}%")
@@ -84,10 +79,18 @@ class ReportController extends Controller
             });
 
         })
-        ->orderBy('created_at', 'desc')
-        ->paginate(config('default_pagination'))->withQueryString();
+        ;
+
+        $summary = (clone $query)->toBase()->reorder()
+            ->selectRaw('type, COUNT(*) as entries, SUM(amount) as amount')
+            ->groupBy('type')
+            ->orderByDesc('amount')
+            ->get();
+
+        $expense = $query->orderBy('created_at', 'desc')
+            ->paginate(config('default_pagination'))->withQueryString();
         $module_type = Helpers::get_store_data()->module->module_type;
-        return view('vendor-views.report.expense-report', compact('expense','from','to','filter','module_type'));
+        return view('vendor-views.report.expense-report', compact('expense','summary','from','to','filter','module_type'));
     }
 
 
@@ -103,11 +106,10 @@ class ReportController extends Controller
             $to = $request->to ?? null;
         }
         $key = explode(' ', $request['search'] ?? '');
-        $expense = Expense::with('order')->where('created_by','vendor')->where('store_id',Helpers::get_store_id())->where('amount', '>' ,0)
+        $expense = Expense::with(['order', 'trip.customer'])->notRefunded()->where('created_by','vendor')->where('store_id',Helpers::get_store_id())->where('amount', '>' ,0)
         ->when(isset($filter) , function ($query) use ($filter,$from, $to) {
                 return $query->applyDateFilter($filter, $from, $to);
         })
-
         ->when($request['search'] && is_array($key), function ($query) use ($key) {
 
             $query->where(function ($q) use ($key) {
@@ -118,18 +120,15 @@ class ReportController extends Controller
 
                         $sub->where('type', 'like', "%{$value}%")
                             ->orWhere('order_id', 'like', "%{$value}%")
-
                             ->orWhereHas('order.customer', function ($customer) use ($value) {
                                 $customer->where('f_name', 'like', "%{$value}%")
                                         ->orWhere('l_name', 'like', "%{$value}%")
                                         ->orWhere('phone', 'like', "%{$value}%");
                             })
-
                             ->orWhereHas('order', function ($order) use ($value) {
                                 $order->where('delivery_address->contact_person_name', 'like', "%{$value}%")
                                     ->orWhere('delivery_address->contact_person_phone', 'like', "%{$value}%");
                             })
-
                             ->orWhereHas('user', function ($user) use ($value) {
                                 $user->where('f_name', 'like', "%{$value}%")
                                     ->orWhere('l_name', 'like', "%{$value}%")
@@ -165,8 +164,6 @@ class ReportController extends Controller
             'zone'=>Helpers::get_zones_name(Helpers::get_store_data()->zone_id),
             'store'=>Helpers::get_stores_name(Helpers::get_store_id()),
             'module_type'=>Helpers::get_store_data()->module->module_type,
-            // 'customer'=>is_numeric($customer_id)?Helpers::get_customer_name($customer_id):null,
-            // 'module'=>request('module_id')?Helpers::get_module_name(request('module_id')):null,
             'filter'=>$filter,
             'type'=> 'store',
         ];
@@ -194,7 +191,7 @@ class ReportController extends Controller
         $status = $request->query('status', 'all');
         $payment_method_id = $request->query('payment_method_id', 'all');
 
-        $dis = DisbursementDetails::where('store_id',$store_id)
+        $dis = DisbursementDetails::with(['withdraw_method'])->where('store_id',$store_id)
             ->when((isset($payment_method_id) && ($payment_method_id != 'all')), function ($query) use ($payment_method_id) {
                 return $query->whereHas('withdraw_method',function($q)use ($payment_method_id){
                     $q->where('withdrawal_method_id', $payment_method_id);
@@ -216,15 +213,15 @@ class ReportController extends Controller
             })
             ->latest();
 
-        $total_disbursements= $dis->get();
+        $payout_summary = (clone $dis)->toBase()->reorder()
+            ->selectRaw('status, COUNT(*) as payouts, SUM(disbursement_amount) as amount')
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
 
-        $disbursements= $dis->paginate(config('default_pagination'))->withQueryString();
+        $disbursements = $dis->paginate(config('default_pagination'))->withQueryString();
 
-        $pending =(float) $total_disbursements->where('status','pending')->sum('disbursement_amount');
-        $completed =(float) $total_disbursements->where('status','completed')->sum('disbursement_amount');
-        $canceled =(float) $total_disbursements->where('status','canceled')->sum('disbursement_amount');
-
-        return view('vendor-views.report.disbursement-report', compact('disbursements','pending', 'completed','canceled','filter','from','to','withdrawal_methods','status','payment_method_id'));
+        return view('vendor-views.report.disbursement-report', compact('disbursements','payout_summary','filter','from','to','withdrawal_methods','status','payment_method_id'));
 
     }
 
@@ -243,7 +240,7 @@ class ReportController extends Controller
         $status = $request->query('status', 'all');
         $payment_method_id = $request->query('payment_method_id', 'all');
 
-        $disbursements = DisbursementDetails::where('store_id',$store_id)
+        $disbursements = DisbursementDetails::with(['store', 'withdraw_method'])->where('store_id',$store_id)
             ->when((isset($payment_method_id) && ($payment_method_id != 'all')), function ($query) use ($payment_method_id) {
                 return $query->whereHas('withdraw_method',function($q)use ($payment_method_id){
                     $q->where('withdrawal_method_id', $payment_method_id);

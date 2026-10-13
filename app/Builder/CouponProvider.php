@@ -2,7 +2,7 @@
 
 namespace App\Builder;
 
-use App\CentralLogics\CouponLogic;
+use App\Services\Marketing\CouponService;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Store;
@@ -47,10 +47,6 @@ class CouponProvider implements CouponProviderContract
 
     private function applyEligibility(Builder $q, Store $store, ?int $customerId): void
     {
-        // Storefront shows ONLY the store's own coupons — coupons the vendor
-        // created for this store (created_by = 'vendor', store_id = this store).
-        // Every admin-created coupon (zone-wide, first-order, platform-wide, and
-        // admin store-targeted store_wise) is intentionally hidden here.
         $q->where('created_by', 'vendor')
           ->where('store_id', $store->id)
           ->where(fn (Builder $c) => $this->jsonContainsCustomer($c, $customerId));
@@ -79,8 +75,6 @@ class CouponProvider implements CouponProviderContract
         $minPurchase  = (float) $coupon->min_purchase;
         $maxDiscount  = (float) $coupon->max_discount;
 
-        // A free-delivery coupon carries no monetary discount, so the generic
-        // "$0 Off" reads as broken — show the waived-shipping label instead.
         $isFreeDelivery = $coupon->coupon_type === 'free_delivery';
         $benefit = $isFreeDelivery
             ? 'Free Delivery'
@@ -88,8 +82,6 @@ class CouponProvider implements CouponProviderContract
                 ? $this->trimNumber($discount) . '% Off'
                 : '$' . $this->trimNumber($discount) . ' Off');
 
-        // `note` carries the min-purchase requirement only. The max_discount cap
-        // gets its own line in the card, so both can show at once.
         $note = $minPurchase > 0
             ? 'Min purchase $' . $this->trimNumber($minPurchase)
             : null;
@@ -171,10 +163,6 @@ class CouponProvider implements CouponProviderContract
         if ((int) $coupon->module_id !== (int) $moduleId) {
             return ['ok' => false, 'error' => 'This coupon does not apply to the current module.'];
         }
-        // Storefront only honors the store's own coupons — matches the coupon list,
-        // which hides admin-created coupons (zone-wide, first-order, platform-wide,
-        // admin store-targeted). Reject anything not created by the vendor for this
-        // store so a hidden admin code can't be redeemed by typing it in.
         if ($coupon->created_by !== 'vendor' || (int) $coupon->store_id !== (int) $storeId) {
             return ['ok' => false, 'error' => 'This coupon is not available at this store.'];
         }
@@ -187,15 +175,15 @@ class CouponProvider implements CouponProviderContract
         }
 
         $status = $customerId
-            ? CouponLogic::is_valide($coupon, $customerId, $storeId, $moduleId)
-            : CouponLogic::is_valid_for_guest($coupon, $storeId, $moduleId);
+            ? app(CouponService::class)->validateForCustomer($coupon, $customerId, $storeId, $moduleId)
+            : app(CouponService::class)->validateForGuest($coupon, $storeId, $moduleId);
 
         if ($status !== 200) {
             return ['ok' => false, 'error' => $this->statusToMessage($status)];
         }
 
         $isFreeDelivery = $coupon->coupon_type === 'free_delivery';
-        $discount       = $isFreeDelivery ? 0.0 : (float) CouponLogic::get_discount($coupon, $cartTotal);
+        $discount       = $isFreeDelivery ? 0.0 : (float) app(CouponService::class)->calculateDiscount($coupon, $cartTotal);
 
         return [
             'ok'           => true,

@@ -1,0 +1,31 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+Time: 00:24.011, Memory: 82.00 MB
+
+There was 1 error:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\ProductListingFlowTest::test_controls_are_scoped_to_question_and_paginate_without_losing_choices
+Mockery\Exception\NoMatchingExpectationException: No matching handler found for Mockery_0_Modules_WhatsAppVendorConcierge_app_Services_WhatsAppGateway::sendButtonMessage('123', 'Choose a unit', [0 => [...], 1 => [...], 2 => [...]], NULL, 'Your progress is saved • Type Support for help'). Either the method was unexpected or its arguments matched no expected argument list for this method
+
+
+
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery\ExpectationDirector.php:90
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingPresenter.php:58
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ProductListingFlowTest.php:83
+
+--
+
+There was 1 risky test:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\ProductListingFlowTest::test_controls_are_scoped_to_question_and_paginate_without_losing_choices
+* Test code or tested code did not remove its own error handlers
+
+* Test code or tested code did not remove its own exception handlers
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ProductListingFlowTest.php:69
+
+ERRORS!
+Tests: 14, Assertions: 69, Errors: 1, PHPUnit Deprecations: 1, Risky: 1.

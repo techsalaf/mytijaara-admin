@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin\System;
 
 use App\Models\Module;
-use App\Traits\ActivationClass;
+use App\Traits\System\ActivationTrait;
 use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use Illuminate\Http\JsonResponse;
@@ -22,7 +22,7 @@ use Illuminate\Contracts\Foundation\Application;
 
 class AddonController extends Controller
 {
-    use ActivationClass;
+    use ActivationTrait;
     public function __construct(){
         if (is_dir('Modules\Gateways\Traits') && trait_exists('Modules\Gateways\Traits\SmsGateway')) {
             $this->extendWithSmsGatewayTrait();
@@ -65,29 +65,31 @@ class AddonController extends Controller
         return view('admin-views.system.addon.index', compact('addons'));
     }
 
-    public function publish(Request $request): JsonResponse|int
+    public function publish(Request $request): JsonResponse
     {
         if (getEnvMode() == 'demo') {
             return response()->json([
                 'status' => 'demo',
-                'message'=> translate('messages.update_option_is_disable_for_demo')
+                'message'=> translate('messages.Update option is disable for demo')
             ]);
         }
         $full_data = include($request['path'] . '/Addon/info.php');
         $path = $request['path'];
         $addon_name = $full_data['name'];
-        if ($full_data['purchase_code'] == null || $full_data['username'] == null) {
+
+        $going_active = !$full_data['is_published'];
+
+        // The licence is only a condition of turning an add-on ON. Gating both
+        // directions on it strands an add-on that is published with no purchase
+        // code — every click on its switch reopens the licence modal, so it can
+        // never be turned off.
+        if ($going_active && ($full_data['purchase_code'] == null || $full_data['username'] == null)) {
             return response()->json([
                 'flag' => 'inactive',
                 'view' => view('admin-views.system.addon.partials.activation-modal-data', compact('full_data', 'path', 'addon_name'))->render(),
             ]);
         }
 
-        $going_active = !$full_data['is_published'];
-
-        // Builder activation requires a server pre-flight check (PHP
-        // version, extensions, writable paths, DB, bundle present, etc.).
-        // Run BEFORE flipping info.php so a failure leaves state untouched.
         if ($going_active && $full_data['name'] == 'Builder') {
             $issues = $this->checkBuilderRequirements();
             if (!empty($issues)) {
@@ -111,11 +113,12 @@ class AddonController extends Controller
             $this->rideSharePublish($full_data['is_published']);
         }
 
+        if ($full_data['name'] == 'Service') {
+            $this->servicePublish($full_data['is_published']);
+        }
+
         if ($full_data['name'] == 'Builder') {
             $ok = $this->builderPublish($full_data['is_published']);
-            // If the runtime file copy fails (rare — preflight already
-            // passed) roll back the info.php flip so the customer isn't
-            // left in an "activated but no bundle" state.
             if (!$ok) {
                 $full_data['is_published'] = $going_active ? 0 : 1;
                 file_put_contents(
@@ -129,36 +132,32 @@ class AddonController extends Controller
             }
         }
 
+        // is_published goes back so the card can flip in place — the page never
+        // reloads, so the switch has to be told what the file now says.
         return response()->json([
-            'status' => 'success',
-            'message'=> 'status_updated_successfully'
+            'status'       => 'success',
+            'is_published' => (int) $full_data['is_published'],
         ]);
     }
 
-    public function activation(Request $request): Redirector|RedirectResponse|Application
+    public function activation(Request $request): Redirector|RedirectResponse|Application|JsonResponse
     {
+        // The modal on the add-on page posts here over ajax so the card can flip
+        // without a reload. A plain post (JS unavailable) keeps the old
+        // flash-and-redirect flow, so the form never dead-ends on raw JSON.
+        $wants_json = $request->ajax();
 
         if (getEnvMode() == 'demo') {
-            Toastr::info(translate('messages.update_option_is_disable_for_demo'));
+            $message = translate('messages.Update option is disable for demo');
+            if ($wants_json) {
+                return response()->json(['status' => 'demo', 'message' => $message]);
+            }
+            Toastr::info($message);
             return back();
         }
-        $remove = ["http://", "https://", "www."];
-        $url = str_replace($remove, "", url('/'));
         $full_data = include($request['path'] . '/Addon/info.php');
+        $addon_name = $full_data['name'];
 
-        $post = [
-            base64_decode('bmFtZQ==') => $request['name'],
-            base64_decode('ZW1haWw=') => $request['email'],
-            base64_decode('dXNlcm5hbWU=') => $request['username'],
-            base64_decode('cHVyY2hhc2Vfa2V5') => $request['purchase_code'],
-            base64_decode('c29mdHdhcmVfaWQ=') => $full_data['software_id'],
-            base64_decode('ZG9tYWlu') => $url,
-        ];
-
-        // NulledMaster: Always return success, skip remote server verification
-        $status = base64_encode(1);
-
-        if ($full_data['name'] == 'Builder' || $full_data['name'] == 'Rental') {
             $response= $this->getRequestConfig(
                         name:  $request['name'],
                         email:  $request['email'],
@@ -169,14 +168,18 @@ class AddonController extends Controller
                     );
             $status =  base64_encode(data_get($response, 'active', 1));
 
-        }
 
         if ((int)base64_decode($status)) {
-            // Builder server pre-flight runs BEFORE info.php is written
-            // so a failure leaves the addon in its previous state.
             if ($full_data['name'] == 'Builder') {
                 $issues = $this->checkBuilderRequirements();
                 if (!empty($issues)) {
+                    if ($wants_json) {
+                        return response()->json([
+                            'flag' => 'requirements_missing',
+                            'view' => view('admin-views.system.addon.partials.builder-requirements-modal-data',
+                                        compact('issues', 'addon_name'))->render(),
+                        ]);
+                    }
                     \session()->flash('builder_requirements_issues', $issues);
                     \session()->flash('builder_requirements_addon', $full_data['name']);
                     return back();
@@ -196,23 +199,36 @@ class AddonController extends Controller
             if ($full_data['name'] == 'RideShare') {
                 $this->rideSharePublish($full_data['is_published']);
             }
+            if ($full_data['name'] == 'Service') {
+                $this->servicePublish($full_data['is_published']);
+            }
+
 
             if ($full_data['name'] == 'Builder') {
                 $ok = $this->builderPublish($full_data['is_published']);
                 if (!$ok) {
-                    // Runtime copy failed after we already wrote info.php —
-                    // roll back so customer isn't left mid-activation.
                     $full_data['is_published'] = 0;
                     file_put_contents(
                         base_path($request['path'] . '/Addon/info.php'),
                         "<?php return " . var_export($full_data, true) . ";"
                     );
-                    Toastr::error(translate('Builder activation failed during the bundle copy. Check logs and try again.'));
+                    $message = translate('Builder activation failed during the bundle copy. Check logs and try again.');
+                    if ($wants_json) {
+                        return response()->json(['status' => 'error', 'message' => $message]);
+                    }
+                    Toastr::error($message);
                     return back();
                 }
             }
 
-            Toastr::success(translate('activated_successfully'));
+            if ($wants_json) {
+                return response()->json([
+                    'status'       => 'success',
+                    'is_published' => 1,
+                ]);
+            }
+
+            Toastr::success(translate('Activated successfully'));
             return back();
         }
 
@@ -220,6 +236,10 @@ class AddonController extends Controller
         $activation_url .= '?username=' . $request['username'];
         $activation_url .= '&purchase_code=' . $request['purchase_code'];
         $activation_url .= '&domain=' . url('/') . '&';
+
+        if ($wants_json) {
+            return response()->json(['status' => 'redirect', 'url' => $activation_url]);
+        }
 
         return redirect($activation_url);
     }
@@ -246,7 +266,6 @@ class AddonController extends Controller
         $zip = new \ZipArchive();
 
         if ($zip->open(storage_path('app/' . $tempPath)) === TRUE) {
-            // Extract the contents to a directory
             $extractPath = base_path('Modules/');
             if (!File::isWritable($extractPath)) {
                         $status = 'error';
@@ -257,17 +276,17 @@ class AddonController extends Controller
             $zip->close();
             if(File::exists($extractPath.'/'.explode('.', $filename)[0].'/Addon/info.php')){
                 File::chmod($extractPath.'/'.explode('.', $filename)[0].'/Addon', 0777);
-                Toastr::success(translate('file_upload_successfully!'));
+                Toastr::success(translate('File upload successfully!'));
                 $status = 'success';
-                $message = translate('file_upload_successfully!');
+                $message = translate('File upload successfully!');
             }else{
                 File::deleteDirectory($extractPath.'/'.explode('.', $filename)[0]);
                 $status = 'error';
-                $message = translate('invalid_file!');
+                $message = translate('Invalid file!');
             }
         }else{
             $status = 'error';
-            $message = translate('file_upload_fail!');
+            $message = translate('File upload fail!');
         }
 
         Storage::delete($tempPath);
@@ -280,7 +299,7 @@ class AddonController extends Controller
 
     public function delete_theme(Request $request){
         if (getEnvMode() == 'demo') {
-            Toastr::info(translate('messages.update_option_is_disable_for_demo'));
+            Toastr::info(translate('messages.Update option is disable for demo'));
             return back();
         }
         $path = $request->path;
@@ -290,7 +309,7 @@ class AddonController extends Controller
         if(File::deleteDirectory($full_path)){
             return response()->json([
                 'status' => 'success',
-                'message'=> translate('file_delete_successfully')
+                'message'=> translate('File delete successfully')
             ]);
         }else{
             return response()->json([
@@ -301,7 +320,6 @@ class AddonController extends Controller
 
     }
 
-    //helper functions
     function getDirectories(string $path): array
     {
         $fullPath = base_path($path);
@@ -369,20 +387,32 @@ class AddonController extends Controller
         }
     }
 
-    /**
-     * Server-side pre-flight check for Builder activation. Returns an
-     * array of blocker issues (empty = good to go). Each entry has:
-     *   ['key' => 'short_id', 'message' => 'human', 'fix' => 'how-to']
-     *
-     * Called from `publish()` / `activation()` BEFORE info.php is flipped
-     * so a failure leaves the state untouched. NOT called for deactivate
-     * — only activate requires the environment to support the swap.
-     */
+    private function servicePublish(int|bool $is_published): bool
+    {
+        try {
+            $module = Module::firstOrNew(
+                ['module_type' => 'service'],
+                ['module_name' => 'Service']
+            );
+
+            if ($is_published) {
+                Artisan::call('migrate', ['--force' => true]);
+                $module->status = 1;
+            } else {
+                $module->status = 0;
+            }
+
+            $module->save();
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     private function checkBuilderRequirements(): array
     {
         $issues = [];
 
-        // A — PHP version (Laravel 10 baseline)
         if (PHP_VERSION_ID < 80100) {
             $issues[] = [
                 'key' => 'php_version',
@@ -391,7 +421,6 @@ class AddonController extends Controller
             ];
         }
 
-        // B — required PHP extensions
         $extensions = ['zip', 'pdo_mysql', 'mbstring', 'fileinfo', 'openssl',
                        'tokenizer', 'xml', 'ctype', 'bcmath'];
         foreach ($extensions as $ext) {
@@ -411,7 +440,6 @@ class AddonController extends Controller
             ];
         }
 
-        // C — PHP functions sometimes disabled on shared hosts
         $functions = ['symlink', 'readlink', 'copy', 'unlink', 'rmdir',
                       'glob', 'class_implements', 'realpath'];
         foreach ($functions as $fn) {
@@ -424,7 +452,6 @@ class AddonController extends Controller
             }
         }
 
-        // D — writable paths
         $writable = [
             public_path()                => 'public/',
             base_path('bootstrap/cache') => 'bootstrap/cache/',
@@ -441,7 +468,6 @@ class AddonController extends Controller
             }
         }
 
-        // E — database connection
         try {
             \DB::connection()->getPdo();
         } catch (\Throwable $e) {
@@ -452,7 +478,6 @@ class AddonController extends Controller
             ];
         }
 
-        // F — Builder pre-built bundle present (single zip)
         $distZip = base_path('Modules/Builder/resources/dist/build.zip');
         if (!file_exists($distZip)) {
             $issues[] = [
@@ -462,7 +487,6 @@ class AddonController extends Controller
             ];
         }
 
-        // F — build symlink at project root (create on the fly if possible)
         $link = base_path('build');
         if (!file_exists($link) && !is_link($link) && function_exists('symlink')) {
             @symlink('public/build', $link);
@@ -484,20 +508,6 @@ class AddonController extends Controller
         return $issues;
     }
 
-    /**
-     * Activate / deactivate Builder. The addon zip ships a pre-built JS
-     * bundle as a single archive at `Modules/Builder/resources/dist/build.zip`.
-     * The customer's core install does NOT ship `public/build/` — that
-     * directory only exists while Builder is active.
-     *
-     *   activate   → extract build.zip → public/build/
-     *   deactivate → delete public/build/ (the `build` symlink at project
-     *                root dangles, which is harmless because no non-Builder
-     *                blade template loads Vite assets)
-     *
-     * `Resources/dist/build.zip` is never touched by this method — it
-     * stays put across activate / deactivate / re-activate cycles.
-     */
     private function builderPublish(int|bool $is_published): bool
     {
         try {
@@ -529,11 +539,6 @@ class AddonController extends Controller
 
                 Artisan::call('migrate', ['--force' => true]);
             } else {
-                // Deactivate: remove the bundle from the host so the
-                // customer's disk goes back to the pre-activation state.
-                // PHP-level gating (`addon_published_status('Builder')`)
-                // already prevents Builder routes / bindings from
-                // registering — this just removes the inert files too.
                 if (File::isDirectory($hostBuild)) {
                     File::deleteDirectory($hostBuild);
                 }

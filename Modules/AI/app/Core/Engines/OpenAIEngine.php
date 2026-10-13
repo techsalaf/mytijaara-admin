@@ -14,7 +14,6 @@ class OpenAIEngine implements AIEngineInterface
 {
     public function boot(): void
     {
-        // TODO: Implement boot() method.
     }
 
     public function core($prompt, $imageUrl = null): string
@@ -44,7 +43,7 @@ class OpenAIEngine implements AIEngineInterface
                 'temperature' => 0.3,
             ]);
         } catch (ErrorException $e) {
-            throw new AIServiceException(translate('The AI service could not process your request: ') . $e->getMessage());
+            throw new AIServiceException(translate('The AI service could not process your request') . ':' . ' ' . $e->getMessage());
         } catch (TransporterException $e) {
             throw new AIServiceException(translate('Could not reach the AI service. Please check your connection and try again.'));
         } catch (Throwable $e) {

@@ -27,18 +27,18 @@ class ConversationRepository implements ConversationRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->conversation->where($params)->first();
+        return $this->conversation->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->conversation->paginate($dataLimit);
+        return $this->conversation->with($relations)->paginate($dataLimit);
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         $key = explode(' ', $searchValue ?? '');
-        return $this->conversation->where(function ($q) use ($key) {
+        return $this->conversation->with($relations)->where(function ($q) use ($key) {
             foreach ($key as $value) {
                 $q->orWhere('name', 'like', "%{$value}%");
             }
@@ -114,9 +114,9 @@ class ConversationRepository implements ConversationRepositoryInterface
         }
         return $data->paginate($dataLimit);
     }
-    public function getDmConversationList(Request $request, int|string $dataLimit = DEFAULT_DATA_LIMIT, int $user ,?int $offset = null): Collection|LengthAwarePaginator
+    public function getDmConversationList(Request $request, int $user, int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        $key = explode(' ', $request->get('key'));
+        $key = explode(' ', $request->input('key') ?? '');
         $data =$this->conversation->with(['sender', 'receiver', 'last_message'])->WhereUser($user)
         ->when($request->conversation_with == 'store' , function($query){
             $query->WhereUserType('vendor');
@@ -124,7 +124,7 @@ class ConversationRepository implements ConversationRepositoryInterface
         ->when($request?->conversation_with != 'store' , function($query){
             $query->WhereUserType('customer');
         })
-        ->when($request->get('key') , function ($query) use ($key){
+        ->when($request->input('key') , function ($query) use ($key){
             $query->where(function($qu)use($key){
                 $qu->where('sender_type','!=', 'delivery_man')->whereHas('sender',function($query)use($key){
                         foreach ($key as $value) {

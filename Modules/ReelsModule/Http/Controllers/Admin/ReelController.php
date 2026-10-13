@@ -14,14 +14,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Encoders\WebpEncoder;
-use Intervention\Image\ImageManager;
 use Modules\ReelsModule\Entities\Reel;
+use Modules\ReelsModule\Services\Reel\ReelService;
 use Modules\ReelsModule\Entities\ReelEngagement;
 use Modules\ReelsModule\Http\Requests\Admin\ReelStoreRequest;
 use Modules\ReelsModule\Http\Requests\Admin\ReelUpdateRequest;
@@ -30,6 +26,11 @@ use Modules\ReelsModule\Support\ReelProductableResolver;
 
 class ReelController extends Controller
 {
+    /**
+     * Whether getFilteredQuery() narrowed the reel list beyond the module scope.
+     * Set there, read to decide if the module-wide total can be taken from the paginator.
+     */
+    private bool $listIsFiltered = false;
 
     public function index(Request $request): View|RedirectResponse
     {
@@ -37,7 +38,7 @@ class ReelController extends Controller
             return $redirect;
         }
 
-        $stores = $this->getStores();
+        $stores = $this->getFilterStores();
         $filteredQuery = $this->getFilteredQuery($request);
         $analyticsQuery = clone $filteredQuery;
 
@@ -47,14 +48,16 @@ class ReelController extends Controller
 
         $analytics = $this->buildAnalytics($analyticsQuery, $request);
         $filterCount = $this->getFilterCount($request);
-        $stores = $this->getStores();
+        $engagementTotals = $this->getModuleEngagementTotals();
         $overview = [
-            'total_reels' => Reel::moduleWise()->count(),
-            'total_views' => $this->getModuleEngagementCount(ReelEngagement::TYPE_VIEW),
-            'total_likes' => $this->getModuleEngagementCount(ReelEngagement::TYPE_LIKE),
-            'total_store_visits' => $this->getModuleEngagementCount(ReelEngagement::TYPE_VISIT),
-            'total_sale' => $this->getModuleEngagementCount(ReelEngagement::TYPE_ORDER),
-            'total_sale_amount' => $this->getModuleSaleAmount(),
+            // Module-wide total, like every other card. Unfiltered, the paginator has
+            // already counted exactly those rows.
+            'total_reels' => $this->listIsFiltered ? Reel::moduleWise()->count() : $reels->total(),
+            'total_views' => $this->engagementCount($engagementTotals, ReelEngagement::TYPE_VIEW),
+            'total_likes' => $this->engagementCount($engagementTotals, ReelEngagement::TYPE_LIKE),
+            'total_store_visits' => $this->engagementCount($engagementTotals, ReelEngagement::TYPE_VISIT),
+            'total_sale' => $this->engagementCount($engagementTotals, ReelEngagement::TYPE_ORDER),
+            'total_sale_amount' => (float) ($engagementTotals->get(ReelEngagement::TYPE_ORDER)?->total_amount ?? 0),
         ];
         $overviewCards = $this->buildOverviewCards($overview, $analytics);
 
@@ -68,52 +71,52 @@ class ReelController extends Controller
         return [
             [
                 'value' => $overview['total_reels'],
-                'label' => translate('messages.Total_Reels'),
+                'label' => translate('Total reels'),
                 'icon' => 'tio-video-camera-outlined',
                 'color' => 'text-purple',
                 'bg' => 'bg-purple bg-opacity-10',
             ],
             [
                 'value' => $overview['total_views'],
-                'label' => translate('messages.Total_Views'),
+                'label' => translate('Total views'),
                 'icon' => 'tio-invisible',
                 'color' => 'text-info',
                 'bg' => 'bg-info bg-opacity-10',
-                'note' => $analytics['weekly_change']['views'] . ' ' . translate('messages.this_week'),
+                'note' => $analytics['weekly_change']['views'] . ' ' . translate('This week'),
             ],
             [
                 'value' => $overview['total_likes'],
-                'label' => translate('messages.Total_Likes'),
+                'label' => translate('Total likes'),
                 'icon' => 'tio-heart-outlined',
                 'color' => 'text-danger',
                 'bg' => 'bg-danger bg-opacity-10',
-                'note' => $analytics['weekly_change']['likes'] . ' ' . translate('messages.this_week'),
+                'note' => $analytics['weekly_change']['likes'] . ' ' . translate('This week'),
             ],
             [
                 'value' => $overview['total_store_visits'],
-                'label' => config('module.current_module_type') == 'service' ? translate('Provider Visits') : translate('messages.Store_Visits'),
+                'label' => config('module.current_module_type') == 'service' ? translate('Provider Visits') : translate('Store visits'),
                 'icon' => 'tio-home-vs-2-outlined',
                 'color' => 'text-success',
                 'bg' => 'bg-success bg-opacity-10',
-                'note' => $analytics['weekly_change']['visits'] . ' ' . translate('messages.this_week'),
+                'note' => $analytics['weekly_change']['visits'] . ' ' . translate('This week'),
             ],
             [
                 'value' => Helpers::format_currency($overview['total_sale_amount'] ?? 0),
-                'label' => $isServiceModule ? translate('Total Booking Amount') : translate('messages.Total_Sale_Amount'),
-                'tooltip' => $isServiceModule ? translate('Total booking value from Reel Book Now bookings') : translate('messages.Total_order_value_from_Reel_Order_Now_purchases'),
+                'label' => $isServiceModule ? translate('Total booking amount') : translate('Total sale amount'),
+                'tooltip' => $isServiceModule ? translate('Total booking value from reel book now bookings') : translate('Total order value from reel order now purchases'),
                 'icon' => 'tio-money',
                 'color' => 'text-primary',
                 'bg' => 'bg-primary bg-opacity-10',
-                'note' => ($analytics['weekly_change']['sale_amount'] ?? '0%') . ' ' . translate('messages.this_week'),
+                'note' => ($analytics['weekly_change']['sale_amount'] ?? '0%') . ' ' . translate('This week'),
             ],
             [
                 'value' => $overview['total_sale'] ?? 0,
-                'label' => $isServiceModule ? translate('Total Booking') : translate('messages.Total_Sale'),
-                'tooltip' => $isServiceModule ? translate('Total bookings placed using the Reel Book Now button') : translate('messages.Total_orders_placed_using_the_Reel_Order_Now_button'),
+                'label' => $isServiceModule ? translate('Total booking') : translate('Total sale'),
+                'tooltip' => $isServiceModule ? translate('Total bookings placed using the reel book now button') : translate('Total orders placed using the reel order now button'),
                 'icon' => 'tio-shopping-cart',
                 'color' => 'text-warning',
                 'bg' => 'bg-warning bg-opacity-10',
-                'note' => ($analytics['weekly_change']['sale'] ?? '0%') . ' ' . translate('messages.this_week'),
+                'note' => ($analytics['weekly_change']['sale'] ?? '0%') . ' ' . translate('This week'),
             ],
         ];
     }
@@ -127,6 +130,7 @@ class ReelController extends Controller
         $language = getWebConfig('language') ?? [];
         $defaultLang = str_replace('_', '-', app()->getLocale());
         $stores = $this->getStores();
+        $previewStore = null;
         $reel = new Reel([
             'is_always_visible' => false,
             'status' => true,
@@ -136,13 +140,13 @@ class ReelController extends Controller
         $productLabel = $this->productLabel();
         $actionLabel = $this->actionLabel();
 
-        return view('reelsmodule::admin.reels.create', compact('language', 'defaultLang', 'stores', 'reel', 'items', 'selectedProductId', 'productLabel', 'actionLabel'));
+        return view('reelsmodule::admin.reels.create', compact('language', 'defaultLang', 'stores', 'previewStore', 'reel', 'items', 'selectedProductId', 'productLabel', 'actionLabel'));
     }
 
     public function store(ReelStoreRequest $request)
     {
         if ($redirect = $this->guardAccessibleModule()) {
-            return response()->json(['message' => translate('messages.this_feature_is_not_available_for_the_selected_module')], 403);
+            return response()->json(['message' => translate('messages.This feature is not available for the selected module')], 403);
         }
 
         if(getEnvMode() === 'demo') {
@@ -162,10 +166,10 @@ class ReelController extends Controller
             return response()->json(['errors' => [['message' => $exception->getMessage()]]], 422);
         }
 
-        Toastr::success(translate('messages.reel_created_successfully'));
+        Toastr::success(translate('Added successfully'));
 
         return response()->json([
-            'message' => translate('messages.reel_created_successfully'),
+            'message' => translate('Added successfully'),
             'redirect' => route('admin.reels.index'),
         ]);
     }
@@ -178,7 +182,7 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            Toastr::error(translate('messages.reel_not_found'));
+            Toastr::error(translate('No data found'));
 
             return redirect()->back();
         }
@@ -186,18 +190,19 @@ class ReelController extends Controller
         $language = getWebConfig('language') ?? [];
         $defaultLang = str_replace('_', '-', app()->getLocale());
         $stores = $this->getStores();
+        $previewStore = $this->previewStore($reel->store_id);
         $items = $this->getStoreItems($reel->store_id);
         $selectedProductId = $reel->productable_id;
         $productLabel = $this->productLabel();
         $actionLabel = $this->actionLabel();
 
-        return view('reelsmodule::admin.reels.edit', compact('language', 'defaultLang', 'stores', 'reel', 'items', 'selectedProductId', 'productLabel', 'actionLabel'));
+        return view('reelsmodule::admin.reels.edit', compact('language', 'defaultLang', 'stores', 'previewStore', 'reel', 'items', 'selectedProductId', 'productLabel', 'actionLabel'));
     }
 
     public function update(ReelUpdateRequest $request, int $id)
     {
         if ($redirect = $this->guardAccessibleModule()) {
-            return response()->json(['message' => translate('messages.this_feature_is_not_available_for_the_selected_module')], 403);
+            return response()->json(['message' => translate('messages.This feature is not available for the selected module')], 403);
         }
         if(getEnvMode() === 'demo') {
             return response()->json(['message' => translate('Uploads are disabled in demo mode')], 403);
@@ -205,7 +210,7 @@ class ReelController extends Controller
         
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            return response()->json(['errors' => [['message' => translate('messages.reel_not_found')]]], 404);
+            return response()->json(['errors' => [['message' => translate('No data found')]]], 404);
         }
 
         $store = $this->resolveStore($request->store_id);
@@ -219,10 +224,10 @@ class ReelController extends Controller
             return response()->json(['errors' => [['message' => $exception->getMessage()]]], 422);
         }
 
-        Toastr::success(translate('messages.reel_updated_successfully'));
+        Toastr::success(translate('Updated successfully'));
 
         return response()->json([
-            'message' => translate('messages.reel_updated_successfully'),
+            'message' => translate('Updated successfully'),
             'redirect' => route('admin.reels.index'),
         ]);
     }
@@ -235,18 +240,18 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            Toastr::error(translate('messages.reel_not_found'));
+            Toastr::error(translate('No data found'));
 
             return redirect()->back();
         }
 
-        Helpers::check_and_delete(dir: 'reels/', old_image: $reel->thumbnail);
-        Helpers::check_and_delete(dir: 'reels/', old_image: $reel->video);
+        app(ReelService::class)->deleteAsset($reel->thumbnail);
+        app(ReelService::class)->deleteAsset($reel->video);
         $reel->translations()->delete();
         $reel->storage()->delete();
         $reel->delete();
 
-        Toastr::success(translate('messages.reel_deleted_successfully'));
+        Toastr::success(translate('Deleted successfully'));
 
         return redirect()->back();
     }
@@ -259,7 +264,7 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            Toastr::error(translate('messages.reel_not_found'));
+            Toastr::error(translate('No data found'));
 
             return redirect()->back();
         }
@@ -267,7 +272,7 @@ class ReelController extends Controller
         $reel->status = $status;
         $reel->save();
 
-        Toastr::success(translate('messages.reel_status_updated_successfully'));
+        Toastr::success(translate('Updated successfully'));
 
         return back();
     }
@@ -286,7 +291,7 @@ class ReelController extends Controller
         $currentModuleId = config('module.current_module_id');
 
         if (!ReelModuleConfig::isAllowedType($currentModuleType) || !is_numeric($currentModuleId)) {
-            Toastr::error(translate('messages.this_feature_is_not_available_for_the_selected_module'));
+            Toastr::error(translate('messages.This feature is not available for the selected module'));
 
             return redirect()->back();
         }
@@ -294,7 +299,47 @@ class ReelController extends Controller
         return null;
     }
 
+    /**
+     * Hard ceiling on the form's store picker.
+     *
+     * The picker is a plain <select> rendered server-side, so its size is bounded by what a
+     * browser and the memory limit can take, not by the query. At the store counts this schema
+     * supports the unbounded list exhausted 512MB before the page rendered. This keeps the page
+     * alive; a store beyond the ceiling cannot be chosen until the picker becomes a searchable
+     * ajax select, which is the actual fix -- the items() endpoint below is the pattern for it.
+     */
+    private const STORE_PICKER_LIMIT = 1000;
+
+    /**
+     * Stores offered in the reel form's picker. Carries the storage relation because each
+     * option renders a data-logo attribute the form's preview script reads.
+     */
     private function getStores()
+    {
+        return $this->storeOptionQuery()
+            ->with('storage')
+            ->limit(self::STORE_PICKER_LIMIT)
+            ->get(['id', 'name', 'logo', 'module_id']);
+    }
+
+    /**
+     * Stores offered in the list screen's filter. Narrowed to those that actually have a reel,
+     * because filtering by any other store returns nothing -- and the full list is 25k stores
+     * per module, which exhausted the memory limit before the page could render.
+     */
+    private function getFilterStores()
+    {
+        return $this->storeOptionQuery()
+            ->whereIn('id', Reel::moduleWise()->toBase()->select('store_id')->whereNotNull('store_id'))
+            ->get(['id', 'name', 'module_id']);
+    }
+
+    /**
+     * Deliberately without the storage relation -- callers that render a logo add it. The
+     * filter list does not, and eager-loading storage across every store was most of what
+     * made this page exhaust the memory limit.
+     */
+    private function storeOptionQuery()
     {
         return Store::withoutGlobalScopes()
             ->where('status', 1)
@@ -302,8 +347,17 @@ class ReelController extends Controller
                 return $query->where('locale', app()->getLocale());
             }])
             ->when(ReelModuleConfig::isMultiModule(), fn ($query) => $query->where('module_id', config('module.current_module_id')))
-            ->latest()
-            ->get(['id', 'name', 'logo', 'module_id']);
+            ->latest();
+    }
+
+    /** The single store whose logo and name the form previews, or null when none is chosen. */
+    private function previewStore(?int $storeId): ?Store
+    {
+        if (! $storeId) {
+            return null;
+        }
+
+        return Store::withoutGlobalScopes()->with('storage')->find($storeId, ['id', 'name', 'logo']);
     }
 
     public function items(Request $request): JsonResponse
@@ -343,8 +397,8 @@ class ReelController extends Controller
     private function actionLabel(): string
     {
         return $this->isRentalModule() || $this->isServiceModule()
-            ? translate('messages.Book_Now')
-            : translate('messages.Order_Now');
+            ? translate('messages.Book Now')
+            : translate('messages.Order now');
     }
 
     private function getStoreItems(?int $storeId): Collection
@@ -359,6 +413,8 @@ class ReelController extends Controller
             }
 
             return \Modules\Rental\Entities\Vehicle::withoutGlobalScopes()
+                // name is translated, so reading it off each row reaches for translations.
+                ->with('translations')
                 ->where('provider_id', $storeId)
                 ->where('status', 1)
                 ->orderBy('name')
@@ -376,6 +432,7 @@ class ReelController extends Controller
             }
 
             return \Modules\Service\Entities\Service::withoutGlobalScopes()
+                ->with('translations')
                 ->where('store_id', $storeId)
                 ->where('status', 1)
                 ->where('is_approved', 1)
@@ -389,11 +446,6 @@ class ReelController extends Controller
                 ]);
         }
 
-        // withoutGlobalScopes() bypasses Store/Zone scoping, but it also strips
-        // the model's `translate` scope that pins the always-eager-loaded
-        // `translations` to the current locale. Without that pin, ALL locales
-        // load and Item::getNameAttribute() returns the first translation row
-        // regardless of locale (e.g. Arabic), so re-apply the locale constraint.
         return Item::withoutGlobalScopes()
             ->with(['translations' => function ($query) {
                 $query->where('locale', app()->getLocale());
@@ -409,6 +461,9 @@ class ReelController extends Controller
     private function resolveStore(int|string|null $storeId): ?Store
     {
         return Store::withoutGlobalScopes()
+            ->with(['translations' => function ($query) {
+                return $query->where('locale', app()->getLocale());
+            }, 'storage'])
             ->where('id', $storeId)
             ->when(ReelModuleConfig::isMultiModule(), fn ($query) => $query->where('module_id', config('module.current_module_id')))
             ->first();
@@ -417,14 +472,14 @@ class ReelController extends Controller
     private function findAccessibleReel(int $id): ?Reel
     {
         return Reel::withoutGlobalScope('translate')
-            ->with(['store', 'storage', 'translations'])
+            ->with(['store.storage', 'storage', 'translations'])
             ->moduleWise()
             ->find($id);
     }
 
     private function getFilteredQuery(Request $request)
     {
-        $keywords = array_filter(explode(' ', (string) $request->get('search', '')));
+        $keywords = array_filter(explode(' ', (string) $request->input('search', '')));
         $storeIds = array_filter(array_map('intval', (array) $request->input('store_ids', [])));
         if (!$storeIds && $request->filled('store_id')) {
             $storeIds = [(int) $request->input('store_id')];
@@ -433,14 +488,17 @@ class ReelController extends Controller
         $reelStatuses = array_values(array_filter((array) $request->input('reel_status', [])));
         $today = Carbon::today()->toDateString();
 
-        $query = Reel::with(['store', 'storage', 'productable'])
+        $query = Reel::with(['store.storage', 'storage', 'productable'])
             ->withCount([
                 'engagements as total_views' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_VIEW),
                 'engagements as total_likes' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_LIKE),
                 'engagements as total_store_visits' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_VISIT),
             ])
-            ->moduleWise()
-            ->when(!empty($storeIds), function ($builder) use ($storeIds) {
+            ->moduleWise();
+
+        $moduleOnlyWheres = count($query->getQuery()->wheres);
+
+        $query->when(!empty($storeIds), function ($builder) use ($storeIds) {
                 $builder->whereIn('store_id', $storeIds);
             })
             ->when($request->filled('status_filter'), function ($builder) use ($request) {
@@ -464,6 +522,11 @@ class ReelController extends Controller
 
         $this->applyReelStatusFilter($query, $reelStatuses, $today);
         $this->applyUploadDateFilter($query, $request);
+
+        // Every filter above adds at least one where clause, so comparing the count against
+        // the module-only baseline answers "was the list narrowed?" without maintaining a
+        // second list of filter inputs that a future filter could drift out of sync with.
+        $this->listIsFiltered = count($query->getQuery()->wheres) > $moduleOnlyWheres;
 
         return $query;
     }
@@ -549,8 +612,9 @@ class ReelController extends Controller
 
     private function buildAnalytics($query, Request $request): array
     {
-        $records = (clone $query)->get(['id']);
-        $reelIds = $records->pluck('id')->filter()->values();
+        // pluck() goes through the base query: no model hydration, so the list query's
+        // eager loads, appends and withCount subselects are not repeated just to get ids.
+        $reelIds = (clone $query)->pluck('id')->filter()->values();
 
         if ($reelIds->isEmpty()) {
             $monthlyRange = CarbonPeriod::create(Carbon::now()->subMonths(11)->startOfMonth(), '1 month', Carbon::now()->startOfMonth());
@@ -650,24 +714,25 @@ class ReelController extends Controller
         ];
     }
 
-    private function getModuleEngagementCount(string $type): int
+    /**
+     * Every overview card is an aggregate over the same module-wide engagement rows, so
+     * group them once instead of running a count per type plus a separate sum.
+     */
+    private function getModuleEngagementTotals(): Collection
     {
         return ReelEngagement::query()
-            ->where('type', $type)
             ->whereHas('reel', function (Builder $builder) {
                 $builder->moduleWise();
             })
-            ->count();
+            ->selectRaw('type, COUNT(*) as total_count, COALESCE(SUM(amount), 0) as total_amount')
+            ->groupBy('type')
+            ->get()
+            ->keyBy('type');
     }
 
-    private function getModuleSaleAmount(): float
+    private function engagementCount(Collection $totals, string $type): int
     {
-        return (float) ReelEngagement::query()
-            ->where('type', ReelEngagement::TYPE_ORDER)
-            ->whereHas('reel', function (Builder $builder) {
-                $builder->moduleWise();
-            })
-            ->sum('amount');
+        return (int) ($totals->get($type)?->total_count ?? 0);
     }
 
     private function calculatePercentChange(float $previous, float $current): string
@@ -741,26 +806,18 @@ class ReelController extends Controller
 
         if ($request->hasFile('thumbnail')) {
             if ($reel->thumbnail) {
-                Helpers::check_and_delete(dir: 'reels/', old_image: $reel->thumbnail);
+                app(ReelService::class)->deleteAsset($reel->thumbnail);
             }
 
-            $reel->thumbnail = $this->uploadReelAsset(
-                file: $request->file('thumbnail'),
-                dir: 'reels/',
-                type: 'thumbnail'
-            );
+            $reel->thumbnail = app(ReelService::class)->storeAsset($request->file('thumbnail'), 'thumbnail');
         }
 
         if ($request->hasFile('video')) {
             if ($reel->video) {
-                Helpers::check_and_delete(dir: 'reels/', old_image: $reel->video);
+                app(ReelService::class)->deleteAsset($reel->video);
             }
 
-            $reel->video = $this->uploadReelAsset(
-                file: $request->file('video'),
-                dir: 'reels/',
-                type: 'video'
-            );
+            $reel->video = app(ReelService::class)->storeAsset($request->file('video'), 'video');
         }
 
         $reel->save();
@@ -790,69 +847,5 @@ class ReelController extends Controller
         ];
     }
 
-    private function uploadReelAsset(UploadedFile $file, string $dir, string $type): string
-    {
-        $this->validateReelFile($file, $type);
 
-        $format = strtolower($file->getClientOriginalExtension() ?: Helpers::extensionFromMimeType($file->getMimeType()));
-        $validExtForWebp = ['jpg', 'jpeg', 'png'];
-
-        if ($type === 'thumbnail' && in_array($format, $validExtForWebp, true)) {
-            $manager = new ImageManager(Driver::class);
-            $image = $manager->read($file);
-            $image = $image->encode(new WebpEncoder(quality: 80));
-            $format = 'webp';
-            $fileToStore = $image->toString();
-        } else {
-            $fileToStore = $file;
-        }
-
-        $fileName = now()->toDateString() . '-' . uniqid() . '.' . $format;
-        $disk = Helpers::getDisk();
-
-        if (!Storage::disk($disk)->exists($dir)) {
-            Storage::disk($disk)->makeDirectory($dir);
-        }
-
-        if ($fileToStore instanceof UploadedFile) {
-            Storage::disk($disk)->putFileAs($dir, $fileToStore, $fileName);
-        } else {
-            Storage::disk($disk)->put($dir . '/' . $fileName, $fileToStore);
-        }
-
-        return $fileName;
-    }
-
-    private function validateReelFile(UploadedFile $file, string $type): void
-    {
-        $allowedExtensions = match ($type) {
-            'thumbnail' => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-            'video' => ['mp4', 'mov', '3gp', 'gif', 'webm', 'mkv'],
-            default => [],
-        };
-
-        $maxSizeMb = match ($type) {
-            'thumbnail' => 2,
-            'video' => max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15)),
-            default => 0,
-        };
-
-        $extension = strtolower($file->getClientOriginalExtension() ?: Helpers::extensionFromMimeType($file->getMimeType()));
-
-        if (!$extension || !in_array($extension, $allowedExtensions, true)) {
-            throw new InvalidUploadException(
-                $type === 'video'
-                    ? translate('messages.reel_video_format_is_invalid')
-                    : translate('messages.reel_thumbnail_format_is_invalid')
-            );
-        }
-
-        if ($file->getSize() > ($maxSizeMb * 1024 * 1024)) {
-            throw new InvalidUploadException(
-                $type === 'video'
-                    ? str_replace(':size', (string) $maxSizeMb, translate('messages.reel_video_size_must_not_exceed_mb'))
-                    : str_replace(':size', (string) MAX_FILE_SIZE, translate('messages.reel_thumbnail_size_must_not_exceed_2_mb'))
-            );
-        }
-    }
 }

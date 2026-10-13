@@ -9,14 +9,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Service-module category lookup. Read-only suggestion data — no booking.
- * Registered only when the conversation's moduleType is 'service'.
- *
- * Returns category names with active service counts so the LLM can answer
- * "what service categories do you have", "show cleaning services", "which
- * type is most popular" with real data.
- */
 class GetServiceCategoriesTool implements Tool
 {
     public function __construct(

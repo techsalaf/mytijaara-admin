@@ -5,7 +5,6 @@ namespace Modules\TaxModule\Traits;
 
 trait VatTaxConfiguration
 {
-
     public static function getCountryType()
     {
         return  config('taxmodule.country_type');
@@ -18,7 +17,6 @@ trait VatTaxConfiguration
     {
         return config('taxmodule.project');
     }
-
     public static function getPorjectWiseSystemData($key = null)
     {
         $allProjects = [
@@ -56,7 +54,6 @@ trait VatTaxConfiguration
 
         return self::getDataFromProjectArray($allProjects, $key);
     }
-
     public static function getProjectWiseViewPath($name)
     {
         $allProjects = [
@@ -114,23 +111,10 @@ trait VatTaxConfiguration
 
         return self::getDataFromProjectArray($allProjects, $model);
     }
-
-
-    private static function getDataFromProjectArray($array, $key = null)
-    {
-        $project = self::getProjectName();
-        if ($project && array_key_exists($project, $array)) {
-            return $key ? data_get($array[$project], $key, []) : $array[$project];
-        }
-        return $array;
-    }
-
-
     public function showNotification($type, $message)
     {
         $class = \Brian2694\Toastr\Facades\Toastr::class;
         $methodTypes = [
-            // message warning type => method name
             'successMessage' => 'success',
             'infoMessage' => 'info',
             'warningMessage' => 'warning',
@@ -140,5 +124,13 @@ trait VatTaxConfiguration
         if (class_exists($class) && array_key_exists($type, $methodTypes)) {
             return call_user_func([$class, $methodTypes[$type]], $message);
         }
+    }
+    private static function getDataFromProjectArray($array, $key = null)
+    {
+        $project = self::getProjectName();
+        if ($project && array_key_exists($project, $array)) {
+            return $key ? data_get($array[$project], $key, []) : $array[$project];
+        }
+        return $array;
     }
 }

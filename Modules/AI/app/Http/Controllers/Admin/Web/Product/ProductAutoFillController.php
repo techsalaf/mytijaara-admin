@@ -5,32 +5,33 @@ namespace Modules\AI\app\Http\Controllers\Admin\Web\Product;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Models\StoreConfig;
+use App\Rules\ImageFile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
+use App\Support\Cache\ApiCache;
+use Illuminate\Support\Facades\Validator;
 use Modules\AI\app\Services\Products\Action\ProductAutoFillService;
 use Modules\AI\app\Services\Products\Response\ProductResponse;
-use Illuminate\Support\Facades\Validator;
 use Modules\AI\app\Traits\ConversationTrait;
 
 class ProductAutoFillController extends Controller
 {
-
     use ConversationTrait;
+
     public function __construct(
-        private  ProductAutoFillService $productAutoFillService,
+        private ProductAutoFillService $productAutoFillService,
         private ProductResponse $productResponse,
     ) {
         if (getEnvMode() == 'demo') {
             $ip = request()->header('x-forwarded-for');
-            $cacheKey = "restricted_ip_" . $ip;
+            $cacheKey = 'restricted_ip_'.$ip;
 
-            $hits = Cache::store('file')->get($cacheKey, 0);
+            $hits = (int) ApiCache::get('demo_throttle', $cacheKey, 0);
 
             if ($hits >= 10) {
-                abort(403, translate('Demo Mode Restriction: This feature can only be accessed 10 times in demo mode. Further attempts are disabled to maintain a fair demo experience.'));
+                abort(403, translate('Demo mode allows limited uses of this feature, then it is disabled.') . ' ' . translate('Usage limit') . ': 10');
             }
 
-            Cache::store('file')->forever($cacheKey, $hits + 1);
+            ApiCache::put('demo_throttle', $cacheKey, $hits + 1);
         }
     }
 
@@ -42,20 +43,18 @@ class ProductAutoFillController extends Controller
             'langCode' => 'nullable|string|max:20',
         ], [
             'name.required' => translate('Please provide a product name so the AI can generate a suitable title or description'),
-            'name.max' => translate('The product name may not exceed 255 characters.'),
+            'name.max' => translate('The product name is too long.') . ' ' . translate('Character limit') . ': 255',
         ]);
-        // Helpers::get_business_settings('image_upload_limit_for_ai');
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
             $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
         }
-
 
         $result = $this->productAutoFillService->titleAutoFill(
             $request->name,
@@ -74,6 +73,7 @@ class ProductAutoFillController extends Controller
 
         return $this->productResponse->titleAutoFill($result);
     }
+
     public function descriptionAutoFill(Request $request)
     {
         $validated = $request->validate([
@@ -81,15 +81,15 @@ class ProductAutoFillController extends Controller
             'langCode' => 'nullable|string|max:20',
         ], [
             'name.required' => translate('Please provide a product name so the AI can generate a suitable title or description'),
-            'name.max' => translate('The product name may not exceed 255 characters.'),
+            'name.max' => translate('The product name is too long.') . ' ' . translate('Character limit') . ': 255',
         ]);
 
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
@@ -110,9 +110,9 @@ class ProductAutoFillController extends Controller
             }
         }
 
-
         return $this->productResponse->discriptionAutoFill($result);
     }
+
     public function GeneralSetupAutoFill(Request $request)
     {
 
@@ -120,17 +120,17 @@ class ProductAutoFillController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'required|string',
         ], [
-            'name.required' => translate('Please provide a default name so the AI can generate a Data.'),
-            'name.max' => translate('The product name may not exceed 255 characters.'),
-            'description.required' => translate('Please provide a default description so the AI can generate a Data.'),
+            'name.required' => translate('Please provide a default name so the AI can generate data.'),
+            'name.max' => translate('The product name is too long.') . ' ' . translate('Character limit') . ': 255',
+            'description.required' => translate('Please provide a default description so the AI can generate data.'),
         ]);
 
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
@@ -144,7 +144,7 @@ class ProductAutoFillController extends Controller
         );
 
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
@@ -152,8 +152,7 @@ class ProductAutoFillController extends Controller
             }
         }
 
-
-        return $this->productResponse->productGeneralSetupAutoFill($result, $request->store_id, $request->module_type);
+        return $this->productResponse->productGeneralSetupAutoFill($result, $request->store_id, $request->module_type, $request->input('module_id'));
     }
 
     public function PriceOthersAutoFill(Request $request)
@@ -163,17 +162,17 @@ class ProductAutoFillController extends Controller
             'description' => 'nullable|string',
         ],
             [
-            'name.required' => translate('Please provide a default name so the AI can generate a Data.'),
-            'name.max' => translate('The product name may not exceed 255 characters.'),
-            'description' => translate('Please provide a default description so the AI can generate a Data.'),
+                'name.required' => translate('Please provide a default name so the AI can generate data.'),
+                'name.max' => translate('The product name is too long.') . ' ' . translate('Character limit') . ': 255',
+                'description' => translate('Please provide a default description so the AI can generate data.'),
             ]);
 
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
@@ -184,9 +183,8 @@ class ProductAutoFillController extends Controller
             $request->description,
         );
 
-
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
@@ -205,10 +203,10 @@ class ProductAutoFillController extends Controller
         ]);
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
@@ -218,9 +216,8 @@ class ProductAutoFillController extends Controller
             $request->description,
         );
 
-
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
@@ -231,23 +228,22 @@ class ProductAutoFillController extends Controller
         return $this->productResponse->productseoAutoFill($result);
     }
 
-
     public function variationSetupAutoFill(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'required',
-        ],[
-            'name.required' => translate('Please provide a default name so the AI can generate a Data.'),
-            'name.max' => translate('The product name may not exceed 255 characters.'),
-            'description.required' => translate('Please provide a default description so the AI can generate a Data.'),
+        ], [
+            'name.required' => translate('Please provide a default name so the AI can generate data.'),
+            'name.max' => translate('The product name is too long.') . ' ' . translate('Character limit') . ': 255',
+            'description.required' => translate('Please provide a default description so the AI can generate data.'),
         ]);
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
@@ -262,31 +258,28 @@ class ProductAutoFillController extends Controller
             );
         }
 
-
         $result = $this->productAutoFillService->variationSetupAutoFill(
             $request->name,
             $request->description,
         );
 
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
                 $StoreConfig->save();
             }
         }
+
         return $this->productResponse->variationSetupAutoFill($result);
     }
+
     public function analyzeImageAutoFill(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'image' => ImageFile::rules('required', 1024),
         ], [
-            'image.required' => translate('Image is required for analysis.'),
-            'image.image' => translate('The uploaded file must be an image.'),
-            'image.mimes' => translate('Only JPEG, PNG, JPG, and GIF images are allowed.'),
-            'image.max' => translate('Image size must not exceed 1MB.'),
         ]);
         if ($validator->fails()) {
             return response()->json(
@@ -297,17 +290,17 @@ class ProductAutoFillController extends Controller
 
         $increment = false;
         if ($request->requestType == 'image' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $image_upload_limit_for_ai =  Helpers::get_business_settings('image_upload_limit_for_ai');
-            if (($image_upload_limit_for_ai == 0 || $image_upload_limit_for_ai == null) || ($image_upload_limit_for_ai <=  $StoreConfig?->image_wise_ai_use_count)) {
-                abort(403, translate('You have reached the limit of AI usage via Image.'));
+            $image_upload_limit_for_ai = Helpers::get_business_settings('image_upload_limit_for_ai');
+            if (($image_upload_limit_for_ai == 0 || $image_upload_limit_for_ai == null) || ($image_upload_limit_for_ai <= $StoreConfig?->image_wise_ai_use_count)) {
+                abort(403, translate('You have reached the limit of AI usage via image.'));
             }
             $increment = true;
         }
 
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
@@ -315,18 +308,10 @@ class ProductAutoFillController extends Controller
             }
         }
 
-
         $extension = $request->image->getClientOriginalExtension();
         $imageName = Helpers::upload(dir: 'product/ai_product_image', format: $extension, image: $request->image);
 
         $imageUrl = $this->ai_product_image_full_path($imageName);
-
-        // dd($imageUrl);
-        // this is for the local development purpose start
-
-    //    $imageUrl = "https://powermaccenter.com/cdn/shop/files/iPhone_16_Pink_PDP_Image_Position_1__en-WW.jpg";
-
-        // this is for the local development purpose end
 
         $result = $this->productAutoFillService->imageAnalysisAutoFill(
             imageUrl: $imageUrl,
@@ -344,10 +329,10 @@ class ProductAutoFillController extends Controller
         ]);
         $increment = false;
         if ($request->requestType == 'vendor' && $request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
-            $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+            $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+            if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
                 abort(403, translate('You have reached the limit of AI usage.'));
             }
             $increment = true;
@@ -355,9 +340,8 @@ class ProductAutoFillController extends Controller
         $keywords = array_map('trim', explode(',', $request->keywords));
         $result = $this->productAutoFillService->generateTitleSuggestions($keywords);
 
-
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
@@ -368,7 +352,6 @@ class ProductAutoFillController extends Controller
         return $this->productResponse->generateTitleSuggestions($result);
     }
 
-
     public function getOtherVariationData(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -376,42 +359,39 @@ class ProductAutoFillController extends Controller
             'description' => 'required',
         ]);
 
-
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-
         $increment_image = false;
         $increment = false;
         if ($request->store_id) {
-                        $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
+            $StoreConfig = StoreConfig::firstOrNew(['store_id' => $request->store_id]);
 
             if ($request->requestType == 'image') {
-                $image_upload_limit_for_ai =  Helpers::get_business_settings('image_upload_limit_for_ai');
-                 if (($image_upload_limit_for_ai == 0 || $image_upload_limit_for_ai == null) || ($image_upload_limit_for_ai <=  $StoreConfig?->image_wise_ai_use_count)) {
+                $image_upload_limit_for_ai = Helpers::get_business_settings('image_upload_limit_for_ai');
+                if (($image_upload_limit_for_ai == 0 || $image_upload_limit_for_ai == null) || ($image_upload_limit_for_ai <= $StoreConfig?->image_wise_ai_use_count)) {
 
                     return response()->json([
                         'errors' => [
-                            ['code' => 'order', 'message' => translate('You have reached the limit of AI usage via Image.')]
-                        ]
+                            ['code' => 'order', 'message' => translate('You have reached the limit of AI usage via image.')],
+                        ],
                     ], 403);
                 }
                 $increment_image = true;
             } else {
-                $section_wise_ai_limit =  Helpers::get_business_settings('section_wise_ai_limit');
-                if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <=  $StoreConfig?->section_wise_ai_use_count)) {
+                $section_wise_ai_limit = Helpers::get_business_settings('section_wise_ai_limit');
+                if (($section_wise_ai_limit == 0 || $section_wise_ai_limit == null) || ($section_wise_ai_limit <= $StoreConfig?->section_wise_ai_use_count)) {
 
                     return response()->json([
                         'errors' => [
-                            ['code' => 'order', 'message' => translate('You have reached the limit of AI usage.')]
-                        ]
+                            ['code' => 'order', 'message' => translate('You have reached the limit of AI usage.')],
+                        ],
                     ], 403);
                 }
                 $increment = true;
             }
         }
-
 
         $description = $request->input('description');
         $this->descriptionEmptyValidation($description, $validator);
@@ -422,15 +402,14 @@ class ProductAutoFillController extends Controller
             );
         }
 
-
         $result = $this->productAutoFillService->otherVariationSetupAutoFill(
-            $request->name ,
+            $request->name,
             $request->description,
-            $moduleType?? null
+            $request->module_type
         );
 
         if ($increment == true) {
-             if ($StoreConfig->exists) {
+            if ($StoreConfig->exists) {
                 $StoreConfig->increment('section_wise_ai_use_count');
             } else {
                 $StoreConfig->section_wise_ai_use_count = 1;
@@ -444,7 +423,6 @@ class ProductAutoFillController extends Controller
                 $StoreConfig->save();
             }
         }
-
 
         return $this->productResponse->variationSetupAutoFill($result);
     }

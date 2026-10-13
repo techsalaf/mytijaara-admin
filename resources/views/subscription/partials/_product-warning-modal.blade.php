@@ -14,15 +14,15 @@
                             <h5 class="modal-title" ></h5>
                         </div>
                         <div class="text-center">
-                            <h3>{{ translate('Are_You_Sure_You_want_To_switch_to_this_plan?') }}</h3>
-                            <p>{{ translate('You_are_about_to_downgrade_your_plan.After_subscribing_to_this_plan_your_oldest_') }} <span id="disable_item_count"></span> {{ $isServiceModule ? translate('messages.Services_will_be_inactivated.') : translate('Items_will_be_inactivated.') }} </p>
+                            <h3>{{ translate('Are you sure you want to switch to this plan?') }}</h3>
+                            <p>{{ translate('You are about to downgrade your plan. After subscribing to this plan your oldest') }} <span id="disable_item_count"></span> {{ $isServiceModule ? translate('messages.Services will be inactivated.') : translate('Items will be inactivated.') }} </p>
                         </div>
                     </div>
                     <div class="btn--container justify-content-center">
                         <button  id="continue_btn" class="btn btn-outline-primary min-w-120" data-dismiss="modal" >
                             {{translate("Continue")}}
                         </button>
-                        <button  class="btn btn--primary min-w-120  shift_package"  id="back_to_planes" data-dismiss="modal" >{{translate('Go_Back')}}</button>
+                        <button  class="btn btn--primary min-w-120  shift_package"  id="back_to_planes" data-dismiss="modal" >{{translate('Go back')}}</button>
                     </div>
                 </div>
             </div>

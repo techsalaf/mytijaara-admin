@@ -6,6 +6,8 @@ use App\Models\AccountTransaction;
 use App\Models\AddOn;
 use App\Models\Advertisement;
 use App\Models\Banner;
+use App\Models\BogoOffer;
+use App\Models\Bundle;
 use App\Models\Campaign;
 use App\Models\Category;
 use App\Models\Coupon;
@@ -15,6 +17,7 @@ use App\Models\DisbursementWithdrawalMethod;
 use App\Models\EmployeeRole;
 use App\Models\Expense;
 use App\Models\FlashSaleItem;
+use App\Models\HappyHour;
 use App\Models\Item;
 use App\Models\ItemCampaign;
 use App\Models\Order;
@@ -42,6 +45,7 @@ class VendorSearchRegistry
             self::store($storeData),
             self::catalog(),
             self::marketing($storeData->module_type),
+            self::promotions(),
             self::finance($storeData),
             self::team($userType, $storeData),
             self::rental(),
@@ -269,6 +273,73 @@ class VendorSearchRegistry
         ];
     }
 
+    /**
+     * BOGO Offer, Happy Hour and Bundle -- previously unregistered here entirely, so a vendor's
+     * own top-nav search returned nothing for a real offer/bundle title while an ordinary item or
+     * coupon search worked normally (the vendor-panel counterpart of the same gap AdminSearchRegistry
+     * had for its own BOGO/Happy Hour/Bundle entries, fixed there under TC_742).
+     *
+     * BOGO and Happy Hour are admin-managed and store-joined rather than store-created, so there is
+     * no vendor "edit" page to link a result at -- the query mirrors exactly what each one's own
+     * vendor index() shows (this store's module, switched on, and either still running or already
+     * enrolled), and the result routes back to that same list rather than a per-offer page that does
+     * not exist on this side. Bundle IS created and edited by the store directly (it carries its own
+     * store_id, unlike BOGO/Happy Hour), so it is scoped and routed the same way as any other
+     * store-owned entity in this registry (byStore(), routed to its real edit/{id} page).
+     */
+    private static function promotions(): array
+    {
+        $promotionCapable = fn (SearchContext $c) => (bool) config('module.'.($c->moduleType ?? '').'.promotions');
+
+        return [
+            SearchEntity::make('bogo-offer')
+                ->model(BogoOffer::class)
+                ->prefix('BOGO Offer')
+                ->type('bogo-offer')
+                ->columns(['title', 'description'])
+                ->query(function (Builder $query, SearchContext $context) {
+                    $query->where('module_id', $context->moduleId)
+                        ->where('status', 1)
+                        ->where(function (Builder $q) use ($context) {
+                            $q->whereNull('end_date')
+                                ->orWhere('end_date', '>=', now())
+                                ->orWhereHas('enrollments', fn (Builder $e) => $e->where('store_id', $context->storeId));
+                        });
+                })
+                ->when($promotionCapable)
+                ->name(fn ($offer) => $offer->title)
+                ->searchParam(fn ($offer) => $offer->title)
+                ->routes(fn (string $uri) => $uri === 'vendor-panel/bogo-offer'),
+
+            SearchEntity::make('happy-hour')
+                ->model(HappyHour::class)
+                ->prefix('Happy Hour')
+                ->type('happy-hour')
+                ->columns(['title', 'short_description'])
+                ->query(function (Builder $query, SearchContext $context) {
+                    $query->where('module_id', $context->moduleId)
+                        ->where('status', 1)
+                        ->where(function (Builder $q) use ($context) {
+                            $q->notEnded()->orWhereHas('enrollments', fn (Builder $e) => $e->where('store_id', $context->storeId));
+                        });
+                })
+                ->when($promotionCapable)
+                ->name(fn ($happyHour) => $happyHour->title)
+                ->searchParam(fn ($happyHour) => $happyHour->title)
+                ->routes(fn (string $uri) => $uri === 'vendor-panel/happy-hour'),
+
+            SearchEntity::make('bundle')
+                ->model(Bundle::class)
+                ->prefix('Bundle')
+                ->type('bundle')
+                ->columns(['name', 'description'])
+                ->query(self::byStore())
+                ->name(fn ($bundle) => $bundle->name)
+                ->searchParam(fn ($bundle) => $bundle->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'bundle/edit')),
+        ];
+    }
+
     private static function finance(object $storeData): array
     {
         $entities = [
@@ -383,7 +454,7 @@ class VendorSearchRegistry
                 ->columns(['name'])
                 ->query(self::byStore())
                 ->searchParam(fn ($role) => $role->name)
-                ->routes(fn (string $uri) => str_contains($uri, 'custom-role/create') && ! str_contains($uri, 'edit')),
+                ->routes(fn (string $uri) => str_ends_with($uri, 'custom-role')),
 
             SearchEntity::make('employee')
                 ->model(VendorEmployee::class)

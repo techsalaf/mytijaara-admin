@@ -1,11 +1,11 @@
 @php
-    $vendor_can_upload_reels = \App\Models\BusinessSetting::where('key', 'vendor_can_upload_reels')->first()?->value ?? 0;
-    $reels_max_upload_size_mb = \App\Models\BusinessSetting::where('key', 'reels_max_upload_size_mb')->first()?->value ?? '';
-    $reels_max_duration = \App\Models\BusinessSetting::where('key', 'reels_max_duration')->first()?->value ?? '';
-    $reels_max_duration_unit = \App\Models\BusinessSetting::where('key', 'reels_max_duration_unit')->first()?->value ?? 'min';
-    $reels_upload_limit = \App\Models\BusinessSetting::where('key', 'reels_upload_limit')->first()?->value ?? '';
-    $reels_upload_limit_type = \App\Models\BusinessSetting::where('key', 'reels_upload_limit_type')->first()?->value ?? 'week';
-    $reels_upload_limit_unlimited = \App\Models\BusinessSetting::where('key', 'reels_upload_limit_unlimited')->first()?->value ?? 1;
+    $vendor_can_upload_reels = \App\CentralLogics\Helpers::get_business_settings('vendor_can_upload_reels', false) ?? 0;
+    $reels_max_upload_size_mb = \App\CentralLogics\Helpers::get_business_settings('reels_max_upload_size_mb', false) ?? '';
+    $reels_max_duration = \App\CentralLogics\Helpers::get_business_settings('reels_max_duration', false) ?? '';
+    $reels_max_duration_unit = \App\CentralLogics\Helpers::get_business_settings('reels_max_duration_unit', false) ?? 'min';
+    $reels_upload_limit = \App\CentralLogics\Helpers::get_business_settings('reels_upload_limit', false) ?? '';
+    $reels_upload_limit_type = \App\CentralLogics\Helpers::get_business_settings('reels_upload_limit_type', false) ?? 'week';
+    $reels_upload_limit_unlimited = \App\CentralLogics\Helpers::get_business_settings('reels_upload_limit_unlimited', false) ?? 1;
 @endphp
 
 <div class="card mb-20" id="vendor_can_upload_reels_section">
@@ -38,7 +38,7 @@
                                 data-image-off="{{ asset('/public/assets/admin/img/modal/store-reg-off.png') }}"
                                 data-title-on="<strong>{{ translate('Want to enable vendor reels upload?') }}</strong>"
                                 data-title-off="<strong>{{ translate('Want to disable vendor reels upload?') }}</strong>"
-                                data-text-on="<p>{{ translate('If enabled, vendors will be able to create and upload reels on the platform.') }}</p>"
+                                data-text-on="<p>{{ translate('If enabled, vendors can create and upload reels on the platform.') }}</p>"
                                 data-text-off="<p>{{ translate('If disabled, vendors will no longer be able to upload reels on the platform.') }}</p>"
                                 class="status toggle-switch-input dynamic-checkbox-toggle"
                                 value="1"
@@ -54,7 +54,7 @@
                     <div class="bg-opacity-warning-10 px-3 py-2 rounded fz-11  gap-2 align-items-center d-flex ">
                         <img src="{{asset('public/assets/admin/img/info-idea.svg')}}" alt="">
                         <span>
-                            {{translate('The upload size limit depends entirely on the server’s file upload configuration settings. Based on those settings, you should configure the Max Upload Size accordingly.')}}
+                            {{translate('The upload size limit depends entirely on the server\'s file upload configuration settings. Based on those settings, you should configure the Max Upload Size accordingly.')}}
                         </span>
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                                 data-original-title="{{ translate('Max upload size for reels (MB)') }}"><i class="tio-info text-muted ps--3"></i></span>
                         </label>
                         <input type="number" name="reels_max_upload_size_mb" id="reels_max_upload_size_mb" class="form-control"
-                            placeholder="{{ translate('Ex: 50') }}" value="{{ $reels_max_upload_size_mb }}" min="1"
+                            placeholder="{{ translate('Ex') . ': 50' }}" value="{{ $reels_max_upload_size_mb }}" min="1"
                             {{ $vendor_can_upload_reels == 1 ? 'required' : '' }}>
                     </div>
                 </div>
@@ -94,7 +94,7 @@
                                 {{ $vendor_can_upload_reels == 1 ? 'required' : '' }}>
                             <select name="reels_max_duration_unit" id="reels_max_duration_unit"
                                 class="custom-select rounded-0 border-0 bg-modal-btn form-control w-90px fs-12">
-                                <option value="min" {{ $reels_max_duration_unit === 'min' ? 'selected' : '' }}>{{ translate('Minutes') }}</option>
+                                <option value="min" {{ $reels_max_duration_unit === 'min' ? 'selected' : '' }}>{{ translate('minutes') }}</option>
                                 <option value="hour" {{ $reels_max_duration_unit === 'hour' ? 'selected' : '' }}>{{ translate('Hour') }}</option>
                             </select>
                         </div>
@@ -124,7 +124,7 @@
                             <select name="reels_upload_limit_type" id="reels_upload_limit_type"
                                 class="custom-select rounded-0 border-0 bg-modal-btn form-control w-90px fs-12">
                                 <option value="week" {{ $reels_upload_limit_type === 'week' ? 'selected' : '' }}>{{ translate('Weekly') }}</option>
-                                <option value="month" {{ $reels_upload_limit_type === 'month' ? 'selected' : '' }}>{{ translate('Monthly') }}</option>
+                                <option value="month" {{ $reels_upload_limit_type === 'month' ? 'selected' : '' }}>{{ translate('monthly') }}</option>
                             </select>
                         </div>
                     </div>

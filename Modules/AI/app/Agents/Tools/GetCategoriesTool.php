@@ -39,11 +39,9 @@ class GetCategoriesTool implements Tool
         $featuredOnly = ($args['featured_only'] ?? null) !== null ? (bool) $args['featured_only'] : null;
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, Category> $categories */
-        $categories = Category::active()
+        $categories = Category::withStorage()->active()
             ->when($this->moduleId, fn ($q) => $q->module($this->moduleId))
             ->when($featuredOnly, fn ($q) => $q->featured())
-            // When no keyword is given, restrict to top-level so the listing is
-            // human-readable. With a keyword, search the full tree.
             ->when(
                 $keyword === null || $keyword === '',
                 fn ($q) => $q->where(fn ($w) => $w->whereNull('parent_id')->orWhere('parent_id', 0))

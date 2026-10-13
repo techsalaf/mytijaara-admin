@@ -16,7 +16,6 @@ class CurrencyProvider implements CurrencyProviderContract
         ];
     }
 
-    /** 6amMart is single-currency — no switcher, nothing to switch between. */
     public function availableCurrencies(): array
     {
         return [];
@@ -29,6 +28,5 @@ class CurrencyProvider implements CurrencyProviderContract
 
     public function setCurrentCurrency(string $code): void
     {
-        // No-op: single platform currency, nothing to persist.
     }
 }

@@ -19,18 +19,18 @@
                         data-onerror-image="{{ asset('public/assets/admin/img/100x100/img2.jpg') }}"
                         alt="{{ $item->name }}">
                     <div class="flex-grow-1 min-w-0">
-                        <div class="text-muted fs-11 mb-0">{{ translate('ID') }} #{{ $item->id }}</div>
+                        <div class="text-muted fs-11 mb-0">ID #{{ $item->id }}</div>
                         <h6 class="mb-0 fw-bold text-truncate fs-14">{{ Str::limit($item->name, 32, '...') }}</h6>
                         <div class="d-flex align-items-center gap-3 fs-12 text-muted mt-1">
                             @if($isService)
                                 @if(!is_null($item->base_price))
-                                    <span>{{ translate('Price') }} {{ \App\CentralLogics\Helpers::format_currency($item->base_price) }}</span>
+                                    <span>{{ translate('price') }} {{ \App\CentralLogics\Helpers::format_currency($item->base_price) }}</span>
                                 @endif
                             @else
                                 @if(!is_null($item->price))
-                                    <span>{{ translate('Price') }} {{ \App\CentralLogics\Helpers::format_currency($item->price) }}</span>
+                                    <span>{{ translate('price') }} {{ \App\CentralLogics\Helpers::format_currency($item->price) }}</span>
                                 @endif
-                                <span>{{ translate('Variation') }}
+                                <span>{{ translate('variation') }}
                                     {{ is_array($item->food_variations ?? null)
                                         ? count($item->food_variations)
                                         : (is_string($item->food_variations) ? count(json_decode($item->food_variations, true) ?: []) : 0) }}

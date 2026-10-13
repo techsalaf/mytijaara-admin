@@ -25,7 +25,7 @@ class StorefrontScopeResolver implements StorefrontScopeResolverContract
             regionId: $store->zone_id,
             logoUrl: $this->safeLogoUrl($store),
             displayName: $store->slug ?? null,
-            moduleType: $store->module_type, // accessor → $store->module->module_type
+            moduleType: $store->module_type,
             coverImageUrl: $this->safeCoverImageUrl($store),
             contactNumber: $store->phone ?? null,
         );
@@ -82,12 +82,6 @@ class StorefrontScopeResolver implements StorefrontScopeResolverContract
             return null;
         }
 
-        // Domain Settings → "Website Visibility" toggle. When the vendor
-        // turns visibility off, the storefront is taken offline: refusing
-        // to resolve the scope here makes `RequireStorefrontScope`
-        // 404 the request. The vendor can still preview / edit in the
-        // BuilderSetup admin (separate route, not gated by scope), per
-        // the toggle's own description.
         if (!$domainConfig->website_visibility) {
             return null;
         }

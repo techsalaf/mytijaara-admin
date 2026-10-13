@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-/**
- *
- */
 interface RiderRepositoryInterface extends RepositoryInterface
 {
     /**

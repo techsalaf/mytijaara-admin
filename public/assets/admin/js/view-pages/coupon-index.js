@@ -100,11 +100,17 @@ function coupon_type_change(coupon_type) {
     }
 
     if (coupon_type === 'free_delivery') {
+        // Hidden, not just disabled: a free-delivery coupon has nothing here to set, so the
+        // fields go away rather than sit on screen doing nothing. disabled is what keeps a
+        // hidden field from still being posted -- display:none alone does not stop that.
+        $('#discount_type_wrap, #discount_wrap, #max_discount_wrap').hide();
         $('#discount_type').attr("disabled", true).val("").trigger("change");
-        $('#max_discount, #discount').val(0).attr("readonly", true);
+        $('#max_discount, #discount').val(0).attr("readonly", true).attr("disabled", true).removeAttr("required");
     } else {
+        $('#discount_type_wrap, #discount_wrap, #max_discount_wrap').show();
         $('#discount_type').removeAttr("disabled").attr("required", true);
-        $('#max_discount, #discount').removeAttr("readonly");
+        $('#max_discount, #discount').removeAttr("readonly").removeAttr("disabled");
+        $('#discount').attr("required", true);
     }
 
     if ($('#discount_type').val() === 'amount') {

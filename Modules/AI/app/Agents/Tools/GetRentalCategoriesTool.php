@@ -9,14 +9,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Rental-module vehicle-category lookup. Read-only suggestion data — no
- * booking. Registered only when the conversation's moduleType is 'rental'.
- *
- * Returns category names with active vehicle counts so the LLM can answer
- * "what vehicle categories do you have", "show sedans", "which type is
- * most popular" with real data.
- */
 class GetRentalCategoriesTool implements Tool
 {
     public function __construct(

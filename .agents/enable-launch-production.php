@@ -1,0 +1,9 @@
+<?php
+require getcwd().'/vendor/autoload.php';$app=require getcwd().'/bootstrap/app.php';$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+use Illuminate\Support\Facades\DB;
+$dir=storage_path('app/private/maintenance');if(!is_dir($dir))mkdir($dir,0700,true);$file=$dir.'/20260926-delivery-policy.json';
+if(!file_exists($file)){file_put_contents($file,json_encode(['policy'=>DB::table('business_settings')->where('key',App\Services\StoreManagedDeliveryPolicy::KEY)->value('value'),'stores'=>DB::table('stores')->get(['id','self_delivery_system'])],JSON_PRETTY_PRINT),LOCK_EX);chmod($file,0600);}
+$count=app(App\Services\StoreManagedDeliveryPolicy::class)->apply(true);
+Modules\WhatsAppVendorConcierge\app\Models\ConciergeRecoveryAudit::create(['action'=>'global_store_managed_delivery','initiated_by'=>'cli','is_dry_run'=>false,'status'=>'success','reason'=>'Owner authorized store-managed delivery for all supported businesses','details'=>['enabled'=>true,'stores_updated'=>$count],'correlation_id'=>'DELIVERY-'.Illuminate\Support\Str::uuid()]);
+echo json_encode(['enabled'=>App\Services\StoreManagedDeliveryPolicy::mode(),'stores_updated'=>$count,'stores'=>DB::table('stores')->get(['id','name','module_id','self_delivery_system'])]).PHP_EOL;
+foreach(['36101627640-1','36145755847-1','36146321702-1'] as $id){$root=dirname(getcwd()).'/.mytijaara-releases';$p=$root.'/'.$id;$j=$p.'/journal/release.json';if(is_link($root)||is_link($p)||is_link($p.'/journal')||is_link($j))throw new RuntimeException('Unsafe legacy path');if(!is_file($j))continue;$data=json_decode(file_get_contents($j),true);if(($data['target']??'')!==realpath(getcwd())||($data['incoming']??'')!==$p.'/incoming')throw new RuntimeException('Unexpected journal target');if(!file_exists($p.'/completed'))touch($p.'/completed',filemtime($j));echo json_encode(['verified_successful_legacy_release'=>$id]).PHP_EOL;}

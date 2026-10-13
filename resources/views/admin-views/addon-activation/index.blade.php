@@ -1,435 +1,312 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.add_on_activation'))
+@section('title', translate('Add-on activation'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/third-party-setup.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/addon-activation.css') }}">
 @endpush
 
 @section('content')
-    <div class="content container-fluid">
+    @php
+        /*
+         * One query instead of the three inline lookups this page used to run,
+         * and one definition list instead of three copies of the same card.
+         */
+        $addons = [
+            [
+                'addon_name' => 'vendor_app',
+                'key' => 'addon_activation_vendor_app',
+                'software_id' => 'MzY3NzIxNzM=',
+                'icon' => 'tio-shop-outlined',
+                'image' => 'seller-app',
+                'title' => translate('Vendor app'),
+                'summary' => translate('With this app your vendor will manage their business through mobile app'),
+            ],
+            [
+                'addon_name' => 'deliveryman_app',
+                'key' => 'addon_activation_delivery_man_app',
+                'software_id' => 'MzY3NzIxNDg=',
+                'icon' => 'tio-bike',
+                'image' => 'dm-app',
+                'title' => translate('Deliveryman app'),
+                'summary' => translate('With this app your deliverymen will manage their orders through mobile app'),
+            ],
+            [
+                'addon_name' => 'react_web',
+                'key' => 'addon_activation_react',
+                'software_id' => 'NDUzNzAzNTE=',
+                'icon' => 'tio-monitor',
+                'image' => 'user-app',
+                'title' => translate('messages.React User Website'),
+                'summary' => translate('With this react website your customers will experience your system in a more attractive and seamless way'),
+            ],
+        ];
 
-        <!-- Add On Activation Process -->
-        <div class="d-content-between flex-wrap mb-20">
-            <h2 class="title-clr">{{ translate('messages.add_on_activation') }}</h2>
-            {{-- <button class="d-flex d-align-center gap-2 rounded-20 title-clr border py-2 px-3 fz--14px btn bg-opacity-primary-10 offcanvas-trigger" data-target="#offcanvas__customBtn">
-                <i class="tio-help-outlined"></i> How It Work
-            </button> --}}
+        $saved_values = \App\Models\BusinessSetting::whereIn('key', array_column($addons, 'key'))->pluck('value', 'key');
+
+        $addons = array_map(function ($addon) use ($saved_values) {
+            $value = json_decode($saved_values[$addon['key']] ?? '', true);
+            $value = is_array($value) ? $value : [];
+
+            $addon['username'] = $value['username'] ?? '';
+            $addon['purchase_key'] = $value['purchase_key'] ?? '';
+            $addon['is_on'] = (int) ($value['activation_status'] ?? 0) === 1;
+            $addon['is_configured'] = $addon['username'] !== '' && $addon['purchase_key'] !== '';
+
+            return $addon;
+        }, $addons);
+
+        $active_count = count(array_filter($addons, fn ($addon) => $addon['is_on']));
+    @endphp
+
+    <div class="content container-fluid tps adn">
+        <div class="tps-head">
+            <div class="tps-head__title">
+                <span class="tps-head__icon"><i class="tio-puzzle"></i></span>
+                <span class="tps-head__text">
+                    <h1>{{ translate('Add-on activation') }}</h1>
+                    <p>{{ translate('Activate the add-ons you purchased with your CodeCanyon licence.') }}</p>
+                </span>
+            </div>
+
+            <button type="button" class="tps-help" data-toggle="modal" data-target="#addon-help-modal">
+                <i class="tio-help-outlined"></i>
+                <span>{{ translate('How it works') }}</span>
+            </button>
         </div>
+
+        <div class="adn-summary">
+            <div class="adn-summary__count">
+                <strong>{{ $active_count }}<span class="adn-summary__total">/{{ count($addons) }}</span></strong>
+                <span>{{ translate('add-ons activated') }}</span>
+            </div>
+            <div class="adn-summary__domain">
+                <p class="tps-group__label">{{ translate('Licensed domain') }}</p>
+                <div class="tps-readonly">
+                    <span class="tps-readonly__value" id="addon_current_domain">{{ $domain }}</span>
+                    <button type="button" class="tps-readonly__copy tps-copy" data-target="#addon_current_domain">
+                        <i class="tio-copy"></i> {{ translate('messages.Copy') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tps-note tps-note--info mb-3">
+            <i class="tio-info"></i>
+            <div>
+                {{ translate('Each purchase code activates one domain. Flipping a switch only stages it — press Save.') }}
+            </div>
+        </div>
+
         <div class="d-flex flex-column gap-3">
-            <div class="card view-details-container">
-                <form action="{{ route('admin.business-settings.addon-activation.activation') }}" method="post">
-                    @csrf
-                    <input type="hidden" name="addon_name" value="vendor_app">
-                    <input type="hidden" name="software_type" value="addon">
-                    <input type="hidden" name="software_id" value="MzY3NzIxNzM=">
-                    <input type="hidden" name="key" value="addon_activation_vendor_app">
-                    <div class="card-body p-20">
-                        <div class="row align-items-center">
-                            <div class="col-xxl-8 col-md-6 mb-md-0 mb-2">
-                                <h4 class="black-color mb-1 d-block">{{ translate('messages.vendor_app') }}</h4>
-                                <p class="fz-12 text-c mb-1">{{ translate('With_this_app_your_vendor_will_mange_their_business_through_mobile_app') }}</p>
-                            </div>
-                            @php($addon_activation_vendor_app = \App\Models\BusinessSetting::where('key', 'addon_activation_vendor_app')->first())
-                            @php($addon_activation_vendor_app = $addon_activation_vendor_app?->value ? json_decode($addon_activation_vendor_app->value, true) : ['activation_status' => 0, 'username' => '', 'purchase_key' => ''])
-                            <div class="col-xxl-4 col-md-6">
-                                <div class="d-flex flex-sm-nowrap flex-wrap justify-content-end justify-content-end align-items-center gap-sm-3 gap-2">
-                                    <div class="view-btn order-sm-0 order-3 fz--14px text-primary cursor-pointer text-decoration-underline font-semibold d-flex align-items-center gap-1">
-                                        {{ translate('messages.view') }}
-                                        <i class="tio-arrow-downward"></i>
-                                    </div>
-                                    <div class="mb-0">
-                                        <label class="toggle-switch toggle-switch-sm mb-0">
-                                            <input type="checkbox"
-                                                   data-id="addon_activation_vendor_app_status"
-                                                   data-type="toggle"
-                                                   data-image-on="{{ asset('/public/assets/admin/img/modal/free-delivery-on.png') }}"
-                                                   data-image-off="{{ asset('/public/assets/admin/img/modal/free-delivery-off.png') }}"
-                                                   data-title-on="<strong>{{ translate('messages.want_to_Turn_ON_the_Vendor_App_addon?') }}</strong>"
-                                                   data-title-off="<strong>{{ translate('messages.want_to_Turn_OFF_the_Vendor_App_addon?') }}</strong>"
+            @foreach ($addons as $addon)
+                @php
+                    $panel_id = $addon['key'] . '_panel';
+                    $toggle_id = $addon['key'] . '_status';
+                    $expanded = ! $addon['is_configured'];
+                @endphp
 
-                                                   class="status toggle-switch-input dynamic-checkbox-toggle"
+                <div class="tps-card adn-card {{ $addon['is_on'] ? 'is-on' : '' }}">
+                    <form action="{{ route('admin.business-settings.addon-activation.activation') }}" method="post">
+                        @csrf
+                        <input type="hidden" name="addon_name" value="{{ $addon['addon_name'] }}">
+                        <input type="hidden" name="software_type" value="addon">
+                        <input type="hidden" name="software_id" value="{{ $addon['software_id'] }}">
+                        <input type="hidden" name="key" value="{{ $addon['key'] }}">
 
-                                                   name="status" id="addon_activation_vendor_app_status"
-                                                   value="1"
-                                                {{ isset($addon_activation_vendor_app['activation_status']) && $addon_activation_vendor_app['activation_status'] == 1 ? 'checked' : '' }}>
-                                            <span class="toggle-switch-label text mb-0">
-                                                <span
-                                                    class="toggle-switch-indicator">
-                                                </span>
-                                            </span>
-                                        </label>
-                                    </div>
+                        <div class="tps-card__head adn-card__head is-clickable">
+                            <span class="tps-card__brand adn-brand"><i class="{{ $addon['icon'] }}"></i></span>
+
+                            <div class="tps-card__titles">
+                                <div class="adn-title-row">
+                                    <h2 class="tps-card__title">{{ $addon['title'] }}</h2>
+                                    @if ($addon['is_on'])
+                                        <span class="tps-pill tps-pill--on">{{ translate('Active') }}</span>
+                                    @elseif ($addon['is_configured'])
+                                        <span class="tps-pill tps-pill--off">{{ translate('Turned off') }}</span>
+                                    @else
+                                        <span class="tps-pill tps-pill--warn">{{ translate('Not configured') }}</span>
+                                    @endif
                                 </div>
+                                <p class="tps-card__subtitle">{{ $addon['summary'] }}</p>
+                            </div>
+
+                            <div class="tps-card__aside">
+                                <button type="button" class="adn-disclose" aria-controls="{{ $panel_id }}"
+                                        aria-expanded="{{ $expanded ? 'true' : 'false' }}"
+                                        data-panel="#{{ $panel_id }}">
+                                    <span>{{ translate('Licence') }}</span>
+                                    <i class="tio-chevron-down"></i>
+                                </button>
+
+                                <label class="toggle-switch toggle-switch-sm m-0 p-0">
+                                    <input type="checkbox"
+                                           id="{{ $toggle_id }}"
+                                           data-id="{{ $toggle_id }}"
+                                           data-type="toggle"
+                                           data-image-on="{{ asset('public/assets/admin/img/modal/' . $addon['image'] . '-on.png') }}"
+                                           data-image-off="{{ asset('public/assets/admin/img/modal/' . $addon['image'] . '-off.png') }}"
+                                           data-title-on="<strong>{{ translate('Turn on this add-on?') }}</strong>"
+                                           data-title-off="<strong>{{ translate('Turn off this add-on?') }}</strong>"
+                                           data-text-on="<p>{{ translate('Your licence will be checked against this domain when you save.') }}</p>"
+                                           data-text-off="<p>{{ translate('The add-on stops working on this domain once you save.') }}</p>"
+                                           class="status toggle-switch-input dynamic-checkbox-toggle"
+                                           name="status" value="1" {{ $addon['is_on'] ? 'checked' : '' }}>
+                                    <span class="toggle-switch-label text p-0">
+                                        <span class="toggle-switch-indicator"></span>
+                                    </span>
+                                </label>
                             </div>
                         </div>
-                        <div class="view-details">
-                            <div class="bg--secondary rounded p-20 mb-20">
-                                <div class="row g-3">
-                                    <div class="col-md-6 col-lg-6">
-                                        <div class="">
-                                            <label class="mb-2 d-flex align-items-center gap-1 fz--14px">
-                                                {{ translate('messages.codcanyon_user_name') }} <span class="text-danger">*</span>
-                                                <i class="tio-info fz--14px secondary-clr" data-toggle="tooltip" data-bs-placement="top" title="{{ translate('messages.codcanyon_user_name') }} ...."></i>
-                                            </label>
-                                            <input type="text" value="{{ showDemoModeInputValue(value: $addon_activation_vendor_app['username']) }}"
-                                                   placeholder="{{ translate('ex') }}: {{ 'Miler' }}"
-                                                   name="username" class="form-control" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 col-lg-6">
-                                        <div class="">
-                                            <label class="mb-2 d-flex align-items-center gap-1 fz--14px">
-                                                {{ translate('messages.codcanyon_purchase_code') }} <span class="text-danger">*</span>
-                                                <i class="tio-info fz--14px secondary-clr" data-toggle="tooltip" data-bs-placement="top" title="{{ translate('messages.codcanyon_purchase_code') }} ...."></i>
-                                            </label>
-                                            <input type="text" value="{{ showDemoModeInputValue(value: $addon_activation_vendor_app['purchase_key']) }}"
-                                                   placeholder="{{ translate('ex') }}: {{ 'CAWFRWRAAWRCAWRA' }}"
-                                                   name="purchase_key" class="form-control" required>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-end gap-2">
-                                <button type="button" class="btn bg--secondary h--42px title-clr px-4">{{ translate('messages.reset') }}</button>
-                                <button type="{{ getDemoModeFormButton(type: 'button') }}" class="btn btn--primary {{ getDemoModeFormButton(type: 'class') }}">{{ translate('messages.submit') }}</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="card view-details-container">
-                <form action="{{ route('admin.business-settings.addon-activation.activation') }}" method="post">
-                    @csrf
-                    <input type="hidden" name="addon_name" value="deliveryman_app">
-                    <input type="hidden" name="software_type" value="addon">
-                    <input type="hidden" name="software_id" value="MzY3NzIxNDg=">
-                    <input type="hidden" name="key" value="addon_activation_delivery_man_app">
-                    <div class="card-body p-20">
-                        <div class="row align-items-center">
-                            <div class="col-xxl-8 col-md-6 mb-md-0 mb-2">
-                                <h4 class="black-color mb-1 d-block">{{ translate('messages.deliveryman_app') }}</h4>
-                                <p class="fz-12 text-c mb-1">{{ translate('with_this_app_your_all_your_deliveryman_will_mange_their_orders_through_mobile_app') }}</p>
-                            </div>
-                            @php($addon_activation_delivery_man_app = \App\Models\BusinessSetting::where('key', 'addon_activation_delivery_man_app')->first())
-                            @php($addon_activation_delivery_man_app = $addon_activation_delivery_man_app?->value ? json_decode($addon_activation_delivery_man_app->value, true) : ['activation_status' => 0, 'username' => '', 'purchase_key' => ''])
-                            <div class="col-xxl-4 col-md-6">
-                                <div class="d-flex flex-sm-nowrap flex-wrap justify-content-end justify-content-end align-items-center gap-sm-3 gap-2">
-                                    <div class="view-btn order-sm-0 order-3 fz--14px text-primary cursor-pointer text-decoration-underline font-semibold d-flex align-items-center gap-1">
-                                        {{ translate('messages.view') }}
-                                        <i class="tio-arrow-downward"></i>
-                                    </div>
-                                    <div class="mb-0">
-                                        <label class="toggle-switch toggle-switch-sm mb-0">
-                                            <input type="checkbox"
-                                                   data-id="addon_activation_delivery_man_app_status"
-                                                   data-type="toggle"
-                                                   data-image-on="{{ asset('/public/assets/admin/img/modal/free-delivery-on.png') }}"
-                                                   data-image-off="{{ asset('/public/assets/admin/img/modal/free-delivery-off.png') }}"
-                                                   data-title-on="<strong>{{ translate('messages.want_to_Turn_ON_the_Deliveryman_App_addon?') }}</strong>"
-                                                   data-title-off="<strong>{{ translate('messages.want_to_Turn_OFF_the_Deliveryman_App_addon?') }}</strong>"
 
-                                                   class="status toggle-switch-input dynamic-checkbox-toggle"
-
-                                                   name="status" id="addon_activation_delivery_man_app_status"
-                                                   value="1"
-                                                {{ isset($addon_activation_delivery_man_app['activation_status']) && $addon_activation_delivery_man_app['activation_status'] == 1 ? 'checked' : '' }}>
-                                            <span class="toggle-switch-label text mb-0">
-                                                <span
-                                                    class="toggle-switch-indicator">
-                                                </span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="view-details">
-                            <div class="bg--secondary rounded p-20 mb-20">
-                                <div class="row g-3">
-                                    <div class="col-md-6 col-lg-6">
-                                        <div class="">
-                                            <label class="mb-2 d-flex align-items-center gap-1 fz--14px">
-                                                {{ translate('messages.codcanyon_user_name') }} <span class="text-danger">*</span>
-                                                <i class="tio-info fz--14px secondary-clr" data-toggle="tooltip" data-bs-placement="top" title="{{ translate('messages.codcanyon_user_name') }} ...."></i>
-                                            </label>
-                                            <input type="text" value="{{ showDemoModeInputValue(value: $addon_activation_delivery_man_app['username']) }}"
-                                                   placeholder="{{ translate('ex') }}: {{ 'Miler' }}"
-                                                   name="username" class="form-control" required>
+                        <div class="adn-panel" id="{{ $panel_id }}" @if ($expanded) style="display: block;" @endif>
+                            <div class="tps-card__body adn-card__body">
+                                <div class="adn-fields">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="tps-field">
+                                                <label class="tps-field__label" for="{{ $addon['key'] }}_username">
+                                                    {{ translate('messages.CodeCanyon Username') }} <span class="tps-req">*</span>
+                                                </label>
+                                                <div class="tps-input-wrap">
+                                                    <input type="text" id="{{ $addon['key'] }}_username" name="username"
+                                                           class="form-control" autocomplete="off" required
+                                                           placeholder="{{ translate('Example') }}: envato_buyer"
+                                                           value="{{ showDemoModeInputValue(value: $addon['username']) }}">
+                                                    <button type="button" class="tps-input-action tps-copy"
+                                                            data-target="#{{ $addon['key'] }}_username"
+                                                            aria-label="{{ translate('messages.Copy') }}">
+                                                        <i class="tio-copy"></i>
+                                                    </button>
+                                                </div>
+                                                <small class="tps-field__hint">
+                                                    {{ translate('The Envato account name the add-on was purchased with.') }}
+                                                </small>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6 col-lg-6">
-                                        <div class="">
-                                            <label class="mb-2 d-flex align-items-center gap-1 fz--14px">
-                                                {{ translate('messages.codcanyon_purchase_code') }} <span class="text-danger">*</span>
-                                                <i class="tio-info fz--14px secondary-clr" data-toggle="tooltip" data-bs-placement="top" title="{{ translate('messages.codcanyon_purchase_code') }} ...."></i>
-                                            </label>
-                                            <input type="text" value="{{ showDemoModeInputValue(value: $addon_activation_delivery_man_app['purchase_key']) }}"
-                                                   placeholder="{{ translate('ex') }}: {{ 'CAWFRWRAAWRCAWRA' }}"
-                                                   name="purchase_key" class="form-control" required>
+
+                                        <div class="col-md-6">
+                                            <div class="tps-field">
+                                                <label class="tps-field__label" for="{{ $addon['key'] }}_purchase_key">
+                                                    {{ translate('messages.CodeCanyon Purchase Code') }} <span class="tps-req">*</span>
+                                                </label>
+                                                <div class="tps-input-wrap has-two-actions">
+                                                    <input type="password" id="{{ $addon['key'] }}_purchase_key" name="purchase_key"
+                                                           class="form-control" autocomplete="off" required
+                                                           placeholder="••••••••-••••-••••-••••-••••••••••••"
+                                                           value="{{ showDemoModeInputValue(value: $addon['purchase_key']) }}">
+                                                    <button type="button" class="tps-input-action tps-copy"
+                                                            data-target="#{{ $addon['key'] }}_purchase_key"
+                                                            aria-label="{{ translate('messages.Copy') }}">
+                                                        <i class="tio-copy"></i>
+                                                    </button>
+                                                    <button type="button" class="tps-input-action tps-toggle-secret"
+                                                            data-target="#{{ $addon['key'] }}_purchase_key"
+                                                            aria-label="{{ translate('Show value') }}">
+                                                        <i class="tio-visible"></i>
+                                                    </button>
+                                                </div>
+                                                <small class="tps-field__hint">
+                                                    {{ translate('Found under Downloads → Licence certificate on your Envato account.') }}
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center justify-content-end gap-2">
-                                <button type="button" class="btn bg--secondary h--42px title-clr px-4">{{ translate('messages.reset') }}</button>
-                                <button type="{{ getDemoModeFormButton(type: 'button') }}" class="btn btn--primary {{ getDemoModeFormButton(type: 'class') }}">{{ translate('messages.submit') }}</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="card view-details-container">
-                <form action="{{ route('admin.business-settings.addon-activation.activation') }}" method="post">
-                    @csrf
-                    <input type="hidden" name="addon_name" value="react_web">
-                    <input type="hidden" name="software_type" value="addon">
-                    <input type="hidden" name="software_id" value="NDUzNzAzNTE=">
-                    <input type="hidden" name="key" value="addon_activation_react">
-                    <div class="card-body p-20">
-                        <div class="row align-items-center">
-                            <div class="col-xxl-8 col-md-6 mb-md-0 mb-2">
-                                <h4 class="black-color mb-1 d-block">{{ translate('messages.react_user_website') }}</h4>
-                                <p class="fz-12 text-c mb-1">{{ translate('with_this_react_website_your_customers_will_experience_your_system_in_a_more_attractive_and_seamless_way') }}</p>
-                            </div>
-                            @php($addon_activation_react = \App\Models\BusinessSetting::where('key', 'addon_activation_react')->first())
-                            @php($addon_activation_react = $addon_activation_react?->value ? json_decode($addon_activation_react->value, true) : ['activation_status' => 0, 'username' => '', 'purchase_key' => ''])
-                            <div class="col-xxl-4 col-md-6">
-                                <div class="d-flex flex-sm-nowrap flex-wrap justify-content-end justify-content-end align-items-center gap-sm-3 gap-2">
-                                    <div class="view-btn order-sm-0 order-3 fz--14px text-primary cursor-pointer text-decoration-underline font-semibold d-flex align-items-center gap-1">
-                                        {{ translate('messages.view') }}
-                                        <i class="tio-arrow-downward"></i>
-                                    </div>
-                                    <div class="mb-0">
-                                        <label class="toggle-switch toggle-switch-sm mb-0">
-                                            <input type="checkbox"
-                                                   data-id="addon_activation_react_status"
-                                                   data-type="toggle"
-                                                   data-image-on="{{ asset('/public/assets/admin/img/modal/free-delivery-on.png') }}"
-                                                   data-image-off="{{ asset('/public/assets/admin/img/modal/free-delivery-off.png') }}"
-                                                   data-title-on="<strong>{{ translate('messages.want_to_Turn_ON_the_React_Website_addon?') }}</strong>"
-                                                   data-title-off="<strong>{{ translate('messages.want_to_Turn_OFF_the_React_Website_addon?') }}</strong>"
 
-                                                   class="status toggle-switch-input dynamic-checkbox-toggle"
-
-                                                   name="status" id="addon_activation_react_status"
-                                                   value="1"
-                                                {{ isset($addon_activation_react['activation_status']) && $addon_activation_react['activation_status'] == 1 ? 'checked' : '' }}>
-                                            <span class="toggle-switch-label text mb-0">
-                                                <span
-                                                    class="toggle-switch-indicator">
-                                                </span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                </div>
+                            <div class="tps-card__foot">
+                                <span class="tps-foot-note">
+                                    {{ translate('Saving re-checks the licence with the activation server.') }}
+                                </span>
+                                <button type="reset" class="btn btn--reset"><i class="tio-refresh"></i> {{ translate('messages.Reset') }}</button>
+                                <button type="{{ getDemoModeFormButton(type: 'button') }}"
+                                        class="btn btn--primary {{ getDemoModeFormButton(type: 'class') }}">
+                                    <i class="tio-save"></i> {{ translate('messages.Save') }}
+                                </button>
                             </div>
                         </div>
-                        <div class="view-details">
-                            <div class="bg--secondary rounded p-20 mb-20">
-                                <div class="row g-3">
-                                    <div class="col-md-6 col-lg-6">
-                                        <div class="">
-                                            <label class="mb-2 d-flex align-items-center gap-1 fz--14px">
-                                                {{ translate('messages.codcanyon_user_name') }} <span class="text-danger">*</span>
-                                                <i class="tio-info fz--14px secondary-clr" data-toggle="tooltip" data-bs-placement="top" title="{{ translate('messages.codcanyon_user_name') }} ...."></i>
-                                            </label>
-                                            <input type="text" value="{{ showDemoModeInputValue(value: $addon_activation_react['username']) }}"
-                                                   placeholder="{{ translate('ex') }}: {{ 'Miler' }}"
-                                                   name="username" class="form-control" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 col-lg-6">
-                                        <div class="">
-                                            <label class="mb-2 d-flex align-items-center gap-1 fz--14px">
-                                                {{ translate('messages.codcanyon_purchase_code') }} <span class="text-danger">*</span>
-                                                <i class="tio-info fz--14px secondary-clr" data-toggle="tooltip" data-bs-placement="top" title="{{ translate('messages.codcanyon_purchase_code') }} ...."></i>
-                                            </label>
-                                            <input type="text" value="{{ showDemoModeInputValue(value: $addon_activation_react['purchase_key']) }}"
-                                                   placeholder="{{ translate('ex') }}: {{ 'CAWFRWRAAWRCAWRA' }}"
-                                                   name="purchase_key" class="form-control" required>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center justify-content-end gap-2">
-                                <button type="button" class="btn bg--secondary h--42px title-clr px-4">{{ translate('messages.reset') }}</button>
-                                <button type="{{ getDemoModeFormButton(type: 'button') }}" class="btn btn--primary {{ getDemoModeFormButton(type: 'class') }}">{{ translate('messages.submit') }}</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
+            @endforeach
         </div>
     </div>
 
-
-    <!--  Offcanvas -->
-    {{-- <div id="offcanvas__customBtn" class="custom-offcanvas">
-        <div class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
-            <h3 class="mb-0">How Addon Activation Works</h2>
-            <button type="button" class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary text-dark offcanvas-close fz-15px p-0" aria-label="Close">&times;</button>
-        </div>
-        <div class="custom-offcanvas-body p-20">
-            <div class="accordion mx-450" id="accordionExample">
-                <div class="accordion-item mb-15 custom-accordion-style bg--secondary rounded">
-                    <h5 class="accordion-header mb-0">
-                        <button class="accordion-button border w-100 p-15 d-flex align-items-center bg-transparent gap-xl-3 gap-2 border-0 fz-15 font-semibold" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            <span class="btn p-2 d-center border w-35px h-35px rounded-circle bg-white-n theme-hover"><i class="tio-chevron-down"></i></span> Our Addons
-                        </button>
-                    </h5>
-                    <div id="collapseOne" class="accordion-collapse collapse show" data-parent="#accordionExample">
-                        <div class="accordion-body bg--secondary-n pt-0 p-15">
-                            <div class="bg-white-n rounded p-15">
-                                <div class="mb-15">
-                                    <h5 class="black-color mb-mb-0 font-normal d-block">Vendor App</h5>
-                                    <p class="fz-12 text-c mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio tellus, laoreet pharetra auctor eget, fringilla nec lectus. Nullam in feugiat est. Nam in interdum ligula, non elementum purus. Aenean eu lectus diam. To get the Vendor App <a href="#0" class="text-primary text-decoration-underline">Visit Here.</a></p>
-                                </div>
-                                <div class="position-relative">
-                                    <div class="single-item-slider2 dots-style2 owl-carousel bg--secondary p-15">
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="custom-nav w-100 z-999 d-flex align-items-center justify-content-between top-50 position-absolute gap-3 mt-3">
-                                        <button class="custom-prev btn p-2 bg-white-n d-center border min-w-25px h-35px rounded-circle theme-hover"><i class="tio-chevron-left"></i></button>
-                                        <button class="custom-next btn p-2 bg-white-n d-center border min-w-25px h-35px rounded-circle theme-hover"><i class="tio-chevron-right"></i></button></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="custom-nav d-flex align-items-center justify-content-center gap-3 mt-3">
-                                <button class="custom-prev btn p-2 d-center border bg-white-n w-35px h-35px rounded theme-hover"><i class="tio-chevron-left"></i></button>
-                                <div class="slide-counter slide-counter2"></div>
-                                <button class="custom-next btn p-2 d-center border bg-white-n w-35px h-35px rounded theme-hover"><i class="tio-chevron-right"></i></button></button>
-                            </div>
-                        </div>
-                    </div>
+    <div class="modal fade" id="addon-help-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ translate('Activating an add-on') }}</h5>
+                    <button type="button" class="close btn btn--reset btn-circle" data-dismiss="modal" aria-label="{{ translate('Close') }}">
+                        <span aria-hidden="true" class="tio-clear fs-20 opacity-70"></span>
+                    </button>
                 </div>
-                <div class="accordion-item mb-15 custom-accordion-style bg--secondary rounded">
-                    <h5 class="accordion-header mb-0">
-                        <button class="accordion-button border w-100 p-15 d-flex align-items-center bg-transparent gap-xl-3 gap-2 border-0 fz-15 font-semibold collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            <span class="btn p-2 d-center border w-35px h-35px rounded-circle bg-white-n theme-hover"><i class="tio-chevron-down"></i></span> How To Active Addons
-                        </button>
-                    </h5>
-                    <div id="collapseTwo" class="accordion-collapse collapse" data-parent="#accordionExample">
-                        <div class="accordion-body bg--secondary-n pt-0 p-15">
-                            <div class="bg-white-n rounded p-15">
-                                <div class="mb-15">
-                                    <h5 class="black-color mb-mb-0 font-normal d-block">Vendor App</h5>
-                                    <p class="fz-12 text-c mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio tellus, laoreet pharetra auctor eget, fringilla nec lectus. Nullam in feugiat est. Nam in interdum ligula, non elementum purus. Aenean eu lectus diam. To get the Vendor App <a href="#0" class="text-primary text-decoration-underline">Visit Here.</a></p>
-                                </div>
-                                <div class="position-relative">
-                                    <div class="single-item-slider2 dots-style2 owl-carousel bg--secondary p-15">
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-center">
-                                                <img src="{{asset('/public/assets/admin/img/map-img.png')}}" alt="">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="custom-nav w-100 z-999 d-flex align-items-center justify-content-between top-50 position-absolute gap-3 mt-3">
-                                        <button class="custom-prev btn p-2 bg-white-n d-center border min-w-25px h-35px rounded-circle theme-hover"><i class="tio-chevron-left"></i></button>
-                                        <button class="custom-next btn p-2 bg-white-n d-center border min-w-25px h-35px rounded-circle theme-hover"><i class="tio-chevron-right"></i></button></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="custom-nav d-flex align-items-center justify-content-center gap-3 mt-3">
-                                <button class="custom-prev btn p-2 d-center border bg-white-n w-35px h-35px rounded theme-hover"><i class="tio-chevron-left"></i></button>
-                                <div class="slide-counter slide-counter2"></div>
-                                <button class="custom-next btn p-2 d-center border bg-white-n w-35px h-35px rounded theme-hover"><i class="tio-chevron-right"></i></button></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item custom-accordion-style bg--secondary rounded">
-                    <h5 class="accordion-header mb-0">
-                        <button class="accordion-button border w-100 p-15 d-flex align-items-center bg-transparent gap-xl-3 gap-2 border-0 fz-15 font-semibold collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            <span class="btn p-2 d-center border w-35px h-35px rounded-circle bg-white-n theme-hover"><i class="tio-chevron-down"></i></span> Why You Need to Active The Addons
-                        </button>
-                    </h5>
-                    <div id="collapseThree" class="accordion-collapse collapse" data-parent="#accordionExample">
-                        <div class="accordion-body bg--secondary-n pt-0 p-15">
-                            <div class="bg-white-n rounded p-15">
-                                <div class="position-relative">
-                                    <div class="single-item-slider2 dots-style2 owl-carousel">
-                                        <div class="item mb-10px">
-                                            <div class="text-start">
-                                                <h5 class="black-color font-normal mb-15 d-block">Vendor App</h5>
-                                                <ol class="p-0 ps-20 d-flex flex-column gap-2">
-                                                    <li class="fz-12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio tellus, laoreet pharetra auctor eget, fringilla nec lectus.</li>
-                                                    <li class="fz-12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio.</li>
-                                                    <li class="fz-12px">Laoreet pharetra auctor eget, fringilla nec lectus. Nullam.</li>
-                                                </ol>
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-start">
-                                                <h5 class="black-color font-normal mb-15 d-block">Vendor App</h5>
-                                                <ol class="p-0 ps-20 d-flex flex-column gap-2">
-                                                    <li class="fz-12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio tellus, laoreet pharetra auctor eget, fringilla nec lectus.</li>
-                                                    <li class="fz-12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio.</li>
-                                                    <li class="fz-12px">Laoreet pharetra auctor eget, fringilla nec lectus. Nullam.</li>
-                                                </ol>
-                                            </div>
-                                        </div>
-                                        <div class="item mb-10px">
-                                            <div class="text-start">
-                                                <h5 class="black-color font-normal mb-15 d-block">Vendor App</h5>
-                                                <ol class="p-0 ps-20 d-flex flex-column gap-2">
-                                                    <li class="fz-12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio tellus, laoreet pharetra auctor eget, fringilla nec lectus.</li>
-                                                    <li class="fz-12px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam odio.</li>
-                                                    <li class="fz-12px">Laoreet pharetra auctor eget, fringilla nec lectus. Nullam.</li>
-                                                </ol>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="custom-nav d-flex align-items-center justify-content-center gap-3 mt-3">
-                                <button class="custom-prev btn p-2 d-center border bg-white-n w-35px h-35px rounded theme-hover"><i class="tio-chevron-left"></i></button>
-                                <div class="slide-counter slide-counter2"></div>
-                                <button class="custom-next btn p-2 d-center border bg-white-n w-35px h-35px rounded theme-hover"><i class="tio-chevron-right"></i></button></button>
-                            </div>
+                <div class="modal-body">
+                    <ol class="tps-steps mb-3">
+                        <li>{{ translate('Sign in to Envato and open Downloads for the add-on you purchased.') }}</li>
+                        <li>{{ translate('Download the licence certificate and copy the item purchase code from it.') }}</li>
+                        <li>{{ translate('Paste your Envato username and that purchase code into the add-on below.') }}</li>
+                        <li>{{ translate('Switch the add-on on and press Save — the licence is checked against the domain shown above.') }}</li>
+                    </ol>
+                    <div class="tps-note tps-note--warn">
+                        <i class="tio-info-outined"></i>
+                        <div>
+                            {{ translate('A purchase code is tied to one domain. Release the licence before moving the site.') }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div> --}}
-
+    </div>
 @endsection
 
 @push('script_2')
+    @include('admin-views.business-settings.partials.third-party-scripts')
 
+    <script>
+        "use strict";
+
+        /*
+         * Own accordion rather than the global .view-btn helper in admin.js: the
+         * panel holds the Save button, so it also has to open by itself when the
+         * switch is flipped, otherwise the staged change has nowhere to be saved.
+         */
+        function adnTogglePanel($trigger, forceOpen) {
+            const $panel = $($trigger.data('panel'));
+
+            if (!$panel.length) {
+                return;
+            }
+
+            const open = typeof forceOpen === 'boolean' ? forceOpen : !$panel.is(':visible');
+
+            $trigger.attr('aria-expanded', open ? 'true' : 'false');
+            open ? $panel.stop(true, true).slideDown(220) : $panel.stop(true, true).slideUp(220);
+        }
+
+        $(document).on('click', '.adn .adn-disclose', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            adnTogglePanel($(this));
+        });
+
+        /* The whole header row opens the panel, minus the switch sitting in it. */
+        $(document).on('click', '.adn .adn-card__head.is-clickable', function (event) {
+            if ($(event.target).closest('.toggle-switch, .adn-disclose').length) {
+                return;
+            }
+
+            adnTogglePanel($(this).find('.adn-disclose'));
+        });
+
+        /*
+         * .dynamic-checkbox-toggle only flips the box after the confirm modal, so
+         * "change" is the point where the admin still has to reach Save.
+         */
+        $(document).on('change', '.adn .dynamic-checkbox-toggle', function () {
+            adnTogglePanel($(this).closest('.adn-card').find('.adn-disclose'), true);
+        });
+    </script>
 @endpush

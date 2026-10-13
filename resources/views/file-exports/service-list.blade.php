@@ -1,14 +1,14 @@
 @php use App\CentralLogics\Helpers; @endphp
 <div class="row">
     <div class="col-lg-12 text-center">
-        <h1>{{ translate('Service_List') }}</h1>
+        <h1>{{ translate('Service list') }}</h1>
     </div>
     <div class="col-lg-12">
 
         <table>
             <thead>
                 <tr>
-                    <th>{{ translate('Filter_Criteria') }}</th>
+                    <th>{{ translate('Filter criteria') }}</th>
                     <th></th>
                     <th></th>
                     <th>
@@ -18,9 +18,9 @@
                         <br>
                         {{ translate('Module') }}: {{ $data['module_name'] ?? translate('N/A') }}
                         <br>
-                        {{ translate('category') }}: {{ $data['category'] ?? translate('N/A') }}
+                        {{ translate('Category') }}: {{ $data['category'] ?? translate('N/A') }}
                         <br>
-                        {{ translate('Search_Bar_Content') }}: {{ $data['search'] ?? translate('N/A') }}
+                        {{ translate('Search bar content') }}: {{ $data['search'] ?? translate('N/A') }}
                     </th>
                     <th></th>
                     <th></th>
@@ -29,13 +29,13 @@
                 </tr>
 
                 <tr>
-                    <th>{{ translate('sl') }}</th>
+                    <th>{{ translate('SL') }}</th>
                     <th>{{ translate('Image') }}</th>
-                    <th>{{ translate('service_name') }}</th>
-                    <th>{{ translate('Category_Name') }}</th>
-                    <th>{{ translate('zone') }}</th>
-                    <th>{{ translate('base_price') }}</th>
-                    <th>{{ translate('minimum_bidding_price') }}</th>
+                    <th>{{ translate('Service name') }}</th>
+                    <th>{{ translate('Category name') }}</th>
+                    <th>{{ translate('Zone') }}</th>
+                    <th>{{ translate('Base price') }}</th>
+                    <th>{{ translate('Minimum bidding price') }}</th>
                     <th>{{ translate('Status') }}</th>
                 </tr>
             </thead>

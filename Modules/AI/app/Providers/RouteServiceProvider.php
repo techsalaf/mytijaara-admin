@@ -10,16 +10,8 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 
 class RouteServiceProvider extends ServiceProvider
 {
-    /**
-     * The module namespace to assume when generating URLs to actions.
-     */
     protected string $moduleNamespace = 'Modules\AI\app\Http\Controllers';
 
-    /**
-     * Called before routes are registered.
-     *
-     * Register any model bindings or pattern based filters.
-     */
     public function boot(): void
     {
         $this->configureAiChatRateLimiting();
@@ -27,15 +19,6 @@ class RouteServiceProvider extends ServiceProvider
         parent::boot();
     }
 
-    /**
-     * Rate limiters for the AI chat endpoints.
-     *
-     * `send` triggers a paid LLM call, so it's throttled to prevent cost abuse.
-     * In DEMO mode the per-IP hit-limit in AiChatController (10 messages, with a
-     * friendly "demo restriction" message) is the real cap — so these throttles
-     * are switched OFF there. Otherwise Laravel's generic "Too Many Attempts"
-     * (429) fires first and masks the demo message.
-     */
     protected function configureAiChatRateLimiting(): void
     {
         $isDemo = fn (): bool => function_exists('getEnvMode') && getEnvMode() === 'demo';
@@ -53,9 +36,6 @@ class RouteServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Define the routes for the application.
-     */
     public function map(): void
     {
         $this->mapApiRoutes();
@@ -63,11 +43,6 @@ class RouteServiceProvider extends ServiceProvider
         $this->mapWebRoutes();
     }
 
-    /**
-     * Define the "web" routes for the application.
-     *
-     * These routes all receive session state, CSRF protection, etc.
-     */
     protected function mapWebRoutes(): void
     {
         Route::middleware('web')
@@ -79,11 +54,6 @@ class RouteServiceProvider extends ServiceProvider
             ->group(module_path('AI', '/routes/admin/routes.php'));
     }
 
-    /**
-     * Define the "api" routes for the application.
-     *
-     * These routes are typically stateless.
-     */
         protected function mapApiRoutes()
     {
         Route::prefix('api/v1')

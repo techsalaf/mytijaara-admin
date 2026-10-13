@@ -87,7 +87,6 @@ class UpdateCartQuantityTool implements Tool
             ->when($this->moduleId, fn ($q) => $q->where('module_id', $this->moduleId))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId));
 
-        // Primary lookup by item_id (+ optional variation)
         $cart = null;
         if ($itemId > 0) {
             $cart = $baseQuery()
@@ -96,8 +95,6 @@ class UpdateCartQuantityTool implements Tool
                 ->first();
         }
 
-        // Fallback: resolve by item name. Cart::item is a morphTo (polymorphic),
-        // so we resolve Item IDs first then filter cart rows by them.
         if (! $cart && $itemName !== null && $itemName !== '') {
             $candidateIds = Item::where('name', 'like', "%{$itemName}%")
                 ->pluck('id')
@@ -121,18 +118,10 @@ class UpdateCartQuantityTool implements Tool
             return "{$label}{$variationHint} is not in your cart. Add it first before updating the quantity.";
         }
 
-        // Enforce stock + max-cart-quantity the same way AddToCartTool /
-        // PlaceNewOrder do: read variation stock via Helpers::variation_price,
-        // and only enforce stock for modules whose config('module.X.stock')
-        // flag is true (grocery, pharmacy, e-commerce).
         $item = Item::find($itemId, ['id', 'name', 'maximum_cart_quantity', 'stock', 'variations']);
 
         if ($item) {
             $rawStock = $item->getAttribute('stock');
-            // Legacy per-variant stock lookup only applies to the non-food
-            // variation system (variations = [{type, price, stock}]). Food uses
-            // food_variations with item-level stock, so skip the helper there —
-            // calling it would iterate a null `variations` column.
             if ($this->moduleType !== 'food' && $variationType !== null && $variationType !== '' && !empty($item->getAttribute('variations'))) {
                 $variantData = Helpers::variation_price($item, json_encode([['type' => $variationType]]));
                 $rawStock    = $variantData['stock'] ?? $rawStock;
@@ -169,18 +158,13 @@ class UpdateCartQuantityTool implements Tool
         return "Updated {$name}{$variationLabel} quantity to {$quantity} in your cart.";
     }
 
-    /**
-     * Re-read the cart and push a fresh snapshot into the response context so
-     * the API response carries the post-mutation state instead of the stale
-     * snapshot from any earlier GetCartItemsTool call this turn.
-     */
     private function publishCartSnapshot(int|string $cartUserId, bool $isGuest): void
     {
         $carts = Cart::where('user_id', $cartUserId)
             ->where('is_guest', $isGuest)
             ->where('item_type', Item::class)
             ->when($this->moduleId, fn ($q) => $q->where('module_id', $this->moduleId))
-            ->with('item:id,name,price,discount,discount_type,store_id,image')
+            ->with(['item:id,name,price,discount,discount_type,store_id,image', 'item.storage'])
             ->get();
 
         $storeIds   = $carts->pluck('store_id')->filter()->unique()->values()->all();

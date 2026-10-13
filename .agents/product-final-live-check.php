@@ -1,0 +1,4 @@
+<?php
+require getcwd().'/vendor/autoload.php';$app=require getcwd().'/bootstrap/app.php';$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$d=Modules\WhatsAppVendorConcierge\app\Models\ProductListingDraft::findOrFail(1);
+echo json_encode(['deferred_job_live'=>class_exists(Modules\WhatsAppVendorConcierge\app\Jobs\ResumeProductDraftMessage::class),'draft_id'=>$d->id,'status'=>$d->status,'step'=>$d->step,'name'=>$d->data['name']??null,'price'=>$d->data['price']??null,'stock'=>$d->data['stock']??null,'item_id'=>$d->item_id,'categories'=>Illuminate\Support\Facades\DB::table('categories')->count(),'units'=>Illuminate\Support\Facades\DB::table('units')->count(),'attributes'=>Illuminate\Support\Facades\DB::table('attributes')->count(),'queued_jobs'=>Illuminate\Support\Facades\DB::table('jobs')->count(),'failed_jobs'=>Illuminate\Support\Facades\DB::table('failed_jobs')->count()]).PHP_EOL;

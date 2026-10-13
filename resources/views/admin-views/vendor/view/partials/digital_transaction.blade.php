@@ -4,17 +4,17 @@
             class="table table-thead-bordered table-align-middle card-table">
             <thead class="thead-light">
                 <tr>
-                    <th class="w--1 border-0">{{translate('sl')}}</th>
-                    <th class="w--1 border-0">{{translate('messages.order_id')}}</th>
-                    <th class="w--2 border-0">{{translate('messages.total_order_amount')}}</th>
+                    <th class="w--1 border-0">{{translate('SL')}}</th>
+                    <th class="w--1 border-0">{{translate('Order ID')}}</th>
+                    <th class="w--2 border-0">{{translate('Total order amount')}}</th>
                     <th class="w--3 border-0">{{translate('messages.store_earned')}}</th>
-                    <th class="w--1 border-0">{{translate('messages.admin_earned')}}</th>
-                    <th class="w--1 border-0">{{translate('messages.delivery_fee')}}</th>
-                    <th class="w--1 border-0">{{translate('messages.vat/tax')}}</th>
+                    <th class="w--1 border-0">{{translate('Admin earned')}}</th>
+                    <th class="w--1 border-0">{{translate('Delivery fee')}}</th>
+                    <th class="w--1 border-0">{{translate('VAT/tax')}}</th>
                 </tr>
             </thead>
             <tbody>
-            @php($digital_transaction = \App\Models\OrderTransaction::where('vendor_id', $store->vendor->id)->latest()->paginate(25))
+            @php($digital_transaction = $transactions)
             @foreach($digital_transaction as $k=>$dt)
                 <tr>
                     <td scope="row">{{$k+$digital_transaction->firstItem()}}</td>
@@ -40,7 +40,7 @@
 <div class="empty--data">
     <img src="{{asset('/public/assets/admin/svg/illustrations/sorry.svg')}}" alt="public">
     <h5>
-        {{translate('no_data_found')}}
+        {{translate('No data found')}}
     </h5>
 </div>
 @endif

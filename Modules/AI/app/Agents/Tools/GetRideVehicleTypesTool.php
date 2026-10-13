@@ -8,17 +8,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Lists the ride vehicle categories available in the customer's zone, with
- * their base fare and per-km rate. Pure read-only — no booking, no driver
- * matching. The RiderVehicleCategory model applies an `is_ride = 1` global
- * scope (DMVehicle), so we only ever see ride-eligible rows here.
- *
- * Fares are sourced through the `tripFares` hasMany relation (RideFare),
- * which is keyed by (vehicle_category_id, zone_id). When the customer
- * spans multiple zones (overlapping coverage areas), we use the first
- * matching fare row to keep the answer concise.
- */
 class GetRideVehicleTypesTool implements Tool
 {
     /**
@@ -47,9 +36,6 @@ class GetRideVehicleTypesTool implements Tool
             return 'Ride options aren\'t available without a delivery area — please set your location first.';
         }
 
-        // tripFares relation lives on DMVehicle (parent class). Eager-load
-        // only the rows that match the user's zones so the LLM doesn't see
-        // fare data from other regions.
         $categories = RiderVehicleCategory::where('status', 1)
             ->whereHas('tripFares', fn ($q) => $q->whereIn('zone_id', $this->zoneIds))
             ->with(['tripFares' => fn ($q) => $q->whereIn('zone_id', $this->zoneIds)
@@ -61,15 +47,13 @@ class GetRideVehicleTypesTool implements Tool
         }
 
         $lines = $categories->map(function (RiderVehicleCategory $cat) {
-            // Use the first available fare row — when a user's zones overlap,
-            // showing every zone's row would spam the response.
             $fare = $cat->tripFares->first();
             if (! $fare) {
                 return null;
             }
             $base   = round((float) $fare->getAttribute('base_fare'), 2);
             $perKm  = round((float) $fare->getAttribute('base_fare_per_km'), 2);
-            $type   = $cat->getAttribute('type'); // 'car', 'motor_bike', etc.
+            $type   = $cat->getAttribute('type');
             return '• ' . $cat->getAttribute('name')
                 . ($type ? ' (' . $type . ')' : '')
                 . ' — base ' . $base . ' + ' . $perKm . '/km';

@@ -8,15 +8,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Rental-module vehicle suggestions. Read-only — listings only, no booking.
- * Registered only when the conversation's moduleType is 'rental'.
- *
- * Returns a text summary (no product cards) listing brand+name, supported
- * pricing models with prices, rating, trip count and provider for each
- * vehicle, so the LLM can answer "best vehicles", "show me sedans under
- * 800/hour", "BMWs available" etc. with real numbers.
- */
 class GetRentalVehiclesTool implements Tool
 {
     /**
@@ -79,8 +70,6 @@ class GetRentalVehiclesTool implements Tool
             ->when($brandId, fn ($q) => $q->where('brand_id', (int) $brandId))
             ->when($categoryId, fn ($q) => $q->where('category_id', (int) $categoryId))
             ->when($priceColumn && $maxPrice !== null, fn ($q) => $q->where($priceColumn, '<=', (float) $maxPrice)->where($priceColumn, '>', 0))
-            // pickup_zone_id is a JSON column on Provider — match if any of
-            // the user's overlapping zones is in that list.
             ->when(!empty($this->zoneIds), function ($q) {
                 $q->whereHas('provider', function ($p) {
                     $p->where(function ($pp) {

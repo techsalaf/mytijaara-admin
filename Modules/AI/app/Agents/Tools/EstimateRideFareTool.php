@@ -8,24 +8,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Fare estimator. The host's real estimator (CommonTrait::estimatedFare)
- * calls Google Maps via getRoutes() to derive the route distance — that's
- * an external HTTP hop we don't want to incur from a chat tool, both for
- * latency and quota reasons.
- *
- * So this tool works in two modes:
- *
- *   1. With distance_km supplied → returns per-category totals using
- *      base_fare + (base_fare_per_km * distance) plus a "this excludes
- *      waiting/idle/surge/tax" disclaimer.
- *   2. Without distance_km → returns the fare structure (base + per-km)
- *      so the LLM can ask the user for a distance and compute later.
- *
- * Waiting / idle / delay / cancellation fees are runtime fees applied to
- * actual trips — they are deliberately omitted from estimates because the
- * customer doesn't know in advance how long they'll wait.
- */
 class EstimateRideFareTool implements Tool
 {
     /**
@@ -69,9 +51,6 @@ class EstimateRideFareTool implements Tool
             ? trim((string) $args['vehicle_category_name'])
             : null;
 
-        // Sanity-check the distance. A chat-provided distance over 200km
-        // almost certainly means the user is confused or testing — flag it
-        // rather than returning a nonsense estimate.
         if ($distanceKm !== null && ($distanceKm <= 0 || $distanceKm > 200)) {
             return 'That distance looks off — ride estimates are valid for ~0–200 km. Please check the kilometres and try again.';
         }
@@ -84,8 +63,6 @@ class EstimateRideFareTool implements Tool
             return 'Fare data isn\'t set up for your area yet — please contact support.';
         }
 
-        // Filter by category name if the user named one ("just sedans").
-        // Substring match keeps "bike" / "motor bike" / "motorbike" all aligned.
         if ($categoryHit !== null && $categoryHit !== '') {
             $needle = mb_strtolower($categoryHit);
             $rows   = $rows->filter(fn (RideFare $r) =>
@@ -97,14 +74,11 @@ class EstimateRideFareTool implements Tool
                 return 'No ride category matching "' . $categoryHit . '" is available in your area.';
             }
         } else {
-            // Drop inactive categories from the default cross-category view.
             $rows = $rows->filter(fn (RideFare $r) =>
                 $r->vehicleCategory && (int) $r->vehicleCategory->getAttribute('status') === 1
             );
         }
 
-        // Deduplicate by category — if the user spans multiple zones we'll
-        // see the same category twice; keep the first row per category.
         $rows = $rows->unique('vehicle_category_id');
 
         if ($distanceKm === null) {

@@ -12,6 +12,5 @@ class AISettingsController extends Controller
 {
     public function index(): View
     {
-       dd("SS");
     }
 }

@@ -23,41 +23,39 @@
         <h2 class="mb-20">{{ translate('messages.Setup Tax Calculation') }}</h3>
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 mt-4 __gap-12px">
                 <div class="js-nav-scroller hs-nav-scroller-horizontal mt-2">
-                    <!-- Nav -->
                     <ul class="nav nav-tabs border-0 nav--tabs nav--pills">
                         <li class="nav-item">
                             <a class="nav-link  {{ Request::is('taxvat/system-taxvat') && request('type') == 'vendor' ? 'active' : '' }}"
                                 href="{{ route('taxvat.systemTaxvat', ['type' => 'vendor']) }}"
-                                aria-disabled="true">{{ translate('Order Module') }}</a>
+                                aria-disabled="true">{{ translate('Order module') }}</a>
                         </li>
                         @if (addon_published_status('Rental'))
                             <li class="nav-item">
                                 <a class="nav-link {{ Request::is('taxvat/system-taxvat') && request('type') == 'rental' ? 'active' : '' }}"
                                     href="{{ route('taxvat.systemTaxvat', ['type' => 'rental']) }}"
-                                    aria-disabled="true">{{ translate('Rental Module') }}</a>
+                                    aria-disabled="true">{{ translate('Rental module') }}</a>
                             </li>
                         @endif
                         @if (addon_published_status('RideShare'))
                             <li class="nav-item">
                                 <a class="nav-link {{ Request::is('taxvat/system-taxvat') && request('type') == 'ride-share' ? 'active' : '' }}"
                                     href="{{ route('taxvat.systemTaxvat', ['type' => 'ride-share']) }}"
-                                    aria-disabled="true">{{ translate('RideShare Module') }}</a>
+                                    aria-disabled="true">{{ translate('RideShare module') }}</a>
                             </li>
                         @endif
                         <li class="nav-item">
                             <a class="nav-link {{ Request::is('taxvat/system-taxvat') && request('type') == 'parcel' ? 'active' : '' }}"
                                 href="{{ route('taxvat.systemTaxvat', ['type' => 'parcel']) }}"
-                                aria-disabled="true">{{ translate('Parcel Module') }}</a>
+                                aria-disabled="true">{{ translate('Parcel module') }}</a>
                         </li>
                         @if (addon_published_status('Service'))
                             <li class="nav-item">
                                 <a class="nav-link {{ Request::is('taxvat/system-taxvat') && request('type') == 'service' ? 'active' : '' }}"
                                     href="{{ route('taxvat.systemTaxvat', ['type' => 'service']) }}"
-                                    aria-disabled="true">{{ translate('Service Module') }}</a>
+                                    aria-disabled="true">{{ translate('Service module') }}</a>
                             </li>
                         @endif
                     </ul>
-                    <!-- End Nav -->
                 </div>
             </div>
             <div class="card p-20 mb-20">
@@ -72,10 +70,10 @@
                             {{ translate('messages.Status') }}
                             <div class="toggle-switch ml-auto justify-content-end toggle-switch-sm confirmStatus"
                                 data-id="{{ $systemTaxVat?->id }}"
-                                data-on_title="{{ translate('messages.Turn On The Status?') }}"
-                                data-off_title="{{ translate('messages.Turn Off The Status?') }}"
-                                data-on_message= "{{ translate('Are you sure, do you want to turn ON the VAT status from your system. It will  effect on tax calculation & report') }}"
-                                data-off_message= "{{ translate('Are you sure, do you want to turn off the VAT status from your system. It will  effect on tax calculation & report') }}"
+                                data-on_title="{{ translate('Turn on the status?') }}"
+                                data-off_title="{{ translate('Turn off the status?') }}"
+                                data-on_message= "{{ translate('Are you sure you want to turn ON the VAT status? It will affect tax calculation and reports.') }}"
+                                data-off_message= "{{ translate('Are you sure you want to turn OFF the VAT status? It will affect tax calculation and reports.') }}"
                                 data-url="{{ route('taxvat.systemTaxVatVendorStatus', ['id' => $systemTaxVat?->id, 'prescription_system_id' => $systemTaxVatForPrescription?->id, 'country_code' => $country_code ?? ($systemTaxVat?->country_code ?? null), 'type' => $tax_payer]) }}"
                                 data-env="{{ getEnvMode() }}"
                                 for="vendor_tax_status">
@@ -102,13 +100,13 @@
                         <div class="bg--secondary p-15 rounded mb-20">
                             <div class="mb-20">
                                 @if ($tax_payer == 'rental_provider')
-                                    @php($productType = translate('Trip_Amount'))
+                                    @php($productType = translate('Trip amount'))
                                 @elseif($tax_payer == 'ride_module')
-                                    @php($productType = translate('Ride_Amount'))
+                                    @php($productType = translate('Ride Amount'))
                                 @elseif($tax_payer == 'parcel')
-                                    @php($productType = translate('Parcel_Amount'))
+                                    @php($productType = translate('Parcel Amount'))
                                 @elseif($tax_payer == 'service_provider')
-                                    @php($productType = translate('Service_Amount'))
+                                    @php($productType = translate('Service Amount'))
                                 @else
                                     @php($productType = translate('Product Price'))
                                 @endif
@@ -126,7 +124,7 @@
                                                     {{ $productType }}
                                                 </h5>
                                                 <p class="mb-0 fz-11 fw-normal">
-                                                    {{ translate('Calculate Tax Included. By selecting this option you will need to setup same tax rate for all types of income source.') }}
+                                                    {{ translate('Tax included: you must set the same rate for every income source.') }}
                                                 </p>
                                             </label>
                                         </div>
@@ -157,7 +155,7 @@
                             <div class="bg--secondary rounded p-20 mb-20">
                                 <div class="row g-lg-4 g-md-3 g-2">
                                     <div class="col-md-6">
-                                        <h3 class="mb-1">{{ translate('messages.Basic Setup') }}</h3>
+                                        <h3 class="mb-1">{{ translate('Basic setup') }}</h3>
                                         <p class="mb-0 fz-12">{{ translate('Choose the tax type and applicable tax rates.') }}</p>
                                         <div class="danger-notes-bg px-2 py-2 rounded fz-11  gap-2 align-items-center mt-10px d-none"
                                             id=tax_type_change_alert>
@@ -178,13 +176,13 @@
                                             <span id="alert_for_item"
                                                 class="{{ $tax_payer == 'service_provider' && $systemTaxVat?->tax_type == 'service_wise' ? 'd-none' : '' }}">
                                                 {{ translate('messages.When you change') }} <span
-                                                    class="font-semibold title-clr">{{ translate('messages.Tax Type') }}</span>
-                                                {{ translate('to product wise.Vendors will have control to setup the taxes of their products.') }}
+                                                    class="font-semibold title-clr">{{ translate('Tax type') }}</span>
+                                                {{ translate('to product wise. Vendors will have control to setup the taxes of their products.') }}
                                             </span>
                                             <span id="alert_for_service"
                                                 class="{{ $tax_payer == 'service_provider' && $systemTaxVat?->tax_type == 'service_wise' ? '' : 'd-none' }}">
                                                 {{ translate('messages.When you change') }} <span
-                                                    class="font-semibold title-clr">{{ translate('messages.Tax Type') }}</span>
+                                                    class="font-semibold title-clr">{{ translate('Tax type') }}</span>
                                                 {{ translate('to service wise.Providers will have control to setup the taxes of their services.') }}
                                             </span>
                                         </div>
@@ -211,12 +209,12 @@
                                             <div id="tax_rate_div"
                                                 class="{{ !$systemTaxVat || ($tax_payer == 'service_provider' && in_array($systemTaxVat?->tax_type, ['booking_wise'])) || ($tax_payer != 'service_provider' && in_array($systemTaxVat?->tax_type, ['order_wise', 'trip_wise'])) ? '' : 'd-none' }}">
                                                 <span
-                                                    class="mb-2 d-block title-clr fw-normal">{{ translate('Select Tax Rate') }}</span>
+                                                    class="mb-2 d-block title-clr fw-normal">{{ translate('Select tax rate') }}</span>
                                                 <select
                                                     {{ in_array($systemTaxVat?->tax_type, ['order_wise', 'trip_wise']) ? 'selected' : '' }}
                                                     name="tax_ids[]" id="tax__rate"
                                                     class="form-control js-select2-custom" multiple="multiple"
-                                                    placeholder="{{ translate('Type & Select Tax Rate') }}">
+                                                    placeholder="{{ translate('Type & select tax rate') }}">
                                                     @foreach ($taxVats as $taxVat)
                                                         <option
                                                             {{ in_array($taxVat->id, $systemTaxVat?->tax_ids ?? []) ? 'selected' : '' }}
@@ -270,25 +268,19 @@
                                                 <span
                                                     class="{{ $systemTaxVat?->tax_type == 'category_wise' ? '' : 'd-none' }}"
                                                     id="info_for_category">
-                                                    {{ translate('messages.Please specify the tax rate while creating a category from') }}
-                                                    <span
-                                                        class="font-semibold theme-clr text-decoration-underline">{{ translate('Category List') }}.</span>
+                                                    {{ translate('messages.Please specify the tax rate when creating a category') }}: <span class="font-semibold theme-clr text-decoration-underline">{{ translate('Category list') }}</span>.
                                                     {{ translate('If you already created category without tax then go to category edit & update tax.') }}
                                                 </span>
                                                 <span
                                                     class="{{ $systemTaxVat?->tax_type == 'product_wise' ? '' : 'd-none' }}"
                                                     id="info_for_item">
-                                                    {{ translate('messages.Please specify the tax rate while creating a Product from') }}
-                                                    <span
-                                                        class="font-semibold theme-clr text-decoration-underline">{{ translate('Products List') }}.</span>
+                                                    {{ translate('messages.Please specify the tax rate when creating a product') }}: <span class="font-semibold theme-clr text-decoration-underline">{{ translate('Products List') }}</span>.
                                                     {{ translate('If you already created Products without tax then go to edit Product and update tax.') }}
                                                 </span>
                                                 <span
                                                     class="{{ $tax_payer == 'service_provider' && $systemTaxVat?->tax_type == 'service_wise' ? '' : 'd-none' }}"
                                                     id="info_for_service">
-                                                    {{ translate('messages.Please specify the tax rate while creating a Service from') }}
-                                                    <span
-                                                        class="font-semibold theme-clr text-decoration-underline">{{ translate('Services List') }}.</span>
+                                                    {{ translate('messages.Please specify the tax rate when creating a service') }}: <span class="font-semibold theme-clr text-decoration-underline">{{ translate('Services List') }}</span>.
                                                     {{ translate('If you already created Services without tax then go to edit Service and update tax.') }}
                                                 </span>
                                             </div>
@@ -375,12 +367,12 @@
                                                 </div>
                                                 <div>
                                                     <span
-                                                        class="mb-2 d-block title-clr fw-normal">{{ translate('Select Tax Rate') }}</span>
+                                                        class="mb-2 d-block title-clr fw-normal">{{ translate('Select tax rate') }}</span>
                                                     <select
                                                         {{ in_array($systemTaxVatForPrescription?->tax_type, ['order_wise', 'trip_wise']) ? 'selected' : '' }}
                                                         name="tax_ids_for_prescription[]" id="tax__rate1"
                                                         class="form-control js-select2-custom" multiple="multiple"
-                                                        placeholder="{{ translate('Type & Select Tax Rate') }}">
+                                                        placeholder="{{ translate('Type & select tax rate') }}">
                                                         @foreach ($taxVats as $taxVat)
                                                             <option
                                                                 {{ in_array($taxVat->id, $systemTaxVatForPrescription?->tax_ids ?? []) ? 'selected' : '' }}
@@ -405,7 +397,7 @@
                                 <div class="bg--secondary rounded p-20">
                                     <div class="row g-lg-4 g-md-3 g-2">
                                         <div class="col-md-6">
-                                            <h3 class="mb-1">{{ translate('messages.Additional Setup') }}</h3>
+                                            <h3 class="mb-1">{{ translate('Additional setup') }}</h3>
                                             <p class="mb-0 fz-12">{{ translate('Apply tax on additional charges.') }}</p>
                                         </div>
                                         <div class="col-md-6">
@@ -433,7 +425,7 @@
                                                         <select id="additional_charge_{{ $item }}"
                                                             name="additional[{{ $item }}][]"
                                                             class="form-control js-select2-custom service__charge"
-                                                            multiple="multiple" placeholder="{{ translate('Type & Select Tax Rate') }}">
+                                                            multiple="multiple" placeholder="{{ translate('Type & select tax rate') }}">
                                                             @foreach ($taxVats as $taxVat)
                                                                 <option
                                                                     {{ in_array($taxVat->id, $additionalData?->tax_ids ?? []) ? 'selected' : '' }}
@@ -455,13 +447,12 @@
                     <div class="d-flex align-items-center justify-content-end mt-4 gap-md-3 gap-2">
                         <button type="reset"
                             class="btn bg--secondary h--42px title-clr px-4">{{ translate('messages.Reset') }}</button>
-                        <button type="{{ getEnvMode() != 'demo' ? 'submit' : 'button' }}" class="btn btn--primary call-demo">{{ translate('Save Information') }}</button>
+                        <button type="{{ getEnvMode() != 'demo' ? 'submit' : 'button' }}" class="btn btn--primary call-demo">{{ translate('Save information') }}</button>
                     </div>
                 </form>
             </div>
 
     </div>
-    <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -486,7 +477,6 @@
         </div>
     </div>
 
-    <!-- global guideline view Offcanvas here -->
     <div id="global_guideline_offcanvas" class="custom-offcanvas d-flex flex-column justify-content-between">
         <form action="{{ route('taxvat.store') }}" method="post">
             <div>
@@ -509,9 +499,6 @@
                                     </div>
                                     <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Setup Tax Calculation') }}</span>
                                 </button>
-                                <!-- <a href="javascript:void(0)" class="fs-12 text-nowrap theme-clr text-underline">
-                                    {{translate('Let’s Setup')}}
-                                </a> -->
                             </div>
                             <div class="collapse mt-3 show" id="collapseGeneralSetup_01">
                                 <div class="card rounded border p-3 card-body">
@@ -521,7 +508,7 @@
                                         </p>
                                     </div>
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('You can decide:')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('You can decide') }}:</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('Whether tax should be included in the product price or added separately')}}</li>
                                             <li class="fs-12 color-656566">{{translate('Which parts of the order should have taxes applied — items, delivery fees, or packaging')}}</li>
@@ -544,15 +531,15 @@
                             <div class="collapse mt-3" id="collapseGeneralSetup_032">
                                 <div class="card rounded border p-3 card-body"> 
                                     <div class="mb-3">
-                                        <p class="m-0 color-656566 fs-12">{{translate('You can choose one of two ways to calculate tax:')}}</p>
+                                        <p class="m-0 color-656566 fs-12">{{ translate('You can choose one of two ways to calculate tax') }}:</p>
                                     </div>                               
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('Calculate Tax Included in Product Price')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{translate('Calculate tax included in product price')}}</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('The tax is already included in the listed item price.')}}</li>
                                             <li class="fs-12 color-656566">{{translate('The customer sees a single total price (no separate tax line).')}}</li>
-                                            <li class="fs-12 color-656566">{{translate('Invoices and reports won’t show separate VAT amounts.')}}</li>
-                                            <li class="fs-12 color-656566">{{translate('Use this method if your displayed prices are “tax-included.')}}</li>
+                                            <li class="fs-12 color-656566">{{translate('Invoices and reports won\'t show separate VAT amounts.')}}</li>
+                                            <li class="fs-12 color-656566">{{translate('Use this method if your displayed prices are "tax-included.')}}</li>
                                         </ul>
                                     </div>
                                      <div class="mb-3">
@@ -564,7 +551,7 @@
                                         </ul>
                                     </div>
                                     <p class="m-0 fs-12 color-656566">
-                                        {{ translate('Recommendation: Use “Tax Excluded from Product Price” if you want to show taxes separately for better reporting.') }}
+                                        {{ translate('Recommendation: Use "Tax Excluded from Product Price" if you want to show taxes separately for better reporting.') }}
                                     </p>
                                 </div>
                             </div>
@@ -583,19 +570,19 @@
                                 <div class="card rounded border p-3 card-body"> 
                                     <p class="fs-12 mb-3 color-656566">The system applies tax only to orders placed after you enable it.</p>  
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('Before activation:')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('Before activation') }}:</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('Orders placed earlier will not have any tax added.')}}</li>                                            
                                         </ul>
                                     </div>
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('After activation:')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('After activation') }}:</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('All new orders will automatically calculate and apply the correct tax.')}}</li>                                            
                                         </ul>
                                     </div>
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('After deactivation:')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('After deactivation') }}:</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('If you turn off tax again, future orders will not include tax until reactivated.')}}</li>                                            
                                         </ul>
@@ -620,19 +607,19 @@
                                 <div class="card rounded border p-3 card-body"> 
                                     <p class="fs-12 mb-3 color-656566">You can choose how the tax applies depending on your business model:</p>  
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('Order-wise Tax:')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('Order-wise Tax') }}:</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('One flat tax rate applies to the total order.')}}</li>                                            
                                         </ul>
                                     </div>
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('Product-wise Tax: ')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('Product-wise Tax') }}: </h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('Each product or food item can have its own tax rate.')}}</li>                                            
                                         </ul>
                                     </div>
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('Category-wise Tax: ')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('Category-wise Tax') }}: </h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('Different product categories can carry different tax rates.')}}</li>                                            
                                         </ul>
@@ -671,7 +658,7 @@
                                     <div class="btn-collapse-icon w-35px h-35px bg-white d-flex align-items-center justify-content-center border icon-btn rounded-circle fs-12 lh-1 collapsed">
                                         <i class="tio-down-ui top-01 color-656566"></i>
                                     </div>
-                                    <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Additional Setup') }}</span>
+                                    <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Additional setup') }}</span>
                                 </button>
                             </div>
                             <div class="collapse mt-3" id="collapseGeneralSetup_066">
@@ -683,7 +670,7 @@
                                         </ul>
                                     </div>
                                     <p class="m-0 fs-12 color-656566">
-                                        {{ translate('Example: If packaging costs $2 and tax is 10%, the total will show as $2.20.') }}
+                                        {{ translate('Example') }} — {{ translate('Packaging charge') }}: $2, {{ translate('tax') }}: 10%, {{ translate('Total') }}: $2.20
                                     </p>
                                 </div>
                             </div>
@@ -701,7 +688,7 @@
                             <div class="collapse mt-3" id="collapseGeneralSetup_077">
                                 <div class="card rounded border p-3 card-body"> 
                                     <div class="mb-3">
-                                        <h6 class="mb-2 fs-12 color-656566">{{translate('After completing all configurations:')}}</h6>
+                                        <h6 class="mb-2 fs-12 color-656566">{{ translate('After completing all configurations') }}:</h6>
                                         <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                             <li class="fs-12 color-656566">{{translate('Click Save Information to apply changes.')}}</li>                                            
                                             <li class="fs-12 color-656566">{{translate('Click Reset if you want to start over or discard unsaved edits.')}}</li>                                            
@@ -719,7 +706,6 @@
         </form>
     </div>
     <div id="offcanvasOverlay" class="offcanvas-overlay"></div>
-    <!-- global guideline view Offcanvas end -->
 @endsection
 
 

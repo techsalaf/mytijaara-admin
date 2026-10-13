@@ -1,6 +1,10 @@
 <?php
-use Illuminate\Support\Facades\Route;
 
+use Modules\TaxModule\Http\Controllers\{
+    SystemTaxVatSetupController,
+    TaxVatController,
+};
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,15 +16,17 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::group(['prefix' => 'taxvat', 'as' => 'taxvat.','middleware' =>['admin','current-module','module:system_tax']], function () {
-        Route::get('get-taxvat-data', 'TaxVatController@index')->name('index');
-        Route::post('add-taxvat-data', 'TaxVatController@store')->name('store');
-        Route::put('update-taxvat-data/{taxVat} ', 'TaxVatController@update')->name('update');
-        Route::get('update-taxvat-status/{taxVat} ', 'TaxVatController@status')->name('status');
-        Route::get('export-taxvat', 'TaxVatController@export')->name('export');
-
-        Route::get('system-taxvat', 'SystemTaxVatSetupController@index')->name('systemTaxvat');
-        Route::put('system-taxvat', 'SystemTaxVatSetupController@systemTaxVatStore')->name('systemTaxVatStore');
-        Route::get('system-taxvat-vendor-status', 'SystemTaxVatSetupController@vendorStatus')->name('systemTaxVatVendorStatus');
+Route::middleware(['admin','current-module','module:system_tax'])->prefix('taxvat')->name('taxvat.')->group(function () {
+    Route::controller(TaxVatController::class)->group(function () {
+        Route::get('get-taxvat-data', 'index')->name('index');
+        Route::post('add-taxvat-data', 'store')->name('store');
+        Route::put('update-taxvat-data/{taxVat}', 'update')->name('update');
+        Route::get('update-taxvat-status/{taxVat}', 'status')->name('status');
+        Route::get('export-taxvat', 'export')->name('export');
+    });
+    Route::controller(SystemTaxVatSetupController::class)->group(function () {
+        Route::get('system-taxvat', 'index')->name('systemTaxvat');
+        Route::put('system-taxvat', 'systemTaxVatStore')->name('systemTaxVatStore');
+        Route::get('system-taxvat-vendor-status', 'vendorStatus')->name('systemTaxVatVendorStatus');
+    });
 });

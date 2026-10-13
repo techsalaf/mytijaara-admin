@@ -1,4 +1,3 @@
-{{-- Shared v2 profile popover (rail bottom). --}}
 @php
     use App\CentralLogics\Helpers;
     $admin_user = auth('admin')->user();

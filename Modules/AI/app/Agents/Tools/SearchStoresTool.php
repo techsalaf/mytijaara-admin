@@ -2,8 +2,10 @@
 
 namespace Modules\AI\app\Agents\Tools;
 
+use App\Services\System\DistanceService;
+
 use Modules\AI\app\Agents\AiResponseContext;
-use App\CentralLogics\StoreLogic;
+use App\Services\Store\StoreService;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -12,34 +14,27 @@ use Laravel\Ai\Tools\Request;
 
 class SearchStoresTool implements Tool
 {
-    /** Generic words that signal a "top/best/popular" listing, not a literal name. */
     private const INTENT_TOP = [
         'best', 'top', 'popular', 'trending', 'highest', 'rated', 'good',
         'suggest', 'suggestions', 'recommend', 'recommended',
         'restaurants', 'restaurant', 'stores', 'store', 'shops', 'shop',
         'vendors', 'vendor', 'all', 'me',
-        // common filler words so a natural phrase like "give me a vendor list"
-        // is still treated as a listing, not a literal name search.
         'give', 'list', 'show', 'find', 'please', 'need', 'want', 'the', 'a', 'of', 'for',
     ];
 
-    /** Words that specifically request a distance-based listing. */
     private const INTENT_NEAR = [
         'nearby', 'nearest', 'near', 'around', 'close', 'closest',
     ];
 
-    /** Words that request the fastest-delivery listing. */
     private const INTENT_FAST = [
         'fast', 'fastest', 'quick', 'quickest', 'quickly', 'speedy',
         'soonest', 'express', 'rapid', 'fast-delivery',
     ];
 
-    /** Words that request the popular / most-ordered listing. */
     private const INTENT_POPULAR = [
         'popular', 'trending', 'famous', 'best-selling', 'bestselling',
     ];
 
-    /** Words that request the top-rated listing. */
     private const INTENT_TOP_RATED = [
         'rated', 'top-rated',
     ];
@@ -86,8 +81,6 @@ class SearchStoresTool implements Tool
         $isPopular   = $this->matchesIntent($keywords, self::INTENT_POPULAR);
         $isTopRated  = $this->matchesIntent($keywords, self::INTENT_TOP_RATED);
 
-        // A "listing" is anything that's not a literal store-name search:
-        // empty query, an all-generic phrase, or any explicit listing intent.
         $isListing = $query === ''
             || $this->isGenericIntent($keywords)
             || $isNearest || $hasNearWord || $isFast || $isPopular || $isTopRated;
@@ -135,8 +128,6 @@ class SearchStoresTool implements Tool
             default      => 'store(s) found for "' . $query . '"',
         };
 
-        // When the user asked for "nearest" but no coordinates were provided,
-        // surface that so the AI can be honest about the fallback.
         $note = '';
         if ($hasNearWord && ! $hasCoords) {
             $note = ' (no GPS coordinates available — showing promoted/popular stores instead)';
@@ -146,7 +137,7 @@ class SearchStoresTool implements Tool
     }
 
     /**
-     * Storefront-identical listing. Delegates to StoreLogic::get_stores — the
+     * Storefront-identical listing. Delegates to StoreService::getList — the
      * same call the storefront's store-list endpoints use — so promoted stores,
      * personalisation, open-now and the requested sort all match the app.
      *
@@ -161,7 +152,6 @@ class SearchStoresTool implements Tool
             return $this->fallbackListing($limit, $featured, $isNearest, $isFast);
         }
 
-        // Map the chat intent onto StoreLogic's filter / store_type vocabulary.
         $filter    = [];
         $storeType = 'all';
         if ($isNearest) {
@@ -174,22 +164,20 @@ class SearchStoresTool implements Tool
             $storeType = 'popular';
         }
 
-        $result = StoreLogic::get_stores(
-            zone_id:     json_encode(array_values($this->zoneIds)),
-            filter_data: 'all',
-            type:        'all',
-            store_type:  $storeType,
-            limit:       $limit,
-            offset:      1,
-            featured:    $featured ?? false,
-            longitude:   $this->longitude ?? 0,
-            latitude:    $this->latitude ?? 0,
-            filter:      $filter ?: '',
-            rating_count: null,
-            store_filter: null,
-            user_id:     $this->user?->getKey(),
-            module_id:   $this->moduleId,
-        );
+        $result = app(StoreService::class)->getList([
+            'zone_id'    => json_encode(array_values($this->zoneIds)),
+            'filter_data' => 'all',
+            'type'       => 'all',
+            'store_type' => $storeType,
+            'featured'   => $featured ?? false,
+            'longitude'  => $this->longitude ?? 0,
+            'latitude'   => $this->latitude ?? 0,
+            'filter'     => $filter ?: '',
+            'rating_count' => null,
+            'store_filter' => null,
+            'user_id'    => $this->user?->getKey(),
+            'module_id'  => $this->moduleId,
+        ], ['per_page' => $limit, 'page' => 1]);
 
         return collect($result['stores'] ?? []);
     }
@@ -197,7 +185,7 @@ class SearchStoresTool implements Tool
     /**
      * Local listing used only when the chat has no zone context. Mirrors the
      * storefront's promoted-first / open-first ordering as closely as possible
-     * without a zone-scoped StoreLogic call.
+     * without a zone-scoped store-service call.
      *
      * @return \Illuminate\Support\Collection<int, Store>
      */
@@ -210,7 +198,7 @@ class SearchStoresTool implements Tool
             ->with(['discount' => fn ($q) => $q->validate()])
             ->when($this->moduleId, fn ($q) => $q->module($this->moduleId))
             ->when($featured, fn ($q) => $q->featured())
-            ->withExists('advertisements')
+            ->withAdExists()
             ->orderByDesc('advertisements_exists')
             ->orderByDesc('open')
             ->when($isNearest, fn ($q) => $q->orderBy('distance'))
@@ -254,10 +242,18 @@ class SearchStoresTool implements Tool
             ->get();
     }
 
-    /** Format a km distance the way the storefront does: cap huge values at "1k+ km". */
+    /**
+     * Distance shown to a customer, so it follows business_settings.distance_unit rather than
+     * hardcoding kilometres. `$km` is a MEASURED value and therefore always kilometres — the
+     * service converts it at the boundary (D1).
+     */
     private function formatDistance(float $km): string
     {
-        return $km >= 1000 ? '1k+ km away' : number_format($km, 1) . ' km away';
+        $distance = app(DistanceService::class);
+
+        return $km >= 1000
+            ? '1k+ ' . $distance->unitLabel() . ' away'
+            : $distance->format($km, 1) . ' away';
     }
 
     private function isGenericIntent(array $keywords): bool
@@ -268,7 +264,7 @@ class SearchStoresTool implements Tool
         $allowed = array_merge(
             self::INTENT_TOP, self::INTENT_NEAR, self::INTENT_FAST,
             self::INTENT_POPULAR, self::INTENT_TOP_RATED,
-            ['delivery'] // qualifier word that often rides along with "fast"/"free"
+            ['delivery']
         );
         foreach ($keywords as $kw) {
             if (! in_array(strtolower($kw), $allowed, true)) {
@@ -278,7 +274,6 @@ class SearchStoresTool implements Tool
         return true;
     }
 
-    /** True when at least one keyword is in the given intent vocabulary. */
     private function matchesIntent(array $keywords, array $vocab): bool
     {
         foreach ($keywords as $kw) {
@@ -291,17 +286,12 @@ class SearchStoresTool implements Tool
 
     private function format(Store $store): array
     {
-        // Store::getRatingAttribute() returns [r5, r4, r3, r2, r1] — feed it
-        // straight into StoreLogic to get a real average; casting it to float
-        // here used to produce 1.0 for every store.
         $avg     = 0.0;
         $buckets = $store->getAttribute('rating');
         if (is_array($buckets) && count($buckets) === 5) {
-            $avg = (float) (StoreLogic::calculate_store_rating($buckets)['rating'] ?? 0);
+            $avg = (float) (app(StoreService::class)->calculateRating($buckets)['rating'] ?? 0);
         }
 
-        // `open` comes from WithOpenWithDeliveryTime — falls back to the
-        // toggle column `active` when the scope wasn't applied.
         $isOpen = $store->getAttribute('open') !== null
             ? (bool) $store->getAttribute('open')
             : (bool) $store->getAttribute('active');

@@ -32,13 +32,6 @@ class AdminSearchShortcuts
         return $shortcuts;
     }
 
-    /**
-     * Pin the Main / Sub Category add page for add/create/new intent. Those pages label
-     * themselves with the verb "Add", so a "create main category" query would otherwise lose
-     * to unrelated pages that literally contain "create" in their title (e.g. Campaign Create,
-     * Custom Role Create). Fires only when the query names a "main"/"sub" category alongside an
-     * add/create/new verb; the `pinned` flag lifts it above title matches.
-     */
     private static function catalogCategoryRoutes(string $keyword): array
     {
         $keyword = strtolower(trim($keyword));
@@ -57,8 +50,6 @@ class AdminSearchShortcuts
             return [];
         }
 
-        // Build the URI from the literal path (matching the JSON page row) rather than route(),
-        // which is domain-pinned and would leave a full URL in URI once the query string is added.
         $uri = 'admin/category/add?position='.($isSub ? 1 : 0);
 
         return [[
@@ -71,19 +62,20 @@ class AdminSearchShortcuts
         ]];
     }
 
-    /**
-     * Pin the Service list for the exact "service list" intent. Otherwise "Custom Service List",
-     * whose title literally contains "service list", outranks the canonical listing (a shorter
-     * title-substring match scores above the plain "List" page's path match).
-     */
+    private static function normalizedTokens(string $keyword): array
+    {
+        $tokens = preg_split('/[^a-z0-9]+/', strtolower(trim($keyword)), -1, PREG_SPLIT_NO_EMPTY);
+
+        return array_map(fn ($token) => Str::singular($token), $tokens);
+    }
+
     private static function serviceListRoutes(string $keyword): array
     {
         if (! Route::has('admin.service.list')) {
             return [];
         }
 
-        $tokens = preg_split('/[^a-z0-9]+/', strtolower(trim($keyword)), -1, PREG_SPLIT_NO_EMPTY);
-        $normalized = array_map(fn ($token) => Str::singular($token), $tokens);
+        $normalized = self::normalizedTokens($keyword);
         sort($normalized);
 
         if ($normalized !== ['list', 'service']) {
@@ -100,19 +92,13 @@ class AdminSearchShortcuts
         ]];
     }
 
-    /**
-     * Map "provider category/categories" to the Provider (store) Category list. That page is
-     * named "Store Category" internally, so the service-panel term "provider category" doesn't
-     * match its title or keywords and the intended page never surfaces.
-     */
     private static function providerCategoryRoutes(string $keyword): array
     {
         if (! Route::has('admin.store-category.list')) {
             return [];
         }
 
-        $tokens = preg_split('/[^a-z0-9]+/', strtolower(trim($keyword)), -1, PREG_SPLIT_NO_EMPTY);
-        $normalized = array_map(fn ($token) => Str::singular($token), $tokens);
+        $normalized = self::normalizedTokens($keyword);
 
         if (! in_array('provider', $normalized, true) || ! in_array('category', $normalized, true)) {
             return [];
@@ -128,12 +114,6 @@ class AdminSearchShortcuts
         ]];
     }
 
-    /**
-     * Pin "Service Add New" to the top for add/create-a-service intent. Covers the bare verbs
-     * (add / create / new) and any add|create|new query that also names "service". Specific
-     * targets like "serviceman create" or "provider create" (no standalone "service" token) are
-     * intentionally left to normal ranking. The `pinned` flag lifts it above title matches.
-     */
     private static function serviceCatalogRoutes(string $keyword): array
     {
         $keyword = strtolower(trim($keyword));
@@ -243,10 +223,6 @@ class AdminSearchShortcuts
 
         $wantsProvider = str_contains($keyword, 'provider');
 
-        // Note: `providerTax` (the per-provider detail report) is intentionally omitted here.
-        // It requires an `id` query param (Store::findOrFail($request->id)) and is only reachable
-        // by drilling into a provider row on the `providerWiseTaxes` listing — surfacing it as a
-        // standalone search result 404s. The listing page below covers the "provider tax" intent.
         $pages = [
             ['Service Tax Report', 'admin.transactions.service.report.getTaxReport', false],
             ['Service Provider Tax Report', 'admin.transactions.service.report.providerWiseTaxes', true],

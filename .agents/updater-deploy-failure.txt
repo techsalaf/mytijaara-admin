@@ -1,0 +1,59 @@
+Deploy to Namecheap	Deploy via SSH	﻿2026-09-21T21:36:46.5778042Z ##[group]Run set -euo pipefail
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5778362Z ^[[36;1mset -euo pipefail^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5778589Z ^[[36;1m^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5778797Z ^[[36;1mmkdir -p ~/.ssh^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5779047Z ^[[36;1mecho "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5779430Z ^[[36;1mchmod 600 ~/.ssh/deploy_key^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5779674Z ^[[36;1m^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5780042Z ^[[36;1mKNOWN_HOSTS_LINE="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5780459Z ^[[36;1mmkdir -p ~/.ssh/known_hosts.d^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5780728Z ^[[36;1mtouch ~/.ssh/known_hosts^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5780963Z ^[[36;1m^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5781176Z ^[[36;1mcat >> ~/.ssh/config <<EOF^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5781426Z ^[[36;1mHost mytijaara-deploy^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5781667Z ^[[36;1m    HostName $SSH_HOST^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5781920Z ^[[36;1m    Port $SSH_PORT^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5782153Z ^[[36;1m    User $SSH_USERNAME^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5782457Z ^[[36;1m    IdentityFile ~/.ssh/deploy_key^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5782735Z ^[[36;1m    StrictHostKeyChecking no^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5782999Z ^[[36;1m    UserKnownHostsFile=/dev/null^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5783265Z ^[[36;1m    LogLevel ERROR^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5783489Z ^[[36;1mEOF^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5783692Z ^[[36;1m^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5783901Z ^[[36;1mchmod 600 ~/.ssh/config^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5784131Z ^[[36;1m^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5784372Z ^[[36;1mRELEASE_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5784740Z ^[[36;1mRELEASE_ROOT="$(dirname "$DEPLOY_PATH")/.mytijaara-releases/$RELEASE_ID"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5785078Z ^[[36;1mINCOMING="$RELEASE_ROOT/incoming"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5785359Z ^[[36;1mJOURNAL="$RELEASE_ROOT/journal"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5785666Z ^[[36;1mssh mytijaara-deploy "mkdir -p '$INCOMING' '$JOURNAL'"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5786004Z ^[[36;1mrsync -az --exclude-from=.rsync-exclude \^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5786357Z ^[[36;1m    -e "ssh -p $SSH_PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5786709Z ^[[36;1m    ./ mytijaara-deploy:"$INCOMING"/^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5786969Z ^[[36;1m^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5787253Z ^[[36;1m# Preparation verifies every obsolete file and backs up each affected^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5787656Z ^[[36;1m# code file before maintenance or live writes. Runtime paths are denied.^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5788144Z ^[[36;1mssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' prepare '$DEPLOY_PATH' '$JOURNAL' '$INCOMING'"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5788569Z ^[[36;1mRUN_MIGRATE="false"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5788877Z ^[[36;1mif [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ]; then^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5789389Z ^[[36;1m  RUN_MIGRATE="true"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5789623Z ^[[36;1mfi^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5790021Z ^[[36;1mssh mytijaara-deploy "bash '$INCOMING/scripts/apply-code-release.sh' '$DEPLOY_PATH' '$JOURNAL' '$INCOMING' '$RUN_MIGRATE' '$RUN_SEED'"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5790527Z ^[[36;1mecho "Deploy complete. Recoverable code journal: $JOURNAL"^[[0m
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5823092Z shell: /usr/bin/bash -e {0}
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5823460Z env:
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5823790Z   COMPOSER_PROCESS_TIMEOUT: 0
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5824166Z   COMPOSER_NO_INTERACTION: 1
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5824531Z   COMPOSER_NO_AUDIT: 1
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5824997Z   SSH_HOST: ***
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5825342Z   SSH_USERNAME: ***
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5825686Z   SSH_PORT: ***
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5838098Z   SSH_PRIVATE_KEY: ***
+Deploy to Namecheap	Deploy via SSH	
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5838376Z   DEPLOY_PATH: ***
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5838601Z   MIGRATIONS_CHANGED: true
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5838836Z   FORCE_MIGRATE: false
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5839279Z   RUN_SEED: false
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:36:46.5839614Z ##[endgroup]
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:37:05.8793125Z Cannot copy code file
+Deploy to Namecheap	Deploy via SSH	2026-09-21T21:37:05.8917572Z ##[error]Process completed with exit code 1.

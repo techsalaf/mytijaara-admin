@@ -13,7 +13,7 @@
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('admin.users.customer.rental.view') ? 'active' : '' }}"
                         href="{{ route('admin.users.customer.rental.view', ['module' => true, 'user_id' => $customer->id]) }}">
-                        {{ translate('Rental_Module') }}
+                        {{ translate('Rental module') }}
                     </a>
                 </li>
             @endif
@@ -21,7 +21,7 @@
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('admin.users.customer.ride-share.view') ? 'active' : '' }}"
                         href="{{ route('admin.users.customer.ride-share.view', ['module' => true, 'user_id' => $customer->id]) }}">
-                        {{ translate('RideShare_Module') }}
+                        {{ translate('RideShare module') }}
                     </a>
                 </li>
             @endif
@@ -29,7 +29,7 @@
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('admin.users.customer.service.view') ? 'active' : '' }}"
                         href="{{ route('admin.users.customer.service.view', ['user_id' => $customer->id]) }}">
-                        {{ translate('Service_Module') }}
+                        {{ translate('Service module') }}
                     </a>
                 </li>
             @endif
@@ -37,7 +37,7 @@
                 <li class="nav-item">
                     <a class="nav-link {{ Route::is('admin.users.customer.subscription-plan') ? 'active' : '' }}"
                         href="{{ route('admin.users.customer.subscription-plan', $customer->id) }}">
-                        {{ translate('messages.Subscription_Plan') }}
+                        {{ translate('Subscription plan') }}
                     </a>
                 </li>
             @endif

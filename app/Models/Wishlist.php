@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use App\Traits\HandlesMissingAddonRelations;
+use App\Traits\Item\MissingAddonRelationsTrait;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Service\Entities\Service;
 
 class Wishlist extends Model
 {
-    use HandlesMissingAddonRelations;
+    use MissingAddonRelationsTrait;
 
     protected $fillable = [
         'user_id',

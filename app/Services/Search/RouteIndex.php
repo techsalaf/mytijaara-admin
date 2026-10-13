@@ -3,7 +3,7 @@
 namespace App\Services\Search;
 
 use Closure;
-use Illuminate\Support\Facades\Cache;
+use App\Support\Cache\ApiCache;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use ReflectionMethod;
@@ -51,6 +51,58 @@ class RouteIndex
         return $this->memo[$key];
     }
 
+    public static function resolvableUris(string $prefix, array $candidates): array
+    {
+        $entries = self::rawEntries($prefix);
+        $literal = [];
+        foreach ($entries as $entry) {
+            $literal[$entry['uri']] = $entry['permission'];
+        }
+
+        $unknown = [];
+        $allowed = [];
+        foreach ($candidates as $uri) {
+            if ($uri === '' || str_contains($uri, '{')) {
+                continue;
+            }
+            $path = explode('?', $uri)[0];
+            if (isset($literal[$path])) {
+                $allowed[$uri] = $literal[$path];
+            } else {
+                $unknown[$uri] = true;
+            }
+        }
+
+        if ($unknown === []) {
+            return $allowed;
+        }
+
+        $key = 'search:resolvable-uris:' . md5($prefix . '|' . self::signature($entries) . '|' . implode('|', array_keys($unknown)));
+
+        $matched = ApiCache::remember('route_index', $key, function () use ($prefix, $unknown) {
+            return self::matchAgainstPatterns($prefix, array_keys($unknown));
+        });
+
+        foreach ($matched as $uri => $permission) {
+            $allowed[$uri] = $permission;
+        }
+
+        return $allowed;
+    }
+
+    public static function jsonResponseUris(string $prefix): array
+    {
+        $entries = self::rawEntries($prefix);
+
+        return ApiCache::remember(
+            'route_index',
+            'json-response-uris:' . md5($prefix . '|' . self::signature($entries)),
+            function () use ($entries) {
+                return self::scanJsonResponseUris($entries);
+            }
+        );
+    }
+
     private static function permissionOf($route): string
     {
         foreach ($route->gatherMiddleware() as $middleware) {
@@ -92,48 +144,6 @@ class RouteIndex
         return self::$rawCache[$prefix] = $routes;
     }
 
-    public static function resolvableUris(string $prefix, array $candidates): array
-    {
-        $entries = self::rawEntries($prefix);
-        $literal = [];
-        foreach ($entries as $entry) {
-            $literal[$entry['uri']] = $entry['permission'];
-        }
-
-        $unknown = [];
-        $allowed = [];
-        foreach ($candidates as $uri) {
-            if ($uri === '' || str_contains($uri, '{')) {
-                continue;
-            }
-            // Resolve permission by the route path, ignoring any query string (e.g.
-            // admin/category/add?position=0), then key the result by the full URI so the
-            // caller's lookup on the original (query-carrying) URI still matches.
-            $path = explode('?', $uri)[0];
-            if (isset($literal[$path])) {
-                $allowed[$uri] = $literal[$path];
-            } else {
-                $unknown[$uri] = true;
-            }
-        }
-
-        if ($unknown === []) {
-            return $allowed;
-        }
-
-        $key = 'search:resolvable-uris:' . md5($prefix . '|' . self::signature($entries) . '|' . implode('|', array_keys($unknown)));
-
-        $matched = Cache::remember($key, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use ($prefix, $unknown) {
-            return self::matchAgainstPatterns($prefix, array_keys($unknown));
-        });
-
-        foreach ($matched as $uri => $permission) {
-            $allowed[$uri] = $permission;
-        }
-
-        return $allowed;
-    }
-
     private static function matchAgainstPatterns(string $prefix, array $uris): array
     {
         $patterns = [];
@@ -168,19 +178,6 @@ class RouteIndex
         return md5(implode('|', array_map(function ($entry) {
             return $entry['uri'] . '@' . $entry['controller'];
         }, $entries)));
-    }
-
-    public static function jsonResponseUris(string $prefix): array
-    {
-        $entries = self::rawEntries($prefix);
-
-        return Cache::remember(
-            'search:json-response-uris:' . md5($prefix . '|' . self::signature($entries)),
-            now()->addMinutes(self::CACHE_TTL_MINUTES),
-            function () use ($entries) {
-                return self::scanJsonResponseUris($entries);
-            }
-        );
     }
 
     private static function scanJsonResponseUris(array $entries): array

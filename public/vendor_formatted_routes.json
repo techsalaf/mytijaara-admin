@@ -846,5 +846,45 @@
         "bladePath": "service::vendor.dashboard",
         "moduleType": "service",
         "isModified": false
+    },
+    {
+        "routeName": "Custom Role List",
+        "URI": "vendor-panel/custom-role",
+        "keywords": "Role List Employee Role Every Role Your Employees Can Hold What Each One Reaches And How Many People Use It Add New Role Employee Roles And What Each One Can Reach In Your Dashboard Search Role Search Reset Role Name Permission Employees Created Action No Role Matches Your Search Try A Different Role Name No Role Added Yet Create A Role Tick What It Can Reach Then Give It To An Employee Unit List Measurement Units Vendors Choose From When Adding An Item Id No Permission One Yet Edited View Edit Role Move Its To Another Role Before Deleting This This Will Be Removed For Good Employee Holds It So Nobody Loses Access Delete",
+        "bladePath": "vendor-views/custom-role/index",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Bogo Offer List",
+        "URI": "vendor-panel/bogo-offer",
+        "keywords": "BOGO Offer Buy One Get One Offers You Can Join And The Ones Already Running On Your Items BOGO Offer List Search Here No Data Found No BOGO Offers Yet No Offer Matched Your Search There Are No BOGO Offers Available For Your Store Right Now Title Image Item Qty Duration Ends On Status Action Id Buy Get N/A Ends Ends Tomorrow Ends Today Ended Yesterday Ended View Approve Deny Join Edit Items Want To Leave This BOGO Offer Want To Cancel This Request Leave Cancel Request Close Select Items For BOGO Offer Buy Item Get Item Customers Must Buy Selected Items In Specific Quantities For The BOGO Offer Customers Receive The Item In The Specified Quantity With This BOGO Offer You Must Add Quantities Of The Item As The Buy Quantity For This BOGO Offer Quantity Of The Item As The Get Quantity For This BOGO Offer Select Item Search And Pick An Item From Your Menu Reset BOGO Offer Edit The Items Of This BOGO Offer Changing Any Item Or Combination Removes This BOGO Offer From Every Customer Cart That Already Holds It The Offer Goes Back To Pending And Stops Applying Until The Admin Approves The New Selection Cancel Decline This BOGO Offer The Admin Will Be Told You Are Not Taking Part Rejection Reason Type The Reason Submit Submit Your Request Has Been Sent To The Admin Something Went Wrong Are You Sure You Want To Join This BOGO Offer No Yes See More See Less Offer Not Visible To Customers Expired BOGO Offer This Promotion Is Approved But Customers Can Not See Or Order It Right Now Reasons The On Hold The Returns Customer App Automatically Once These Are Resolved Okay Description See More Addon Total Price Add Item And Ons Edit Found Veg Non You Add A Maximum Of Quantities For This Item No Results Unavailable Less Required Select One Option Combination Available Need Select Minimum To Options Is Required",
+        "bladePath": "vendor-views/promotions/bogo-offer/list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Bundle List",
+        "URI": "vendor-panel/bundle/list",
+        "keywords": "Bundle Package Bundle Package No Packages Yet Create Your First Bundle Package By Grouping Related Products And Offering Them At A Special Price To Attract More Customers Add List Search Here Export Download Options Excel Csv Name Items Duration Base Price Discount After Status Action A Product In This Has Changed Since The Was Saved Re Save It Again N/A View Do You Want To Edit The Edit Delete This Will Be Removed From Every Cart That Already Holds No Longer See Delete Data Found Cancel Ok Something Went Wrong",
+        "bladePath": "vendor-views/promotions/bundle/list",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Bundle Create",
+        "URI": "vendor-panel/bundle/create",
+        "keywords": "Create Bundle Reset Basic Setup Enter The Bundle Name Upload A Thumbnail And Set Display Schedule Default Bundle Name Type Start Date & Time Select Date End Thumbnail Image Dimension Max MB Items Pricing Pick Products \u2014 Prices Update Live You Can Add Discount Store Total Base Price After Select Items Here Shows Total Price Of Selected Discount If Give Percentage On Cost Show New Ex Or Not Provider This Belongs To Its Services Are What Search Offers Menu Is Item Service Item Search Pick Service Offer From An Your Choose Include In Updates Real Time See Final Create Description See More Addon Add This Close Variant No Found A Needs At Least Something Went Wrong You Maximum Quantities For Edit Delete Currently Unavailable Out Stock",
+        "bladePath": "vendor-views/promotions/bundle/create",
+        "moduleType": null,
+        "isModified": false
+    },
+    {
+        "routeName": "Happy Hour List",
+        "URI": "vendor-panel/happy-hour",
+        "keywords": "Happy Hour Daily Weekly Custom Happy Hour Offers You Can Join And The Hours Each One Runs Happy Hour List Search Here No Data Found No Happy Hours Yet No Happy Hour Matched Your Search There Are No Happy Hours Available For Your Store Right Now Info Discount Schedule Status Action Id Minimum Order Amount Permanent Days N/A View Join Approve Deny Want To Leave This Happy Hour Want To Cancel This Request Leave Cancel Request No Action Available Decline This Happy Hour The Admin Will Be Told You Are Not Taking Part Rejection Reason Type The Reason Close Submit Something Went Wrong See More See Less Expired Happy Hour Campaign The Campaign Will Replace All Other Offers On Eligible Items Pro Member Discounts Stay For Customers You Bear The Full Discount Cost Cancel",
+        "bladePath": "vendor-views/promotions/happy-hour/list",
+        "moduleType": null,
+        "isModified": false
     }
 ]

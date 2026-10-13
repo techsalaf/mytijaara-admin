@@ -1,57 +1,28 @@
 @extends('layouts.admin.app')
-@section('title',translate('messages.Store_Subscription'))
+@section('title',translate('messages.Store Subscription'))
 @section('subscriberList')
 active
 @endsection
 @push('css_or_js')
-
+    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/third-party-setup.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/assets/admin/css/view-pages/subscriber-detail.css') }}">
 @endpush
 
 @section('content')
 
     <div class="content container-fluid">
-        <div class="page-header">
-            <div class="d-flex flex-wrap justify-content-between align-items-center py-2">
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-start">
-                        <img src="{{asset('/public/assets/admin/img/store.png')}}" width="24" alt="img">
-                        <div class="w-0 flex-grow pl-2">
-                            <h1 class="page-header-title">{{ $store->name }} {{translate('Subscription')}} &nbsp; &nbsp;
-                                @if($store?->status == 0 &&  $store?->vendor?->status == 0)
-                                <span class=" badge badge-pill badge-info">  &nbsp; {{ translate('Approval_Pending') }}  &nbsp; </span>
-                                @elseif($store?->store_sub_update_application?->status == 0)
-                                <span class=" badge badge-pill badge-danger">  &nbsp; {{ translate('Expired') }}  &nbsp; </span>
-                                @elseif ($store?->store_sub_update_application?->is_canceled == 1)
-                                <span class=" badge badge-pill badge-warning">  &nbsp; {{ translate('canceled') }}  &nbsp; </span>
-                                @elseif($store?->store_sub_update_application?->status == 1)
-                                <span class=" badge badge-pill badge-success">  &nbsp; {{ translate('Active') }}  &nbsp; </span>
-                                @endif
-                            </h1>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="js-nav-scroller hs-nav-scroller-horizontal mb-4">
-            <ul class="nav nav-tabs border-0 nav--tabs nav--pills">
-                <li class="nav-item">
-                    <a href="" class="nav-link active">{{ translate('Subscription_Details') }} </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.business-settings.subscriptionackage.subscriberTransactions',$store->id) }}" class="nav-link">{{ translate('Transactions') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('admin.business-settings.subscriptionackage.subscriberWalletTransactions',$store->id) }}" class="nav-link">{{ translate('Subscription_Refunds') }}</a>
-                </li>
-            </ul>
-        </div>
+        @include('admin-views.subscription.subscriber.partials._subscriber-nav', [
+            'sn_active' => 'details',
+            'sn_subtitle' => translate('The package this store is on, what it covers and when it renews.'),
+        ])
+
         <div class="card mb-20">
             <div class="card-header border-0 align-items-center">
                 <h4 class="card-title align-items-center gap-2">
                     <span class="card-header-icon">
                         <img src="{{asset('public/assets/admin/img/store-3.png')}}" alt="">
                     </span>
-                    <span class="text-title">{{ translate('Store_Info') }}</span>
+                    <span class="text-title">{{ translate('Store information') }}</span>
                 </h4>
             </div>
             <div class="card-body">
@@ -107,7 +78,7 @@ active
                                     <ul class="address-info list-unstyled list-unstyled-py-3 text-dark pl-0">
                                         <li>
                                             <h5 class="name">
-                                                {{ translate('Owner Info') }}
+                                                {{ translate('Owner information') }}
                                             </h5>
                                         </li>
                                         <li>
@@ -144,12 +115,12 @@ active
             <div class="card-header flex-wrap gap-2 border-0 align-items-center">
                 <div>
                     <h3 class="card-title mb-1 align-items-center gap-2">
-                        <span class="text-title">{{ translate('Package Overview') }}</span>
+                        <span class="text-title">{{ translate('Package overview') }}</span>
                     </h3>
                     <span class="fs-12 d-block color-334257B2">{{ translate('Here you see the active business plan.') }}</span>
                 </div>
                 <div class="btn--container justify-content-end m-0">
-                    <button type="button" data-toggle="modal" data-target="#plan-modal" class="btn btn--primary">{{ translate('Change Business Plan') }}</button>
+                    <button type="button" data-toggle="modal" data-target="#plan-modal" class="btn btn--primary"><i class="tio-sync"></i> {{ translate('Change business plan') }}</button>
                 </div>
             </div>
             <div class="card-body pt-0">
@@ -157,9 +128,9 @@ active
                     <div class="row g-3 align-items-center">
                         <div class="col-md-6">
                             <div class="max-w-595">
-                                <h3 class="name">{{ translate('Commission Base Plan') }}</h3>
+                                <h3 class="name">{{ translate('Commission base plan') }}</h3>
                                 <div class="info-text fs-14">
-                                    {{ translate('Store will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order. You will get access to all the features and options in store panel, app and interaction with user.') }}
+                                    {{ translate('Store will pay') }} {{ $store->comission ?? $admin_commission }}% {{ translate('commission to') }} <strong>{{ $business_name }}</strong> {{ translate('from each order, with full access to the store panel, app and customer interaction.') }}
                                 </div>
                             </div>
                         </div>
@@ -169,7 +140,7 @@ active
                                     <span class="text-180 fs-32 theme-clr">
                                      {{ $store->comission ?? $admin_commission }}%
                                     </span>
-                                    <span class="fs-14 font-semibold d-block">{{ translate('messages.Commission_per_order') }}</span>
+                                    <span class="fs-14 font-semibold d-block">{{ translate('messages.Commission per order') }}</span>
                                 </h4>
                                 <img width="40" src="{{asset('public/assets/admin/img/money-percentage.png')}}" alt="">
                             </div>
@@ -183,9 +154,9 @@ active
                         <div class="row align-items-center g-3">
                             <div class="col-md-6">
                                 <div class="max-w-595">
-                                    <h3 class="name">{{ translate('Change Commission Rate') }}</h3>
+                                    <h3 class="name">{{ translate('Change commission rate') }}</h3>
                                     <div class="info-text fs-14">
-                                        {{ translate('When enabled admin will only receive the certain commission percentage set for this store. Otherwise the system default commission will be applied.') }}
+                                        {{ translate('Admin takes the commission set for this store rather than the system default.') }}
                                     </div>
                                 </div>
                             </div>
@@ -201,7 +172,7 @@ active
                                 </div>
                                 <div>
                                     <label class="d-flex mb-2 justify-content-between text-dark text-capitalize">
-                                        <span>{{translate('messages.Change_Commission_Rate')}}(%)</span>
+                                        <span>{{translate('Change commission rate')}}(%)</span>
                                     </label>
                                     <div class="d-flex flex-wrap gap-3">
                                         <input type="number" id="comission" min="0" max="10000" step="0.01" name="comission" class="form-control w-200px flex-grow-1 bg-white" required value="{{$store->comission??'0'}}" {{isset($store->comission)?'':'readonly'}}>
@@ -210,8 +181,8 @@ active
                             </div>
                         </div>
                         <div class="d-flex align-items-center justify-content-end gap-3 mt-4">
-                            <button type="submit" class="btn min-w-120px btn--reset h--45px">{{ translate('Reset') }}</button>
-                            <button type="submit" class="btn min-w-120px btn--primary h--45px">{{ translate('Change') }}</button>
+                            <button type="submit" class="btn min-w-120px btn--reset h--45px"><i class="tio-refresh"></i> {{ translate('Reset') }}</button>
+                            <button type="submit" class="btn min-w-120px btn--primary h--45px"><i class="tio-sync"></i> {{ translate('change') }}</button>
                         </div>
                     </form>
                 </div>
@@ -220,12 +191,16 @@ active
 
         @elseif (in_array($store->store_business_model,[ 'subscription' ,'unsubscribed']) && $store?->store_sub_update_application)
 
-        @include('subscription.partials._billing', ['store' => $store])
-        @include('subscription.partials._plan-overview', ['store' => $store, 'routePrefix' => 'admin.business-settings.subscriptionackage', 'isServiceModule' => $store?->module?->module_type == 'service', 'showPos' => !in_array($store?->module?->module_type, ['rental', 'service']), 'showSelfDelivery' => !in_array($store?->module?->module_type, ['rental', 'service']), 'showStatusBadge' => false])
+        <div class="tps sbd">
+            @include('subscription.partials._billing', ['store' => $store])
+            @include('subscription.partials._plan-overview', ['store' => $store, 'routePrefix' => 'admin.business-settings.subscriptionackage', 'isServiceModule' => $store?->module?->module_type == 'service', 'showPos' => !in_array($store?->module?->module_type, ['rental', 'service']), 'showSelfDelivery' => !in_array($store?->module?->module_type, ['rental', 'service']), 'showStatusBadge' => false])
+        </div>
 
         @else
 
-        @include('subscription.partials._empty-state', ['isServiceModule' => $store?->module?->module_type == 'service'])
+        <div class="tps sbd">
+            @include('subscription.partials._empty-state', ['isServiceModule' => $store?->module?->module_type == 'service'])
+        </div>
 
         @endif
 

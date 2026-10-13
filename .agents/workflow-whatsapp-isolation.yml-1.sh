@@ -1,0 +1,1 @@
+php scripts/check-core-boundary.php "$COMPARE_BASE"

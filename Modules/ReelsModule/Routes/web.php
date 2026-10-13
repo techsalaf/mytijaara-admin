@@ -1,34 +1,29 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Modules\ReelsModule\Http\Controllers\Admin\ReelController;
 use Modules\ReelsModule\Http\Controllers\Vendor\ReelController as VendorReelController;
+use Illuminate\Support\Facades\Route;
 
-Route::group([
-    'prefix' => 'admin/reels',
-    'as' => 'admin.reels.',
-    'middleware' => ['admin', 'module:reels', 'current-module', 'actch:admin_panel'],
-], function () {
-    Route::get('/', [ReelController::class, 'index'])->name('index');
-    Route::get('/items', [ReelController::class, 'items'])->name('items');
-    Route::get('/create', [ReelController::class, 'create'])->name('create');
-    Route::post('/store', [ReelController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [ReelController::class, 'edit'])->name('edit');
-    Route::put('/update/{id}', [ReelController::class, 'update'])->name('update');
-    Route::delete('/delete/{id}', [ReelController::class, 'destroy'])->name('destroy');
-    Route::get('/status/{id}/{status}', [ReelController::class, 'status'])->name('status');
+Route::middleware(['admin', 'module:reels', 'current-module', 'actch:admin_panel'])->prefix('admin/reels')->name('admin.reels.')->group(function () {
+    Route::controller(ReelController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/items', 'items')->name('items');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/update/{id}', 'update')->name('update');
+        Route::delete('/delete/{id}', 'destroy')->name('destroy');
+        Route::get('/status/{id}/{status}', 'status')->name('status');
+    });
 });
-
-Route::group([
-    'prefix' => 'vendor-panel/reels',
-    'as' => 'vendor.reels.',
-    'middleware' => ['vendor', 'module:reels', 'actch:admin_panel'],
-], function () {
-    Route::get('/', [VendorReelController::class, 'index'])->name('index');
-    Route::get('/create', [VendorReelController::class, 'create'])->name('create');
-    Route::post('/store', [VendorReelController::class, 'store'])->name('store');
-    Route::get('/{id}/edit', [VendorReelController::class, 'edit'])->name('edit');
-    Route::put('/update/{id}', [VendorReelController::class, 'update'])->name('update');
-    Route::delete('/delete/{id}', [VendorReelController::class, 'destroy'])->name('destroy');
-    Route::get('/status/{id}/{status}', [VendorReelController::class, 'status'])->name('status');
+Route::middleware(['vendor', 'module:reels', 'actch:admin_panel'])->prefix('vendor-panel/reels')->name('vendor.reels.')->group(function () {
+    Route::controller(VendorReelController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/update/{id}', 'update')->name('update');
+        Route::delete('/delete/{id}', 'destroy')->name('destroy');
+        Route::get('/status/{id}/{status}', 'status')->name('status');
+    });
 });

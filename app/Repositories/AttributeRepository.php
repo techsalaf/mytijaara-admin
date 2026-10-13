@@ -27,19 +27,19 @@ class AttributeRepository implements AttributeRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->attribute->where($params)->first();
+        return $this->attribute->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->attribute->get();
+        return $this->attribute->with($relations)->get();
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         $key = explode(' ', $searchValue ?? '');
 
-        return $this->attribute->orderBy('name')
+        return $this->attribute->with($relations)->orderBy('name')
             ->when($searchValue , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
@@ -84,6 +84,6 @@ class AttributeRepository implements AttributeRepositoryInterface
 
     public function getFirstWithoutGlobalScopeWhere(array $params, array $relations = []): ?Model
     {
-        return $this->attribute->withoutGlobalScope('translate')->where($params)->first();
+        return $this->attribute->with($relations)->withoutGlobalScope('translate')->with('translations')->where($params)->first();
     }
 }

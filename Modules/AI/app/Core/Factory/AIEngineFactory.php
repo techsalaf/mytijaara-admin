@@ -13,8 +13,6 @@ class AIEngineFactory
     {
         return match (strtolower($engine)) {
             AIEngine::OPENAI   => new OpenAIEngine(),
-            // AIEngine::DEEPSEEK => new DeepSeekEngine(),
-            // AIEngine::CLAUDE   => new ClaudeEngine(),
 
             default => throw new InvalidArgumentException("Unsupported AI engine: {$engine}"),
         };

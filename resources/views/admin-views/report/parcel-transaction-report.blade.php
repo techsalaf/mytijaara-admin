@@ -1,41 +1,40 @@
 @extends('layouts.admin.app')
 
-@section('title', translate('Parcel Transaction Report'))
+@section('title', translate('Parcel transaction report'))
 
 @push('css_or_js')
 @endpush
 
 @section('content')
     <div class="content container-fluid">
-        <!-- Page Header -->
 
         <div class="page-header">
             <h1 class="page-header-title">
                 <span class="page-header-icon">
-                    <img src="{{ asset('public/assets/admin/img/report.png') }}" class="w--22" alt="">
+                    <img src="{{ asset('public/assets/admin/img/outline/report.svg') }}" class="w--26" alt="">
                 </span>
                 <span>
-                    {{ translate('Parcel Transaction Report') }}
+                    {{ translate('Parcel transaction report') }}
                     @if ( $from && $to)
                         <span class="mb-0 h6 badge badge-soft-success ml-2"
                               id="itemCount">( {{ $from }} - {{ $to  }} )</span>
                     @endif
                 </span>
             </h1>
+            <p class="page-header-desc">{{ translate('Money in and out on the parcel side, day by day.') }}</p>
         </div>
-        <!-- End Page Header -->
         <div class="card mb-20">
             <div class="card-body">
-                <h4 class="">{{ translate('Search Data') }}</h4>
+                <h4 class="">{{ translate('Search data') }}</h4>
                 <form>
                     @csrf
                     <div class="row g-3">
                         <div class="col-sm-6 col-md-3">
                             <select name="module_id" class="form-control js-select2-custom set-filter" data-url="{{ url()->full() }}" data-filter="module_id"
-                                    title="{{ translate('messages.select_modules') }}">
+                                    title="{{ translate('messages.Select modules') }}">
                                 <option value="" {{ !request('module_id') ? 'selected' : '' }}>
-                                    {{ translate('messages.all_modules') }}</option>
-                                @foreach (\App\Models\Module::where('module_type','parcel')->where('status',1)->get(['id', 'module_name']) as $module)
+                                    {{ translate('All modules') }}</option>
+                                @foreach (\App\CentralLogics\Helpers::modules_list()->where('module_type', 'parcel')->where('status', 1) as $module)
                                     <option value="{{ $module->id }}"
                                         {{ request('module_id') == $module->id ? 'selected' : '' }}>
                                         {{ $module['module_name'] }}
@@ -45,8 +44,8 @@
                         </div>
                         <div class="col-sm-6 col-md-3">
                             <select name="zone_id" class="form-control js-select2-custom set-filter" data-url="{{ url()->full() }}" data-filter="zone_id" id="zone">
-                                <option value="all">{{ translate('messages.All_Zones') }}</option>
-                                @foreach (\App\Models\Zone::orderBy('name')->get(['id', 'name']) as $z)
+                                <option value="all">{{ translate('All zones') }}</option>
+                                @foreach (\App\CentralLogics\Helpers::zones_dropdown() as $z)
                                     <option value="{{ $z['id'] }}"
                                         {{ isset($zone) && $zone->id == $z['id'] ? 'selected' : '' }}>
                                         {{ $z['name'] }}
@@ -57,17 +56,17 @@
                         <div class="col-sm-6 col-md-3">
                             <select class="form-control set-filter" name="filter" data-url="{{ url()->full() }}" data-filter="filter">
                                 <option value="all_time" {{ isset($filter) && $filter == 'all_time' ? 'selected' : '' }}>
-                                    {{ translate('messages.All Time') }}</option>
+                                    {{ translate('All time') }}</option>
                                 <option value="this_year" {{ isset($filter) && $filter == 'this_year' ? 'selected' : '' }}>
-                                    {{ translate('messages.This Year') }}</option>
+                                    {{ translate('This year') }}</option>
                                 <option value="previous_year"
                                     {{ isset($filter) && $filter == 'previous_year' ? 'selected' : '' }}>
-                                    {{ translate('messages.Previous Year') }}</option>
+                                    {{ translate('Previous year') }}</option>
                                 <option value="this_month"
                                     {{ isset($filter) && $filter == 'this_month' ? 'selected' : '' }}>
-                                    {{ translate('messages.This Month') }}</option>
+                                    {{ translate('This month') }}</option>
                                 <option value="this_week" {{ isset($filter) && $filter == 'this_week' ? 'selected' : '' }}>
-                                    {{ translate('messages.This Week') }}</option>
+                                    {{ translate('This week') }}</option>
                                 <option value="custom" {{ isset($filter) && $filter == 'custom' ? 'selected' : '' }}>
                                     {{ translate('messages.Custom') }}</option>
                             </select>
@@ -75,17 +74,17 @@
                         @if (isset($filter) && $filter == 'custom')
                             <div class="col-sm-6 col-md-3">
                                 <input type="date" name="from" id="from_date" class="form-control"
-                                       placeholder="{{ translate('Start Date') }}" value="{{ $from ?? '' }}" required>
+                                       placeholder="{{ translate('Start date') }}" value="{{ $from ?? '' }}" required>
                             </div>
                             <div class="col-sm-6 col-md-3">
                                 <input type="date" name="to" id="to_date" class="form-control"
-                                       placeholder="{{ translate('End Date') }}"
+                                       placeholder="{{ translate('End date') }}"
                                        value="{{ $to ?? '' }}" required>
                             </div>
                         @endif
                         <div class="col-sm-6 col-md-3 ml-auto">
                             <button type="submit"
-                                    class="btn btn-primary btn-block h--45px">{{ translate('Filter') }}</button>
+                                    class="btn btn-primary btn-block h--45px"><i class="tio-filter-list"></i> {{ translate('Filter') }}</button>
                         </div>
                     </div>
                 </form>
@@ -101,7 +100,7 @@
                                      alt="report/new">
                                 <h3 class="title text-008958">{{ \App\CentralLogics\Helpers::number_format_short($delivered) }}
                                 </h3>
-                                <h6 class="subtitle">{{ translate('Completed Transaction') }}</h6>
+                                <h6 class="subtitle">{{ translate('Completed transaction') }}</h6>
                                 <div class="info-icon" data-toggle="tooltip" data-placement="top"
                                      data-original-title="{{ translate('When the order is successfully delivered full order amount goes to this section.') }}">
                                     <img src="{{ asset('/public/assets/admin/img/report/new/info1.png') }}"
@@ -115,9 +114,9 @@
                                      alt="report/new">
                                 <h3 class="title text-FF5A54">{{ \App\CentralLogics\Helpers::number_format_short($canceled) }}
                                 </h3>
-                                <h6 class="subtitle">{{ translate('Refunded Transaction') }}</h6>
+                                <h6 class="subtitle">{{ translate('Refunded transaction') }}</h6>
                                 <div class="info-icon" data-toggle="tooltip" data-placement="top"
-                                     data-original-title="{{ translate('If the order is successfully refunded, the full order amount goes to this section without the delivery fee and delivery tips.') }}">
+                                     data-original-title="{{ translate('Refunded orders show the full amount here, excluding delivery fee and tips.') }}">
                                     <img src="{{ asset('/public/assets/admin/img/report/new/info3.png') }}"
                                          alt="report/new">
                                 </div>
@@ -133,7 +132,7 @@
                                     <img class="img"
                                          src="{{ asset('/public/assets/admin/img/report/new/admin-earning.png') }}"
                                          alt="">
-                                    <h4 class="name">{{ translate('Admin Earning') }}</h4>
+                                    <h4 class="name">{{ translate('Admin earning') }}</h4>
                                     <div class="info-icon" data-toggle="tooltip" data-placement="right"
                                          data-original-title="{{ translate('Deducting the admin discount from the admin earning amount and goes to this section.') }}">
                                         <img src="{{ asset('/public/assets/admin/img/report/new/info1.png') }}"
@@ -150,7 +149,7 @@
                                     <img class="img"
                                          src="{{ asset('/public/assets/admin/img/report/new/deliveryman-earning.png') }}"
                                          alt="">
-                                    <h4 class="name">{{ translate('Deliveryman Earning') }}</h4>
+                                    <h4 class="name">{{ translate('Deliveryman earning') }}</h4>
                                     <div class="info-icon" data-toggle="tooltip" data-placement="right"
                                          data-original-title="{{ translate('Deducting the admin commission on the delivery fee, the delivery fee & tips amount goes to earning section.') }}">
                                         <img src="{{ asset('/public/assets/admin/img/report/new/info3.png') }}"
@@ -166,19 +165,16 @@
             </div>
         </div>
 
-        <!-- End Stats -->
-        <!-- Card -->
         <div class="card mt-3">
-            <!-- Header -->
             <div class="card-header border-0 py-2">
                 <div class="search--button-wrapper">
                     <h3 class="card-title">
-                        {{ translate('messages.parcel_transactions') }} <span
+                        {{ translate('messages.Parcel transactions') }} <span
                                 class="badge badge-soft-secondary" id="countItems">{{ $order_transactions->total() }}</span>
                     </h3>
                     <form class="search-form">
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input class="form-control" placeholder="{{ translate('Search by Order ID') }}" value="{{ request()?->search ?? null}}" name="search">
+                            <input class="form-control" placeholder="{{ translate('Search by order ID') }}" value="{{ request()?->search ?? null}}" name="search">
                             <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                         </div>
                     </form>
@@ -190,56 +186,54 @@
                                 &quot;type&quot;: &quot;css-animation&quot;
                             }"
                            data-hs-unfold-target="#usersExportDropdown" data-hs-unfold-invoker="">
-                            <i class="tio-download-to mr-1"></i> {{ translate('export') }}
+                            <i class="tio-download-to mr-1"></i> {{ translate('Export') }}
                         </a>
 
                         <div id="usersExportDropdown"
                              class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right hs-unfold-content-initialized hs-unfold-css-animation animated hs-unfold-reverse-y hs-unfold-hidden">
 
-                            <span class="dropdown-header">{{ translate('download_options') }}</span>
+                            <span class="dropdown-header">{{ translate('Download options') }}</span>
                             <a id="export-excel" class="dropdown-item"
                                href="{{ route('admin.transactions.report.parcel-transaction-report-export', ['type' => 'excel', request()->getQueryString()]) }}">
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                      src="{{ asset('public/assets/admin/svg/components/excel.svg') }}"
                                      alt="Image Description">
-                                {{ translate('messages.excel') }}
+                                Excel
                             </a>
                             <a id="export-csv" class="dropdown-item"
                                href="{{ route('admin.transactions.report.parcel-transaction-report-export', ['type' => 'csv', request()->getQueryString()]) }}">
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                      src="{{ asset('public/assets/admin/svg/components/placeholder-csv-format.svg') }}"
                                      alt="Image Description">
-                                {{ translate('messages.csv') }}
+                                CSV
                             </a>
 
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- End Header -->
 
-            <!-- Body -->
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table id="datatable" class="table table-thead-bordered table-align-middle card-table">
                         <thead class="thead-light text-nowrap">
                         <tr>
-                            <th class="border-0">{{ translate('sl') }}</th>
-                            <th class="border-0">{{ translate('messages.order_id') }}</th>
-                            <th class="border-0">{{ translate('messages.customer_name') }}</th>
-                            <th class="border-0">{{ translate('messages.referral_discount') }}</th>
-                            <th class="border-0">{{ translate('messages.vat/tax') }}</th>
-                            <th class="border-0">{{ translate('messages.delivery_charge') }}</th>
-                            <th class="border-0">{{ translate('messages.order_amount') }}</th>
-                            <th class="border-0">{{ translate('messages.admin_discount') }}</th>
-                            <th class="border-0">{{ translate('messages.admin_commission') }}</th>
-                            <th class="border-0">{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge') }}</th>
-                            <th class="min-w-140 text-capitalize">{{ translate('commision_on_delivery_charge') }}</th>
-                            <th class="min-w-140 text-capitalize">{{ translate('admin_net_income') }}</th>
-                            <th class="border-0 min-w-120">{{ translate('messages.amount_received_by') }}</th>
-                            <th class="border-top border-bottom text-capitalize">{{ translate('messages.payment_method') }}</th>
-                            <th class="border-0">{{ translate('messages.payment_status') }}</th>
-                            <th class="border-0">{{ translate('messages.action') }}</th>
+                            <th class="border-0">{{ translate('SL') }}</th>
+                            <th class="border-0">{{ translate('messages.Order ID') }}</th>
+                            <th class="border-0">{{ translate('Customer name') }}</th>
+                            <th class="border-0">{{ translate('Referral discount') }}</th>
+                            <th class="border-0">{{ translate('VAT/tax') }}</th>
+                            <th class="border-0">{{ translate('Delivery charge') }}</th>
+                            <th class="border-0">{{ translate('Order amount') }}</th>
+                            <th class="border-0">{{ translate('Admin discount') }}</th>
+                            <th class="border-0">{{ translate('Admin commission') }}</th>
+                            <th class="border-0">{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('Additional charge') }}</th>
+                            <th class="min-w-140 text-capitalize">{{ translate('Commision on delivery charge') }}</th>
+                            <th class="min-w-140 text-capitalize">{{ translate('Admin net income') }}</th>
+                            <th class="border-0 min-w-120">{{ translate('messages.Amount received by') }}</th>
+                            <th class="border-top border-bottom text-capitalize">{{ translate('messages.Payment method') }}</th>
+                            <th class="border-0">{{ translate('Payment status') }}</th>
+                            <th class="border-0">{{ translate('messages.Action') }}</th>
                         </tr>
                         </thead>
                         <tbody id="set-rows">
@@ -259,7 +253,7 @@
                                     @elseif (!empty($delivery_address['contact_person_name']))
                                         <strong>{{ $delivery_address['contact_person_name'] }}</strong>
                                     @else
-                                        <label class="badge badge-danger">{{ translate('messages.invalid_customer_data') }}</label>
+                                        <label class="badge badge-danger">{{ translate('messages.Invalid customer data') }}</label>
                                     @endif
                                 </td>
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order['ref_bonus_amount']) }}</td>
@@ -267,30 +261,27 @@
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_charge + ($ot->pro_delivery_discount ?? 0)) }}</td>
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order_amount) }}</td>
 
-                                {{-- admin_discount --}}
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->admin_expense) }}</td>
 
-                                {{-- admin_commission --}}
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->admin_commission + $ot->admin_expense) - $ot->delivery_fee_comission -$ot->additional_charge) }}</td>
 
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->additional_charge)) }}</td>
                                 <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_fee_comission) }}</td>
-                                {{-- admin_net_income --}}
-                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(\App\CentralLogics\OrderLogic::admin_net_income($ot)) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(app(\App\Services\Order\OrderTransactionService::class)->adminNetIncome($ot)) }}</td>
 
                                 @if ($ot->received_by == 'admin')
                                     <td class="text-capitalize white-space-nowrap">{{ translate('messages.admin') }}</td>
                                 @elseif ($ot->received_by == 'deliveryman')
                                     <td class="text-capitalize white-space-nowrap">
-                                        <div>{{ translate('messages.delivery_man') }}</div>
+                                        <div>{{ translate('Deliveryman') }}</div>
                                         <div class="text-right mw--85px">
                                             @if (isset($ot->delivery_man) && $ot->delivery_man->earning == 1)
                                                 <span class="badge badge-soft-primary">
-                                                    {{translate('messages.freelance')}}
+                                                    {{translate('Freelancer')}}
                                                 </span>
                                             @elseif (isset($ot->delivery_man) && $ot->delivery_man->earning == 0 && $ot->delivery_man->type == 'restaurant_wise')
                                                 <span class="badge badge-soft-warning">
-                                                    {{translate('messages.restaurant')}}
+                                                    {{translate('messages.Restaurant')}}
                                                 </span>
                                             @elseif (isset($ot->delivery_man) && $ot->delivery_man->earning == 0 && $ot->delivery_man->type == 'zone_wise')
                                                 <span class="badge badge-soft-success">
@@ -300,21 +291,21 @@
                                         </div>
                                     </td>
                                 @elseif ($ot->received_by == 'store')
-                                    <td class="text-capitalize white-space-nowrap">{{ translate('messages.store') }}</td>
+                                    <td class="text-capitalize white-space-nowrap">{{ translate('messages.Store') }}</td>
                                 @else
                                     <td></td>
                                 @endif
                                 <td class="mw--85px text-capitalize min-w-120 ">
-                                    {{ translate(str_replace('_', ' ', $ot->order['payment_method'])) }}
+                                    {{ payment_method_label($ot->order['payment_method']) }}
                                 </td>
                                 <td class="text-capitalize white-space-nowrap">
                                     @if ($ot->status)
                                         <span class="badge badge-soft-danger">
-                                            {{translate('messages.refunded')}}
+                                            {{translate('Refunded')}}
                                         </span>
                                     @else
                                         <span class="badge badge-soft-success">
-                                            {{translate('messages.completed')}}
+                                            {{translate('messages.Completed')}}
                                         </span>
                                     @endif
                                 </td>
@@ -332,7 +323,6 @@
                     </table>
                 </div>
             </div>
-            <!-- End Body -->
             @if (count($order_transactions) !== 0)
                 <hr>
             @endif
@@ -343,12 +333,11 @@
                 <div class="empty--data">
                     <img src="{{ asset('/public/assets/admin/svg/illustrations/sorry.svg') }}" alt="public">
                     <h5>
-                        {{ translate('no_data_found') }}
+                        {{ translate('No data found') }}
                     </h5>
                 </div>
             @endif
         </div>
-        <!-- End Card -->
     </div>
 @endsection
 

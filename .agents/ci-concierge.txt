@@ -1,0 +1,332 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+EEEEE.FF..EEE...F...E....FFFFF......EF..FE.E...................  63 / 134 ( 47%)
+.........EFF..EEEEEE........FFFF............................... 126 / 134 ( 94%)
+........                                                        134 / 134 (100%)
+
+Time: 03:12.137, Memory: 132.00 MB
+
+There were 19 errors:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::tokens_are_hashed_regenerated_and_atomically_single_use
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CredentialTokenService.php:39
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:21
+
+2) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::expired_invalid_revoked_and_abandoned_tokens_are_rejected
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CredentialTokenService.php:39
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:42
+
+3) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::url_uses_configured_https_origin_despite_request_host
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CredentialTokenService.php:39
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:59
+
+4) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::password_validation_and_successful_https_continuation
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CredentialTokenService.php:39
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:70
+
+5) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::failed_password_attempts_are_atomically_limited_and_revoke_the_link
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\CredentialTokenService.php:39
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:87
+
+6) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_preflight_command_passes
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:preflight" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:25
+
+7) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_process_stuck_sessions_dry_run_and_execution
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:process-stuck-sessions" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:103
+
+8) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_cleanup_media_dry_run_and_execution
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:cleanup-media" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest.php:157
+
+9) Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest::test_decision_state_is_synchronized_when_delivery_fails
+TypeError: MockObject_WhatsAppGateway_6178ec08::sendTemplateMessage(): Argument #4 ($language) must be of type string, null given, called in C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification.php on line 226
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification.php:226
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest.php:134
+
+10) Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest::test_strict_preflight_passes_for_a_complete_test_configuration
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:preflight" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest.php:21
+
+11) Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest::test_payment_link_generation_and_pending_transition
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.subscription-payment] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:375
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:415
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService.php:50
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest.php:179
+
+12) Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest::test_expired_link_detection_and_regeneration
+Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.subscription-payment] not defined.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:375
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:415
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\SubscriptionLifecycleService.php:50
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest.php:307
+
+13) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::test_queue_failure_does_not_abort_a_host_denial
+Mockery\Exception\InvalidCountException: Method connection(<Any Arguments>) from Mockery_1_Illuminate_Support_Testing_Fakes_QueueFake should be called
+ exactly 1 times but called 0 times.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery\CountValidator\Exact.php:32
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery\Expectation.php:739
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery\ExpectationDirector.php:202
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery\Container.php:583
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery\Container.php:519
+C:\xampp\htdocs\mytijaara-admin\vendor\mockery\mockery\library\Mockery.php:176
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Testing\Concerns\InteractsWithTestCaseLifecycle.php:147
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Testing\TestCase.php:85
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\HardeningTestCase.php:52
+
+14) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_passes_exact_approved_contract_without_sending_messages
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:451
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:675
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php:55
+
+15) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_wrong_locale_and_lists_the_available_locale
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:451
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:675
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php:65
+
+16) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_missing_templates
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:451
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:675
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php:71
+
+17) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_unapproved_templates
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:451
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:675
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php:77
+
+18) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_wrong_parameter_count
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:451
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:675
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php:83
+
+19) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_does_not_print_provider_credentials_or_raw_errors
+Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Console\Application.php:162
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Foundation\Console\Kernel.php:447
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:451
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\PendingCommand.php:675
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest.php:90
+
+--
+
+There were 16 failures:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::credential_routes_enforce_throttling
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:16
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:120
+
+2) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::csrf_remains_enabled_for_password_posts
+Expected response status code [419] but received 404.
+Failed asserting that 404 is identical to 419.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest.php:132
+
+3) Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest::kyc_access_requires_admin_authorization
+Expected response status code [201, 301, 302, 303, 307, 308] but received 404.
+Failed asserting that false is true.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:200
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest.php:102
+
+4) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::every_operations_route_rejects_anonymous_access
+Expected response status code [401] but received 404.
+Failed asserting that 404 is identical to 401.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:121
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php:26
+
+5) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::unrelated_admin_role_cannot_read_or_send
+Expected response status code [403] but received 404.
+Failed asserting that 404 is identical to 403.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:141
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php:37
+
+6) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::authorized_admin_can_read_events_by_canonical_foreign_key_and_queue_messages
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:16
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php:49
+
+7) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::expired_admin_session_is_rejected
+Expected response status code [401] but received 404.
+Failed asserting that 404 is identical to 401.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:121
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php:61
+
+8) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::debug_does_not_sign_payloads_and_is_absent_in_production
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:16
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest.php:69
+
+9) Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signed_batched_status_webhook_only_dispatches_receipt_jobs
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:16
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php:22
+
+10) Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signature_and_verification_fail_closed
+Expected response status code [401] but received 404.
+Failed asserting that 404 is identical to 401.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:121
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest.php:70
+
+11) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_approved
+The expected [Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification] job was not pushed.
+Failed asserting that false is true.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Testing\Fakes\QueueFake.php:121
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:85
+
+12) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_denied
+The expected [Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification] job was not pushed.
+Failed asserting that false is true.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Testing\Fakes\QueueFake.php:121
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Support\Facades\Facade.php:363
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:131
+
+13) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_dispatches_message_via_api
+Expected response status code [202] but received 404.
+Failed asserting that 404 is identical to 202.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:41
+
+14) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_lists_conversations_and_history
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:75
+
+15) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_returns_onboarding_analytics
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:99
+
+16) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_tests_webhook_signature_calculation
+Expected response status code [200] but received 404.
+Failed asserting that 404 is identical to 200.
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest.php:126
+
+--
+
+There was 1 risky test:
+
+1) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::test_queue_failure_does_not_abort_a_host_denial
+* Test code or tested code did not remove its own error handlers
+
+* Test code or tested code did not remove its own exception handlers
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest.php:29
+
+ERRORS!
+Tests: 134, Assertions: 622, Errors: 19, Failures: 16, PHPUnit Deprecations: 50, Risky: 1.

@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use Illuminate\Support\Facades\Cache;
+use App\Support\Cache\ApiCache;
 use Illuminate\Support\Facades\Http;
 use App\Models\BusinessSetting;
 
@@ -13,20 +13,18 @@ class ConfigControllerMapApiTest extends TestCase
     {
         parent::setUp();
 
-        // Ensure map_api_key_server exists so the controller constructor works
         BusinessSetting::updateOrCreate(
             ['key' => 'map_api_key_server'],
             ['value' => 'test-api-key-12345']
         );
     }
 
-    // ─── VALIDATION TESTS ─────────────────────────────────────────────
 
     public function test_place_autocomplete_validation_fails_without_search_text()
     {
         $response = $this->getJson('/api/v1/config/place-api-autocomplete');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
@@ -34,7 +32,7 @@ class ConfigControllerMapApiTest extends TestCase
     {
         $response = $this->getJson('/api/v1/config/distance-api');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
@@ -42,7 +40,7 @@ class ConfigControllerMapApiTest extends TestCase
     {
         $response = $this->getJson('/api/v1/config/distance-api?origin_lat=23.8&origin_lng=90.4');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
@@ -56,14 +54,14 @@ class ConfigControllerMapApiTest extends TestCase
             'mode' => 'FLY',
         ]));
 
-        $response->assertStatus(403);
+        $response->assertStatus(422);
     }
 
     public function test_place_details_validation_fails_without_placeid()
     {
         $response = $this->getJson('/api/v1/config/place-api-details');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
@@ -71,7 +69,7 @@ class ConfigControllerMapApiTest extends TestCase
     {
         $response = $this->getJson('/api/v1/config/geocode-api');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
@@ -79,7 +77,7 @@ class ConfigControllerMapApiTest extends TestCase
     {
         $response = $this->getJson('/api/v1/config/geocode-api?lat=23.8103');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
@@ -87,11 +85,10 @@ class ConfigControllerMapApiTest extends TestCase
     {
         $response = $this->getJson('/api/v1/config/direction-api');
 
-        $response->assertStatus(403)
+        $response->assertStatus(422)
             ->assertJsonStructure(['errors']);
     }
 
-    // ─── CACHE HIT TESTS ─────────────────────────────────────────────
 
     public function test_place_autocomplete_returns_cached_data_on_cache_hit()
     {
@@ -100,12 +97,12 @@ class ConfigControllerMapApiTest extends TestCase
         $cacheKey = 'place_autocomplete_' . md5($searchText . '_' . $locale);
 
         $cachedData = ['suggestions' => [['placePrediction' => ['text' => 'Dhaka, Bangladesh']]]];
-        Cache::put($cacheKey, $cachedData, now()->addMinutes(30));
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addMinutes(30));
 
         $response = $this->getJson('/api/v1/config/place-api-autocomplete?search_text=' . $searchText);
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
     public function test_distance_api_returns_cached_data_on_cache_hit()
@@ -124,12 +121,12 @@ class ConfigControllerMapApiTest extends TestCase
         );
 
         $cachedData = ['distanceMeters' => 12000, 'duration' => '3600s'];
-        Cache::put($cacheKey, $cachedData, now()->addHours(24));
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addHours(24));
 
         $response = $this->getJson('/api/v1/config/distance-api?' . http_build_query($params));
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
     public function test_place_details_returns_cached_data_on_cache_hit()
@@ -143,12 +140,12 @@ class ConfigControllerMapApiTest extends TestCase
             'formattedAddress' => '123 Test St',
             'location' => ['latitude' => 23.8103, 'longitude' => 90.4125],
         ];
-        Cache::put($cacheKey, $cachedData, now()->addDays(7));
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addDays(7));
 
         $response = $this->getJson('/api/v1/config/place-api-details?placeid=' . $placeId);
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
     public function test_geocode_api_returns_cached_data_on_cache_hit()
@@ -161,12 +158,12 @@ class ConfigControllerMapApiTest extends TestCase
             'results' => [['formatted_address' => 'Dhaka, Bangladesh']],
             'status' => 'OK',
         ];
-        Cache::put($cacheKey, $cachedData, now()->addDays(7));
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addDays(7));
 
         $response = $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
     public function test_direction_api_returns_cached_data_on_cache_hit()
@@ -187,20 +184,17 @@ class ConfigControllerMapApiTest extends TestCase
         $cachedData = [
             'routes' => [['distanceMeters' => 15000, 'duration' => '1800s']],
         ];
-        Cache::put($cacheKey, $cachedData, now()->addHour());
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addHour());
 
         $response = $this->getJson('/api/v1/config/direction-api?' . http_build_query($params));
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
-    // ─── CACHE KEY PRECISION: NEARBY COORDINATES HIT SAME CACHE ───────
 
     public function test_distance_api_nearby_coordinates_use_same_cache_key()
     {
-        // Two coordinates that differ only at 6th decimal place (< 0.11m apart)
-        // should round to the same 5-decimal key
         $lat1 = 23.810301;
         $lat2 = 23.810304;
 
@@ -221,7 +215,6 @@ class ConfigControllerMapApiTest extends TestCase
         $this->assertEquals($key1, $key2);
     }
 
-    // ─── CACHE KEY UNIQUENESS: DIFFERENT PARAMS PRODUCE DIFFERENT KEYS ─
 
     public function test_distance_api_different_modes_produce_different_cache_keys()
     {
@@ -243,7 +236,6 @@ class ConfigControllerMapApiTest extends TestCase
         $this->assertNotEquals($keyEn, $keyBn);
     }
 
-    // ─── API ERROR RESPONSE MUST NOT BE CACHED ────────────────────────
 
     public function test_geocode_api_does_not_cache_non_ok_status()
     {
@@ -261,7 +253,7 @@ class ConfigControllerMapApiTest extends TestCase
         $response = $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
         $response->assertStatus(200);
-        $this->assertNull(Cache::get($cacheKey));
+        $this->assertNull(ApiCache::get('map_lookup', $cacheKey));
     }
 
     public function test_geocode_api_does_not_cache_request_denied()
@@ -280,7 +272,7 @@ class ConfigControllerMapApiTest extends TestCase
 
         $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
-        $this->assertNull(Cache::get($cacheKey));
+        $this->assertNull(ApiCache::get('map_lookup', $cacheKey));
     }
 
     public function test_geocode_api_caches_successful_ok_response()
@@ -300,7 +292,7 @@ class ConfigControllerMapApiTest extends TestCase
 
         $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
-        $cached = Cache::get($cacheKey);
+        $cached = ApiCache::get('map_lookup', $cacheKey);
         $this->assertNotNull($cached);
         $this->assertEquals('OK', $cached['status']);
     }
@@ -317,10 +309,9 @@ class ConfigControllerMapApiTest extends TestCase
 
         $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
-        $this->assertNull(Cache::get($cacheKey));
+        $this->assertNull(ApiCache::get('map_lookup', $cacheKey));
     }
 
-    // ─── CACHE MISS → FRESH API CALL TESTS ────────────────────────────
 
     public function test_geocode_api_makes_api_call_on_cache_miss()
     {
@@ -339,7 +330,7 @@ class ConfigControllerMapApiTest extends TestCase
         $response = $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
         $response->assertStatus(200)
-            ->assertJson($expectedData);
+            ->assertJson(['content' => $expectedData]);
 
         Http::assertSentCount(1);
     }
@@ -354,23 +345,19 @@ class ConfigControllerMapApiTest extends TestCase
         $lng = 5.00001;
         $cacheKey = 'geocode_api_' . md5(round($lat, 5) . '_' . round($lng, 5));
 
-        Cache::put($cacheKey, ['results' => [['formatted_address' => 'Cached Place']], 'status' => 'OK'], now()->addDays(7));
+        ApiCache::put('map_lookup', $cacheKey, ['results' => [['formatted_address' => 'Cached Place']], 'status' => 'OK'], now()->addDays(7));
 
         $response = $this->getJson('/api/v1/config/geocode-api?lat=' . $lat . '&lng=' . $lng);
 
         $response->assertStatus(200)
-            ->assertJson(['results' => [['formatted_address' => 'Cached Place']]]);
+            ->assertJson(['content' => ['results' => [['formatted_address' => 'Cached Place']]]]);
 
         Http::assertNothingSent();
     }
 
-    // ─── DISTANCE API: NULL SAFETY ON MALFORMED RESPONSE ──────────────
 
     public function test_distance_api_handles_null_decoded_response_safely()
     {
-        // Simulate: API returns non-JSON (e.g. HTML error page)
-        // json_decode returns null, is_array(null) = false → result = null
-        // No crash, no cache write
         $params = [
             'origin_lat' => 10.00001,
             'origin_lng' => 10.00001,
@@ -383,58 +370,47 @@ class ConfigControllerMapApiTest extends TestCase
             round(11.00001, 5) . '_' . round(11.00001, 5) . '_WALK'
         );
 
-        // Pre-verify no cache
-        $this->assertNull(Cache::get($cacheKey));
+        $this->assertNull(ApiCache::get('map_lookup', $cacheKey));
 
-        // We can't easily mock curl, but we CAN verify the cache key logic
-        // and that a cached null doesn't get stored (testing the guard condition)
         $result = is_array(null) ? (null[0] ?? null) : null;
         $this->assertNull($result);
 
-        // Verify the guard: null result won't pass the cache-write condition
-        $response = false; // simulating curl_exec failure
+        $response = false;
         $this->assertFalse($response !== false && $result !== null && !isset($result['error']));
     }
 
     public function test_distance_api_handles_error_json_response_safely()
     {
-        // Google API error: {"error": {"code": 400, "message": "...", "status": "INVALID_ARGUMENT"}}
-        // json_decode gives associative array, is_array = true, but [0] doesn't exist → null
         $errorResponse = ['error' => ['code' => 400, 'message' => 'Invalid', 'status' => 'INVALID_ARGUMENT']];
         $decoded = $errorResponse;
         $result = is_array($decoded) ? ($decoded[0] ?? null) : null;
 
         $this->assertNull($result);
 
-        // Verify the guard blocks caching
         $this->assertFalse('fake-response' !== false && $result !== null && !isset($result['error']));
     }
 
     public function test_distance_api_handles_valid_array_response()
     {
-        // Google Routes API success: [{distanceMeters: 12000, duration: "3600s"}]
         $apiResponse = [['distanceMeters' => 12000, 'duration' => '3600s']];
         $result = is_array($apiResponse) ? ($apiResponse[0] ?? null) : null;
 
         $this->assertNotNull($result);
         $this->assertEquals(12000, $result['distanceMeters']);
 
-        // Verify the guard allows caching
-        $response = json_encode($apiResponse); // simulating valid curl response
+        $response = json_encode($apiResponse);
         $this->assertTrue($response !== false && $result !== null && !isset($result['error']));
     }
 
-    // ─── DIRECTION API: CURL ERROR PATH ───────────────────────────────
 
     public function test_direction_api_returns_cached_data_and_ignores_mode_case()
     {
-        // mode defaults to DRIVE via strtoupper, verify case normalization
         $params = [
             'origin_lat' => 23.81030,
             'origin_lng' => 90.41250,
             'destination_lat' => 23.71040,
             'destination_lng' => 90.40740,
-            'mode' => 'drive', // lowercase
+            'mode' => 'drive',
         ];
 
         $mode = strtoupper($params['mode']);
@@ -444,17 +420,16 @@ class ConfigControllerMapApiTest extends TestCase
         );
 
         $cachedData = ['routes' => [['distanceMeters' => 8000]]];
-        Cache::put($cacheKey, $cachedData, now()->addHour());
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addHour());
 
         $response = $this->getJson('/api/v1/config/direction-api?' . http_build_query($params));
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
     public function test_direction_api_default_mode_is_drive()
     {
-        // Without mode param, defaults to DRIVE
         $params = [
             'origin_lat' => 24.81030,
             'origin_lng' => 91.41250,
@@ -468,15 +443,14 @@ class ConfigControllerMapApiTest extends TestCase
         );
 
         $cachedData = ['routes' => [['distanceMeters' => 5000]]];
-        Cache::put($cacheKey, $cachedData, now()->addHour());
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addHour());
 
         $response = $this->getJson('/api/v1/config/direction-api?' . http_build_query($params));
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
-    // ─── DISTANCE API: DEFAULT MODE IS WALK ───────────────────────────
 
     public function test_distance_api_default_mode_is_walk()
     {
@@ -493,29 +467,25 @@ class ConfigControllerMapApiTest extends TestCase
         );
 
         $cachedData = ['distanceMeters' => 3000, 'duration' => '2400s'];
-        Cache::put($cacheKey, $cachedData, now()->addHours(24));
+        ApiCache::put('map_lookup', $cacheKey, $cachedData, now()->addHours(24));
 
         $response = $this->getJson('/api/v1/config/distance-api?' . http_build_query($params));
 
         $response->assertStatus(200)
-            ->assertJson($cachedData);
+            ->assertJson(['content' => $cachedData]);
     }
 
-    // ─── CACHE EXPIRY SIMULATION ──────────────────────────────────────
 
     public function test_expired_cache_is_not_returned()
     {
         $placeId = 'ChIJExpiredPlace';
         $cacheKey = 'place_details_' . md5($placeId);
 
-        // Put cache with a past expiry
-        Cache::put($cacheKey, ['id' => $placeId, 'displayName' => 'Old Data'], now()->subMinute());
+        ApiCache::put('map_lookup', $cacheKey, ['id' => $placeId, 'displayName' => 'Old Data'], now()->subMinute());
 
-        // The cache should be expired
-        $this->assertNull(Cache::get($cacheKey));
+        $this->assertNull(ApiCache::get('map_lookup', $cacheKey));
     }
 
-    // ─── GUARD CONDITION UNIT TESTS ───────────────────────────────────
 
     public function test_guard_blocks_caching_when_curl_returns_false()
     {

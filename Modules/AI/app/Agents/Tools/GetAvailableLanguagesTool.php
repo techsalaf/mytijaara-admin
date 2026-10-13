@@ -2,6 +2,7 @@
 
 namespace Modules\AI\app\Agents\Tools;
 
+use App\CentralLogics\Helpers;
 use Modules\AI\app\Agents\AiResponseContext;
 use App\Models\BusinessSetting;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -48,14 +49,9 @@ class GetAvailableLanguagesTool implements Tool
         return "Supported languages: {$list}." . ($default ? " Default: {$default}." : '');
     }
 
-    /**
-     * Load active languages from business_settings.system_language.
-     * A language is considered active if status=1 OR it is the default language.
-     * Returns array of ['code' => ..., 'direction' => ..., 'default' => ...].
-     */
     public static function loadActive(): array
     {
-        $raw = BusinessSetting::where('key', 'system_language')->value('value');
+        $raw = Helpers::get_business_settings('system_language', false);
         if (!$raw) {
             return [];
         }
@@ -70,9 +66,6 @@ class GetAvailableLanguagesTool implements Tool
         }));
     }
 
-    /**
-     * Map a locale code to a human-readable language name.
-     */
     public static function localeName(string $code): string
     {
         $map = [

@@ -1,114 +1,113 @@
-<div class="modal fade show" id="plan-modal">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header px-3 pt-3">
-                <button type="button" class="close" data-dismiss="modal">
+@php($spm_commission_enabled = \App\CentralLogics\Helpers::commission_check())
+@php($spm_on_commission = $store->store_business_model == 'commission')
+@php($spm_is_rental = $store?->module?->module_type == 'rental' && addon_published_status('Rental'))
+@php($spm_is_service = $isServiceModule ?? false)
+@php($spm_rate = $store->comission ?? $admin_commission)
+@php($spm_count = $packages->count() + ($spm_commission_enabled ? 1 : 0))
+
+<div class="modal fade" id="plan-modal" tabindex="-1" aria-labelledby="plan-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content spm">
+            <div class="modal-header spm-head">
+                <div class="spm-head__text">
+                    <h2 class="spm-head__title" id="plan-modal-title">{{ translate('Change subscription plan') }}</h2>
+                    <p class="spm-head__desc">{{ translate('Choose the plan that fits your business. Renew your current plan or switch to another one.') }}</p>
+                </div>
+                <button type="button" class="close spm-head__close" data-dismiss="modal" aria-label="{{ translate('Close') }}">
                     <span aria-hidden="true" class="tio-clear"></span>
                 </button>
             </div>
-            <div class="modal-body px-4 pt-0">
-                <div>
-                    <div class="text-center">
-                        <h2 class="modal-title">{{ translate('Change Subscription Plan') }}</h2>
-                    </div>
-                    <div class="text-center text-14 mb-4 pb-3">
-                       {{ translate('Renew or shift your plan to get better experience!') }}
-                    </div>
-                    <div class="plan-slider owl-theme owl-carousel owl-refresh">
-                        @if (\App\CentralLogics\Helpers::commission_check())
-                        <div class="__plan-item hover {{ $store->store_business_model == 'commission'  ? 'active' : ''}} ">
-                            <div class="inner-div">
-                                <div class="text-center">
-                                    <h3 class="title">{{ translate('Commission Base') }}</h3>
-                                    <h2 class="price">{{  $store->comission ?? $admin_commission }}%</h2>
-                                </div>
-                                <div class="py-5 mt-4">
-                                    <div class="info-text text-center">
-                                        {{ translate($title.' will pay') }} {{  $store->comission ?? $admin_commission }}% {{ translate('commission to') }} {{ $business_name }} {{ translate('from each '.$orderOrTrip.'. You will get access to all the features and options in '.$title.' panel, app and interaction with user.') }}
-                                    </div>
-                                </div>
-                                <div class="text-center">
-                                    @if ($store->store_business_model == 'commission')
-                                    <button type="button" class="btn btn--secondary">{{ translate('Current_Plan') }}</button>
-                                    @else
-                                        @php($cash_backs = \App\CentralLogics\Helpers::calculateSubscriptionRefundAmount(store: $store, return_data: true))
-                                        <button type="button" data-url="{{route($routePrefix.'.switchToCommission',$store->id)}}" data-message="{{translate('You_Want_To_Migrate_To_Commission.')}} {{ data_get($cash_backs,'back_amount') > 0  ?  translate('You will get').' '. \App\CentralLogics\Helpers::format_currency(data_get($cash_backs,'back_amount')) .' '.translate('to_your_wallet_for_remaining') .' '.data_get($cash_backs,'days').' '.translate('messages.days_subscription_plan') : '' }}" class="btn btn--primary shift_to_commission">{{ translate('Shift in this plan') }}</button>
-                                    @endif
-                                </div>
+            <div class="modal-body spm-body">
+                <div class="spm-plans" style="--spm-count: {{ max($spm_count, 1) }}">
+                    @if ($spm_commission_enabled)
+                        <article class="spm-plan {{ $spm_on_commission ? 'is-current' : '' }}">
+                            @if ($spm_on_commission)
+                                <span class="spm-plan__badge"><i class="tio-checkmark-circle"></i> {{ translate('Current plan') }}</span>
+                            @endif
+                            <h3 class="spm-plan__name">{{ translate('Commission base') }}</h3>
+                            <div class="spm-plan__price">
+                                <span class="spm-plan__amount">{{ $spm_rate }}%</span>
+                                <span class="spm-plan__period">
+                                    {{ $orderOrTrip == 'trip' ? translate('Commission per trip') : ($orderOrTrip == 'booking' ? translate('Commission per booking') : translate('Commission per order')) }}
+                                </span>
                             </div>
-                        </div>
-                        @endif
+                            <p class="spm-plan__desc">
+                                @if ($orderOrTrip == 'trip')
+                                    {{ translate('Pay a commission on each trip instead of a fixed fee, with every feature included.') }}
+                                @elseif ($orderOrTrip == 'booking')
+                                    {{ translate('Pay a commission on each booking instead of a fixed fee, with every feature included.') }}
+                                @else
+                                    {{ translate('Pay a commission on each order instead of a fixed fee, with every feature included.') }}
+                                @endif
+                            </p>
+                            <ul class="spm-plan__features">
+                                <li class="spm-feat"><i class="tio-checkmark-circle" aria-hidden="true"></i> <span>{{ translate('All features included') }}</span></li>
+                            </ul>
+                            <div class="spm-plan__foot">
+                                @if ($spm_on_commission)
+                                    <button type="button" class="btn btn--reset" disabled><i class="tio-checkmark-circle-outlined"></i> {{ translate('Current plan') }}</button>
+                                @else
+                                    @php($spm_cash_backs = \App\CentralLogics\Helpers::calculateSubscriptionRefundAmount(store: $store, return_data: true))
+                                    <button type="button" data-url="{{ route($routePrefix.'.switchToCommission', $store->id) }}"
+                                        data-message="{{ translate('You want to migrate to commission.') }} {{ data_get($spm_cash_backs, 'back_amount') > 0 ? translate('You will get').' '.\App\CentralLogics\Helpers::format_currency(data_get($spm_cash_backs, 'back_amount')).' '.translate('To your wallet for remaining').' '.data_get($spm_cash_backs, 'days').' '.translate('messages.Days subscription plan') : '' }}"
+                                        class="btn btn-outline-primary shift_to_commission"><i class="tio-sync"></i> {{ translate('Shift in this plan') }}</button>
+                                @endif
+                            </div>
+                        </article>
+                    @endif
 
-                        @forelse ($packages as $package)
-                        <div class="__plan-item hover {{ $store?->store_sub_update_application?->package_id == $package->id  && $store->store_business_model != 'commission'  ? 'active' : ''}}">
-                            <div class="inner-div">
-                                <div class="text-center">
-                                    <h3 class="title">{{ $package->package_name }}</h3>
-                                    <h2 class="price">{{ \App\CentralLogics\Helpers::format_currency($package->price)}}</h2>
-                                    <div class="day-count">{{ $package->validity }} {{ translate('messages.days') }}</div>
-                                </div>
-                                <ul class="info">
-
-                                    @if ($package->pos && ($showPos ?? true))
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ translate('messages.POS') }} </span>
-                                    </li>
-                                    @endif
-                                    @if ($package->mobile_app)
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ translate('messages.mobile_app') }} </span>
-                                    </li>
-                                    @endif
-                                    @if ($package->chat)
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ translate('messages.chatting_options') }} </span>
-                                    </li>
-                                    @endif
-                                    @if ($package->review)
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ translate('messages.review_section') }} </span>
-                                    </li>
-                                    @endif
-                                    @if ($package->self_delivery && ($showSelfDelivery ?? true))
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ translate('messages.self_delivery') }} </span>
-                                    </li>
-                                    @endif
+                    @foreach ($packages as $package)
+                        @php($spm_is_current = !$spm_on_commission && $store?->store_sub_update_application?->package_id == $package->id)
+                        @php($spm_features = array_values(array_filter([
+                            ($showPos ?? true) ? ['label' => translate('messages.POS'), 'on' => (bool) $package->pos] : null,
+                            ['label' => translate('Mobile app'), 'on' => (bool) $package->mobile_app],
+                            ['label' => translate('messages.Chatting options'), 'on' => (bool) $package->chat],
+                            ['label' => translate('Review section'), 'on' => (bool) $package->review],
+                            ($showSelfDelivery ?? true) ? ['label' => translate('messages.Self delivery'), 'on' => (bool) $package->self_delivery] : null,
+                        ])))
+                        <article class="spm-plan {{ $spm_is_current ? 'is-current' : '' }}">
+                            @if ($spm_is_current)
+                                <span class="spm-plan__badge"><i class="tio-checkmark-circle"></i> {{ translate('Current plan') }}</span>
+                            @endif
+                            <h3 class="spm-plan__name">{{ $package->package_name }}</h3>
+                            <div class="spm-plan__price">
+                                <span class="spm-plan__amount">{{ \App\CentralLogics\Helpers::format_currency($package->price) }}</span>
+                                <span class="spm-plan__period">/ {{ $package->validity }} {{ translate('messages.days') }}</span>
+                            </div>
+                            <ul class="spm-plan__features">
+                                <li class="spm-feat">
+                                    <i class="tio-checkmark-circle" aria-hidden="true"></i>
                                     @if ($package->max_order == 'unlimited')
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ $store?->module->module_type == 'rental' && addon_published_status('Rental') ? translate('messages.unlimited_trips') : (($isServiceModule ?? false) ? translate('messages.Unlimited_Bookings') : translate('messages.Unlimited_Orders')) }} </span>
-                                    </li>
+                                        <span>{{ $spm_is_rental ? translate('Unlimited trips') : ($spm_is_service ? translate('Unlimited bookings') : translate('Unlimited orders')) }}</span>
                                     @else
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ $package->max_order }} {{ $store?->module->module_type == 'rental' && addon_published_status('Rental') ? translate('messages.trips') : (($isServiceModule ?? false) ? translate('messages.Bookings') : translate('messages.Orders')) }} </span>
-                                    </li>
+                                        <span>{{ $package->max_order }} {{ $spm_is_rental ? translate('messages.Trips') : ($spm_is_service ? translate('messages.Bookings') : translate('messages.Orders')) }}</span>
                                     @endif
+                                </li>
+                                <li class="spm-feat">
+                                    <i class="tio-checkmark-circle" aria-hidden="true"></i>
                                     @if ($package->max_product == 'unlimited')
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ ($isServiceModule ?? false) ? translate('messages.Unlimited_Service_Uploads') : translate('messages.Unlimited_uploads') }} </span>
-                                    </li>
+                                        <span>{{ $spm_is_service ? translate('Unlimited service uploads') : translate('messages.Unlimited uploads') }}</span>
                                     @else
-                                    <li>
-                                        <i class="tio-checkmark-circle"></i> <span>  {{ $package->max_product }} {{ ($isServiceModule ?? false) ? translate('messages.Service_Uploads') : translate('messages.uploads') }} </span>
+                                        <span>{{ $package->max_product }} {{ $spm_is_service ? translate('Service uploads') : translate('messages.uploads') }}</span>
+                                    @endif
+                                </li>
+                                @foreach ($spm_features as $spm_feature)
+                                    <li class="spm-feat {{ $spm_feature['on'] ? '' : 'is-off' }}">
+                                        <i class="{{ $spm_feature['on'] ? 'tio-checkmark-circle' : 'tio-clear-circle' }}" aria-hidden="true"></i>
+                                        <span>{{ $spm_feature['label'] }}</span>
+                                        <span class="sr-only">{{ $spm_feature['on'] ? translate('Included') : translate('Not included') }}</span>
                                     </li>
-                                    @endif
-
-                                </ul>
-                                <div class="text-center">
-                                    @if ( $store?->store_business_model != 'commission'  && $store?->store_sub_update_application?->package_id == $package->id)
-                                    <button data-id="{{ $package->id }}"  data-url="{{route($routePrefix.'.packageView',[$package->id,$store->id ])}}"
-                                        data-target="#package_detail" id="package_detail" type="button" class="btn btn--warning text-white renew-btn package_detail">{{ translate('messages.Renew') }}</button>
-                                    @else
-                                    <button data-id="{{ $package->id }}" data-url="{{route($routePrefix.'.packageView',[$package->id,$store->id ])}}"
-                                        data-target="#package_detail" id="package_detail" type="button" class="btn btn--primary shift-btn package_detail">{{ translate('messages.Shift_in_this_plan') }}</button>
-                                    @endif
-                                </div>
+                                @endforeach
+                            </ul>
+                            <div class="spm-plan__foot">
+                                <button type="button" data-id="{{ $package->id }}" data-url="{{ route($routePrefix.'.packageView', [$package->id, $store->id]) }}"
+                                    class="btn {{ $spm_is_current ? 'btn--primary' : 'btn-outline-primary' }} package_detail">
+                                    <i class="{{ $spm_is_current ? 'tio-autorenew' : 'tio-sync' }}"></i>
+                                    {{ $spm_is_current ? translate('messages.Renew') : translate('messages.Shift in this plan') }}
+                                </button>
                             </div>
-                        </div>
-                        @empty
-
-                        @endforelse
-                    </div>
+                        </article>
+                    @endforeach
                 </div>
             </div>
         </div>

@@ -777,6 +777,22 @@ body.page-scrolled .main-nav {
   box-shadow: 0 4px 12px rgba(var(--primary-rgb), .2)
 }
 
+/* Prev/next draw a feather arrow rather than a text one, so the mirror for RTL
+   goes on the icon: .slider-arrow carries translateY(-50%) for its own
+   centring and a scaleX() on the button would drop it. */
+[dir="rtl"] .slider-arrow svg,
+[dir="rtl"] .svc-arrow svg {
+  transform: scaleX(-1)
+}
+
+@media(max-width:768px) {
+  .slider-arrow svg,
+  .svc-arrow svg {
+    width: 16px;
+    height: 16px
+  }
+}
+
 /* ========== MARQUEE ========== */
 .marquee {
   padding: 20px 0;

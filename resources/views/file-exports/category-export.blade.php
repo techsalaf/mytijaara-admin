@@ -3,7 +3,7 @@
 @endphp
 <div class="row">
     <div class="col-lg-12 text-center ">
-        <h1> {{ $isSubCategory ? translate('Sub_Category_List') : translate('Category_List') }}
+        <h1> {{ $isSubCategory ? translate('Subcategory list') : translate('Category list') }}
         </h1>
     </div>
     <div class="col-lg-12">
@@ -11,10 +11,10 @@
         <table>
             <thead>
                 <tr>
-                    <th>{{ translate('Filter_Criteria') }}</th>
+                    <th>{{ translate('Filter criteria') }}</th>
                     <th></th>
                     <th>
-                        {{ translate('Search_Bar_Content') }}: {{ $data['search'] ?? translate('N/A') }}
+                        {{ translate('Search bar content') }}: {{ $data['search'] ?? translate('N/A') }}
 
                     </th>
                     <th> </th>
@@ -22,17 +22,17 @@
 
 
                 <tr>
-                    <th>{{ translate('sl') }}</th>
-                    <th>{{ $isSubCategory ? translate('Sub_Category_Name') : translate('Category_Name') }}</th>
-                    <th>{{ $isSubCategory ? translate('Sub_Category_ID') : translate('Category_ID') }}</th>
+                    <th>{{ translate('SL') }}</th>
+                    <th>{{ $isSubCategory ? translate('Subcategory name') : translate('Category name') }}</th>
+                    <th>{{ $isSubCategory ? translate('Subcategory ID') : translate('Category ID') }}</th>
                     <th>{{ translate('Module') }}</th>
                     <th>{{ translate('Priority') }}</th>
                     @if (isset($data['module'])  && $data['module'] == 'ecommerce')
-                    <th>{{ translate('Featured') }}</th>
+                    <th>{{ translate('featured') }}</th>
 
                     @endif
                     @if ($data['categoryWiseTax'])
-                        <th class="border-0 w--1">{{ translate('messages.Vat/Tax') }}</th>
+                        <th class="border-0 w--1">{{ translate('VAT/tax') }}</th>
                     @endif
                     <th>{{ translate('Status') }}</th>
 
@@ -46,9 +46,9 @@
                         <td>{{ $category?->module?->module_name }}</td>
                         @php
                             $return_value = match ($category->priority) {
-                                0 => translate('messages.normal'),
+                                0 => translate('messages.Normal'),
                                 1 => translate('messages.medium'),
-                                2 => translate('messages.high'),
+                                2 => translate('messages.High'),
                             };
                         @endphp
                         <td>{{ $return_value }}</td>
@@ -66,7 +66,7 @@
                                 </span> </span>
                                 <br>
                                 @empty
-                                <span> {{ translate('messages.no_tax') }} </span>
+                                <span> {{ translate('messages.No tax') }} </span>
                                 @endforelse
                             </span>
                         </td>

@@ -1,0 +1,58 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+Time: 03:59.657, Memory: 172.00 MB
+
+There was 1 error:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 no such table: system_tax_setups (Connection: sqlite, Database: :memory:, SQL: select * from "system_tax_setups" where "is_active" = 1 and "tax_payer" = vendor and "is_default" = 1 limit 1)
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\app\CentralLogics\Helpers.php:5141
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductFieldMap.php:28
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:104
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:28
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Cache\Lock.php:130
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:22
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:42
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:183
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php:422
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1 no such table: system_tax_setups
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:420
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:411
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3505
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3490
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4080
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:3489
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:902
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:884
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Concerns\BuildsQueries.php:366
+C:\xampp\htdocs\mytijaara-admin\app\CentralLogics\Helpers.php:5141
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductFieldMap.php:28
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:104
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:28
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Cache\Lock.php:130
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:22
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ProductListingFlow.php:42
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager.php:183
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest.php:422
+
+ERRORS!
+Tests: 200, Assertions: 1072, Errors: 1, PHPUnit Deprecations: 50.

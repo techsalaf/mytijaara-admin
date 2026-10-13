@@ -1,0 +1,30 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+Time: 00:34.341, Memory: 64.00 MB
+
+There was 1 error:
+
+1) Modules\WhatsAppVendorConcierge\tests\Integration\MySqlProductListingTest::test_mysql_taxonomy_is_additive_idempotent_and_product_confirm_is_atomic
+Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value (Connection: core_fixture, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_eb457c19f7a2a41d, SQL: insert into `vendors` (`id`, `f_name`, `phone`, `email`, `status`) values (1, Fixture, 2348000000001, fixture@example.test, 1))
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Integration\MySqlProductListingTest.php:18
+
+Caused by
+PDOException: SQLSTATE[HY000]: General error: 1364 Field 'password' doesn't have a default value
+
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:53
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:827
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\MySqlConnection.php:42
+C:\xampp\htdocs\mytijaara-admin\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4121
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Integration\MySqlProductListingTest.php:18
+
+ERRORS!
+Tests: 1, Assertions: 3, Errors: 1, PHPUnit Deprecations: 1.

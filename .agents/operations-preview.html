@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/public/assets/admin/css/bootstrap.min.css"><link rel="stylesheet" href="/public/assets/admin/css/theme.minc619.css"><link rel="stylesheet" href="/public/assets/admin/vendor/icon-set/style.css"><style>
+.ops-header,.ops-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.ops-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:20px 0}.ops-stat{padding:18px;border:1px solid #dfe5eb;border-radius:10px;background:white;color:#334155;display:block}.ops-stat strong{display:block;font-size:28px;color:#133b37;margin:6px 0}.ops-stat:hover{border-color:#008069;text-decoration:none}.ops-description{max-width:340px;white-space:normal;line-height:1.5}.ops-table td{vertical-align:middle}.ops-actions{display:flex;flex-wrap:wrap;gap:6px}.ops-toolbar{padding:16px}.ops-toolbar form{display:flex;gap:8px;flex-wrap:wrap}.ops-toolbar form .form-control{width:auto;max-width:240px}.ops-muted{color:#64748b;font-size:13px}.ops-empty{text-align:center;padding:40px!important}.ops-result{padding:12px;border-bottom:1px solid #e5e7eb;overflow-wrap:anywhere}@media(max-width:700px){.ops-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ops-header h1{font-size:22px}.ops-toolbar>*{width:100%}.ops-toolbar input,.ops-toolbar select{width:100%!important}.ops-stat{padding:12px}.ops-toolbar .btn{white-space:normal}}
+</style>
+</head><body><div class="content container-fluid pb-0"><a class="btn btn-outline-primary" href="http://dashboard.mytijaara.test/admin/whatsapp/product-drafts">Product drafts &amp; missing category images</a></div>
+<div class="content container-fluid">
+ <div class="ops-header">
+  <div><h1 class="page-header-title">Concierge Operations Centre</h1><p class="text-muted mb-0">See who needs help, understand why, and preview the next action.</p></div>
+  <div class="ops-actions"><a class="btn btn-outline-primary" href="http://dashboard.mytijaara.test/admin/whatsapp/inbox">Open inbox</a><a class="btn btn-outline-secondary" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center/audits">Recovery history</a>
+   <form method="POST" action="http://dashboard.mytijaara.test/admin/whatsapp/operations-center/health-check"><input type="hidden" name="_token" value="" autocomplete="off"><button class="btn btn-primary">Refresh health scan</button></form></div>
+ </div>
+ <p class="ops-muted mt-3">Last saved scan: Not run yet. Counts below use current conversation records. A reply recorded as sent means Meta accepted it; delivery and read receipts are shown separately.</p>
+ <div class="ops-summary">
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=active"><span>Registrations in progress</span><strong>1</strong><small>Incomplete applications</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=waiting_concierge"><span>Waiting for a reply</span><strong>1</strong><small>No successful reply recorded</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=waiting_user"><span>Waiting for the customer</span><strong>0</strong><small>No repair is needed</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=human_handoff"><span>Human support</span><strong>0</strong><small>Review the open support request</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=stale_handoff"><span>Orphaned handoffs</span><strong>0</strong><small>No open support ticket</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=failed"><span>Failed replies</span><strong>0</strong><small>Inspect before retrying</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center?filter=technical"><span>Technical investigation</span><strong>0</strong><small>Not safe to repair automatically</small></a>
+  <a class="ops-stat" href="http://dashboard.mytijaara.test/admin/store/pending-requests"><span>Awaiting approval</span><strong>0</strong><small>Review stores across modules</small></a>
+  </div>
+ <div class="card">
+  <div class="ops-toolbar border-bottom">
+   <div><h2 class="h4 mb-1">All conversations <span class="badge badge-light">1</span></h2><span class="ops-muted">Read the diagnosis before selecting an action.</span></div>
+   <form method="GET"><label class="sr-only" for="ops-filter">Show conversations</label><select class="form-control" id="ops-filter" name="filter">
+    <option value="all" selected>All conversations</option><option value="active" >Registrations in progress</option><option value="waiting_concierge" >Waiting for reply</option><option value="waiting_user" >Waiting for customer</option><option value="human_handoff" >Human support</option><option value="stale_handoff" >Orphaned handoffs</option><option value="stuck" >Needs attention</option><option value="failed" >Failed replies</option><option value="technical" >Technical investigation</option>   </select><label class="sr-only" for="ops-search">Search name or phone</label><input class="form-control" id="ops-search" name="search" value="" placeholder="Search name or phone"><button class="btn btn-outline-primary">Search</button><a class="btn btn-link" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center">Clear</a></form>
+  </div>
+  <div class="ops-toolbar bg-light"><label class="mb-0"><input type="checkbox" id="selectAll"> Select this page · <span id="selectedCount">0</span> selected</label><div class="ops-actions"><select class="form-control" id="bulkAction" style="width:230px" aria-label="Recovery action"><option value="renudge_current_step">Resend current question</option><option value="release_stale_handoff">Resume orphaned handoff</option><option value="assign_human">Request human support</option></select><button class="btn btn-primary" id="previewSelected">Preview selected</button></div></div>
+  <div class="table-responsive"><table class="table ops-table mb-0"><thead><tr><th></th><th>Customer</th><th>Progress</th><th>Who responds next?</th><th>What happened?</th><th>Next action</th></tr></thead><tbody>
+       <tr><td><input class="row-checkbox" type="checkbox" value="1" aria-label="Select Demo Shop Owner"></td><td><a href="http://dashboard.mytijaara.test/admin/whatsapp/inbox/1"><strong>Demo Shop Owner</strong></a><div class="ops-muted">2348000000001</div><small>#1</small></td>
+   <td>Account Password<div class="ops-muted">53% · Onboarding active</div></td>
+   <td>Concierge<div class="ops-muted">Reply window open</div></td>
+   <td class="ops-description">The latest customer message has no recorded successful reply. Check the chat and delivery evidence.<div class="ops-muted mt-1">Customer: 10 minutes ago<br>Reply: No recorded reply</div></td>
+   <td><div class="ops-actions"><a class="btn btn-sm btn-outline-secondary" href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center/conversation/1">Details</a><a class="btn btn-sm btn-outline-primary" href="http://dashboard.mytijaara.test/admin/whatsapp/inbox/1">Chat</a>
+    <button class="btn btn-sm btn-primary preview-one" data-id="1" data-action="assign_human">Preview help</button>       </div></td></tr>
+    </tbody></table></div>
+  <div class="card-footer"></div>
+ </div>
+ <p class="ops-muted mt-3">Recovery never approves a store, discards a draft, or closes an open support ticket. Historical inbound messages cannot be replayed safely without a processing checkpoint.</p>
+</div>
+<div class="modal fade" id="recoveryPreview" tabindex="-1" role="dialog" aria-labelledby="recoveryTitle" aria-hidden="true"><div class="modal-dialog modal-lg" role="document"><div class="modal-content">
+ <div class="modal-header"><h2 class="h4 modal-title" id="recoveryTitle">Review recovery</h2><button class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>
+ <div class="modal-body" id="previewBody" aria-live="polite"></div><div class="modal-footer"><button class="btn btn-secondary" data-dismiss="modal">Cancel</button><button class="btn btn-primary" id="confirmRecovery" disabled>Confirm recovery</button></div>
+</div></div></div>
+</body></html>

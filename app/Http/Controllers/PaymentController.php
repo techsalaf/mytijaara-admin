@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\CentralLogics\Helpers;
 use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Models\BusinessSetting;
 use App\Library\Payer;
-use App\Traits\Payment;
+use App\Services\Payment\PaymentLinkService;
+use App\Traits\Payment\PaymentTrait;
 use App\Library\Receiver;
 use App\Library\Payment as PaymentInfo;
 
 class PaymentController extends Controller
 {
     public function __construct(){
-        if (is_dir('App\Traits') && trait_exists('App\Traits\Payment')) {
+        if (is_dir('App\Traits') && trait_exists('App\Traits\Payment\PaymentTrait')) {
             $this->extendWithPaymentGatewayTrait();
         }
     }
@@ -28,7 +30,7 @@ class PaymentController extends Controller
     private function generateExtendedControllerClass()
     {
         $baseControllerClass = get_class($this);
-        $traitClassName = 'App\Traits\Payment';
+        $traitClassName = 'App\Traits\Payment\PaymentTrait';
 
         $extendedControllerClass = "
             class ExtendedController extends $baseControllerClass {
@@ -58,7 +60,6 @@ class PaymentController extends Controller
             $customer = User::withoutGlobalScope(\App\Scopes\HostScope::class)->find($request['customer_id']);
         }
 
-        //guest user check
         if ($order->is_guest) {
             $address = json_decode($order['delivery_address'],true);
             $customer = collect([
@@ -71,7 +72,7 @@ class PaymentController extends Controller
         } else {
             $customer = User::withoutGlobalScope(\App\Scopes\HostScope::class)->find($request['customer_id']);
             if (!$customer) {
-                return response()->json(['errors' => ['message' => 'Customer not found']], 403);
+                return response()->json(['errors' => ['message' => translate('No data found')]], 403);
             }
             $customer = collect([
                 'first_name' => $customer['f_name'],
@@ -89,7 +90,7 @@ class PaymentController extends Controller
         $order_amount = $order->order_amount - $order->partially_paid_amount;
 
         if (!isset($customer)) {
-            return response()->json(['errors' => ['message' => 'Customer not found']], 403);
+            return response()->json(['errors' => ['message' => translate('No data found')]], 403);
         }
 
         if (!isset($order_amount)) {
@@ -102,11 +103,11 @@ class PaymentController extends Controller
 
         $payer = new Payer($customer['first_name'].' '.$customer['last_name'], $customer['email'], $customer['phone'], '');
 
-        $currency=BusinessSetting::where(['key'=>'currency'])->first()->value;
+        $currency=Helpers::get_business_settings('currency', false);
 
         $store_logo= BusinessSetting::where(['key' => 'logo'])->first();
         $additional_data = [
-            'business_name' => BusinessSetting::where(['key'=>'business_name'])->first()?->value,
+            'business_name' => Helpers::get_business_settings('business_name', false),
             'business_logo' => \App\CentralLogics\Helpers::get_full_url('business',$store_logo?->value,$store_logo?->storage[0]?->value ?? 'public' )
         ];
 
@@ -127,7 +128,7 @@ class PaymentController extends Controller
 
         $receiver_info = new Receiver('receiver_name','example.png');
 
-        $redirect_link = Payment::generate_link($payer, $payment_info, $receiver_info);
+        $redirect_link = PaymentLinkService::generateLink($payer, $payment_info, $receiver_info);
 
         return redirect($redirect_link);
 

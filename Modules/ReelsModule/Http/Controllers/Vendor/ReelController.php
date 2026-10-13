@@ -11,14 +11,10 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\Encoders\WebpEncoder;
-use Intervention\Image\ImageManager;
 use Modules\ReelsModule\Entities\Reel;
+use Modules\ReelsModule\Services\Reel\ReelService;
 use Modules\ReelsModule\Entities\ReelEngagement;
 use Modules\ReelsModule\Http\Requests\Vendor\ReelStoreRequest;
 use Modules\ReelsModule\Http\Requests\Vendor\ReelUpdateRequest;
@@ -71,7 +67,7 @@ class ReelController extends Controller
     public function store(ReelStoreRequest $request)
     {
         if ($redirect = $this->guardAccessibleStore()) {
-            return response()->json(['message' => translate('messages.this_feature_is_not_available_for_the_selected_module')], 403);
+            return response()->json(['message' => translate('messages.This feature is not available for the selected module')], 403);
         }
         if(getEnvMode() === 'demo') {
             return response()->json(['message' => translate('Uploads are disabled in demo mode')], 403);
@@ -84,10 +80,10 @@ class ReelController extends Controller
             return response()->json(['errors' => [['message' => $exception->getMessage()]]], 422);
         }
 
-        Toastr::success(translate('messages.reel_created_successfully'));
+        Toastr::success(translate('Added successfully'));
 
         return response()->json([
-            'message' => translate('messages.reel_created_successfully'),
+            'message' => translate('Added successfully'),
             'redirect' => route('vendor.reels.index'),
         ]);
     }
@@ -100,7 +96,7 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            Toastr::error(translate('messages.reel_not_found'));
+            Toastr::error(translate('No data found'));
 
             return redirect()->back();
         }
@@ -119,7 +115,7 @@ class ReelController extends Controller
     public function update(ReelUpdateRequest $request, int $id)
     {
         if ($redirect = $this->guardAccessibleStore()) {
-            return response()->json(['message' => translate('messages.this_feature_is_not_available_for_the_selected_module')], 403);
+            return response()->json(['message' => translate('messages.This feature is not available for the selected module')], 403);
         }
         
         if(getEnvMode() === 'demo') {
@@ -128,7 +124,7 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            return response()->json(['errors' => [['message' => translate('messages.reel_not_found')]]], 404);
+            return response()->json(['errors' => [['message' => translate('No data found')]]], 404);
         }
 
         try {
@@ -137,10 +133,10 @@ class ReelController extends Controller
             return response()->json(['errors' => [['message' => $exception->getMessage()]]], 422);
         }
 
-        Toastr::success(translate('messages.reel_updated_successfully'));
+        Toastr::success(translate('Updated successfully'));
 
         return response()->json([
-            'message' => translate('messages.reel_updated_successfully'),
+            'message' => translate('Updated successfully'),
             'redirect' => route('vendor.reels.index'),
         ]);
     }
@@ -153,18 +149,18 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            Toastr::error(translate('messages.reel_not_found'));
+            Toastr::error(translate('No data found'));
 
             return redirect()->back();
         }
 
-        Helpers::check_and_delete(dir: 'reels/', old_image: $reel->thumbnail);
-        Helpers::check_and_delete(dir: 'reels/', old_image: $reel->video);
+        app(ReelService::class)->deleteAsset($reel->thumbnail);
+        app(ReelService::class)->deleteAsset($reel->video);
         $reel->translations()->delete();
         $reel->storage()->delete();
         $reel->delete();
 
-        Toastr::success(translate('messages.reel_deleted_successfully'));
+        Toastr::success(translate('Deleted successfully'));
 
         return redirect()->route('vendor.reels.index');
     }
@@ -177,7 +173,7 @@ class ReelController extends Controller
 
         $reel = $this->findAccessibleReel($id);
         if (!$reel) {
-            Toastr::error(translate('messages.reel_not_found'));
+            Toastr::error(translate('No data found'));
 
             return redirect()->back();
         }
@@ -185,7 +181,7 @@ class ReelController extends Controller
         $reel->status = $status;
         $reel->save();
 
-        Toastr::success(translate('messages.reel_status_updated_successfully'));
+        Toastr::success(translate('Updated successfully'));
 
         return back();
     }
@@ -197,7 +193,7 @@ class ReelController extends Controller
         }
 
         if (!Helpers::get_business_settings('vendor_can_upload_reels')) {
-            Toastr::error(translate('messages.this_feature_is_not_available_for_the_selected_module'));
+            Toastr::error(translate('messages.This feature is not available for the selected module'));
             return redirect()->back();
         }
 
@@ -205,7 +201,7 @@ class ReelController extends Controller
         $moduleType = $store?->module?->module_type;
 
         if (!$store || !in_array($moduleType, $this->allowedModuleTypes, true)) {
-            Toastr::error(translate('messages.this_feature_is_not_available_for_the_selected_module'));
+            Toastr::error(translate('messages.This feature is not available for the selected module'));
             return redirect()->back();
         }
 
@@ -214,16 +210,20 @@ class ReelController extends Controller
 
     private function getFilteredQuery(Request $request, int $storeId)
     {
-        $keywords = array_filter(explode(' ', (string) $request->get('search', '')));
+        $keywords = array_filter(explode(' ', (string) $request->input('search', '')));
         $reelStatuses = array_values(array_filter((array) $request->input('reel_status', [])));
         $today = Carbon::today()->toDateString();
 
-        $query = Reel::with(['store', 'storage', 'productable'])
+        $query = Reel::with(['storage', 'productable'])
             ->withCount([
                 'engagements as total_views' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_VIEW),
                 'engagements as total_likes' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_LIKE),
                 'engagements as total_store_visits' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_VISIT),
+                'engagements as total_orders' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_ORDER),
             ])
+            ->withSum([
+                'engagements as total_order_amount' => fn (Builder $builder) => $builder->where('type', ReelEngagement::TYPE_ORDER),
+            ], 'amount')
             ->where('store_id', $storeId)
             ->when(!empty($keywords), function ($builder) use ($keywords) {
                 foreach ($keywords as $value) {
@@ -361,50 +361,49 @@ class ReelController extends Controller
 
     private function buildOverviewCards(array $overview): array
     {
-        // Services are booked, not sold: show booking wording for the service module.
         $isService = Helpers::get_store_data()?->module?->module_type === 'service';
 
         return [
             [
                 'value' => $overview['total_reels'] ?? 0,
-                'label' => translate('messages.Total_Reels'),
+                'label' => translate('Total reels'),
                 'icon' => 'tio-video-camera-outlined',
                 'color' => 'text-purple',
                 'bg' => 'bg-purple bg-opacity-10',
             ],
             [
                 'value' => $overview['total_views'] ?? 0,
-                'label' => translate('messages.Total_Views'),
+                'label' => translate('Total views'),
                 'icon' => 'tio-invisible',
                 'color' => 'text-info',
                 'bg' => 'bg-info bg-opacity-10',
             ],
             [
                 'value' => $overview['total_likes'] ?? 0,
-                'label' => translate('messages.Total_Likes'),
+                'label' => translate('Total likes'),
                 'icon' => 'tio-heart-outlined',
                 'color' => 'text-danger',
                 'bg' => 'bg-danger bg-opacity-10',
             ],
             [
                 'value' => $overview['total_store_visits'] ?? 0,
-                'label' => translate('messages.Store_Visits'),
+                'label' => translate('Store visits'),
                 'icon' => 'tio-home-vs-2-outlined',
                 'color' => 'text-success',
                 'bg' => 'bg-success bg-opacity-10',
             ],
             [
                 'value' => Helpers::format_currency($overview['total_sale_amount'] ?? 0),
-                'label' => $isService ? translate('messages.Total Booking Amount') : translate('messages.Total_Sale_Amount'),
-                'tooltip' => $isService ? translate('messages.Total booking value from Reel Book Now bookings') : translate('messages.Total_order_value_from_Reel_Order_Now_purchases'),
+                'label' => $isService ? translate('Total booking amount') : translate('Total sale amount'),
+                'tooltip' => $isService ? translate('Total booking value from reel book now bookings') : translate('Total order value from reel order now purchases'),
                 'icon' => 'tio-money',
                 'color' => 'text-primary',
                 'bg' => 'bg-primary bg-opacity-10',
             ],
             [
                 'value' => $overview['total_sale'] ?? 0,
-                'label' => $isService ? translate('messages.Total Booking') : translate('messages.Total_Sale'),
-                'tooltip' => $isService ? translate('messages.Total bookings placed using the Reel Book Now button') : translate('messages.Total_orders_placed_using_the_Reel_Order_Now_button'),
+                'label' => $isService ? translate('Total booking') : translate('Total sale'),
+                'tooltip' => $isService ? translate('Total bookings placed using the reel book now button') : translate('Total orders placed using the reel order now button'),
                 'icon' => 'tio-shopping-cart',
                 'color' => 'text-warning',
                 'bg' => 'bg-warning bg-opacity-10',
@@ -441,26 +440,18 @@ class ReelController extends Controller
 
         if ($request->hasFile('thumbnail')) {
             if ($reel->thumbnail) {
-                Helpers::check_and_delete(dir: 'reels/', old_image: $reel->thumbnail);
+                app(ReelService::class)->deleteAsset($reel->thumbnail);
             }
 
-            $reel->thumbnail = $this->uploadReelAsset(
-                file: $request->file('thumbnail'),
-                dir: 'reels/',
-                type: 'thumbnail'
-            );
+            $reel->thumbnail = app(ReelService::class)->storeAsset($request->file('thumbnail'), 'thumbnail');
         }
 
         if ($request->hasFile('video')) {
             if ($reel->video) {
-                Helpers::check_and_delete(dir: 'reels/', old_image: $reel->video);
+                app(ReelService::class)->deleteAsset($reel->video);
             }
 
-            $reel->video = $this->uploadReelAsset(
-                file: $request->file('video'),
-                dir: 'reels/',
-                type: 'video'
-            );
+            $reel->video = app(ReelService::class)->storeAsset($request->file('video'), 'video');
         }
 
         $reel->save();
@@ -490,76 +481,12 @@ class ReelController extends Controller
         ];
     }
 
-    private function uploadReelAsset(UploadedFile $file, string $dir, string $type): string
-    {
-        $this->validateReelFile($file, $type);
 
-        $format = strtolower($file->getClientOriginalExtension() ?: Helpers::extensionFromMimeType($file->getMimeType()));
-        $validExtForWebp = ['jpg', 'jpeg', 'png'];
-
-        if ($type === 'thumbnail' && in_array($format, $validExtForWebp, true)) {
-            $manager = new ImageManager(Driver::class);
-            $image = $manager->read($file);
-            $image = $image->encode(new WebpEncoder(quality: 80));
-            $format = 'webp';
-            $fileToStore = $image->toString();
-        } else {
-            $fileToStore = $file;
-        }
-
-        $fileName = now()->toDateString() . '-' . uniqid() . '.' . $format;
-        $disk = Helpers::getDisk();
-
-        if (!Storage::disk($disk)->exists($dir)) {
-            Storage::disk($disk)->makeDirectory($dir);
-        }
-
-        if ($fileToStore instanceof UploadedFile) {
-            Storage::disk($disk)->putFileAs($dir, $fileToStore, $fileName);
-        } else {
-            Storage::disk($disk)->put($dir . '/' . $fileName, $fileToStore);
-        }
-
-        return $fileName;
-    }
-
-    private function validateReelFile(UploadedFile $file, string $type): void
-    {
-        $allowedExtensions = match ($type) {
-            'thumbnail' => ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-            'video' => ['mp4', 'mov', '3gp', 'gif', 'webm', 'mkv'],
-            default => [],
-        };
-
-        $maxSizeMb = match ($type) {
-            'thumbnail' => 2,
-            'video' => max(1, (int) (Helpers::get_business_settings('reels_max_upload_size_mb') ?: 15)),
-            default => 0,
-        };
-
-        $extension = strtolower($file->getClientOriginalExtension() ?: Helpers::extensionFromMimeType($file->getMimeType()));
-
-        if (!$extension || !in_array($extension, $allowedExtensions, true)) {
-            throw new InvalidUploadException(
-                $type === 'video'
-                    ? translate('messages.reel_video_format_is_invalid')
-                    : translate('messages.reel_thumbnail_format_is_invalid')
-            );
-        }
-
-        if ($file->getSize() > ($maxSizeMb * 1024 * 1024)) {
-            throw new InvalidUploadException(
-                $type === 'video'
-                    ? str_replace(':size', (string) $maxSizeMb, translate('messages.reel_video_size_must_not_exceed_mb'))
-                    : str_replace(':size', (string) MAX_FILE_SIZE, translate('messages.reel_thumbnail_size_must_not_exceed_2_mb'))
-            );
-        }
-    }
 
     private function findAccessibleReel(int $id): ?Reel
     {
         return Reel::withoutGlobalScope('translate')
-            ->with(['store', 'storage', 'translations'])
+            ->with(['store.storage', 'storage', 'translations'])
             ->where('store_id', Helpers::get_store_id())
             ->find($id);
     }
@@ -572,13 +499,35 @@ class ReelController extends Controller
             ->count();
     }
 
+    /**
+     * Module type of a store, resolved at most once per store per request.
+     *
+     * isRentalStore() and isServiceStore() both call this, and productLabel(),
+     * actionLabel() and getStoreItems() each call those — so rendering one page re-ran
+     * this Store lookup six or seven times, each firing the Store's translate and storage
+     * global scopes plus the module's. It was the worst single route in the vendor panel.
+     *
+     * The authenticated vendor's Store is already hydrated, so it is used directly when
+     * the id matches instead of being fetched again.
+     */
+    private array $moduleTypeCache = [];
+
     private function storeModuleType(?int $storeId): ?string
     {
         if (!$storeId) {
             return null;
         }
 
-        return \App\Models\Store::with('module:id,module_type')->find($storeId)?->module?->module_type;
+        if (array_key_exists($storeId, $this->moduleTypeCache)) {
+            return $this->moduleTypeCache[$storeId];
+        }
+
+        $authStore = Helpers::get_store_data();
+        $store = ($authStore && (int) $authStore->id === (int) $storeId)
+            ? $authStore
+            : \App\Models\Store::with('module:id,module_type')->find($storeId);
+
+        return $this->moduleTypeCache[$storeId] = $store?->module?->module_type;
     }
 
     private function isRentalStore(?int $storeId): bool
@@ -607,8 +556,8 @@ class ReelController extends Controller
     private function actionLabel(?int $storeId): string
     {
         return $this->isRentalStore($storeId) || $this->isServiceStore($storeId)
-            ? translate('messages.Book_Now')
-            : translate('messages.Order_Now');
+            ? translate('messages.Book Now')
+            : translate('messages.Order now');
     }
 
     private function getStoreItems(?int $storeId): Collection
@@ -623,6 +572,9 @@ class ReelController extends Controller
             }
 
             return \Modules\Rental\Entities\Vehicle::withoutGlobalScopes()
+                ->with(['translations' => function ($query) {
+                    $query->where('locale', app()->getLocale());
+                }])
                 ->where('provider_id', $storeId)
                 ->where('status', 1)
                 ->orderBy('name')
@@ -640,6 +592,9 @@ class ReelController extends Controller
             }
 
             return \Modules\Service\Entities\Service::withoutGlobalScopes()
+                ->with(['translations' => function ($query) {
+                    $query->where('locale', app()->getLocale());
+                }])
                 ->where('store_id', $storeId)
                 ->where('status', 1)
                 ->where('is_approved', 1)
@@ -652,12 +607,6 @@ class ReelController extends Controller
                 ]);
         }
 
-        // withoutGlobalScopes() bypasses Store/Zone scoping (the vendor panel
-        // has no zone header), but it also strips the model's `translate` scope
-        // that pins the always-eager-loaded `translations` to the current
-        // locale. Without that pin, ALL locales load and Item::getNameAttribute()
-        // returns the first translation row regardless of locale (e.g. Arabic),
-        // so re-apply the current-locale constraint here.
         return Item::withoutGlobalScopes()
             ->with(['translations' => function ($query) {
                 $query->where('locale', app()->getLocale());

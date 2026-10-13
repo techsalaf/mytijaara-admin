@@ -26,12 +26,12 @@ class CashBackRepository implements CashBackRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->bonus->where($params)->first();
+        return $this->bonus->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->bonus->paginate($dataLimit);
+        return $this->bonus->with($relations)->paginate($dataLimit);
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
@@ -67,7 +67,7 @@ class CashBackRepository implements CashBackRepositoryInterface
 
     public function getFirstWithoutGlobalScopeWhere(array $params, array $relations = []): ?Model
     {
-        return $this->bonus->withoutGlobalScope('translate')->where($params)->first();
+        return $this->bonus->with($relations)->withoutGlobalScope('translate')->with('translations')->where($params)->first();
     }
 
     public function getSearchedList(?string $searchValue = null, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection

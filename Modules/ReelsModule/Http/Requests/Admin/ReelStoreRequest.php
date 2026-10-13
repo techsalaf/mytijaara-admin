@@ -2,6 +2,8 @@
 
 namespace Modules\ReelsModule\Http\Requests\Admin;
 
+use App\Rules\VideoFile;
+use App\Rules\ImageFile;
 use App\CentralLogics\Helpers;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\Validator;
@@ -27,8 +29,8 @@ class ReelStoreRequest extends FormRequest
             'description.*' => 'nullable|string|max:200',
             'lang' => 'required|array',
             'lang.*' => 'required|string',
-            'thumbnail' => 'required|image|max:' . (MAX_FILE_SIZE * 1024) . '|mimes:'.IMAGE_FORMAT_FOR_VALIDATION,
-            'video' => 'required|file|mimes:mp4,mov,3gp,gif,webm,mkv|max:' . ($maxUploadSizeMb * 1024),
+            'thumbnail' => ImageFile::rules('required'),
+            'video' => VideoFile::rules('required', ($maxUploadSizeMb * 1024)),
             'product_id' => 'nullable|integer',
             'order_now_button' => 'nullable|in:1',
             'is_always_visible' => 'nullable|in:1',
@@ -44,16 +46,8 @@ class ReelStoreRequest extends FormRequest
         return [
             'store_id.required' => 'Please select a ' . $storeLabelLower,
             'store_id.exists' => 'Please select a valid ' . $storeLabelLower,
-            'description.0.required' => translate('messages.default_description_is_required'),
-            'thumbnail.required' => translate('messages.reel_thumbnail_is_required'),
-            'thumbnail.image' => translate('messages.reel_thumbnail_must_be_an_image'),
-            'thumbnail.mimes' => translate('messages.reel_thumbnail_format_is_invalid'),
-            'thumbnail.max' => str_replace(':size', (string) MAX_FILE_SIZE, translate('messages.reel_thumbnail_size_must_not_exceed_2_mb')),
-            'video.required' => translate('messages.reel_video_is_required'),
-            'video.file' => translate('messages.reel_video_file_is_invalid'),
-            'video.mimes' => translate('messages.reel_video_format_is_invalid'),
-            'video.max' => str_replace(':size', (string) $maxUploadSizeMb, translate('messages.reel_video_size_must_not_exceed_mb')),
-            'dates.required_without' => translate('messages.please_select_reel_visibility_duration_or_choose_always_visible'),
+            'description.0.required' => translate('messages.Default description is required'),
+            'dates.required_without' => translate('messages.Please select reel visibility duration or choose always visible'),
         ];
     }
 
@@ -72,7 +66,7 @@ class ReelStoreRequest extends FormRequest
                 $startDate = Carbon::createFromFormat('m/d/Y', $startDate)->startOfDay();
                 $endDate = Carbon::createFromFormat('m/d/Y', $endDate)->endOfDay();
             } catch (\Throwable $th) {
-                $validator->errors()->add('dates', translate('messages.please_select_a_valid_date_range'));
+                $validator->errors()->add('dates', translate('messages.Please select a valid date range'));
                 return;
             }
 
@@ -121,11 +115,7 @@ class ReelStoreRequest extends FormRequest
         if ($existingCount >= $limit) {
             $validator->errors()->add(
                 'store_id',
-                str_replace(
-                    [':limit', ':period'],
-                    [(string) $limit, $limitType === 'month' ? translate('messages.month') : translate('messages.week')],
-                    translate('messages.reel_upload_limit_exceeded')
-                )
+                translate('messages.This store has already reached its reel upload limit for this period.') . ' ' . translate('messages.Upload limit') . ': ' . $limit . ' / ' . ($limitType === 'month' ? translate('messages.month') : translate('messages.week'))
             );
         }
     }
@@ -149,11 +139,7 @@ class ReelStoreRequest extends FormRequest
         if ($durationSeconds > $maxDurationSeconds) {
             $validator->errors()->add(
                 'video',
-                str_replace(
-                    [':duration', ':unit'],
-                    [(string) $maxDuration, $durationUnit === 'hour' ? translate('messages.Hour') : translate('messages.Minutes')],
-                    translate('messages.reel_video_duration_must_not_exceed')
-                )
+                translate('messages.Reel video is too long.') . ' ' . translate('messages.Maximum duration') . ': ' . $maxDuration . ' ' . ($durationUnit === 'hour' ? translate('messages.Hour') : translate('messages.minutes'))
             );
         }
     }

@@ -1,13 +1,11 @@
 @extends('layouts.blank')
 
 @section('content')
-    <!-- Title -->
     <div class="text-center text-white mb-4">
         <h2>6amMart Software Installation</h2>
         <h6 class="fw-normal">Please proceed step by step with proper data according to instructions</h6>
     </div>
 
-    <!-- Progress -->
     <div class="pb-2">
         <div class="progress cursor-pointer" role="progressbar" aria-label="6amMart Software Installation"
              aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" data-bs-toggle="tooltip"
@@ -17,7 +15,6 @@
         </div>
     </div>
 
-    <!-- Card -->
     <div class="card mt-4">
         <div class="p-4 mb-md-3 mx-xl-4 px-md-5">
             <div class="d-flex justify-content-end mb-2">
@@ -74,7 +71,6 @@
 
                 <div class="text-center">
                     <button type="submit" class="btn btn-dark px-sm-5">Continue</button>
-                    {{--<a href="step3.html" class="btn btn-dark px-sm-5">Continue</a>--}}
                 </div>
             </form>
         </div>

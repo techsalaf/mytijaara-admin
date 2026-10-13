@@ -10,22 +10,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Lists the authenticated customer's recent ride history, or returns
- * aggregate spend stats. Read-only — no cancellation, no rebooking from
- * chat (those happen in the dedicated ride screens of the app).
- *
- * Schema notes from the audit:
- *   - RideRequest.customer_id holds the user FK (not user_id).
- *   - Status column is `current_status` — NOT `status`. Values:
- *     pending | accepted | ongoing | completed | cancelled | returning | returned.
- *   - Fare is split across `paid_fare` (final with discount), `actual_fare`
- *     (calculated at end of trip), `estimated_fare` (at booking). We
- *     resolve in that order so the user always sees the most accurate
- *     number that exists.
- *   - SoftDeletes is on; we use the default scope so trashed trips don't
- *     leak into the user's view.
- */
 class GetMyTripsTool implements Tool
 {
     private const VALID_STATUSES = [
@@ -80,9 +64,6 @@ class GetMyTripsTool implements Tool
             return 'Unknown trip status "' . $status . '". Try: ' . implode(', ', self::VALID_STATUSES) . '.';
         }
 
-        // Module FK on RideRequest is set on create from the ride-share
-        // Module row (RideRequest.php boot hook). Explicit filter so a
-        // shared customer_id across modules can't bleed in.
         $rideShareModuleId = Module::where('module_type', 'ride-share')->value('id');
 
         $query = RideRequest::where('customer_id', $this->user->getKey())
@@ -90,17 +71,12 @@ class GetMyTripsTool implements Tool
             ->when($status !== null, fn ($q) => $q->where('current_status', $status));
 
         if ($summary) {
-            // Build a fresh chained query for the count so we don't share
-            // builder state with the spend aggregation below.
             $count = (clone $query)->count();
             if ($count === 0) {
                 return $status
                     ? 'No ' . $status . ' rides found.'
                     : 'You don\'t have any rides yet.';
             }
-            // Sum the best-available fare column per row. We can't do this
-            // in SQL cleanly because of the coalesce-with-zero rule, so
-            // pull the three columns and resolve in PHP.
             $rows = (clone $query)->get(['paid_fare', 'actual_fare', 'estimated_fare']);
             $total = 0.0;
             foreach ($rows as $r) {
@@ -140,7 +116,6 @@ class GetMyTripsTool implements Tool
             $category     = $t->vehicleCategory?->getAttribute('name') ?? '—';
             $pickup       = $t->coordinate?->getAttribute('pickup_address') ?? '—';
             $dropoff      = $t->coordinate?->getAttribute('destination_address') ?? '—';
-            // Trim long addresses so the response stays readable.
             $route = $this->shorten($pickup) . ' → ' . $this->shorten($dropoff);
             return '• ' . $ref . ' (' . $date . ') — ' . $category . ', ' . $route
                 . ': ' . round($fare, 2) . ', ' . $statusText;
@@ -152,12 +127,6 @@ class GetMyTripsTool implements Tool
             . 'Total shown: ' . round($total, 2) . '.';
     }
 
-    /**
-     * Pick the most accurate fare available for a trip row. Lifecycle:
-     *   paid_fare  → set at end of trip with coupon/discount applied
-     *   actual_fare → set at trip completion before coupon
-     *   estimated_fare → set at booking time
-     */
     private function resolveFare(RideRequest $trip): float
     {
         $paid = (float) $trip->getAttribute('paid_fare');

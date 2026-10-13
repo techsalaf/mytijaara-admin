@@ -1,0 +1,6 @@
+<?php
+require getcwd().'/vendor/autoload.php';$app=require getcwd().'/bootstrap/app.php';$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+use Modules\WhatsAppVendorConcierge\app\Models\{ConciergeRecoveryAudit,WhatsAppMessage,WhatsAppConversation};
+foreach(ConciergeRecoveryAudit::whereIn('conversation_id',[14,15,16,18,19,22])->where('action','renudge_current_step')->where('is_dry_run',false)->where('created_at','>=',now()->subHour())->get() as $audit){$m=WhatsAppMessage::where('whatsapp_message_id',$audit->details['message_id']??'')->first();echo json_encode(['conversation_id'=>$audit->conversation_id,'audit_status'=>$audit->status,'message_status'=>$m?->status,'sent_at'=>$m?->sent_at,'delivered_at'=>$m?->delivered_at,'read_at'=>$m?->read_at]).PHP_EOL;}
+$r=app(Modules\WhatsAppVendorConcierge\app\Services\Operations\ConciergeRecoveryService::class);$preview=$r->bulkRecover([14,15,16,18,19,22],'renudge_current_step',true,'cli');echo json_encode(['repeat_preview_eligible'=>$preview['eligible_count'],'repeat_preview_excluded'=>$preview['excluded_count']]).PHP_EOL;
+$check=$r->runHealthCheck('manual');echo json_encode(['health_check_id'=>$check->id,'overview'=>$check->summary]).PHP_EOL;

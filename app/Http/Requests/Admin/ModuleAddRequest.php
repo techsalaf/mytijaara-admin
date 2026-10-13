@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\ImageFile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
@@ -23,9 +24,6 @@ use Illuminate\Support\Carbon;
  */
 class ModuleAddRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -40,12 +38,9 @@ class ModuleAddRequest extends FormRequest
     {
         return [
             'module_name' => 'required|unique:modules|max:100',
-            // Addon-managed module types are created via their addon publish
-            // flow, not the manual "Add Module" form. Block them here so a
-            // crafted POST cannot create one.
             'module_type'=>'required|not_in:rental,ride-share,service',
-            'icon'=>'required',
-            'thumbnail'=>'required',
+            'icon' => ImageFile::rules('required'),
+            'thumbnail' => ImageFile::rules('required'),
             'module_name.0' => 'required',
             'description.0' => 'required',
             'short_description.*' => 'nullable|string|max:100',
@@ -55,10 +50,10 @@ class ModuleAddRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'module_name.required' => translate('messages.Name is required!'),
-            'module_name.0.required'=>translate('default_name_is_required'),
-            'module_type.not_in'=>translate('messages.this_module_type_cannot_be_created_manually'),
-            'description.0.required'=>translate('default_description_is_required'),
+            'module_name.required' => translate('messages.Name is required'),
+            'module_name.0.required'=>translate('Default name is required'),
+            'module_type.not_in'=>translate('messages.This module type cannot be created manually'),
+            'description.0.required'=>translate('Default description is required'),
         ];
     }
 }

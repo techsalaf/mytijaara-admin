@@ -29,10 +29,41 @@ class WithdrawalMethodController extends Controller
                     }
                 });
             })
+            ->withCount([
+                'withdrawRequests as requests_count' => function ($query) {
+                    $query->where('type', '!=', 'disbursement');
+                },
+                'disbursementMethod as payees_count',
+            ])
             ->latest()
-            ->paginate(config('default_pagination'));
+            ->paginate(config('default_pagination'))
+            ->appends($request->except('page'));
 
-        return view('admin-views.withdraw-method.withdraw-methods-list', compact('withdrawal_methods', 'search'));
+        return view('admin-views.withdraw-method.withdraw-methods-list', [
+            'withdrawal_methods' => $withdrawal_methods,
+            'search' => $search,
+            'summary' => $this->methodSummary(),
+        ]);
+    }
+
+    /**
+     * Method counts by state, for the summary strip. One grouped query rather
+     * than a count() per tile; it describes every method, so it ignores the
+     * search box — the count badge on the table tracks that.
+     */
+    private function methodSummary(): array
+    {
+        $byStatus = $this->withdrawal_method
+            ->selectRaw('is_active, COUNT(*) as methods')
+            ->groupBy('is_active')
+            ->pluck('methods', 'is_active');
+
+        return [
+            'total' => (int) $byStatus->sum(),
+            'active' => (int) ($byStatus[1] ?? 0),
+            'inactive' => (int) ($byStatus[0] ?? 0),
+            'default' => $this->withdrawal_method->where('is_default', 1)->value('method_name'),
+        ];
     }
 
     public function create()
@@ -85,6 +116,11 @@ class WithdrawalMethodController extends Controller
     public function getMethodInfo(Request $request)
     {
         $withdrawal_method = $this->withdrawal_method->find($request->id);
+
+        if (! $withdrawal_method) {
+            return response()->json(['errors' => [['code' => 'withdrawal_method', 'message' => translate('No data found')]]], 404);
+        }
+
         return response()->json([
             'view' => view('admin-views.withdraw-method.partials._method_info', compact('withdrawal_method'))->render(),
         ]);

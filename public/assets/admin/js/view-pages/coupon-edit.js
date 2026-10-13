@@ -97,13 +97,15 @@ function coupon_type_change(coupon_type) {
     }
 
     if (coupon_type === 'free_delivery') {
+        $('#discount_type_wrap, #discount_wrap, #max_discount_wrap').hide();
         $('#discount_type').attr("disabled", true).val("").trigger("change");
-        $('#max_discount, #discount').val(0).attr("readonly", true);
+        $('#max_discount, #discount').val(0).attr("readonly", true).attr("disabled", true);
         $('#discount').removeAttr("required");
         $('#discount').removeAttr("min");
     } else {
+        $('#discount_type_wrap, #discount_wrap, #max_discount_wrap').show();
         $('#discount_type').removeAttr("disabled").attr("required", true);
-        $('#max_discount, #discount').removeAttr("readonly");
+        $('#max_discount, #discount').removeAttr("readonly").removeAttr("disabled");
         $('#discount').attr("required", true);
         $('#discount').attr("min", 1);
     }

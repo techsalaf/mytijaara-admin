@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\Model\InvalidatesCacheTrait;
 use App\CentralLogics\Helpers;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Traits\GeneratesSlug;
+use App\Traits\Model\SlugTrait;
+use App\Traits\Model\HasTranslationsTrait;
+use App\Traits\Model\HasStorageTrait;
 
 /**
  * Class Module
@@ -31,8 +33,29 @@ use App\Traits\GeneratesSlug;
  */
 class Module extends Model
 {
-    use HasFactory, GeneratesSlug;
-    protected $with = ['translations','storage'];
+    use HasFactory, SlugTrait, HasTranslationsTrait, HasStorageTrait, InvalidatesCacheTrait;
+
+    protected static array $cacheTags = ['module'];
+
+    protected $hidden = ['translations', 'storage'];
+
+    /**
+     * ModuleService memoises the active-module list for the life of a request. Any write to a
+     * module invalidates it here, so a save-then-render cycle cannot serve the stale list.
+     */
+    protected static function booted(): void
+    {
+        // Both memos derive from the same list: ModuleService caches the rows, Zone caches the
+        // eta-capable subset of their ids. A new or retyped module changes each of them.
+        $forget = function () {
+            app(\App\Services\System\ModuleService::class)->forgetSelectOptions();
+            Zone::forgetEtaCapableModules();
+        };
+
+        static::saved($forget);
+        static::deleted($forget);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -84,26 +107,13 @@ class Module extends Model
     /**
      * @return MorphMany
      */
-    public function translations(): MorphMany
-    {
-        return $this->morphMany(Translation::class, 'translationable');
-    }
-
     /**
      * @param $value
      * @return mixed
      */
     public function getModuleNameAttribute($value): mixed
     {
-        if (count($this->translations) > 0) {
-            foreach ($this->translations as $translation) {
-                if ($translation['key'] == 'module_name') {
-                    return $translation['value'];
-                }
-            }
-        }
-
-        return $value;
+        return $this->translatedAttribute(key: 'module_name', value: $value);
     }
 
     /**
@@ -112,28 +122,12 @@ class Module extends Model
      */
     public function getDescriptionAttribute($value): mixed
     {
-        if (count($this->translations) > 0) {
-            foreach ($this->translations as $translation) {
-                if ($translation['key'] == 'description') {
-                    return $translation['value'];
-                }
-            }
-        }
-
-        return $value;
+        return $this->translatedAttribute(key: 'description', value: $value);
     }
 
     public function getShortDescriptionAttribute($value): mixed
     {
-        if (count($this->translations) > 0) {
-            foreach ($this->translations as $translation) {
-                if ($translation['key'] == 'short_description') {
-                    return $translation['value'];
-                }
-            }
-        }
-
-        return $value;
+        return $this->translatedAttribute(key: 'short_description', value: $value);
     }
 
 
@@ -183,21 +177,6 @@ class Module extends Model
     }
 
     /**
-     * Back-compat shim. Earlier versions attached top_offer_value /
-     * top_offer_type as scalar subqueries via selectSub, but the SQL
-     * lateral-referenced `modules.id` from inside a derived table — a
-     * pattern that only works on MySQL 8.0.14+ with implicit lateral and
-     * fails on MariaDB and older MySQL ("Unknown column 'modules.id' in
-     * WHERE"). The replacement is `Module::attachTopOffers($collection,
-     * $zoneIds)` which is portable. This scope is now a no-op so existing
-     * callers don't break; call attachTopOffers() after ->get().
-     */
-    public function scopeWithTopOffer($query, array $zoneIds = []): mixed
-    {
-        return $query;
-    }
-
-    /**
      * Populate `top_offer_value` and `top_offer_type` on each module in
      * the given collection, using a single UNION ALL query that never
      * cross-references the outer modules row. Works on every MySQL ≥ 5.7
@@ -224,9 +203,6 @@ class Module extends Model
 
         $zones = empty($zoneIds) ? null : array_values(array_map('intval', $zoneIds));
 
-        // Each leg returns (module_id, discount, discount_type) and reuses the
-        // same visibility scopes the listing and details endpoints apply, so a
-        // module can never advertise a discount the customer cannot reach.
         $visibleItems = Item::query()
             ->active(zone_ids: $zones)
             ->whereIn('items.module_id', $moduleIds);
@@ -271,9 +247,6 @@ class Module extends Model
 
         $rows = $itemLeg->unionAll($storeDiscountLeg)->unionAll($flashLeg)->get();
 
-        // Rank by the money a customer actually saves so a flat amount and a
-        // percentage are never compared as bare numbers. Done in PHP to avoid
-        // window functions (MySQL 8.0+ / MariaDB 10.2+).
         $byModule = [];
         foreach ($rows as $r) {
             $mid = (int) $r->module_id;
@@ -300,46 +273,14 @@ class Module extends Model
             ."CASE WHEN {$type} = 'percent' THEN {$price} * {$discount} / 100 ELSE {$capped} END AS saving";
     }
 
-    public function getIconFullUrlAttribute(){
-        $value = $this->icon;
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] == 'icon') {
-                    return Helpers::get_full_url('module',$value,$storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('module',$value,'public');
-    }
-    public function getThumbnailFullUrlAttribute(){
-        $value = $this->thumbnail;
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] == 'thumbnail') {
-                    return Helpers::get_full_url('module',$value,$storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('module',$value,'public');
-    }
-
-    public function storage()
+    public function getIconFullUrlAttribute()
     {
-        return $this->morphMany(Storage::class, 'data');
+        return $this->storageFullUrl('module', 'icon', $this->icon);
     }
 
-    protected static function booted()
+    public function getThumbnailFullUrlAttribute()
     {
-        static::addGlobalScope('storage', function ($builder) {
-            $builder->with('storage');
-        });
-        static::addGlobalScope('translate', function (Builder $builder) {
-            $builder->with(['translations' => function($query){
-                return $query->where('locale', app()->getLocale());
-            }]);
-        });
+        return $this->storageFullUrl('module', 'thumbnail', $this->thumbnail);
     }
 
     /**
@@ -375,32 +316,8 @@ class Module extends Model
             $item->save();
         });
         static::saved(function ($model) {
-            if($model->isDirty('icon')){
-                $value = Helpers::getDisk();
-
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'icon',
-                ], [
-                    'value' => $value,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-            if($model->isDirty('thumbnail')){
-                $value = Helpers::getDisk();
-
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'thumbnail',
-                ], [
-                    'value' => $value,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            self::recordStorageDisk($model, 'icon', 'icon');
+            self::recordStorageDisk($model, 'thumbnail', 'thumbnail');
         });
 
     }
@@ -409,7 +326,6 @@ class Module extends Model
     {
         static::chunkById(100, function ($modules) use ($force) {
             foreach ($modules as $module) {
-                // Skip if slug already exists (unless forced)
                 if (!$force && !empty($module->slug)) {
                     continue;
                 }

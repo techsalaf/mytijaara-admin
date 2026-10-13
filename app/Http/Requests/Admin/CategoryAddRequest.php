@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Category;
+use App\Rules\ImageFile;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Config;
@@ -16,9 +17,6 @@ use Illuminate\Validation\Validator;
  */
 class CategoryAddRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -34,14 +32,10 @@ class CategoryAddRequest extends FormRequest
         return [
             'name' => 'required|max:100',
             'name.0' => 'required',
-            'image' => 'required_if:position,==,0',
+            'image' => ImageFile::rules('required_if:position,==,0'),
         ];
     }
 
-    /**
-     * Reject a category whose name duplicates a sibling: main categories must be unique
-     * within the module, sub categories unique within their parent.
-     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
@@ -64,9 +58,9 @@ class CategoryAddRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => translate('messages.Name is required!'),
-            'image.required_if' => translate('messages.Image is required!'),
-            'name.0.required' => translate('default_name_is_required'),
+            'name.required' => translate('messages.Name is required'),
+            'image.required_if' => translate('messages.Image is required'),
+            'name.0.required' => translate('Default name is required'),
         ];
     }
 }

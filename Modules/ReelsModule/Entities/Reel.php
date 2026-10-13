@@ -2,10 +2,8 @@
 
 namespace Modules\ReelsModule\Entities;
 
-use App\CentralLogics\Helpers;
-use App\Models\Storage;
+use App\Traits\Model\InvalidatesCacheTrait;
 use App\Models\Store;
-use App\Models\Translation;
 use DateTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,10 +11,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Modules\ReelsModule\Support\ReelModuleConfig;
+use App\Traits\Model\HasTranslationsTrait;
+use App\Traits\Model\HasStorageTrait;
 
 class Reel extends Model
 {
-    use HasFactory;
+
+    use HasFactory, HasTranslationsTrait, HasStorageTrait, InvalidatesCacheTrait;
+
+    protected static array $cacheTags = ['reel'];
 
     protected $guarded = ['id'];
 
@@ -37,7 +40,7 @@ class Reel extends Model
         'end_date' => 'datetime',
     ];
 
-    protected $appends = ['thumbnail_full_url', 'video_full_url', 'reel_status_label'];
+    protected $appends = ['reel_status_label'];
 
     public function created_by()
     {
@@ -54,16 +57,6 @@ class Reel extends Model
         return $this->morphTo();
     }
 
-    public function storage()
-    {
-        return $this->morphMany(Storage::class, 'data');
-    }
-
-    public function translations()
-    {
-        return $this->morphMany(Translation::class, 'translationable');
-    }
-
     public function engagements(): HasMany
     {
         return $this->hasMany(ReelEngagement::class, 'reel_id');
@@ -71,59 +64,34 @@ class Reel extends Model
 
     public function getDescriptionAttribute($value)
     {
-        if (count($this->translations) > 0) {
-            foreach ($this->translations as $translation) {
-                if ($translation['key'] === 'description' && $translation['locale'] === app()->getLocale()) {
-                    return $translation['value'];
-                }
-            }
-        }
-
-        return $value;
+        return $this->translatedAttribute('description', $value);
     }
 
     public function getThumbnailFullUrlAttribute(): ?string
     {
-        $value = $this->thumbnail;
-        if (!$value) {
+        if (! $this->thumbnail) {
             return null;
         }
 
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] === 'thumbnail') {
-                    return Helpers::get_full_url('reels', $value, $storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('reels', $value, 'public');
+        return $this->storageFullUrl('reels', 'thumbnail', $this->thumbnail);
     }
 
     public function getVideoFullUrlAttribute(): ?string
     {
-        $value = $this->video;
-        if (!$value) {
+        if (! $this->video) {
             return null;
         }
 
-        if (count($this->storage) > 0) {
-            foreach ($this->storage as $storage) {
-                if ($storage['key'] === 'video') {
-                    return Helpers::get_full_url('reels', $value, $storage['value']);
-                }
-            }
-        }
-
-        return Helpers::get_full_url('reels', $value, 'public');
+        return $this->storageFullUrl('reels', 'video', $this->video);
     }
 
     public function getReelStatusLabelAttribute(): string
     {
-        if (!$this->status) {
-            return 'deactivated';
-        }
+        return $this->status ? $this->window_state_label : 'deactivated';
+    }
 
+    public function getWindowStateLabelAttribute(): string
+    {
         if ($this->is_always_visible) {
             return 'live';
         }
@@ -171,52 +139,15 @@ class Reel extends Model
             });
     }
 
-    public function hasEngaged(?int $userId, ?string $guestId, string $type): bool
-    {
-        return $this->engagements()
-            ->where('type', $type)
-            ->when($userId, fn (Builder $query) => $query->where('user_id', $userId))
-            ->when(!$userId && $guestId, fn (Builder $query) => $query->where('guest_id', $guestId))
-            ->exists();
-    }
-
     protected static function boot()
     {
         parent::boot();
 
         static::saved(function ($model) {
-            if ($model->isDirty('thumbnail')) {
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'thumbnail',
-                ], [
-                    'value' => Helpers::getDisk(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            self::recordStorageDisk($model, 'thumbnail', 'thumbnail');
 
-            if ($model->isDirty('video')) {
-                DB::table('storages')->updateOrInsert([
-                    'data_type' => get_class($model),
-                    'data_id' => $model->id,
-                    'key' => 'video',
-                ], [
-                    'value' => Helpers::getDisk(),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
+            self::recordStorageDisk($model, 'video', 'video');
         });
     }
 
-    protected static function booted()
-    {
-        static::addGlobalScope('translate', function (Builder $builder) {
-            $builder->with(['translations' => function ($query) {
-                return $query->where('locale', app()->getLocale());
-            }]);
-        });
-    }
 }

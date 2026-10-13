@@ -5,6 +5,9 @@ namespace App\Builder\Resources;
 use App\Builder\Support\CardContext;
 use App\Builder\Support\ItemPricing;
 use App\CentralLogics\Helpers;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use App\Services\Item\ItemService;
+use App\Http\Resources\Common\Item\ProductResource;
 use App\Models\Item;
 use App\Models\Review;
 use Illuminate\Support\Str;
@@ -15,7 +18,7 @@ class ItemDetailResource
 {
     public static function fromOne(Item $item): array
     {
-        $formatted = Helpers::product_data_formatting($item, false, true, app()->getLocale());
+        $formatted = self::productPayload($item);
         $images = collect($formatted['images_full_url'] ?? [])
             ->filter()
             ->values();
@@ -30,11 +33,6 @@ class ItemDetailResource
 
         $pricing = ItemPricing::compute($item);
 
-        // Stock is only meaningful for modules that track it (config/module.php
-        // `stock`) — same gate Admin\OrderController applies before letting a
-        // zero stock mark an item unavailable. `food` does NOT track stock, so
-        // every food row sits at stock = 0; treating that as depleted made the
-        // whole catalog read "Out of Stock" and froze the quantity stepper.
         $moduleType  = $formatted['module_type'] ?? $item->module?->module_type;
         $tracksStock = (bool) data_get(config('module.' . $moduleType), 'stock', false);
         $stock       = (int) ($formatted['stock'] ?? $item->stock ?? 0);
@@ -58,8 +56,6 @@ class ItemDetailResource
             'rating' => $live['rating'],
             'ratingCount' => $live['count'],
             'reviewCount' => (int) ($formatted['review_count'] ?? 0),
-            // 5-bucket distribution for the "View All" reviews drawer's
-            // summary bars. One GROUP-BY query, status-approved only.
             'ratingDistribution' => self::ratingDistribution($item),
             'tracksStock' => $tracksStock,
             'inStock' => !$tracksStock || $stock > 0,
@@ -73,9 +69,6 @@ class ItemDetailResource
             'variationCombinations' => $variationCombinations,
             'tags' => $item->tags->pluck('tag')->filter()->values()->all(),
             'description' => (string) ($formatted['description'] ?? ''),
-            // YouTube link stored on the item; the storefront extracts the
-            // video id and embeds it. Non-YouTube/blank values are ignored
-            // client-side, so pass the raw value through.
             'videoUrl' => $item->video ?: null,
             'reviews' => self::detailReviews($item),
             'isWishlist' => app(WishlistProvider::class)->has((int) $item->id),
@@ -126,9 +119,6 @@ class ItemDetailResource
             ->filter(fn ($variation) => \filled($variation['type'] ?? null))
             ->mapWithKeys(function ($variation) use ($item, $tracksStock) {
                 $originalPrice = (float) ($variation['price'] ?? 0);
-                // Apply the same flash/store/product discount to each
-                // combination's base price so the modal's per-combo display
-                // matches the page header (and the cart line).
                 $pricing = ItemPricing::compute($item, $originalPrice);
                 $stock = (int) ($variation['stock'] ?? 0);
 
@@ -145,24 +135,9 @@ class ItemDetailResource
             ->all();
     }
 
-    /**
-     * Map a single Review row to the shape the frontend expects.
-     * Shared between `detailReviews()` (first-page bootstrap) and
-     * `ItemProvider::listReviews()` (paginated drawer fetch) so both
-     * surfaces render identical cards.
-     */
     public static function reviewRow(Review $review): array
     {
-        $images = collect(Helpers::decodeJsonToArray($review->attachment ?? []))
-            ->map(function ($image) {
-                if (!\is_string($image) || $image === '') {
-                    return null;
-                }
-                return Helpers::get_full_url('review', $image, 'public');
-            })
-            ->filter()
-            ->values()
-            ->all();
+        $images = $review->attachment_full_url;
 
         return [
             'id' => $review->id,
@@ -183,12 +158,6 @@ class ItemDetailResource
 
     private static function detailReviews(Item $item): array
     {
-        // Reviewer identity should display regardless of which storefront
-        // the active customer is on — otherwise reviews authored by users
-        // bound to a different tenant fall out of `$review->customer` and
-        // render as "Customer" with no avatar. Re-query the reviews here
-        // (instead of using the upstream-loaded `$item->reviews`
-        // collection) so the `customer` eager-load can drop HostScope.
         $reviews = $item->reviews()
             ->where('status', 1)
             ->take(12)
@@ -255,5 +224,12 @@ class ItemDetailResource
             $out[$star] = (int) ($rows[$star] ?? 0);
         }
         return $out;
+    }
+
+    private static function productPayload(Item $item): array
+    {
+        app(ItemService::class)->loadProductRelations(new EloquentCollection([$item]));
+
+        return (new ProductResource($item))->toArray(request());
     }
 }

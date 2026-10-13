@@ -7,25 +7,15 @@ use App\Models\Order;
 use App\Models\Module;
 use App\Models\Store;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\Cache;
+use App\Support\Cache\ApiCache;
 use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Data-backed answers for meta questions about the platform — "which module
- * is most popular?", "what's trending?", "top stores?". Keeps the chat from
- * falling back to generic menus when the user is asking a real question that
- * the order data can actually answer.
- *
- * Results are zone-scoped (like the other product/store tools) so they
- * reflect what's popular in the customer's delivery area, not platform-wide.
- * Cached for 5 minutes so repeated questions don't hammer the orders table.
- */
 class GetPlatformStatsTool implements Tool
 {
     private const WINDOW_DAYS = 30;
-    private const CACHE_TTL   = 300; // 5 minutes
+    private const CACHE_TTL   = 300;
     private const TOP_N       = 5;
 
     /**
@@ -63,10 +53,9 @@ class GetPlatformStatsTool implements Tool
             'module' => $this->moduleId,
         ]));
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($metric) {
+        return ApiCache::remember('ai_platform_stats', $cacheKey, function () use ($metric) {
             $since = now()->subDays(self::WINDOW_DAYS);
 
-            // Single shared base query: orders in window, zone-scoped via store.
             $base = fn () => Order::where('orders.created_at', '>=', $since)
                 ->whereNotIn('order_status', ['failed', 'canceled'])
                 ->when(!empty($this->zoneIds), fn ($q) => $q->whereHas(
@@ -100,7 +89,6 @@ class GetPlatformStatsTool implements Tool
         });
     }
 
-    /** Top modules by order count, with percentage share. */
     private function topModules(\Closure $base, int $totalOrders): string
     {
         $rows = (clone $base())
@@ -126,7 +114,6 @@ class GetPlatformStatsTool implements Tool
         return 'Top modules: ' . $items;
     }
 
-    /** Top stores by order count — names only, no IDs in the user-facing string. */
     private function topStores(\Closure $base, int $totalOrders): string
     {
         $rows = (clone $base())
@@ -152,10 +139,6 @@ class GetPlatformStatsTool implements Tool
         return 'Top stores: ' . $items;
     }
 
-    /**
-     * Top categories by quantity sold. Joins order_details → items so we get a
-     * real product-category breakdown rather than module-level only.
-     */
     private function topCategories(\Closure $base): string
     {
         $orderIds = (clone $base())

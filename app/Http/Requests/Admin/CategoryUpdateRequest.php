@@ -16,9 +16,6 @@ use Illuminate\Validation\Validator;
  */
 class CategoryUpdateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -37,10 +34,6 @@ class CategoryUpdateRequest extends FormRequest
         ];
     }
 
-    /**
-     * Reject a rename that would collide with a sibling: main categories must be unique
-     * within the module, sub categories unique within their parent (ignoring itself).
-     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
@@ -64,7 +57,7 @@ class CategoryUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.0.required' => translate('default_name_is_required'),
+            'name.0.required' => translate('Default name is required'),
         ];
     }
 }

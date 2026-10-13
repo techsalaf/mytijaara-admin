@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title', translate('messages.Tax_Setup'))
+@section('title', translate('messages.Tax Setup'))
 
 
     @section('taxmodule')
@@ -21,24 +21,22 @@
 
     <div class="content container-fluid">
 
-        <!-- Page Header -->
         <div class="page-header">
             <div class="row align-items-end">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title">{{ translate('All Taxes') }}</h1>
-                    <p class="text-muted mb-0">{{ translate('Manage system-wide tax rates and rules') }}</p>
+                    <h1 class="page-header-title">{{ translate('All taxes') }}</h1>
+                    <p class="page-header-desc">{{ translate('The tax rates stores apply to their items, and the zones each one covers.') }}</p>
                 </div>
                 @if (count($taxVats) > 0)
                 <div class="col-sm-auto">
                     <button type="button" class="btn btn--primary offcanvas-trigger"
                         data-target="#offcanvas__customBtn">
-                        <i class="tio-add mr-1"></i>{{ translate('messages.create_tax') }}
+                        <i class="tio-add mr-1"></i>{{ translate('messages.Create tax') }}
                     </button>
                 </div>
                 @endif
             </div>
         </div>
-        <!-- End Page Header -->
 
         @if (count($taxVats) > 0)
             <div class="row">
@@ -52,16 +50,16 @@
                                 <form class="search-form min--260">
                                     <div class="input-group input--group">
                                         <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                            placeholder="{{ translate('messages.Ex:') }} 10010"
+                                            placeholder="{{ translate('messages.Ex') }}: 10010"
                                             value="{{ request()?->search ?? null }}"
-                                            aria-label="{{ translate('messages.search') }}">
+                                            aria-label="{{ translate('messages.Search') }}">
                                         <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                                     </div>
                                 </form>
 
-                                @if (request()->get('search'))
+                                @if (request()->input('search'))
                                     <button type="reset" class="btn btn--primary ml-2 location-reload-to-base"
-                                        data-url="{{ url()->full() }}">{{ translate('messages.reset') }}</button>
+                                        data-url="{{ url()->full() }}">{{ translate('messages.Reset') }}</button>
                                 @endif
 
                                 <div class="hs-unfold mr-2">
@@ -69,40 +67,39 @@
                                         href="javascript:;"
                                         data-hs-unfold-options='{
                                             "target": "#usersExportDropdown", "type": "css-animation" }'>
-                                        <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                                        <i class="tio-download-to mr-1"></i> {{ translate('messages.Export') }}
                                     </a>
                                     <div id="usersExportDropdown"
                                         class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                                        <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                        <span class="dropdown-header">{{ translate('messages.Download options') }}</span>
                                         <a id="export-excel" class="dropdown-item"
                                             href="{{ route('taxvat.export', ['type' => 'excel', request()->getQueryString()]) }}">
                                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                                 src="{{ asset('Modules/TaxModule/public/assets/admin/img/excel.svg') }}"
                                                 alt="Image Description">
-                                            {{ translate('messages.excel') }}
+                                            Excel
                                         </a>
                                         <a id="export-csv" class="dropdown-item"
                                             href="{{ route('taxvat.export', ['type' => 'csv', request()->getQueryString()]) }}">
                                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                                 src="{{ asset('Modules/TaxModule/public/assets/admin/img/placeholder-csv-format.svg') }}"
                                                 alt="Image Description">
-                                            {{ translate('messages.csv') }}
+                                            CSV
                                         </a>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Table -->
                         <div class="table-responsive datatable-custom">
                             <table id="datatable"
                                 class="table table-hover table-borderless table-thead-bordered table-nowrap table-align-middle card-table fz--14px">
                         <thead class="thead-light">
                             <tr>
-                                <th class="border-0">{{ translate('sl') }}</th>
-                                <th class="border-0">{{ translate('messages.tax_name') }}</th>
-                                <th class="border-0">{{ translate('messages.tax_rate') }}</th>
-                                <th class="border-0 text-end">{{ translate('messages.status') }}</th>
-                                <th class="border-0 text-end">{{ translate('messages.action') }}</th>
+                                <th class="border-0">{{ translate('SL') }}</th>
+                                <th class="border-0">{{ translate('messages.Tax name') }}</th>
+                                <th class="border-0">{{ translate('messages.Tax rate') }}</th>
+                                <th class="border-0 text-end">{{ translate('messages.Status') }}</th>
+                                <th class="border-0 text-end">{{ translate('messages.Action') }}</th>
                             </tr>
                         </thead>
 
@@ -122,10 +119,10 @@
                                             class="toggle-switch ml-auto confirmStatus justify-content-end toggle-switch-sm"
                                             data-url="{{ route('taxvat.status', $taxVat->id) }}"
                                             data-id="{{ $taxVat->id }}" data-is_active="{{ $taxVat->is_active }}"
-                                            data-on_title="{{ translate('messages.Turn On The Status?') }}"
-                                            data-off_title="{{ translate('messages.Turn Off The Status?') }}"
-                                            data-on_message= "{{ translate('Are you sure, do you want to turn ON the VAT status from your system. It will  effect on tax calculation & report') }}"
-                                            data-off_message= "{{ translate('Are you sure, do you want to turn off the VAT status from your system. It will  effect on tax calculation & report') }}"
+                                            data-on_title="{{ translate('Turn on the status?') }}"
+                                            data-off_title="{{ translate('Turn off the status?') }}"
+                                            data-on_message= "{{ translate('Are you sure you want to turn ON the VAT status? It will affect tax calculation and reports.') }}"
+                                            data-off_message= "{{ translate('Are you sure you want to turn OFF the VAT status? It will affect tax calculation and reports.') }}"
                                             for="status_{{ $taxVat->id }}">
                                             <input type="checkbox" {{ $taxVat->is_active == 1 ? 'checked' : '' }}
                                                 class="toggle-switch-input" id="status_{{ $taxVat->id }}">
@@ -135,7 +132,7 @@
                                         </label>
                                     </td>
                                     <td class="text-end">
-                                        <a class="btn btn-sm ml-auto text-end action-btn info--outline text--info info-hover offcanvas-trigger get_data"
+                                        <a class="btn btn-sm ml-auto text-end action-btn action-btn--edit offcanvas-trigger get_data"
                                             data-target="#editTaxData" data-id="{{ $taxVat->id }}"
                                             data-name="{{ $taxVat->name }}" data-tax_rate="{{ $taxVat->tax_rate }}"
                                             data-is_active="{{ $taxVat->is_active }}"
@@ -149,7 +146,6 @@
                                 </tbody>
                             </table>
                         </div>
-                        <!-- End Table -->
                     </div>
                 </div>
             </div>
@@ -158,16 +154,14 @@
                     <div class="max-349 text-center mx-auto my-5">
                         <img src="{{ asset('Modules/TaxModule/public/assets/admin/img/tax-error.png') }}" alt="img"
                             class="mb-20">
-                        <h4 class="mb-2">{{ translate('Currently you don’t have any Tax') }}</h4>
+                        <h4 class="mb-2">{{ translate('Currently you don\'t have any Tax') }}</h4>
                         <p class="mb-20">
                             {{ translate('In this page you see all the Tax you added. Please create new tax to collect tax') }}
                         </p>
                         <div class="d-flex align-items-center justify-content-center gap-md-3 gap-2">
 
-                            {{-- <button type="button"
-                                class="btn btn--primary btn-outline-primary">{{ translate('messages.import') }}</button> --}}
                             <button type="button" class="btn btn--primary offcanvas-trigger"
-                                data-target="#offcanvas__customBtn">{{ translate('messages.create_tax') }}</button>
+                                data-target="#offcanvas__customBtn">{{ translate('messages.Create tax') }}</button>
                         </div>
                     </div>
                 </div>
@@ -182,7 +176,7 @@
                 @csrf
                 <div
                     class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
-                    <h3 class="mb-0">{{ translate('messages.create_tax') }}</h2>
+                    <h3 class="mb-0">{{ translate('messages.Create tax') }}</h2>
                         <button type="button"
                             class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary text-dark offcanvas-close fz-15px p-0"
                             aria-label="Close">&times;</button>
@@ -193,7 +187,7 @@
                         <div class="mb-15">
                             <h4 class="mb-0">{{ translate('Availability') }}</h4>
                             <p class="fz-12px">
-                                {{ translate('If you turn off this status your tax calculation will effect.') }}</p>
+                                {{ translate('If you turn off this status, your tax calculation will be affected.') }}</p>
                         </div>
                         <label
                             class="border d-flex align-items-center bg-white-n justify-content-between rounded p-10px px-3">
@@ -209,17 +203,17 @@
                     </div>
                     <div class="bg--secondary rounded p-20 mb-20">
                         <div class="form-group">
-                            <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_name') }} <span class="text-danger">*</span></label>
+                            <label class="mb-2 fz--14px d-block">{{ translate('messages.Tax name') }} <span class="text-danger">*</span></label>
                             <input type="text" name="name" class="form-control h--45px border-0 pl-unset" required
                                 placeholder="{{ translate('Type tax name') }}" value="{{ old('name') }}" maxlength="50">
                         </div>
                         <div class="form-group mb-0">
-                            <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_rate') }} <span class="text-danger">*</span></label>
+                            <label class="mb-2 fz--14px d-block">{{ translate('messages.Tax rate') }} <span class="text-danger">*</span></label>
                             <div class="custom-group-btn border">
                                 <div class="flex-sm-grow-1">
                                     <input type="number" value="{{ old('tax_rate') }}" required name="tax_rate"
                                         min="0" step="0.001" max="100"
-                                        class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex: 5') }}">
+                                        class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex') . ': 5' }}">
                                 </div>
                                 <div class="flex-shrink-0">
                                     <span class="input-group-text ltr border-0"> % </span>
@@ -230,7 +224,7 @@
                 </div>
         </div>
         <div class="offcanvas-footer p-3 d-flex align-items-center justify-content-center gap-3">
-            <button type="reset" class="btn w-100 btn--secondary h--40px">{{ translate('messages.reset') }}</button>
+            <button type="reset" class="btn w-100 btn--secondary h--40px">{{ translate('messages.Reset') }}</button>
             <button type="submit" class="btn w-100 btn--primary h--40px">{{ translate('messages.Submit') }}</button>
         </div>
         </form>
@@ -244,7 +238,7 @@
                 @csrf
                 <div
                     class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
-                    <h3 class="mb-0">{{ translate('messages.edit_tax') }}</h2>
+                    <h3 class="mb-0">{{ translate('messages.Edit tax') }}</h2>
                         <button type="button"
                             class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary text-dark offcanvas-close fz-15px p-0"
                             aria-label="Close">&times;</button>
@@ -254,7 +248,7 @@
                         <div class="mb-15">
                             <h4 class="mb-0">{{ translate('Availability') }}</h4>
                             <p class="fz-12px">
-                                {{ translate('If you turn off this status your tax calculation will effect.') }}</p>
+                                {{ translate('If you turn off this status, your tax calculation will be affected.') }}</p>
                         </div>
                         <label
                             class="border d-flex align-items-center bg-white-n justify-content-between rounded p-10px px-3">
@@ -270,17 +264,17 @@
                     </div>
                     <div class="bg--secondary rounded p-20 mb-20">
                         <div class="form-group">
-                            <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_name') }} <span class="text-danger">*</span></label>
+                            <label class="mb-2 fz--14px d-block">{{ translate('messages.Tax name') }} <span class="text-danger">*</span></label>
                             <input type="text" name="name" readonly class="form-control h--45px border-0 pl-unset"
                                 placeholder="{{ translate('VAT') }}" id="tax_name">
                         </div>
                         <div class="form-group mb-0">
-                            <label class="mb-2 fz--14px d-block">{{ translate('messages.tax_rate') }} <span class="text-danger">*</span></label>
+                            <label class="mb-2 fz--14px d-block">{{ translate('messages.Tax rate') }} <span class="text-danger">*</span></label>
                             <div class="custom-group-btn border">
                                 <div class="flex-sm-grow-1">
                                     <input type="number" name="tax_rate" id="tax_rate" required name="tax_rate"
                                         min="0" step="0.001" max="100"
-                                        class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex: 5') }}">
+                                        class="form-control h--45px border-0 pl-unset" placeholder="{{ translate('Ex') . ': 5' }}">
                                 </div>
                                  <div class="flex-shrink-0">
                                     <span class="input-group-text ltr border-0"> % </span>
@@ -304,8 +298,7 @@
                             </defs>
                         </svg>
                         <p class="fz-12px mb-0">
-                            {{ translate('Recheck your changes & make sure before update. When you change it will effect on all related') }}
-                            <span class="fz-12px font-semibold title-clr">{{ translate('Tax Calculation.') }}</span>
+                            {{ translate('Recheck your changes before updating. A change here affects all related tax calculations.') }}
                         </p>
                     </div>
                 </div>
@@ -321,7 +314,6 @@
 
     <div id="offcanvasOverlay" class="offcanvas-overlay"></div>
 
-    <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -347,7 +339,6 @@
     </div>
 
 
-<!-- global guideline view Offcanvas here -->
 <div id="global_guideline_offcanvas" class="custom-offcanvas d-flex flex-column justify-content-between">
     <form action="{{ route('taxvat.store') }}" method="post">
         <div>
@@ -368,10 +359,10 @@
                                 <div class="btn-collapse-icon w-35px h-35px bg-white d-flex align-items-center justify-content-center border icon-btn rounded-circle fs-12 lh-1">
                                     <i class="tio-down-ui top-01 color-656566"></i>
                                 </div>
-                                <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('What is Tax ?') }}</span>
+                                <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('What is Tax?') }}</span>
                             </button>
                             <a href="javascript:void(0)" class="fs-12 text-nowrap theme-clr text-underline">
-                                {{translate('Let’s Setup')}}
+                                {{translate('Let\'s setup')}}
                             </a>
                         </div>
                         <div class="collapse mt-3 show" id="collapseGeneralSetup_01">
@@ -389,7 +380,7 @@
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                         <li class="fs-12 color-656566">{{translate('VAT (Value Added Tax)')}}</li>
                                         <li class="fs-12 color-656566">{{translate('GST (Goods & Services Tax)')}}</li>
-                                        <li class="fs-12 color-656566">{{translate('Service Tax')}}</li>
+                                        <li class="fs-12 color-656566">{{translate('Service tax')}}</li>
                                         <li class="fs-12 color-656566">{{translate('Sales Tax')}}</li>
                                     </ul>
                                 </div>
@@ -406,13 +397,13 @@
                                 <div class="btn-collapse-icon w-35px h-35px bg-white d-flex align-items-center justify-content-center border icon-btn rounded-circle fs-12 lh-1 collapsed">
                                     <i class="tio-down-ui top-01 color-656566"></i>
                                 </div>
-                                <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Why Set Up Taxes ?') }}</span>
+                                <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Why Set Up Taxes?') }}</span>
                             </button>
                         </div>
                         <div class="collapse mt-3" id="collapseGeneralSetup_032">
                             <div class="card rounded border p-3 card-body">
                                 <div class="mb-3">
-                                    <h6 class="mb-2 fs-12 color-656566">{{translate('Enabling tax in your system helps you:')}}</h6>
+                                    <h6 class="mb-2 fs-12 color-656566">{{ translate('Enabling tax in your system helps you') }}:</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                         <li class="fs-12 color-656566">{{translate('Stay legally compliant with local tax laws')}}</li>
                                         <li class="fs-12 color-656566">{{translate('Automatically calculate and apply the correct tax during checkout')}}</li>
@@ -434,7 +425,7 @@
                                 <div class="btn-collapse-icon w-35px h-35px bg-white d-flex align-items-center justify-content-center border icon-btn rounded-circle fs-12 lh-1 collapsed">
                                     <i class="tio-down-ui top-01 color-656566"></i>
                                 </div>
-                                <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Follow these steps to add a new tax rate:') }}</span>
+                                <span class="font-semibold text-left fs-14 text-title line--limit-1">{{ translate('Follow these steps to add a new tax rate') }}:</span>
                             </button>
                         </div>
                         <div class="collapse mt-3" id="collapseGeneralSetup_033">
@@ -443,20 +434,20 @@
                                     <h6 class="mb-2 fs-12 color-656566">{{translate('Activate the Tax Status')}}</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                         <li class="fs-12 color-656566">{{translate('Turn ON the Status toggle to make the tax active.')}}</li>
-                                        <li class="fs-12 color-656566">{{translate('If it’s OFF, the tax will be saved but not applied to any transaction.')}}</li>
+                                        <li class="fs-12 color-656566">{{translate('If it\'s OFF, the tax will be saved but not applied to any transaction.')}}</li>
                                     </ul>
                                 </div>
                                 <div class="mb-3">
                                     <h6 class="mb-2 fs-12 color-656566">{{translate('Enter a Tax Name')}}</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
                                         <li class="fs-12 color-656566">{{translate('Go to the Tax Name field and enter your preferred name.')}}</li>
-                                        <li class="fs-12 color-656566">{{translate('Example: Service Tax, VAT, GST, Sales Tax, etc.')}}</li>
+                                        <li class="fs-12 color-656566">{{translate('Example') . ': ' . 'Service Tax, VAT, GST, Sales Tax, etc.'}}</li>
                                     </ul>
                                 </div>
                                 <div class="mb-3">
                                     <h6 class="mb-2 fs-12 color-656566">{{translate('Set the Tax Rate')}}</h6>
                                     <ul class="mb-0 list-group pl-3 d-flex flex-column gap-1px">
-                                        <li class="fs-12 color-656566">{{translate('In the Tax Rate box, enter the percentage (e.g., 10%).')}}</li>
+                                        <li class="fs-12 color-656566">{{translate('In the tax rate box, enter the percentage.')}} {{translate('Example')}}: 10%</li>
                                         <li class="fs-12 color-656566">{{translate('This is the rate that will be applied to all taxable items or services.')}}</li>
                                     </ul>
                                 </div>
@@ -504,7 +495,6 @@
     </form>
 </div>
 <div id="offcanvasOverlay" class="offcanvas-overlay"></div>
-<!-- global guideline view Offcanvas end -->
 @endsection
 
 @push('script_2')

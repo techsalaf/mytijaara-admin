@@ -6,11 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * The service tax payer is standardized to `service_provider` — the string the Service module's
-     * cart and booking read (CalculateTaxService with tax_payer `service_provider`). The tax-setup UI
-     * previously stored it as `service`, so rename any existing rows in the tax tables to match.
-     */
     public function up(): void
     {
         foreach (['system_tax_setups', 'order_taxes'] as $table) {

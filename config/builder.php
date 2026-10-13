@@ -79,31 +79,19 @@ return [
     'capabilities' => [
         'schemaVersion' => 1,
 
-        // Storefront profile-edit field editability. Phone is the account's
-        // login identity → locked; email is editable. Read on the client
-        // (EditProfileModal disables the field) and enforced server-side in
-        // CustomerAuthProvider::updateProfile.
         'profile' => [
             'phoneEditable' => false,
             'emailEditable' => true,
         ],
 
-        // Business-model / item presentation.
-        // itemPresentation: 'auto' (food→modal, else page) | 'modal' | 'page'.
         'modules' => ['mode' => 'multi', 'switcher' => true, 'itemPresentation' => 'auto'],
 
-        // Currency. Only 'single' is implemented today; 'multi' is reserved.
         'currency' => ['mode' => 'single', 'switcher' => false],
 
-        // Location / map / address book.
         'location' => [
             'enabled' => true, 'map' => true, 'currentLocation' => true,
             'zoneBased' => true, 'savedAddresses' => true,
-            // Email input on every address is a 6Valley-only field; 6amMart
-            // collects email only in guest checkout.
             'addressEmail' => false,
-            // Extra address inputs rendered under name/phone in the address
-            // form. 6amMart stores road/house/floor.
             'addressFields' => [
                 ['key' => 'road',  'label' => 'address_form_street', 'half' => false],
                 ['key' => 'house', 'label' => 'address_form_house',  'half' => true],
@@ -111,7 +99,6 @@ return [
             ],
         ],
 
-        // Checkout surface.
         'checkout' => [
             'deliveryTypes' => ['home', 'takeaway', 'schedule'],
             'tips' => true, 'tipPresets' => [10, 15, 20, 40],
@@ -120,35 +107,23 @@ return [
             'orderNote' => false, 'savedAddress' => true,
         ],
 
-        // Payment rails + flow. timing: 'after' (place→pay) is the only mode
-        // implemented today; 'before' is reserved for a future pre-auth flow.
         'payment' => [
             'cod' => true, 'digital' => true, 'offline' => true,
             'wallet' => true, 'partial' => true,
             'timing' => 'after', 'retryReminder' => true,
         ],
 
-        // Cross-cutting commerce features.
         'features' => [
             'wallet' => true, 'loyaltyPoint' => true, 'referral' => true,
             'reviews' => true, 'inbox' => true, 'pushNotif' => true,
             'guestCheckout' => true, 'reorder' => true, 'wishlist' => true, 'blog' => false,
-            // Buy Now (instant checkout) button on the item modal / details page /
-            // quick-view. Off for StackFood + 6amMart per product decision — the
-            // storefront uses the add-to-cart flow only.
             'buyNow' => false,
-            // Delivery-partner contact affordances on the order-details card.
-            // 6amMart assigns a deliveryman with a reachable phone + storefront
-            // inbox, so both the tap-to-call and chat actions are available.
             'deliveryManChat' => true, 'deliveryManCall' => true,
         ],
 
-        // Auth methods (folds the existing social/login switches under one axis).
         'auth' => [
             'manual' => true, 'otp' => true, 'otpChannel' => 'sms',
             'social' => ['google' => true, 'facebook' => true, 'apple' => true],
-            // Storefront forgot-password: `status` toggles the whole feature;
-            // `modes` lists the allowed reset channels. 6amMart allows both.
             'forgotPassword' => ['status' => true, 'modes' => ['phone', 'email']],
         ],
     ],

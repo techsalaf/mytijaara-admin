@@ -29,13 +29,13 @@ class BrandRepository implements BrandRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->brand->where($params)->first();
+        return $this->brand->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
 
-        return $this->brand->where(function($query){
+        return $this->brand->with($relations)->withCount('items')->where(function($query){
             $query->whereNull('module_id')->orWhere('module_id',  Config::get('module.current_module_id'));
         })->get();
     }
@@ -43,9 +43,9 @@ class BrandRepository implements BrandRepositoryInterface
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
         $key = explode(' ', $searchValue ?? '');
-        return $this->brand->where(function($query){
+        return $this->brand->with($relations)->withCount('items')->where(function($query){
             $query->whereNull('module_id')->orWhere('module_id',  Config::get('module.current_module_id'));
-            })->orderBy('name')
+            })->latest()
             ->when($searchValue , function($q) use($key){
                 $q->where(function ($q) use ($key) {
                     foreach ($key as $value) {
@@ -92,7 +92,7 @@ class BrandRepository implements BrandRepositoryInterface
 
     public function getFirstWithoutGlobalScopeWhere(array $params, array $relations = []): ?Model
     {
-        return $this->brand->withoutGlobalScope('translate')->where($params)->first();
+        return $this->brand->with($relations)->withoutGlobalScope('translate')->with(['translations', 'storage'])->where($params)->first();
     }
 
     public function getDropdownList(Request $request, int|string $dataLimit = DEFAULT_DATA_LIMIT): Collection

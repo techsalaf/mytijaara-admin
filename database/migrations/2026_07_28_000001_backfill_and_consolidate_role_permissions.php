@@ -3,15 +3,8 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-/**
- * Maps permission keys from the previously released scheme onto the current
- * group-wise scheme, so upgrading installs keep the access their roles already had.
- *
- * Only keys that shipped in a prior release appear here.
- */
 return new class extends Migration
 {
-    /** Retired released key => key that now covers it. A key may map to several. */
     private const RENAMED = [
         'zone'                  => ['settings'],
         'apps_setting'          => ['system_config'],
@@ -39,7 +32,6 @@ return new class extends Migration
         'push_ntf'              => ['notification'],
     ];
 
-    /** Still-current key => new sibling keys split out of it. */
     private const SPLIT = [
         'report'             => ['sales_report', 'performance_report', 'earning_report', 'expense_report',
                                  'disbursement_report', 'vendor_vat_report', 'admin_text_module'],

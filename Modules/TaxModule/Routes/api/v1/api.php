@@ -1,8 +1,7 @@
 <?php
 
+use Modules\TaxModule\Http\Controllers\Api\V1\Common\Tax\TaxController;
 use Illuminate\Support\Facades\Route;
-
-use Modules\TaxModule\Http\Controllers\Api\V1\TaxController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,8 +13,9 @@ use Modules\TaxModule\Http\Controllers\Api\V1\TaxController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-Route::group(['prefix' => 'taxvat', 'as' => 'taxvat.'], function () {
-        Route::get('get-taxVat-list', [TaxController::class, 'getTaxVatList']);
-        Route::put('get-calculated-tax', [TaxController::class, 'getCalculateTax']);
+Route::prefix('taxvat')->name('taxvat.')->group(function () {
+    Route::controller(TaxController::class)->group(function () {
+        Route::get('get-taxVat-list', 'index');
+        Route::put('get-calculated-tax', 'calculate');
+    });
 });

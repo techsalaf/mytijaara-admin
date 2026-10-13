@@ -1,54 +1,45 @@
 @extends('layouts.admin.app')
 
-@section('title', translate('messages.Store_Earning_Report'))
+@section('title', translate('Store earning report'))
 
 @section('store_earning_report')
     active
 @endsection
 @section('content')
-    @php
-        $activeTab = request()->tab ?: 'all';
-        $reportOverviewTitle = match ($activeTab) {
-            'parcel' => 'Comprehensive Financial Overview and Analytics for Store Parcel',
-            'rental' => 'Comprehensive Financial Overview and Analytics for Store Rental',
-            'ride-share' => 'Comprehensive Financial Overview and Analytics for Store Rides',
-            'service' => 'Comprehensive Financial Overview and Analytics for Store Service',
-            default => 'Comprehensive Financial Overview and Analytics for Store Orders',
-        };
-    @endphp
     <div class="content container-fluid">
-        <!-- Page Header -->
-        <div class="page-header pb-0">
+        <div class="page-header">
             <div>
                 <h1 class="page-header-title text-capitalize">
-                    {{translate('messages.Vendor_Earning_Report') }}
+                    <span class="page-header-icon">
+                        <img src="{{ asset('public/assets/admin/img/outline/report.svg') }}" class="w--26" alt="">
+                    </span>
+                    <span>
+                        {{ translate('Vendor earning report') }}
+                    </span>
                 </h1>
-                <p>
-                    {{ $reportOverviewTitle }}
-                </p>
+                <p class="page-header-desc">{{ translate('What each store earned, and what you took from it in commission.') }}</p>
             </div>
         </div>
-        <!-- End Page Header -->
 
-        <div class="js-nav-scroller hs-nav-scroller-horizontal mb-20">
+        <div class="js-nav-scroller hs-nav-scroller-horizontal mb-20 mt-2">
             <ul class="nav mb-0 nav-tabs border-0 nav--tabs nav--pills">
                 <li class="nav-item">
                     <a class="nav-link {{ !in_array(request()->tab, ['rental', 'service']) ? 'active' : '' }}"
                         href="{{ route('admin.transactions.report.store-earning-report') }}"
-                        aria-disabled="true">{{ translate('messages.Order Modules') }}</a>
+                        aria-disabled="true">{{ translate('Order modules') }}</a>
                 </li>
                 @if (addon_published_status('Rental'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->tab === 'rental' ? 'active' : '' }}"
                             href="{{ route('admin.transactions.report.store-earning-report', ['tab' => 'rental']) }}"
-                            aria-disabled="true">{{ translate('messages.Rental Module') }}</a>
+                            aria-disabled="true">{{ translate('Rental module') }}</a>
                     </li>
                 @endif
                 @if (addon_published_status('Service'))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->tab === 'service' ? 'active' : '' }}"
                             href="{{ route('admin.transactions.report.store-earning-report', ['tab' => 'service']) }}"
-                            aria-disabled="true">{{ translate('messages.Service Module') }}</a>
+                            aria-disabled="true">{{ translate('Service module') }}</a>
                     </li>
                 @endif
 

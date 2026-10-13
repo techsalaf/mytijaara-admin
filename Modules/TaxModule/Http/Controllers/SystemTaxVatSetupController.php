@@ -87,7 +87,7 @@ class SystemTaxVatSetupController extends Controller
             $this->updateSystemTaxData($request, $request->prescription_system_tax_id, $request->tax_ids_for_prescription, $request->tax_status);
         }
 
-        $this->showNotification('successMessage', translate('messages.Tax_Settings_Updated_Successfully'));
+        $this->showNotification('successMessage', translate('Updated successfully'));
         return back();
     }
 
@@ -178,7 +178,7 @@ class SystemTaxVatSetupController extends Controller
             }
         }
 
-        return response()->json(['id' => $systemTaxVat->id, 'status' =>  $systemTaxVat->is_active, 'message' => translate('messages.vendor_tax_status_updated')]);
+        return response()->json(['id' => $systemTaxVat->id, 'status' =>  $systemTaxVat->is_active, 'message' => translate('messages.Vendor tax status updated')]);
     }
     private function validateRequest(Request $request, $id = null): void
     {

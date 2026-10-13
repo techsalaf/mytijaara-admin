@@ -1,5 +1,12 @@
 function HSDemo() {
 
+  var builderAnchors = ["headerMain", "headerFluid", "headerDouble", "sidebarMain", "sidebarCompact"],
+    builderControls = ["js-builder-disabled", "js-builder-preview", "js-builder-reset"];
+
+  if (builderAnchors.concat(builderControls).some(function (id) { return !document.getElementById(id); })) {
+    return;
+  }
+
   var settings = {
     headerMain: document.getElementById("headerMain").innerHTML,
     headerFluid: document.getElementById("headerFluid").innerHTML,

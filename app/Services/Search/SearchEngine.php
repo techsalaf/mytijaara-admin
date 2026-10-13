@@ -50,8 +50,6 @@ class SearchEngine
                 'fullRoute' => url($uri),
                 'currentModuleType' => $this->context->moduleType,
                 'data_from' => 'files',
-                // Carried only for ranking (stripped in rank()) so a page that matched via its
-                // keywords isn't dumped to the bottom below unrelated title-only matches.
                 'keywords' => $route['keywords'] ?? '',
             ];
         }

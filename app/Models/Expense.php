@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use App\Traits\HandlesMissingAddonRelations;
-use App\Traits\ReportFilter;
+use App\Traits\Item\MissingAddonRelationsTrait;
+use App\Traits\Report\ReportFilterTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Rental\Entities\Trips;
@@ -12,7 +12,7 @@ use Modules\Service\Entities\ServiceBooking;
 
 class Expense extends Model
 {
-    use HandlesMissingAddonRelations, HasFactory, ReportFilter;
+    use MissingAddonRelationsTrait, HasFactory, ReportFilterTrait;
     protected $casts = [
         'id' => 'integer',
         'order_id' => 'integer',
@@ -79,5 +79,20 @@ class Expense extends Model
             ->whereNull('ride_id')
             ->whereNull('trip_id')
             ->whereNull('service_booking_id');
+    }
+
+    // Earning figures already exclude a refunded order via Order::scopeNotRefunded() (joined
+    // through order_transactions), but nothing excluded its expense rows -- a bundle_discount,
+    // happy_hour_discount, bogo_discount or discount_on_product row written at delivery time
+    // stayed counted in every "Total Expenses" figure forever, even after the order's own
+    // revenue was correctly dropped. Trip/ride/service-booking expenses have no refunded concept
+    // in this codebase (no status value for it on those models), so a row with no order_id is
+    // left untouched -- this is a safe no-op for every addon-sourced expense query too.
+    public function scopeNotRefunded($query)
+    {
+        return $query->where(function ($query) {
+            $query->whereNull('order_id')
+                ->orWhereHas('order', fn ($order) => $order->where('order_status', '!=', 'refunded'));
+        });
     }
 }

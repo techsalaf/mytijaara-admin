@@ -4,6 +4,7 @@ namespace Modules\ReelsModule\Support;
 
 use App\Models\Item;
 use App\Models\Store;
+use App\Services\Store\StoreService;
 use Closure;
 
 class ReelProductableResolver
@@ -33,13 +34,17 @@ class ReelProductableResolver
 
         $store = $store instanceof Store
             ? $store
-            : Store::withoutGlobalScopes()->with('module:id,module_type')->find($store);
+            : app(StoreService::class)->findUnscopedWithModule($store);
 
         if (!$store) {
             return $empty;
         }
 
         $moduleType = $store->module?->module_type;
+
+        $storeScoped = fn ($query) => $query
+            ->where('store_id', $store->id)
+            ->when(ReelModuleConfig::isMultiModule(), fn ($q) => $q->where('module_id', (int) $store->module_id));
 
         if ($moduleType === 'rental') {
             return self::match(
@@ -50,22 +55,10 @@ class ReelProductableResolver
         }
 
         if ($moduleType === 'service') {
-            return self::match(
-                \Modules\Service\Entities\Service::class,
-                $productId,
-                fn ($query) => $query
-                    ->where('store_id', $store->id)
-                    ->when(ReelModuleConfig::isMultiModule(), fn ($q) => $q->where('module_id', (int) $store->module_id))
-            );
+            return self::match(\Modules\Service\Entities\Service::class, $productId, $storeScoped);
         }
 
-        return self::match(
-            Item::class,
-            $productId,
-            fn ($query) => $query
-                ->where('store_id', $store->id)
-                ->when(ReelModuleConfig::isMultiModule(), fn ($q) => $q->where('module_id', (int) $store->module_id))
-        );
+        return self::match(Item::class, $productId, $storeScoped);
     }
 
     /**

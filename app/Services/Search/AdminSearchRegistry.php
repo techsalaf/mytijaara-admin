@@ -4,11 +4,15 @@ namespace App\Services\Search;
 
 use App\Models\AddOn;
 use App\Models\Admin;
+use App\Models\AdditionalDeliveryCharge;
 use App\Models\AdminRole;
 use App\Models\Advertisement;
+use App\Models\Area;
 use App\Models\Attribute;
 use App\Models\Banner;
+use App\Models\BogoOffer;
 use App\Models\Brand;
+use App\Models\Bundle;
 use App\Models\Campaign;
 use App\Models\CashBack;
 use App\Models\Category;
@@ -16,9 +20,17 @@ use App\Models\CommonCondition;
 use App\Models\Contact;
 use App\Models\Coupon;
 use App\Models\DeliveryMan;
+use App\Models\DeliveryRule;
+use App\Models\Dimension;
 use App\Models\Disbursement;
 use App\Models\DMVehicle;
+use App\Models\EtaConfiguration;
 use App\Models\FlashSale;
+use App\Models\FreeDelivery;
+use App\Models\HappyHour;
+use App\Models\SurgePrice;
+use App\Models\Weight;
+use App\Models\ZipCode;
 use App\Models\Item;
 use App\Models\ItemCampaign;
 use App\Models\LoyaltyPointTransaction;
@@ -62,6 +74,7 @@ class AdminSearchRegistry
             self::settings(),
             self::rental(),
             self::rideShare(),
+            self::deliveryZoneSuite(),
         );
     }
 
@@ -70,6 +83,21 @@ class AdminSearchRegistry
         return function (Builder $query, SearchContext $context) {
             $query->when($context->hasModuleId(), function (Builder $query) use ($context) {
                 $query->where('module_id', $context->moduleId);
+            });
+        };
+    }
+
+    /**
+     * Same scoping as byModule(), for a model that claims a SET of modules through a
+     * modules() belongsToMany pivot rather than a single module_id column — EtaConfiguration
+     * and FreeDelivery both work this way (§E1/§10.3: a configuration can cover several
+     * modules at once).
+     */
+    private static function byModulesRelation(): callable
+    {
+        return function (Builder $query, SearchContext $context) {
+            $query->when($context->hasModuleId(), function (Builder $query) use ($context) {
+                $query->whereHas('modules', fn (Builder $q) => $q->where('modules.id', $context->moduleId));
             });
         };
     }
@@ -330,7 +358,7 @@ class AdminSearchRegistry
                 ->columns(['type'])
                 ->when(fn (SearchContext $c) => $c->moduleTypeIsNot('rental'))
                 ->name(fn ($vehicle) => $vehicle->type)
-                ->routes(fn (string $uri) => str_contains($uri, 'delivery-man/vehicle/edit')),
+                ->routes(fn (string $uri) => str_contains($uri, 'zone/vehicle-category/edit')),
 
             SearchEntity::make('delivery-man')
                 ->model(DeliveryMan::class)
@@ -558,6 +586,131 @@ class AdminSearchRegistry
                 ->columns(['module_name', 'module_type'])
                 ->name(fn ($module) => $module->module_name)
                 ->routes(fn (string $uri) => str_contains($uri, 'business-settings/module') && ! str_contains($uri, 'export')),
+        ];
+    }
+
+    /**
+     * The ported delivery/zone suite (TC_742) — none of these were registered when the port
+     * shipped, so searching for a real BOGO offer, a surge price, a delivery rule by name (and
+     * so on) returned nothing while an ordinary Zone or Store search worked normally. Modelled
+     * on the settings() entries above: most of these screens have no dedicated "name" column
+     * (free delivery, additional delivery charge, zip code), so their name() reads the zone
+     * they belong to instead of inventing a label the screen itself does not show.
+     *
+     * Bundle joined this list later, under the same TC_742 follow-up: it is the same class of
+     * feature (module-scoped, zone-agnostic, admin-managed promotion) as BOGO Offer and Happy
+     * Hour beside it, and was missed for the identical reason -- it shipped after the registry
+     * existed and nobody wired it in. Registered on the same byModule()/moduleScoped() pattern,
+     * reading the plain `name` column the bundles table actually has (not `title`, unlike its
+     * BOGO and Happy Hour neighbours).
+     */
+    private static function deliveryZoneSuite(): array
+    {
+        return [
+            SearchEntity::make('bogo-offer')
+                ->model(BogoOffer::class)
+                ->prefix('BOGO Offer')
+                ->columns(['title', 'description'])
+                ->query(self::byModule())
+                ->moduleScoped()
+                ->name(fn ($offer) => $offer->title)
+                ->routes(fn (string $uri) => str_contains($uri, 'admin/bogo-offer/edit')),
+
+            SearchEntity::make('bundle')
+                ->model(Bundle::class)
+                ->prefix('Bundle')
+                ->columns(['name', 'description'])
+                ->query(self::byModule())
+                ->moduleScoped()
+                ->name(fn ($bundle) => $bundle->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'admin/bundle/edit')),
+
+            SearchEntity::make('happy-hour')
+                ->model(HappyHour::class)
+                ->prefix('Happy Hour')
+                ->columns(['title', 'short_description'])
+                ->query(self::byModule())
+                ->moduleScoped()
+                ->name(fn ($happyHour) => $happyHour->title)
+                ->routes(fn (string $uri) => str_contains($uri, 'admin/happy-hour/edit')),
+
+            SearchEntity::make('surge-price')
+                ->model(SurgePrice::class)
+                ->prefix('Surge Price')
+                ->columns(['surge_price_name', 'customer_note'])
+                ->name(fn ($surge) => $surge->surge_price_name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/surge-price/edit')),
+
+            SearchEntity::make('delivery-rule')
+                ->model(DeliveryRule::class)
+                ->prefix('Delivery Rule')
+                ->columns(['name'])
+                ->query(self::byModule())
+                ->moduleScoped()
+                ->name(fn ($rule) => $rule->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/delivery-rule/edit')),
+
+            SearchEntity::make('eta-configuration')
+                ->model(EtaConfiguration::class)
+                ->prefix('ETA Configuration')
+                ->columns(['name'])
+                ->query(self::byModulesRelation())
+                ->moduleScoped()
+                ->name(fn ($eta) => $eta->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/eta-configuration/edit')),
+
+            SearchEntity::make('free-delivery')
+                ->model(FreeDelivery::class)
+                ->prefix('Free Delivery')
+                ->with(['zone'])
+                ->relation('zone', ['name', 'display_name'])
+                ->query(self::byModulesRelation())
+                ->moduleScoped()
+                ->name(fn ($setup) => trim(($setup->zone?->display_name ?: $setup->zone?->name).' — '.($setup->type === \App\Models\FreeDelivery::TYPE_ALL ? translate('All store') : translate('Specific criteria'))))
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/free-delivery/edit')),
+
+            SearchEntity::make('additional-delivery-charge')
+                ->model(AdditionalDeliveryCharge::class)
+                ->prefix('Additional Delivery Charge')
+                ->with(['zone'])
+                ->relation('zone', ['name', 'display_name'])
+                ->name(fn ($setup) => $setup->zone?->display_name ?: $setup->zone?->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/additional-delivery-charge/edit')),
+
+            SearchEntity::make('area')
+                ->model(Area::class)
+                ->prefix('Area')
+                ->columns(['name', 'display_name'])
+                ->name(fn ($area) => $area->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/area/edit')),
+
+            SearchEntity::make('zip-code')
+                ->model(ZipCode::class)
+                ->prefix('Zip Code')
+                ->columns(['zip_code'])
+                // A zip code IS a number, so the engine's default numeric-keyword path (an id
+                // lookup) would search the wrong column entirely — "1216" would look for the
+                // ROW whose primary key is 1216, not the row whose zip_code is "1216". This
+                // redirects that path at the actual column instead of leaving it to fall
+                // through only for keywords that also happen to look like a phone number.
+                ->idFilter(fn (Builder $query, string $id) => $query->where('zip_code', $id))
+                ->name(fn ($zip) => $zip->zip_code)
+                ->searchParam(fn ($zip) => $zip->zip_code)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/zip-code/edit')),
+
+            SearchEntity::make('weight')
+                ->model(Weight::class)
+                ->prefix('Weight')
+                ->columns(['name'])
+                ->name(fn ($weight) => $weight->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/weight/edit')),
+
+            SearchEntity::make('dimension')
+                ->model(Dimension::class)
+                ->prefix('Dimension')
+                ->columns(['name'])
+                ->name(fn ($dimension) => $dimension->name)
+                ->routes(fn (string $uri) => str_contains($uri, 'delivery-management/dimension/edit')),
         ];
     }
 

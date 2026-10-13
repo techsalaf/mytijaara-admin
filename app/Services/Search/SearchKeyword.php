@@ -23,41 +23,9 @@ class SearchKeyword
         $this->tokens = self::tokenize($this->phrase);
     }
 
-    public static function normalize(?string $text): string
-    {
-        $text = strtolower((string) $text);
-        $text = preg_replace('/[^a-z0-9]+/', ' ', $text);
-
-        return trim(preg_replace('/\s+/', ' ', $text));
-    }
-
-    private static function tokenize(string $phrase): array
-    {
-        if ($phrase === '') {
-            return [];
-        }
-
-        $words = explode(' ', $phrase);
-
-        $tokens = array_filter($words, function ($word) {
-            return $word !== ''
-                && ! in_array($word, self::FILLER, true)
-                && (strlen($word) > 1 || is_numeric($word));
-        });
-
-        $tokens = array_values(array_unique($tokens));
-
-        return $tokens !== [] ? $tokens : array_values(array_unique(array_filter($words)));
-    }
-
     public function raw(): string
     {
         return $this->raw;
-    }
-
-    public function phrase(): string
-    {
-        return $this->phrase;
     }
 
     public function tokens(): array
@@ -91,7 +59,46 @@ class SearchKeyword
         return addcslashes($this->raw, '%_\\');
     }
 
-    public function score(string $routeName, string $uri, string $keywords = ''): ?int
+    public function matches(string $routeName, string $uri, string $keywords = ''): bool
+    {
+        return $this->score($routeName, $uri, $keywords) !== null;
+    }
+
+    public function rank(array $rows, ?int $limit = null): array
+    {
+        $scored = [];
+        foreach ($rows as $index => $row) {
+            $scored[] = [
+                'order' => $index,
+                'pinned' => empty($row['pinned']) ? 1 : 0,
+                'score' => $this->score($row['routeName'] ?? '', $row['URI'] ?? '', $row['keywords'] ?? '') ?? self::NO_MATCH,
+                'row' => $row,
+            ];
+        }
+
+        usort($scored, function ($a, $b) {
+            return [$a['pinned'], $a['score'], $a['order']] <=> [$b['pinned'], $b['score'], $b['order']];
+        });
+
+        $ranked = array_map(function ($entry) {
+            $row = $entry['row'];
+            unset($row['keywords'], $row['pinned']);
+
+            return $row;
+        }, $scored);
+
+        return $limit !== null ? array_slice($ranked, 0, $limit) : $ranked;
+    }
+
+    private static function normalize(?string $text): string
+    {
+        $text = strtolower((string) $text);
+        $text = preg_replace('/[^a-z0-9]+/', ' ', $text);
+
+        return trim(preg_replace('/\s+/', ' ', $text));
+    }
+
+    private function score(string $routeName, string $uri, string $keywords = ''): ?int
     {
         if ($this->phrase === '' || $this->tokens === []) {
             return null;
@@ -136,9 +143,23 @@ class SearchKeyword
         return count($this->tokens) === 1 ? 80 : null;
     }
 
-    public function matches(string $routeName, string $uri, string $keywords = ''): bool
+    private static function tokenize(string $phrase): array
     {
-        return $this->score($routeName, $uri, $keywords) !== null;
+        if ($phrase === '') {
+            return [];
+        }
+
+        $words = explode(' ', $phrase);
+
+        $tokens = array_filter($words, function ($word) {
+            return $word !== ''
+                && ! in_array($word, self::FILLER, true)
+                && (strlen($word) > 1 || is_numeric($word));
+        });
+
+        $tokens = array_values(array_unique($tokens));
+
+        return $tokens !== [] ? $tokens : array_values(array_unique(array_filter($words)));
     }
 
     private function containsAll(string $haystack): bool
@@ -169,32 +190,5 @@ class SearchKeyword
         }
 
         return false;
-    }
-
-    public function rank(array $rows, ?int $limit = null): array
-    {
-        $scored = [];
-        foreach ($rows as $index => $row) {
-            $scored[] = [
-                'order' => $index,
-                // Curated shortcuts flagged `pinned` sort above everything (0 before 1).
-                'pinned' => empty($row['pinned']) ? 1 : 0,
-                'score' => $this->score($row['routeName'] ?? '', $row['URI'] ?? '', $row['keywords'] ?? '') ?? self::NO_MATCH,
-                'row' => $row,
-            ];
-        }
-
-        usort($scored, function ($a, $b) {
-            return [$a['pinned'], $a['score'], $a['order']] <=> [$b['pinned'], $b['score'], $b['order']];
-        });
-
-        $ranked = array_map(function ($entry) {
-            $row = $entry['row'];
-            unset($row['keywords'], $row['pinned']);
-
-            return $row;
-        }, $scored);
-
-        return $limit !== null ? array_slice($ranked, 0, $limit) : $ranked;
     }
 }

@@ -71,8 +71,6 @@ class RemoveFromCartTool implements Tool
             ->when($this->moduleId, fn ($q) => $q->where('module_id', $this->moduleId))
             ->when($storeId, fn ($q) => $q->where('store_id', $storeId));
 
-        // Clear entire cart, or a single store bucket if store_id was passed
-        // (mirrors host's CartController::remove_cart which is store-scoped).
         if ($clearAll) {
             $deleted = $baseQuery()->delete();
             $this->publishCartSnapshot($cartUserId, $isGuest);
@@ -113,17 +111,13 @@ class RemoveFromCartTool implements Tool
         return "{$name} has been removed from your cart.";
     }
 
-    /**
-     * Re-read the cart after a mutation and publish a fresh snapshot to the
-     * response context so the API response carries the post-mutation state.
-     */
     private function publishCartSnapshot(int|string $cartUserId, bool $isGuest): void
     {
         $carts = Cart::where('user_id', $cartUserId)
             ->where('is_guest', $isGuest)
             ->where('item_type', Item::class)
             ->when($this->moduleId, fn ($q) => $q->where('module_id', $this->moduleId))
-            ->with('item:id,name,price,discount,discount_type,store_id,image')
+            ->with(['item:id,name,price,discount,discount_type,store_id,image', 'item.storage'])
             ->get();
 
         $storeIds   = $carts->pluck('store_id')->filter()->unique()->values()->all();

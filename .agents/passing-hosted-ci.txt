@@ -1,0 +1,897 @@
+isolation	Set up job	﻿2026-09-21T15:42:16.4044358Z Current runner version: '2.337.0'
+isolation	Set up job	2026-09-21T15:42:16.4070907Z ##[group]Runner Image Provisioner
+isolation	Set up job	2026-09-21T15:42:16.4071860Z Hosted Compute Agent
+isolation	Set up job	2026-09-21T15:42:16.4072495Z Version: 20260828.587
+isolation	Set up job	2026-09-21T15:42:16.4073792Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+isolation	Set up job	2026-09-21T15:42:16.4074721Z Build Date: 2026-08-28T16:44:25Z
+isolation	Set up job	2026-09-21T15:42:16.4075429Z Worker ID: {6fd7c3a5-0799-4e88-8bde-80d5a4a97f59}
+isolation	Set up job	2026-09-21T15:42:16.4076250Z Azure Region: eastus
+isolation	Set up job	2026-09-21T15:42:16.4076870Z ##[endgroup]
+isolation	Set up job	2026-09-21T15:42:16.4078439Z ##[group]Operating System
+isolation	Set up job	2026-09-21T15:42:16.4079111Z Ubuntu
+isolation	Set up job	2026-09-21T15:42:16.4079634Z 24.04.5
+isolation	Set up job	2026-09-21T15:42:16.4080186Z LTS
+isolation	Set up job	2026-09-21T15:42:16.4080845Z ##[endgroup]
+isolation	Set up job	2026-09-21T15:42:16.4081390Z ##[group]Runner Image
+isolation	Set up job	2026-09-21T15:42:16.4082085Z Image: ubuntu-24.04
+isolation	Set up job	2026-09-21T15:42:16.4082654Z Version: 20260907.300.1
+isolation	Set up job	2026-09-21T15:42:16.4083960Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+isolation	Set up job	2026-09-21T15:42:16.4085774Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+isolation	Set up job	2026-09-21T15:42:16.4086773Z ##[endgroup]
+isolation	Set up job	2026-09-21T15:42:16.4088004Z ##[group]GITHUB_TOKEN Permissions
+isolation	Set up job	2026-09-21T15:42:16.4090193Z Contents: read
+isolation	Set up job	2026-09-21T15:42:16.4090805Z Metadata: read
+isolation	Set up job	2026-09-21T15:42:16.4091473Z Packages: read
+isolation	Set up job	2026-09-21T15:42:16.4092033Z ##[endgroup]
+isolation	Set up job	2026-09-21T15:42:16.4094513Z Secret source: Actions
+isolation	Set up job	2026-09-21T15:42:16.4095549Z Cache mode: write
+isolation	Set up job	2026-09-21T15:42:16.4096547Z Prepare workflow directory
+isolation	Set up job	2026-09-21T15:42:16.4534768Z Prepare all required actions
+isolation	Set up job	2026-09-21T15:42:16.4582069Z Getting action download info
+isolation	Set up job	2026-09-21T15:42:16.6863875Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+isolation	Set up job	2026-09-21T15:42:16.7899041Z Download action repository 'shivammathur/setup-php@v2' (SHA:f3e473d116dcccaddc5834248c87452386958240)
+isolation	Set up job	2026-09-21T15:42:16.9222218Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+isolation	Set up job	2026-09-21T15:42:17.1517023Z Complete job name: isolation
+isolation	Initialize containers	﻿2026-09-21T15:42:17.2074126Z ##[group]Checking docker version
+isolation	Initialize containers	2026-09-21T15:42:17.2087433Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+isolation	Initialize containers	2026-09-21T15:42:17.2980228Z '1.48'
+isolation	Initialize containers	2026-09-21T15:42:17.2990819Z Docker daemon API version: '1.48'
+isolation	Initialize containers	2026-09-21T15:42:17.2991678Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+isolation	Initialize containers	2026-09-21T15:42:17.3167949Z '1.48'
+isolation	Initialize containers	2026-09-21T15:42:17.3181308Z Docker client API version: '1.48'
+isolation	Initialize containers	2026-09-21T15:42:17.3188013Z ##[endgroup]
+isolation	Initialize containers	2026-09-21T15:42:17.3191846Z ##[group]Clean up resources from previous jobs
+isolation	Initialize containers	2026-09-21T15:42:17.3199153Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=951182"
+isolation	Initialize containers	2026-09-21T15:42:17.3342195Z ##[command]/usr/bin/docker network prune --force --filter "label=951182"
+isolation	Initialize containers	2026-09-21T15:42:17.3479394Z ##[endgroup]
+isolation	Initialize containers	2026-09-21T15:42:17.3479997Z ##[group]Create local container network
+isolation	Initialize containers	2026-09-21T15:42:17.3491825Z ##[command]/usr/bin/docker network create --label 951182 github_network_0bf5cedeb38d46f7a18e35b66a1e9c49
+isolation	Initialize containers	2026-09-21T15:42:17.4037540Z 80e68836636bf2f71a6105b2e1a5144f0e2d08adab873cdabdff968cf76b564e
+isolation	Initialize containers	2026-09-21T15:42:17.4063957Z ##[endgroup]
+isolation	Initialize containers	2026-09-21T15:42:17.4091144Z ##[group]Starting mysql service container
+isolation	Initialize containers	2026-09-21T15:42:17.4113116Z ##[command]/usr/bin/docker pull mysql:8.0
+isolation	Initialize containers	2026-09-21T15:42:17.6586301Z 8.0: Pulling from library/mysql
+isolation	Initialize containers	2026-09-21T15:42:17.7350023Z edf85873f64e: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7354783Z 6ef6c7b50a93: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7356067Z e3e5d1ac74c1: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7359018Z 0d74d296605b: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7359987Z 297d04cfe470: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7360584Z 4c8a3e0d4e4b: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7361134Z a63160a5eda1: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7361691Z 7534d1db9f8d: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7362238Z 49ec2dab01d9: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7362781Z ab24264a27e9: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7364072Z 96d30d9fbee8: Pulling fs layer
+isolation	Initialize containers	2026-09-21T15:42:17.7364640Z 0d74d296605b: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7365912Z 297d04cfe470: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7366681Z 4c8a3e0d4e4b: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7367198Z a63160a5eda1: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7367957Z 7534d1db9f8d: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7368428Z 49ec2dab01d9: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7369044Z ab24264a27e9: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7369503Z 96d30d9fbee8: Waiting
+isolation	Initialize containers	2026-09-21T15:42:17.7629052Z 6ef6c7b50a93: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:17.7630194Z 6ef6c7b50a93: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.7752220Z e3e5d1ac74c1: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.8050998Z 297d04cfe470: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:17.8052237Z 297d04cfe470: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.8317293Z 4c8a3e0d4e4b: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:17.8318872Z 4c8a3e0d4e4b: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.8338759Z 0d74d296605b: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.8644460Z 7534d1db9f8d: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:17.8647695Z 7534d1db9f8d: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.9216447Z edf85873f64e: Download complete
+isolation	Initialize containers	2026-09-21T15:42:17.9665847Z ab24264a27e9: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:17.9667501Z ab24264a27e9: Download complete
+isolation	Initialize containers	2026-09-21T15:42:18.0034830Z 96d30d9fbee8: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:18.0036395Z 96d30d9fbee8: Download complete
+isolation	Initialize containers	2026-09-21T15:42:18.0597738Z a63160a5eda1: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:18.0601070Z a63160a5eda1: Download complete
+isolation	Initialize containers	2026-09-21T15:42:18.3369043Z 49ec2dab01d9: Verifying Checksum
+isolation	Initialize containers	2026-09-21T15:42:18.3371405Z 49ec2dab01d9: Download complete
+isolation	Initialize containers	2026-09-21T15:42:19.3270405Z edf85873f64e: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:19.8474741Z 6ef6c7b50a93: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:19.8698015Z e3e5d1ac74c1: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:20.0769709Z 0d74d296605b: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:20.0908344Z 297d04cfe470: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:20.1027260Z 4c8a3e0d4e4b: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:20.9016386Z a63160a5eda1: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:20.9128784Z 7534d1db9f8d: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:28.7376142Z 49ec2dab01d9: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:28.7488302Z ab24264a27e9: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:28.7575109Z 96d30d9fbee8: Pull complete
+isolation	Initialize containers	2026-09-21T15:42:28.7613436Z Digest: sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+isolation	Initialize containers	2026-09-21T15:42:28.7623359Z Status: Downloaded newer image for mysql:8.0
+isolation	Initialize containers	2026-09-21T15:42:28.7631475Z docker.io/library/mysql:8.0
+isolation	Initialize containers	2026-09-21T15:42:28.7690339Z ##[command]/usr/bin/docker create --name c1899897a1834939a54553523aa3fd29_mysql80_670758 --label 951182 --network github_network_0bf5cedeb38d46f7a18e35b66a1e9c49 --network-alias mysql -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10 -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" -e GITHUB_ACTIONS=true -e CI=true mysql:8.0
+isolation	Initialize containers	2026-09-21T15:42:28.7983074Z 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:28.8006841Z ##[command]/usr/bin/docker start 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:29.0045768Z 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:29.0070813Z ##[command]/usr/bin/docker ps --all --filter id=0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+isolation	Initialize containers	2026-09-21T15:42:29.0205111Z 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c Up Less than a second (health: starting)
+isolation	Initialize containers	2026-09-21T15:42:29.0225786Z ##[command]/usr/bin/docker port 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:29.0368144Z 3306/tcp -> 0.0.0.0:3306
+isolation	Initialize containers	2026-09-21T15:42:29.0368761Z 3306/tcp -> [::]:3306
+isolation	Initialize containers	2026-09-21T15:42:29.0419043Z ##[endgroup]
+isolation	Initialize containers	2026-09-21T15:42:29.0429932Z ##[group]Waiting for all services to be ready
+isolation	Initialize containers	2026-09-21T15:42:29.0445672Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:29.0616798Z starting
+isolation	Initialize containers	2026-09-21T15:42:29.0639984Z mysql service is starting, waiting 2 seconds before checking again.
+isolation	Initialize containers	2026-09-21T15:42:31.0638534Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:31.0769714Z starting
+isolation	Initialize containers	2026-09-21T15:42:31.0783845Z mysql service is starting, waiting 4 seconds before checking again.
+isolation	Initialize containers	2026-09-21T15:42:35.2695523Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:35.2824237Z starting
+isolation	Initialize containers	2026-09-21T15:42:35.2836283Z mysql service is starting, waiting 7 seconds before checking again.
+isolation	Initialize containers	2026-09-21T15:42:42.3661103Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Initialize containers	2026-09-21T15:42:42.3790179Z healthy
+isolation	Initialize containers	2026-09-21T15:42:42.3806729Z mysql service is healthy.
+isolation	Initialize containers	2026-09-21T15:42:42.3807462Z ##[endgroup]
+isolation	Run actions/checkout@v4	﻿2026-09-21T15:42:42.4168372Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4176286Z ##[group]Run actions/checkout@v4
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4176716Z with:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4176918Z   fetch-depth: 0
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4177158Z   repository: techsalaf/mytijaara-admin
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4179753Z   token: ***
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4179959Z   ssh-strict: true
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4180157Z   ssh-user: git
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4180362Z   persist-credentials: true
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4180594Z   clean: true
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4180800Z   sparse-checkout-cone-mode: true
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4181055Z   fetch-tags: false
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4181263Z   show-progress: true
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4181460Z   lfs: false
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4181640Z   submodules: false
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4181876Z   set-safe-directory: true
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4182114Z   allow-unsafe-pr-checkout: false
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4182525Z env:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4182711Z   APP_ENV: testing
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4182906Z   APP_DEBUG: false
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4183193Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4183843Z   DB_CONNECTION: sqlite
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4184065Z   DB_DATABASE: :memory:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4184268Z   CACHE_STORE: array
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4184465Z   LOG_CHANNEL: single
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4184668Z   ISOLATION_MYSQL: 1
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.4184861Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5206274Z Syncing repository: techsalaf/mytijaara-admin
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5208034Z ##[group]Getting Git version info
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5208498Z Working directory is '/home/runner/work/mytijaara-admin/mytijaara-admin'
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5209156Z [command]/usr/bin/git version
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5265855Z git version 2.55.0
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5291488Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5309252Z Temporarily overriding HOME='/home/runner/work/_temp/f403be6f-7b87-44cf-a07d-bd7a631e68d4' before making global git config changes
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5310412Z Adding repository directory to the temporary git global config as a safe directory
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5317611Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5371963Z Deleting the contents of '/home/runner/work/mytijaara-admin/mytijaara-admin'
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5375662Z ##[group]Initializing the repository
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5380625Z [command]/usr/bin/git init /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5487189Z hint: Using 'master' as the name for the initial branch. This default branch name
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5488373Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5489584Z hint: to use in all of your new repositories, which will suppress this warning,
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5490341Z hint: call:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5490771Z hint:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5491317Z hint: 	git config --global init.defaultBranch <name>
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5491979Z hint:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5492431Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5493214Z hint: 'development'. The just-created branch can be renamed via this command:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5494045Z hint:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5494451Z hint: 	git branch -m <name>
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5494930Z hint:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5495456Z hint: Disable this message with "git config set advice.defaultBranchName false"
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5500339Z Initialized empty Git repository in /home/runner/work/mytijaara-admin/mytijaara-admin/.git/
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5511353Z [command]/usr/bin/git remote add origin https://github.com/techsalaf/mytijaara-admin
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5567863Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5568491Z ##[group]Disabling automatic garbage collection
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5571931Z [command]/usr/bin/git config --local gc.auto 0
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5631054Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5631660Z ##[group]Setting up auth
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5632305Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.5661125Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6048931Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6096834Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6342802Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6380135Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6609041Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6647448Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6648129Z ##[group]Fetching the repository
+isolation	Run actions/checkout@v4	2026-09-21T15:42:42.6657647Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3861485Z From https://github.com/techsalaf/mytijaara-admin
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3864551Z  * [new branch]      main       -> origin/main
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3865571Z  * [new branch]      refactor/whatsapp-core-isolation -> origin/refactor/whatsapp-core-isolation
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3874240Z [command]/usr/bin/git branch --list --remote origin/refactor/whatsapp-core-isolation
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3902674Z   origin/refactor/whatsapp-core-isolation
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3911657Z [command]/usr/bin/git rev-parse refs/remotes/origin/refactor/whatsapp-core-isolation
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3937651Z 7f849c035acb946fecb2aa97063aeeae4e43a31d
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3942937Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3943870Z ##[group]Determining the checkout info
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3944876Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.3953019Z [command]/usr/bin/git sparse-checkout disable
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.4015003Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.4049750Z ##[group]Checking out the ref
+isolation	Run actions/checkout@v4	2026-09-21T15:42:45.4050881Z [command]/usr/bin/git checkout --progress --force -B refactor/whatsapp-core-isolation refs/remotes/origin/refactor/whatsapp-core-isolation
+isolation	Run actions/checkout@v4	2026-09-21T15:42:46.0518780Z Switched to a new branch 'refactor/whatsapp-core-isolation'
+isolation	Run actions/checkout@v4	2026-09-21T15:42:46.0524617Z branch 'refactor/whatsapp-core-isolation' set up to track 'origin/refactor/whatsapp-core-isolation'.
+isolation	Run actions/checkout@v4	2026-09-21T15:42:46.0554514Z ##[endgroup]
+isolation	Run actions/checkout@v4	2026-09-21T15:42:46.0608581Z [command]/usr/bin/git log -1 --format=%H
+isolation	Run actions/checkout@v4	2026-09-21T15:42:46.0638516Z 7f849c035acb946fecb2aa97063aeeae4e43a31d
+isolation	Run shivammathur/setup-php@v2	﻿2026-09-21T15:42:46.0868238Z ##[group]Run shivammathur/setup-php@v2
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0868557Z with:
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0868751Z   php-version: 8.3
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0869074Z   extensions: mbstring, dom, fileinfo, pdo_mysql, pdo_sqlite, zip, gd, curl
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0869462Z   ini-file: production
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0872013Z   github-token: ***
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0872223Z env:
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0872404Z   APP_ENV: testing
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0872601Z   APP_DEBUG: false
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0872891Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0873245Z   DB_CONNECTION: sqlite
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0873458Z   DB_DATABASE: :memory:
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0874035Z   CACHE_STORE: array
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0874246Z   LOG_CHANNEL: single
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0874470Z   ISOLATION_MYSQL: 1
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.0874662Z ##[endgroup]
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.1278371Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.1692200Z 
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:46.1693232Z ^[[90;1m==> ^[[0m^[[37;1mSetup PHP^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.1560299Z ^[[32;1m✓ ^[[0m^[[34;1mPHP ^[[0m^[[90;1mUpdated to PHP 8.3.33^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.1561143Z 
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.1561664Z ^[[90;1m==> ^[[0m^[[37;1mSetup Extensions^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2365018Z ^[[32;1m✓ ^[[0m^[[34;1mmbstring ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2395197Z ^[[32;1m✓ ^[[0m^[[34;1mdom ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2425698Z ^[[32;1m✓ ^[[0m^[[34;1mfileinfo ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2440808Z ^[[32;1m✓ ^[[0m^[[34;1mpdo_mysql ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2458205Z ^[[32;1m✓ ^[[0m^[[34;1mpdo_sqlite ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2486484Z ^[[32;1m✓ ^[[0m^[[34;1mzip ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2516037Z ^[[32;1m✓ ^[[0m^[[34;1mgd ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2547478Z ^[[32;1m✓ ^[[0m^[[34;1mcurl ^[[0m^[[90;1mEnabled^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2547904Z 
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.2548146Z ^[[90;1m==> ^[[0m^[[37;1mSetup Tools^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.5093940Z ^[[32;1m✓ ^[[0m^[[34;1mcomposer ^[[0m^[[90;1mAdded composer 2.10.3^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.5095717Z 
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.5096090Z ^[[90;1m==> ^[[0m^[[37;1mSponsor setup-php^[[0m
+isolation	Run shivammathur/setup-php@v2	2026-09-21T15:42:49.5096853Z ^[[32;1m✓ ^[[0m^[[34;1msetup-php ^[[0m^[[90;1mhttps://setup-php.com/sponsor^[[0m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	﻿2026-09-21T15:42:49.5271736Z ##[group]Run composer install --no-interaction --prefer-dist --no-progress
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5272332Z ^[[36;1mcomposer install --no-interaction --prefer-dist --no-progress^[[0m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5316370Z shell: /usr/bin/bash -e {0}
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5316642Z env:
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5316831Z   APP_ENV: testing
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5317041Z   APP_DEBUG: false
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5317334Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5317716Z   DB_CONNECTION: sqlite
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5317954Z   DB_DATABASE: :memory:
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5318154Z   CACHE_STORE: array
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5318358Z   LOG_CHANNEL: single
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5318560Z   ISOLATION_MYSQL: 1
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5318770Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5319009Z   COMPOSER_NO_INTERACTION: 1
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5319240Z   COMPOSER_NO_AUDIT: 1
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.5319447Z ##[endgroup]
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.7283229Z Installing dependencies from lock file (including require-dev)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.7419973Z Verifying lock file contents can be installed on current platform.
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8805127Z Package operations: 208 installs, 0 updates, 0 removals
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8812658Z   - Downloading php-http/discovery (1.20.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8816397Z   - Downloading wikimedia/composer-merge-plugin (v2.1.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8819186Z   - Downloading aws/aws-crt-php (v1.2.7)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8822161Z   - Downloading symfony/finder (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8825151Z   - Downloading symfony/polyfill-mbstring (v1.38.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8827801Z   - Downloading symfony/deprecation-contracts (v3.7.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8830277Z   - Downloading symfony/var-dumper (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8833231Z   - Downloading psr/log (3.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8836466Z   - Downloading php-debugbar/php-debugbar (v2.2.6)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8839563Z   - Downloading voku/portable-ascii (2.1.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8842001Z   - Downloading symfony/polyfill-php80 (v1.37.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8844844Z   - Downloading symfony/polyfill-ctype (v1.37.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8847742Z   - Downloading phpoption/phpoption (1.9.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8849830Z   - Downloading graham-campbell/result-type (v1.1.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8851730Z   - Downloading vlucas/phpdotenv (v5.6.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8853463Z   - Downloading symfony/css-selector (v7.4.9)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8855899Z   - Downloading tijsverkoyen/css-to-inline-styles (v2.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8857106Z   - Downloading symfony/polyfill-uuid (v1.37.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8858471Z   - Downloading symfony/uid (v7.4.9)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8860068Z   - Downloading symfony/routing (v7.4.13)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8861344Z   - Downloading symfony/process (v7.4.13)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8862911Z   - Downloading symfony/polyfill-php85 (v1.38.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8864812Z   - Downloading symfony/polyfill-php84 (v1.38.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8866622Z   - Downloading symfony/polyfill-php83 (v1.38.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8868047Z   - Downloading symfony/polyfill-intl-normalizer (v1.38.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8869500Z   - Downloading symfony/polyfill-intl-idn (v1.38.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8871020Z   - Downloading symfony/mime (v7.4.13)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8872616Z   - Downloading psr/container (2.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8874407Z   - Downloading symfony/service-contracts (v3.7.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8875794Z   - Downloading psr/event-dispatcher (1.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8877549Z   - Downloading symfony/event-dispatcher-contracts (v3.7.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8878882Z   - Downloading symfony/event-dispatcher (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8880879Z   - Downloading doctrine/lexer (3.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8882854Z   - Downloading egulias/email-validator (4.0.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8884642Z   - Downloading symfony/mailer (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8886264Z   - Downloading symfony/http-foundation (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8887636Z   - Downloading symfony/error-handler (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8889280Z   - Downloading symfony/http-kernel (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8890728Z   - Downloading symfony/polyfill-intl-grapheme (v1.38.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8892123Z   - Downloading symfony/string (v7.4.13)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8893795Z   - Downloading symfony/console (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8896021Z   - Downloading ramsey/collection (2.1.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8897975Z   - Downloading brick/math (0.14.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8899518Z   - Downloading ramsey/uuid (4.9.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8901069Z   - Downloading psr/simple-cache (3.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8903022Z   - Downloading nunomaduro/termwind (v2.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8905001Z   - Downloading symfony/translation-contracts (v3.7.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8906346Z   - Downloading symfony/translation (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8907956Z   - Downloading psr/clock (1.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8910723Z   - Downloading symfony/clock (v7.4.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8912765Z   - Downloading carbonphp/carbon-doctrine-types (3.2.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8915200Z   - Downloading nesbot/carbon (3.13.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8917155Z   - Downloading monolog/monolog (3.10.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8918709Z   - Downloading psr/http-message (2.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8920183Z   - Downloading psr/http-factory (1.1.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8922182Z   - Downloading league/uri-interfaces (7.8.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8923677Z   - Downloading league/uri (7.8.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8925450Z   - Downloading league/mime-type-detection (1.16.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8926783Z   - Downloading league/flysystem-local (3.31.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8928220Z   - Downloading league/flysystem (3.35.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8930273Z   - Downloading nette/utils (v4.1.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8931712Z   - Downloading nette/schema (v1.3.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8933725Z   - Downloading dflydev/dot-access-data (v3.0.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8935552Z   - Downloading league/config (v1.2.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8937037Z   - Downloading league/commonmark (2.8.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8939156Z   - Downloading laravel/serializable-closure (v2.0.13)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8940450Z   - Downloading laravel/prompts (v0.3.21)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8942509Z   - Downloading guzzlehttp/uri-template (v1.0.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8943885Z   - Downloading psr/http-client (1.0.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8945994Z   - Downloading ralouphie/getallheaders (3.0.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8947216Z   - Downloading guzzlehttp/psr7 (2.12.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8948792Z   - Downloading guzzlehttp/promises (2.5.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8950062Z   - Downloading guzzlehttp/guzzle (7.12.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8952031Z   - Downloading fruitcake/php-cors (v1.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8954258Z   - Downloading dragonmantank/cron-expression (v3.6.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8955550Z   - Downloading doctrine/inflector (2.1.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8957186Z   - Downloading laravel/framework (v12.62.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8959164Z   - Downloading barryvdh/laravel-debugbar (v3.16.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8961031Z   - Downloading masterminds/html5 (2.10.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8962983Z   - Downloading thecodingmachine/safe (v3.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8965255Z   - Downloading sabberworm/php-css-parser (v9.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8967496Z   - Downloading dompdf/php-svg-lib (1.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8968984Z   - Downloading dompdf/php-font-lib (1.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8970457Z   - Downloading dompdf/dompdf (v3.1.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8972087Z   - Downloading barryvdh/laravel-dompdf (v3.1.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8974173Z   - Downloading brian2694/laravel-toastr (5.61)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8976223Z   - Downloading clue/redis-protocol (v0.3.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8977575Z   - Downloading psr/cache (3.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8979293Z   - Downloading doctrine/deprecations (1.1.6)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8980604Z   - Downloading doctrine/dbal (4.4.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8982681Z   - Downloading fakerphp/faker (v1.24.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8984920Z   - Downloading rize/uri-template (0.4.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8986911Z   - Downloading grpc/grpc (1.81.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8988881Z   - Downloading google/protobuf (v5.35.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8990482Z   - Downloading google/longrunning (0.7.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8992465Z   - Downloading firebase/php-jwt (v6.11.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8993898Z   - Downloading google/auth (v1.52.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8995647Z   - Downloading google/grpc-gcp (0.4.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8997126Z   - Downloading google/common-protos (4.14.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.8998696Z   - Downloading google/gax (v1.43.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9000237Z   - Downloading google/cloud-core (v1.72.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9002173Z   - Downloading gregwar/captcha (v1.3.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9004513Z   - Downloading inertiajs/inertia-laravel (v3.1.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9006540Z   - Downloading intervention/gif (4.2.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9008114Z   - Downloading intervention/image (3.11.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9010143Z   - Downloading iyzico/iyzipay-php (v2.0.61)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9012154Z   - Downloading mtdowling/jmespath.php (2.9.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9014536Z   - Downloading lcobucci/jwt (5.6.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9016603Z   - Downloading fig/http-message-util (1.1.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9018598Z   - Downloading beste/clock (3.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9020662Z   - Downloading kreait/firebase-tokens (5.3.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9022230Z   - Downloading google/cloud-storage (v1.51.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9024542Z   - Downloading cuyz/valinor (2.5.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9026137Z   - Downloading beste/json (1.7.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9027707Z   - Downloading beste/in-memory-cache (1.5.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9029262Z   - Downloading kreait/firebase-php (7.24.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9030884Z   - Downloading symfony/filesystem (v7.4.11)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9032410Z   - Downloading aws/aws-sdk-php (3.386.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9033952Z   - Downloading laravel/ai (v0.6.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9035801Z   - Downloading laravel/pail (v1.2.7)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9037455Z   - Downloading symfony/psr-http-message-bridge (v7.4.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9039552Z   - Downloading paragonie/random_compat (v9.99.100)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9041196Z   - Downloading paragonie/constant_time_encoding (v3.1.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9043173Z   - Downloading phpseclib/phpseclib (3.0.55)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9045415Z   - Downloading nyholm/psr7 (1.8.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9046999Z   - Downloading league/event (2.3.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9048617Z   - Downloading lcobucci/clock (3.5.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9050646Z   - Downloading defuse/php-encryption (v2.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9052270Z   - Downloading league/oauth2-server (8.5.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9054009Z   - Downloading laravel/passport (v12.4.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9055911Z   - Downloading laravel/pint (v1.29.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9057964Z   - Downloading react/event-loop (v1.6.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9059973Z   - Downloading evenement/evenement (v3.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9062624Z   - Downloading react/stream (v1.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9064391Z   - Downloading react/promise (v3.3.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9066002Z   - Downloading react/cache (v1.2.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9067930Z   - Downloading react/dns (v1.14.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9069377Z   - Downloading react/socket (v1.17.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9071335Z   - Downloading react/promise-timer (v1.11.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9073893Z   - Downloading ratchet/rfc6455 (v0.4.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9076286Z   - Downloading pusher/pusher-php-server (7.2.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9077744Z   - Downloading clue/redis-react (v2.8.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9079666Z   - Downloading laravel/reverb (v1.10.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9081532Z   - Downloading symfony/yaml (v7.4.14)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9082970Z   - Downloading laravel/sail (v1.63.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9085777Z   - Downloading nikic/php-parser (v5.7.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9088067Z   - Downloading psy/psysh (v0.12.23)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9089590Z   - Downloading laravel/tinker (v2.11.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9091545Z   - Downloading league/flysystem-aws-s3-v3 (3.35.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9094138Z   - Downloading markbaker/matrix (3.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9095619Z   - Downloading markbaker/complex (3.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9098125Z   - Downloading maennchen/zipstream-php (3.2.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9100596Z   - Downloading ezyang/htmlpurifier (v4.19.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9101990Z   - Downloading composer/pcre (3.4.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9104762Z   - Downloading phpoffice/phpspreadsheet (1.30.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9106230Z   - Downloading composer/semver (3.4.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9108655Z   - Downloading maatwebsite/excel (3.1.69)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9111039Z   - Downloading madnest/madzipper (1.6.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9112373Z   - Downloading brick/geo (0.13.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9115282Z   - Downloading matanyadaev/laravel-eloquent-spatial (4.8.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9117510Z   - Downloading mercadopago/dx-php (3.8.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9119837Z   - Downloading hamcrest/hamcrest-php (v2.1.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9122214Z   - Downloading mockery/mockery (1.6.12)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9156302Z   - Downloading setasign/fpdi (v2.6.8)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9156950Z   - Downloading myclabs/deep-copy (1.13.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9157544Z   - Downloading mpdf/psr-log-aware-trait (v3.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9158182Z   - Downloading mpdf/psr-http-message-shim (v2.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9158754Z   - Downloading mpdf/mpdf (v8.3.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9159239Z   - Downloading filp/whoops (2.18.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9159740Z   - Downloading nunomaduro/collision (v8.9.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9160307Z   - Downloading nwidart/laravel-modules (v12.0.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9160952Z   - Downloading php-http/multipart-stream-builder (1.4.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9161856Z   - Downloading openai-php/client (v0.17.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9162409Z   - Downloading openai-php/laravel (v0.17.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9163000Z   - Downloading phonepe/phonepe-pg-php-sdk (1.0.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9164937Z   - Downloading staabm/side-effects-detector (1.0.5)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9165560Z   - Downloading sebastian/version (5.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9166086Z   - Downloading sebastian/type (5.1.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9166634Z   - Downloading sebastian/recursion-context (6.0.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9167252Z   - Downloading sebastian/object-reflector (4.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9167876Z   - Downloading sebastian/object-enumerator (6.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9168475Z   - Downloading sebastian/global-state (7.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9169019Z   - Downloading sebastian/exporter (6.3.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9169549Z   - Downloading sebastian/environment (7.2.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9170046Z   - Downloading sebastian/diff (6.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9170542Z   - Downloading sebastian/comparator (6.3.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9174411Z   - Downloading sebastian/code-unit (3.0.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9175067Z   - Downloading sebastian/cli-parser (3.0.2)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9175550Z   - Downloading phpunit/php-timer (7.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9175935Z   - Downloading phpunit/php-text-template (4.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9184287Z   - Downloading phpunit/php-invoker (5.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9194398Z   - Downloading phpunit/php-file-iterator (5.1.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9195001Z   - Downloading theseer/tokenizer (1.3.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9195563Z   - Downloading sebastian/lines-of-code (3.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9196074Z   - Downloading sebastian/complexity (4.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9196477Z   - Downloading sebastian/code-unit-reverse-lookup (4.0.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9196909Z   - Downloading phpunit/php-code-coverage (11.0.12)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9197433Z   - Downloading phar-io/version (3.2.1)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9197940Z   - Downloading phar-io/manifest (2.0.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9198387Z   - Downloading phpunit/phpunit (11.5.55)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9198747Z   - Downloading openspout/openspout (v4.32.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9199162Z   - Downloading rap2hpoutre/fast-excel (dev-master c92c13d)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9199753Z   - Downloading rmccue/requests (v2.0.18)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9200269Z   - Downloading razorpay/razorpay (2.9.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9200676Z   - Downloading stripe/stripe-php (v10.21.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9201033Z   - Downloading tightenco/ziggy (v2.6.3)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9201500Z   - Downloading twilio/sdk (6.44.4)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:49.9203616Z   - Downloading xendit/xendit-php (2.19.0)
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.4761010Z   - Installing php-http/discovery (1.20.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.4959391Z   - Installing wikimedia/composer-merge-plugin (v2.1.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5030200Z   - Installing aws/aws-crt-php (v1.2.7): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5035512Z   - Installing symfony/finder (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5041386Z   - Installing symfony/polyfill-mbstring (v1.38.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5047460Z   - Installing symfony/deprecation-contracts (v3.7.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5074257Z   - Installing symfony/var-dumper (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5096136Z   - Installing psr/log (3.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5114285Z   - Installing php-debugbar/php-debugbar (v2.2.6): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5135033Z   - Installing voku/portable-ascii (2.1.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5144485Z   - Installing symfony/polyfill-php80 (v1.37.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5168528Z   - Installing symfony/polyfill-ctype (v1.37.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5234361Z   - Installing phpoption/phpoption (1.9.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5235186Z   - Installing graham-campbell/result-type (v1.1.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5235940Z   - Installing vlucas/phpdotenv (v5.6.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5236863Z   - Installing symfony/css-selector (v7.4.9): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5237645Z   - Installing tijsverkoyen/css-to-inline-styles (v2.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5238456Z   - Installing symfony/polyfill-uuid (v1.37.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5239107Z   - Installing symfony/uid (v7.4.9): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5239724Z   - Installing symfony/routing (v7.4.13): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5240360Z   - Installing symfony/process (v7.4.13): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5264238Z   - Installing symfony/polyfill-php85 (v1.38.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5294251Z   - Installing symfony/polyfill-php84 (v1.38.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5308769Z   - Installing symfony/polyfill-php83 (v1.38.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5310161Z   - Installing symfony/polyfill-intl-normalizer (v1.38.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5311066Z   - Installing symfony/polyfill-intl-idn (v1.38.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5311824Z   - Installing symfony/mime (v7.4.13): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5312483Z   - Installing psr/container (2.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5313193Z   - Installing symfony/service-contracts (v3.7.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5314200Z   - Installing psr/event-dispatcher (1.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5315047Z   - Installing symfony/event-dispatcher-contracts (v3.7.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5315929Z   - Installing symfony/event-dispatcher (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5316643Z   - Installing doctrine/lexer (3.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5317334Z   - Installing egulias/email-validator (4.0.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5318053Z   - Installing symfony/mailer (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5318762Z   - Installing symfony/http-foundation (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5319511Z   - Installing symfony/error-handler (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5320258Z   - Installing symfony/http-kernel (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5321058Z   - Installing symfony/polyfill-intl-grapheme (v1.38.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5321821Z   - Installing symfony/string (v7.4.13): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5322482Z   - Installing symfony/console (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5323145Z   - Installing ramsey/collection (2.1.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5324262Z   - Installing brick/math (0.14.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5324878Z   - Installing ramsey/uuid (4.9.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5325517Z   - Installing psr/simple-cache (3.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5326203Z   - Installing nunomaduro/termwind (v2.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5326970Z   - Installing symfony/translation-contracts (v3.7.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5327778Z   - Installing symfony/translation (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5328478Z   - Installing psr/clock (1.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5329103Z   - Installing symfony/clock (v7.4.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5329835Z   - Installing carbonphp/carbon-doctrine-types (3.2.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5330601Z   - Installing nesbot/carbon (3.13.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5331239Z   - Installing monolog/monolog (3.10.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5331885Z   - Installing psr/http-message (2.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5332794Z   - Installing psr/http-factory (1.1.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5344310Z   - Installing league/uri-interfaces (7.8.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5347187Z   - Installing league/uri (7.8.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5349726Z   - Installing league/mime-type-detection (1.16.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5352296Z   - Installing league/flysystem-local (3.31.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5355183Z   - Installing league/flysystem (3.35.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5357783Z   - Installing nette/utils (v4.1.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5360409Z   - Installing nette/schema (v1.3.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5363019Z   - Installing dflydev/dot-access-data (v3.0.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5365805Z   - Installing league/config (v1.2.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5368427Z   - Installing league/commonmark (2.8.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5371083Z   - Installing laravel/serializable-closure (v2.0.13): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5373805Z   - Installing laravel/prompts (v0.3.21): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5376723Z   - Installing guzzlehttp/uri-template (v1.0.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5379273Z   - Installing psr/http-client (1.0.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5381818Z   - Installing ralouphie/getallheaders (3.0.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5384707Z   - Installing guzzlehttp/psr7 (2.12.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5387476Z   - Installing guzzlehttp/promises (2.5.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5390104Z   - Installing guzzlehttp/guzzle (7.12.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5392712Z   - Installing fruitcake/php-cors (v1.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5395657Z   - Installing dragonmantank/cron-expression (v3.6.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5398201Z   - Installing doctrine/inflector (2.1.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5400776Z   - Installing laravel/framework (v12.62.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5403451Z   - Installing barryvdh/laravel-debugbar (v3.16.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5406280Z   - Installing masterminds/html5 (2.10.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5409051Z   - Installing thecodingmachine/safe (v3.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5411687Z   - Installing sabberworm/php-css-parser (v9.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5414230Z   - Installing dompdf/php-svg-lib (1.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5417076Z   - Installing dompdf/php-font-lib (1.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5419585Z   - Installing dompdf/dompdf (v3.1.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5422163Z   - Installing barryvdh/laravel-dompdf (v3.1.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5425074Z   - Installing brian2694/laravel-toastr (5.61): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5427676Z   - Installing clue/redis-protocol (v0.3.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5430412Z   - Installing psr/cache (3.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5433330Z   - Installing doctrine/deprecations (1.1.6): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5435990Z   - Installing doctrine/dbal (4.4.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5438495Z   - Installing fakerphp/faker (v1.24.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5440973Z   - Installing rize/uri-template (0.4.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5443265Z   - Installing grpc/grpc (1.81.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5445847Z   - Installing google/protobuf (v5.35.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5448163Z   - Installing google/longrunning (0.7.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5450478Z   - Installing firebase/php-jwt (v6.11.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5452766Z   - Installing google/auth (v1.52.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5455293Z   - Installing google/grpc-gcp (0.4.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5457622Z   - Installing google/common-protos (4.14.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5459950Z   - Installing google/gax (v1.43.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5462320Z   - Installing google/cloud-core (v1.72.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5464961Z   - Installing gregwar/captcha (v1.3.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5467307Z   - Installing inertiajs/inertia-laravel (v3.1.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5469692Z   - Installing intervention/gif (4.2.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5472080Z   - Installing intervention/image (3.11.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5474602Z   - Installing iyzico/iyzipay-php (v2.0.61): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5476938Z   - Installing mtdowling/jmespath.php (2.9.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5479257Z   - Installing lcobucci/jwt (5.6.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5481638Z   - Installing fig/http-message-util (1.1.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5483948Z   - Installing beste/clock (3.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5486458Z   - Installing kreait/firebase-tokens (5.3.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5488867Z   - Installing google/cloud-storage (v1.51.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5491163Z   - Installing cuyz/valinor (2.5.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5493503Z   - Installing beste/json (1.7.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5496010Z   - Installing beste/in-memory-cache (1.5.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5498360Z   - Installing kreait/firebase-php (7.24.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5500715Z   - Installing symfony/filesystem (v7.4.11): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5503042Z   - Installing aws/aws-sdk-php (3.386.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5505585Z   - Installing laravel/ai (v0.6.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5507981Z   - Installing laravel/pail (v1.2.7): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5510408Z   - Installing symfony/psr-http-message-bridge (v7.4.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5512775Z   - Installing paragonie/random_compat (v9.99.100): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5515334Z   - Installing paragonie/constant_time_encoding (v3.1.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5517629Z   - Installing phpseclib/phpseclib (3.0.55): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5519934Z   - Installing nyholm/psr7 (1.8.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5522317Z   - Installing league/event (2.3.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5524807Z   - Installing lcobucci/clock (3.5.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5527219Z   - Installing defuse/php-encryption (v2.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5529549Z   - Installing league/oauth2-server (8.5.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5532203Z   - Installing laravel/passport (v12.4.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5534758Z   - Installing laravel/pint (v1.29.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5537157Z   - Installing react/event-loop (v1.6.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5539609Z   - Installing evenement/evenement (v3.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5541909Z   - Installing react/stream (v1.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5544379Z   - Installing react/promise (v3.3.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5546728Z   - Installing react/cache (v1.2.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5549007Z   - Installing react/dns (v1.14.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5551484Z   - Installing react/socket (v1.17.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5553832Z   - Installing react/promise-timer (v1.11.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5556276Z   - Installing ratchet/rfc6455 (v0.4.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5558620Z   - Installing pusher/pusher-php-server (7.2.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5560949Z   - Installing clue/redis-react (v2.8.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5563221Z   - Installing laravel/reverb (v1.10.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5565729Z   - Installing symfony/yaml (v7.4.14): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5568022Z   - Installing laravel/sail (v1.63.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5570337Z   - Installing nikic/php-parser (v5.7.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5572625Z   - Installing psy/psysh (v0.12.23): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5575161Z   - Installing laravel/tinker (v2.11.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5577536Z   - Installing league/flysystem-aws-s3-v3 (3.35.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5579844Z   - Installing markbaker/matrix (3.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5582112Z   - Installing markbaker/complex (3.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5584872Z   - Installing maennchen/zipstream-php (3.2.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5587267Z   - Installing ezyang/htmlpurifier (v4.19.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5589640Z   - Installing composer/pcre (3.4.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5592036Z   - Installing phpoffice/phpspreadsheet (1.30.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5594482Z   - Installing composer/semver (3.4.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5596776Z   - Installing maatwebsite/excel (3.1.69): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5599132Z   - Installing madnest/madzipper (1.6.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5601392Z   - Installing brick/geo (0.13.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5603906Z   - Installing matanyadaev/laravel-eloquent-spatial (4.8.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5606352Z   - Installing mercadopago/dx-php (3.8.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5608802Z   - Installing hamcrest/hamcrest-php (v2.1.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5611069Z   - Installing mockery/mockery (1.6.12): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5613391Z   - Installing setasign/fpdi (v2.6.8): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5615949Z   - Installing myclabs/deep-copy (1.13.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5618334Z   - Installing mpdf/psr-log-aware-trait (v3.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5620662Z   - Installing mpdf/psr-http-message-shim (v2.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5622905Z   - Installing mpdf/mpdf (v8.3.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5625410Z   - Installing filp/whoops (2.18.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5627839Z   - Installing nunomaduro/collision (v8.9.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5630100Z   - Installing nwidart/laravel-modules (v12.0.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5632444Z   - Installing php-http/multipart-stream-builder (1.4.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5634841Z   - Installing openai-php/client (v0.17.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5637173Z   - Installing openai-php/laravel (v0.17.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5639450Z   - Installing phonepe/phonepe-pg-php-sdk (1.0.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5641772Z   - Installing staabm/side-effects-detector (1.0.5): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5645628Z   - Installing sebastian/version (5.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5648003Z   - Installing sebastian/type (5.1.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5650291Z   - Installing sebastian/recursion-context (6.0.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5652550Z   - Installing sebastian/object-reflector (4.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5654994Z   - Installing sebastian/object-enumerator (6.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5657242Z   - Installing sebastian/global-state (7.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5659480Z   - Installing sebastian/exporter (6.3.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5661740Z   - Installing sebastian/environment (7.2.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5663952Z   - Installing sebastian/diff (6.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5666553Z   - Installing sebastian/comparator (6.3.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5668833Z   - Installing sebastian/code-unit (3.0.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5671231Z   - Installing sebastian/cli-parser (3.0.2): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5673557Z   - Installing phpunit/php-timer (7.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5676033Z   - Installing phpunit/php-text-template (4.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5678211Z   - Installing phpunit/php-invoker (5.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5680476Z   - Installing phpunit/php-file-iterator (5.1.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5682685Z   - Installing theseer/tokenizer (1.3.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5685409Z   - Installing sebastian/lines-of-code (3.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5687620Z   - Installing sebastian/complexity (4.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5690114Z   - Installing sebastian/code-unit-reverse-lookup (4.0.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5692369Z   - Installing phpunit/php-code-coverage (11.0.12): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5694855Z   - Installing phar-io/version (3.2.1): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5697132Z   - Installing phar-io/manifest (2.0.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5699408Z   - Installing phpunit/phpunit (11.5.55): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5701687Z   - Installing openspout/openspout (v4.32.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5704077Z   - Installing rap2hpoutre/fast-excel (dev-master c92c13d): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5706698Z   - Installing rmccue/requests (v2.0.18): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5709054Z   - Installing razorpay/razorpay (2.9.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5711366Z   - Installing stripe/stripe-php (v10.21.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5713656Z   - Installing tightenco/ziggy (v2.6.3): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5716039Z   - Installing twilio/sdk (6.44.4): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:53.5718299Z   - Installing xendit/xendit-php (2.19.0): Extracting archive
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:55.9891729Z Generating optimized autoload files
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:58.5867853Z > Illuminate\Foundation\ComposerScripts::postAutoloadDump
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:58.6442203Z > @php artisan package:discover --ansi
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1163982Z 
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1165203Z   ^[[37;44m INFO ^[[39;49m Discovering packages.  
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1165848Z 
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1239249Z   barryvdh/laravel-debugbar ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1260101Z   barryvdh/laravel-dompdf ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1285775Z   brian2694/laravel-toastr ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1301174Z   inertiajs/inertia-laravel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1327465Z   laravel/ai ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1347066Z   laravel/pail ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1366621Z   laravel/passport ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1386935Z   laravel/reverb ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1407462Z   laravel/sail ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1428638Z   laravel/tinker ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1448429Z   maatwebsite/excel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1466668Z   madnest/madzipper ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1479008Z   matanyadaev/laravel-eloquent-spatial ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1499494Z   nesbot/carbon ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1518768Z   nunomaduro/collision ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1535878Z   nunomaduro/termwind ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1552348Z   nwidart/laravel-modules ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1570443Z   openai-php/laravel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1587342Z   rap2hpoutre/fast-excel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1609234Z   tightenco/ziggy ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1611798Z 
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1726630Z 121 packages you are using are looking for funding.
+isolation	Run composer install --no-interaction --prefer-dist --no-progress	2026-09-21T15:42:59.1727423Z Use the `composer fund` command to find out more!
+isolation	Enforce core and adapter boundaries	﻿2026-09-21T15:42:59.2122780Z ##[group]Run php scripts/check-core-boundary.php "$COMPARE_BASE"
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2123288Z ^[[36;1mphp scripts/check-core-boundary.php "$COMPARE_BASE"^[[0m
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2161371Z shell: /usr/bin/bash -e {0}
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2161638Z env:
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2161830Z   APP_ENV: testing
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2162039Z   APP_DEBUG: false
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2162333Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2162698Z   DB_CONNECTION: sqlite
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2162915Z   DB_DATABASE: :memory:
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2163126Z   CACHE_STORE: array
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2163330Z   LOG_CHANNEL: single
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2165054Z   ISOLATION_MYSQL: 1
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2165284Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2165529Z   COMPOSER_NO_INTERACTION: 1
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2165836Z   COMPOSER_NO_AUDIT: 1
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2166291Z   COMPARE_BASE: 639c0fff4d67a61499952cf36e425c61509c4563
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.2166612Z ##[endgroup]
+isolation	Enforce core and adapter boundaries	2026-09-21T15:42:59.4961402Z Core boundary passed: no forbidden host dependencies; changed core paths and protected write owners checked.
+isolation	Host absent-module, source contract and MySQL tests	﻿2026-09-21T15:42:59.5087818Z ##[group]Run vendor/bin/phpunit tests/Architecture --log-junit host-results.xml
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5088427Z ^[[36;1mvendor/bin/phpunit tests/Architecture --log-junit host-results.xml^[[0m
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5125414Z shell: /usr/bin/bash -e {0}
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5125670Z env:
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5125854Z   APP_ENV: testing
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5126059Z   APP_DEBUG: false
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5126351Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5126709Z   DB_CONNECTION: sqlite
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5127101Z   DB_DATABASE: :memory:
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5127306Z   CACHE_STORE: array
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5127509Z   LOG_CHANNEL: single
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5127720Z   ISOLATION_MYSQL: 1
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5127929Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5128173Z   COMPOSER_NO_INTERACTION: 1
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5128400Z   COMPOSER_NO_AUDIT: 1
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.5128608Z ##[endgroup]
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.6796598Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.6797310Z 
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.6797514Z Runtime:       PHP 8.3.33
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.6798287Z Configuration: /home/runner/work/mytijaara-admin/mytijaara-admin/phpunit.xml
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:42:59.6798978Z 
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:43:20.6587421Z ....................................                              36 / 36 (100%)
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:43:20.6587941Z 
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:43:20.6588086Z Time: 00:20.978, Memory: 24.00 MB
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:43:20.6588401Z 
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:43:20.6588654Z OK, but there were issues!
+isolation	Host absent-module, source contract and MySQL tests	2026-09-21T15:43:20.6589123Z Tests: 36, Assertions: 190, PHPUnit Deprecations: 1.
+isolation	Concierge regression tests	﻿2026-09-21T15:43:20.6709619Z ##[group]Run vendor/bin/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit concierge-results.xml
+isolation	Concierge regression tests	2026-09-21T15:43:20.6710444Z ^[[36;1mvendor/bin/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit concierge-results.xml^[[0m
+isolation	Concierge regression tests	2026-09-21T15:43:20.6747061Z shell: /usr/bin/bash -e {0}
+isolation	Concierge regression tests	2026-09-21T15:43:20.6747314Z env:
+isolation	Concierge regression tests	2026-09-21T15:43:20.6747497Z   APP_ENV: testing
+isolation	Concierge regression tests	2026-09-21T15:43:20.6747701Z   APP_DEBUG: false
+isolation	Concierge regression tests	2026-09-21T15:43:20.6747988Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Concierge regression tests	2026-09-21T15:43:20.6748345Z   DB_CONNECTION: sqlite
+isolation	Concierge regression tests	2026-09-21T15:43:20.6748559Z   DB_DATABASE: :memory:
+isolation	Concierge regression tests	2026-09-21T15:43:20.6748762Z   CACHE_STORE: array
+isolation	Concierge regression tests	2026-09-21T15:43:20.6748971Z   LOG_CHANNEL: single
+isolation	Concierge regression tests	2026-09-21T15:43:20.6749221Z   ISOLATION_MYSQL: 1
+isolation	Concierge regression tests	2026-09-21T15:43:20.6749430Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation	Concierge regression tests	2026-09-21T15:43:20.6749670Z   COMPOSER_NO_INTERACTION: 1
+isolation	Concierge regression tests	2026-09-21T15:43:20.6749901Z   COMPOSER_NO_AUDIT: 1
+isolation	Concierge regression tests	2026-09-21T15:43:20.6750121Z ##[endgroup]
+isolation	Concierge regression tests	2026-09-21T15:43:20.8557076Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+isolation	Concierge regression tests	2026-09-21T15:43:20.8557768Z 
+isolation	Concierge regression tests	2026-09-21T15:43:20.8557980Z Runtime:       PHP 8.3.33
+isolation	Concierge regression tests	2026-09-21T15:43:20.8558518Z Configuration: /home/runner/work/mytijaara-admin/mytijaara-admin/phpunit.xml
+isolation	Concierge regression tests	2026-09-21T15:43:20.8558963Z 
+isolation	Concierge regression tests	2026-09-21T15:43:41.0929767Z ...............................................................  63 / 134 ( 47%)
+isolation	Concierge regression tests	2026-09-21T15:44:18.5665361Z ............................................................... 126 / 134 ( 94%)
+isolation	Concierge regression tests	2026-09-21T15:44:21.1746315Z ........                                                        134 / 134 (100%)
+isolation	Concierge regression tests	2026-09-21T15:44:21.1747018Z 
+isolation	Concierge regression tests	2026-09-21T15:44:21.1747263Z Time: 01:00.318, Memory: 127.00 MB
+isolation	Concierge regression tests	2026-09-21T15:44:21.1747601Z 
+isolation	Concierge regression tests	2026-09-21T15:44:21.1747974Z OK, but there were issues!
+isolation	Concierge regression tests	2026-09-21T15:44:21.1748404Z Tests: 134, Assertions: 758, PHPUnit Deprecations: 50.
+isolation	Run actions/upload-artifact@v4	﻿2026-09-21T15:44:21.1935717Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1937050Z ##[group]Run actions/upload-artifact@v4
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1937313Z with:
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1937507Z   name: isolation-results
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1937742Z   path: *-results.xml
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1937960Z   if-no-files-found: warn
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1938181Z   compression-level: 6
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1938389Z   overwrite: false
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1938597Z   include-hidden-files: false
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1938824Z env:
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1939003Z   APP_ENV: testing
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1939195Z   APP_DEBUG: false
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1939479Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1939832Z   DB_CONNECTION: sqlite
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1940079Z   DB_DATABASE: :memory:
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1940475Z   CACHE_STORE: array
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1940676Z   LOG_CHANNEL: single
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1940874Z   ISOLATION_MYSQL: 1
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1941078Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1941315Z   COMPOSER_NO_INTERACTION: 1
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1941539Z   COMPOSER_NO_AUDIT: 1
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.1941738Z ##[endgroup]
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.3646917Z (node:5873) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.3647856Z (Use `node --trace-deprecation ...` to show where the warning was created)
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.3784626Z With the provided path, there will be 2 files uploaded
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.3844525Z Artifact name is valid!
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.3854828Z Root directory input is valid!
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.5836067Z Beginning upload of artifact content to blob storage
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.6081572Z (node:5873) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.6366308Z Uploaded bytes 8301
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.6512223Z Finished uploading artifact content to blob storage!
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.6513018Z SHA256 digest of uploaded artifact zip is afe3a3a271066a47150121b12eb77cba04f5f5c4ae27deec91179621c46b2a05
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.6515295Z Finalizing artifact upload
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.8286998Z Artifact isolation-results.zip successfully finalized. Artifact ID 10649900111
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.8288105Z Artifact isolation-results has been successfully uploaded! Final size is 8301 bytes. Artifact ID is 10649900111
+isolation	Run actions/upload-artifact@v4	2026-09-21T15:44:21.8293952Z Artifact download URL: https://github.com/techsalaf/mytijaara-admin/actions/runs/35620731915/artifacts/10649900111
+isolation	Post Run actions/checkout@v4	﻿2026-09-21T15:44:21.8473074Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.8474696Z Post job cleanup.
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9334970Z [command]/usr/bin/git version
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9382095Z git version 2.55.0
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9427411Z Temporarily overriding HOME='/home/runner/work/_temp/76f2c535-5447-4e31-ae57-3f896767f3c3' before making global git config changes
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9429036Z Adding repository directory to the temporary git global config as a safe directory
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9434283Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9475005Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9510881Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9771934Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9803138Z http.https://github.com/.extraheader
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9815798Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:21.9851698Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:22.0122332Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+isolation	Post Run actions/checkout@v4	2026-09-21T15:44:22.0167883Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+isolation	Stop containers	﻿2026-09-21T15:44:22.0588737Z Print service container logs: c1899897a1834939a54553523aa3fd29_mysql80_670758
+isolation	Stop containers	2026-09-21T15:44:22.0594282Z ##[command]/usr/bin/docker logs --details 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Stop containers	2026-09-21T15:44:22.0731993Z  2026-09-21 15:42:29+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+isolation	Stop containers	2026-09-21T15:44:22.0735664Z  2026-09-21T15:42:29.272269Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation	Stop containers	2026-09-21T15:44:22.0737425Z  2026-09-21T15:42:29.272377Z 0 [System] [MY-013169] [Server] /usr/sbin/mysqld (mysqld 8.0.46) initializing of server in progress as process 80
+isolation	Stop containers	2026-09-21T15:44:22.0738216Z  2026-09-21T15:42:29.277896Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation	Stop containers	2026-09-21T15:44:22.0738827Z  2026-09-21T15:42:29.420492Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation	Stop containers	2026-09-21T15:44:22.0739697Z  2026-09-21T15:42:30.050521Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+isolation	Stop containers	2026-09-21T15:44:22.0740968Z  2026-09-21T15:42:32.412236Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation	Stop containers	2026-09-21T15:44:22.0741933Z  2026-09-21T15:42:32.413589Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 124
+isolation	Stop containers	2026-09-21T15:44:22.0742561Z  2026-09-21T15:42:32.422708Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation	Stop containers	2026-09-21T15:44:22.0743109Z  2026-09-21T15:42:32.502521Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation	Stop containers	2026-09-21T15:44:22.0744110Z  2026-09-21T15:42:32.632423Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+isolation	Stop containers	2026-09-21T15:44:22.0745489Z  2026-09-21T15:42:32.632455Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+isolation	Stop containers	2026-09-21T15:44:22.0747464Z  2026-09-21T15:42:32.634037Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+isolation	Stop containers	2026-09-21T15:44:22.0749196Z  2026-09-21T15:42:32.647165Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Socket: /var/run/mysqld/mysqlx.sock
+isolation	Stop containers	2026-09-21T15:44:22.0750746Z  2026-09-21T15:42:32.647249Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server - GPL.
+isolation	Stop containers	2026-09-21T15:44:22.0752155Z  Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+isolation	Stop containers	2026-09-21T15:44:22.0753073Z  Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+isolation	Stop containers	2026-09-21T15:44:22.0754229Z  Warning: Unable to load '/usr/share/zoneinfo/leapseconds' as time zone. Skipping it.
+isolation	Stop containers	2026-09-21T15:44:22.0755113Z  Warning: Unable to load '/usr/share/zoneinfo/tzdata.zi' as time zone. Skipping it.
+isolation	Stop containers	2026-09-21T15:44:22.0755996Z  Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+isolation	Stop containers	2026-09-21T15:44:22.0756873Z  Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
+isolation	Stop containers	2026-09-21T15:44:22.0757995Z  2026-09-21T15:42:34.388062Z 10 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.46).
+isolation	Stop containers	2026-09-21T15:44:22.0759621Z  2026-09-21T15:42:35.142582Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete (mysqld 8.0.46)  MySQL Community Server - GPL.
+isolation	Stop containers	2026-09-21T15:44:22.0760730Z  2026-09-21T15:42:35.571755Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation	Stop containers	2026-09-21T15:44:22.0761679Z  2026-09-21T15:42:35.573045Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 1
+isolation	Stop containers	2026-09-21T15:44:22.0762651Z  2026-09-21T15:42:35.577886Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation	Stop containers	2026-09-21T15:44:22.0763345Z  2026-09-21T15:42:35.660114Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation	Stop containers	2026-09-21T15:44:22.0764342Z  2026-09-21T15:42:35.765871Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+isolation	Stop containers	2026-09-21T15:44:22.0765333Z  2026-09-21T15:42:35.765913Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+isolation	Stop containers	2026-09-21T15:44:22.0766519Z  2026-09-21T15:42:35.767539Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+isolation	Stop containers	2026-09-21T15:44:22.0767707Z  2026-09-21T15:42:35.781980Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+isolation	Stop containers	2026-09-21T15:44:22.0768846Z  2026-09-21T15:42:35.782068Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+isolation	Stop containers	2026-09-21T15:44:22.0769716Z  2026-09-21 15:42:29+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+isolation	Stop containers	2026-09-21T15:44:22.0770258Z  2026-09-21 15:42:29+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+isolation	Stop containers	2026-09-21T15:44:22.0770780Z  2026-09-21 15:42:29+00:00 [Note] [Entrypoint]: Initializing database files
+isolation	Stop containers	2026-09-21T15:44:22.0771219Z  2026-09-21 15:42:32+00:00 [Note] [Entrypoint]: Database files initialized
+isolation	Stop containers	2026-09-21T15:44:22.0771639Z  2026-09-21 15:42:32+00:00 [Note] [Entrypoint]: Starting temporary server
+isolation	Stop containers	2026-09-21T15:44:22.0772050Z  2026-09-21 15:42:32+00:00 [Note] [Entrypoint]: Temporary server started.
+isolation	Stop containers	2026-09-21T15:44:22.0772464Z  '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+isolation	Stop containers	2026-09-21T15:44:22.0772788Z  
+isolation	Stop containers	2026-09-21T15:44:22.0773050Z  2026-09-21 15:42:34+00:00 [Note] [Entrypoint]: Stopping temporary server
+isolation	Stop containers	2026-09-21T15:44:22.0773695Z  2026-09-21 15:42:35+00:00 [Note] [Entrypoint]: Temporary server stopped
+isolation	Stop containers	2026-09-21T15:44:22.0774055Z  
+isolation	Stop containers	2026-09-21T15:44:22.0774379Z  2026-09-21 15:42:35+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+isolation	Stop containers	2026-09-21T15:44:22.0774777Z  
+isolation	Stop containers	2026-09-21T15:44:22.0780848Z Stop and remove container: c1899897a1834939a54553523aa3fd29_mysql80_670758
+isolation	Stop containers	2026-09-21T15:44:22.0786350Z ##[command]/usr/bin/docker rm --force 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Stop containers	2026-09-21T15:44:22.2173082Z 0ff8ab9fce136e9c2ced0284da8a5c95fa26caffcd741942c0251fe81c09a24c
+isolation	Stop containers	2026-09-21T15:44:22.2207640Z Remove container network: github_network_0bf5cedeb38d46f7a18e35b66a1e9c49
+isolation	Stop containers	2026-09-21T15:44:22.2212006Z ##[command]/usr/bin/docker network rm github_network_0bf5cedeb38d46f7a18e35b66a1e9c49
+isolation	Stop containers	2026-09-21T15:44:22.3168621Z github_network_0bf5cedeb38d46f7a18e35b66a1e9c49
+isolation	Complete job	﻿2026-09-21T15:44:22.3242672Z Cleaning up orphan processes
+isolation	Complete job	2026-09-21T15:44:22.3509736Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

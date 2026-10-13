@@ -1,0 +1,775 @@
+{
+    "apply": false,
+    "backup": null,
+    "counts": {
+        "created": 86,
+        "skipped": 2
+    },
+    "records": [
+        {
+            "kind": "units",
+            "key": "units/piece",
+            "name": "Piece",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "units",
+            "key": "units/pack",
+            "name": "Pack",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "units",
+            "key": "units/pair",
+            "name": "Pair",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "units",
+            "key": "units/kilogram",
+            "name": "Kilogram",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "units",
+            "key": "units/gram",
+            "name": "Gram",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "units",
+            "key": "units/litre",
+            "name": "Litre",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "units",
+            "key": "units/millilitre",
+            "name": "Millilitre",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "attributes",
+            "key": "attributes/colour",
+            "name": "Colour",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "attributes",
+            "key": "attributes/size",
+            "name": "Size",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "kind": "attributes",
+            "key": "attributes/material",
+            "name": "Material",
+            "id": null,
+            "action": "created"
+        },
+        {
+            "module": 1,
+            "key": "grains-staples",
+            "name": "Grains & Staples",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "grains-staples/rice",
+            "name": "Rice",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "grains-staples/beans-pulses",
+            "name": "Beans & Pulses",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "grains-staples/garri-cassava",
+            "name": "Garri & Cassava",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "grains-staples/flour-semolina",
+            "name": "Flour & Semolina",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "fresh-food",
+            "name": "Fresh Food",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "fresh-food/vegetables",
+            "name": "Vegetables",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "fresh-food/fruit",
+            "name": "Fruit",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "fresh-food/meat-poultry",
+            "name": "Meat & Poultry",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "fresh-food/fish-seafood",
+            "name": "Fish & Seafood",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "provisions",
+            "name": "Provisions",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "provisions/milk-dairy",
+            "name": "Milk & Dairy",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "provisions/breakfast-cereals",
+            "name": "Breakfast & Cereals",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "provisions/cooking-oils",
+            "name": "Cooking Oils",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "provisions/seasonings-spices",
+            "name": "Seasonings & Spices",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "drinks",
+            "name": "Drinks",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "drinks/water",
+            "name": "Water",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "drinks/juices",
+            "name": "Juices",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "drinks/soft-drinks",
+            "name": "Soft Drinks",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "household-essentials",
+            "name": "Household Essentials",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "household-essentials/laundry-supplies",
+            "name": "Laundry Supplies",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "household-essentials/cleaning-supplies",
+            "name": "Cleaning Supplies",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 1,
+            "key": "household-essentials/tissue-paper",
+            "name": "Tissue & Paper",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "personal-health",
+            "name": "Personal Health",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "personal-health/first-aid-supplies",
+            "name": "First Aid Supplies",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "personal-health/medical-devices",
+            "name": "Medical Devices",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "personal-health/oral-care",
+            "name": "Oral Care",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "wellness-essentials",
+            "name": "Wellness Essentials",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "wellness-essentials/vitamins-supplements",
+            "name": "Vitamins & Supplements",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "wellness-essentials/hygiene-products",
+            "name": "Hygiene Products",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "mother-baby-care",
+            "name": "Mother & Baby Care",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "mother-baby-care/baby-hygiene",
+            "name": "Baby Hygiene",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 2,
+            "key": "mother-baby-care/maternity-essentials",
+            "name": "Maternity Essentials",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "fashion",
+            "name": "Fashion",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "fashion/womens-clothing",
+            "name": "Women's Clothing",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "fashion/mens-clothing",
+            "name": "Men's Clothing",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "fashion/childrens-clothing",
+            "name": "Children's Clothing",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "footwear",
+            "name": "Footwear",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "footwear/shoes",
+            "name": "Shoes",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "footwear/sandals-slippers",
+            "name": "Sandals & Slippers",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "bags-accessories",
+            "name": "Bags & Accessories",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "bags-accessories/handbags",
+            "name": "Handbags",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "bags-accessories/backpacks",
+            "name": "Backpacks",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "bags-accessories/jewellery",
+            "name": "Jewellery",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "bags-accessories/watches",
+            "name": "Watches",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "beauty-personal-care",
+            "name": "Beauty & Personal Care",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "beauty-personal-care/skin-care",
+            "name": "Skin Care",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "beauty-personal-care/hair-care",
+            "name": "Hair Care",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "beauty-personal-care/fragrances",
+            "name": "Fragrances",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "electronics",
+            "name": "Electronics",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "electronics/phones-accessories",
+            "name": "Phones & Accessories",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "electronics/audio-earphones",
+            "name": "Audio & Earphones",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "electronics/computers-accessories",
+            "name": "Computers & Accessories",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "home-kitchen",
+            "name": "Home & Kitchen",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "home-kitchen/cookware",
+            "name": "Cookware",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "home-kitchen/bedding",
+            "name": "Bedding",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "home-kitchen/home-appliances",
+            "name": "Home Appliances",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "baby-kids",
+            "name": "Baby & Kids",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "baby-kids/baby-care",
+            "name": "Baby Care",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 3,
+            "key": "baby-kids/toys",
+            "name": "Toys",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "nigerian-meals",
+            "name": "Nigerian Meals",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "nigerian-meals/rice-meals",
+            "name": "Rice Meals",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "nigerian-meals/swallow-soups",
+            "name": "Swallow & Soups",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "nigerian-meals/beans-yam-meals",
+            "name": "Beans & Yam Meals",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "grills-fast-food",
+            "name": "Grills & Fast Food",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "grills-fast-food/shawarma",
+            "name": "Shawarma",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "grills-fast-food/burgers-sandwiches",
+            "name": "Burgers & Sandwiches",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "grills-fast-food/grilled-meat-fish",
+            "name": "Grilled Meat & Fish",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "bakes-snacks",
+            "name": "Bakes & Snacks",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "bakes-snacks/bread",
+            "name": "Bread",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "bakes-snacks/pastries",
+            "name": "Pastries",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "bakes-snacks/small-chops",
+            "name": "Small Chops",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "beverages",
+            "name": "Beverages",
+            "parent_id": 0,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "beverages/fresh-juices",
+            "name": "Fresh Juices",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "beverages/smoothies",
+            "name": "Smoothies",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 4,
+            "key": "beverages/tea-coffee",
+            "name": "Tea & Coffee",
+            "parent_id": null,
+            "action": "created",
+            "id": null,
+            "image_required": true
+        },
+        {
+            "module": 5,
+            "action": "skipped",
+            "reason": "Module does not use canonical item categories"
+        },
+        {
+            "module": 6,
+            "action": "skipped",
+            "reason": "Module does not use canonical item categories"
+        }
+    ],
+    "images": "New records use the canonical def.png sentinel; admin must supply category images."
+}

@@ -1,0 +1,615 @@
+No syntax errors detected in Modules/AI/app/Agents/PlatformAssistantAgent.php
+
+No syntax errors detected in Modules/AI/app/Agents/Tools/GetServiceCategoriesTool.php
+
+No syntax errors detected in Modules/AI/app/Agents/Tools/GetServiceProvidersTool.php
+
+No syntax errors detected in Modules/AI/app/Agents/Tools/GetServicesTool.php
+
+No syntax errors detected in Modules/AI/app/Core/Engines/OpenAIEngine.php
+
+No syntax errors detected in Modules/AI/app/Exceptions/AIServiceException.php
+
+No syntax errors detected in Modules/AI/app/Http/Controllers/Api/V1/AiChatController.php
+
+No syntax errors detected in Modules/AI/app/Providers/RouteServiceProvider.php
+
+No syntax errors detected in Modules/AI/app/Services/Personalization/PersonalizationService.php
+
+No syntax errors detected in Modules/AI/routes/api/v1/api.php
+
+No syntax errors detected in Modules/ReelsModule/Config/config.php
+
+No syntax errors detected in Modules/ReelsModule/Database/Migrations/2026_06_17_000001_add_order_fields_to_reels_table.php
+
+No syntax errors detected in Modules/ReelsModule/Database/Migrations/2026_06_17_000002_add_amount_to_reel_engagements_table.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Controllers/Admin/ReelController.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Controllers/Api/V1/Vendor/ReelController.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Controllers/Vendor/ReelController.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Requests/Admin/ReelStoreRequest.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Requests/Admin/ReelUpdateRequest.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Requests/Api/V1/Vendor/ReelStoreRequest.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Requests/Api/V1/Vendor/ReelUpdateRequest.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Resources/ReelDetailResource.php
+
+No syntax errors detected in Modules/ReelsModule/Http/Resources/ReelListResource.php
+
+No syntax errors detected in Modules/ReelsModule/Support/ReelProductableResolver.php
+
+No syntax errors detected in Modules/TaxModule/Database/Migrations/2026_07_01_000001_rename_service_tax_payer_to_service_provider.php
+
+No syntax errors detected in Modules/TaxModule/Http/Controllers/SystemTaxVatSetupController.php
+
+No syntax errors detected in Modules/TaxModule/Http/Controllers/TaxVatController.php
+
+No syntax errors detected in Modules/TaxModule/Routes/web.php
+
+No syntax errors detected in Modules/TaxModule/Services/CalculateTaxService.php
+
+No syntax errors detected in Modules/TaxModule/Traits/VatTaxConfiguration.php
+
+No syntax errors detected in app/Builder/CapabilityProvider.php
+
+No syntax errors detected in app/Builder/CartProvider.php
+
+No syntax errors detected in app/Builder/CategoryProvider.php
+
+No syntax errors detected in app/Builder/CheckoutProvider.php
+
+No syntax errors detected in app/Builder/CouponProvider.php
+
+No syntax errors detected in app/Builder/CurrencyProvider.php
+
+No syntax errors detected in app/Builder/CustomerAuthProvider.php
+
+No syntax errors detected in app/Builder/LocaleProvider.php
+
+No syntax errors detected in app/Builder/OrderActionsProvider.php
+
+No syntax errors detected in app/Builder/OrderProvider.php
+
+No syntax errors detected in app/Builder/Resources/FoodDetailsResource.php
+
+No syntax errors detected in app/Builder/Resources/ItemCardResource.php
+
+No syntax errors detected in app/Builder/Resources/ItemDetailResource.php
+
+No syntax errors detected in app/Builder/StorefrontScopeResolver.php
+
+No syntax errors detected in app/CentralLogics/CustomerLogic.php
+
+No syntax errors detected in app/CentralLogics/DeliveryFeeLogic.php
+
+No syntax errors detected in app/CentralLogics/Helpers.php
+
+No syntax errors detected in app/CentralLogics/OrderLogic.php
+
+No syntax errors detected in app/CentralLogics/PersonalizationService.php
+
+No syntax errors detected in app/CentralLogics/ProductLogic.php
+
+No syntax errors detected in app/CentralLogics/StoreLogic.php
+
+No syntax errors detected in app/Console/Commands/GenerateAdminRoute.php
+
+No syntax errors detected in app/Console/Commands/GenerateVendorRoute.php
+
+No syntax errors detected in app/Contracts/Repositories/AddonRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/BannerRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/CashBackRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/CategoryRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/ConversationRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/DeliveryManRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/DmReviewRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/DmVehicleRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/EmployeeRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/ModuleRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/RepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/RiderRepositoryInterface.php
+
+No syntax errors detected in app/Contracts/Repositories/ZoneRepositoryInterface.php
+
+No syntax errors detected in app/Enums/ExportFileNames/Admin/Category.php
+
+No syntax errors detected in app/Exports/CustomerServiceRequestExport.php
+
+No syntax errors detected in app/Exports/ParcelReportExport.php
+
+No syntax errors detected in app/Exports/ParcelTransactionReportExport.php
+
+No syntax errors detected in app/Exports/ServiceExpenseReportExport.php
+
+No syntax errors detected in app/Exports/ServiceExport.php
+
+No syntax errors detected in app/Exports/ServiceRequestListExport.php
+
+No syntax errors detected in app/Exports/ServiceReviewExport.php
+
+No syntax errors detected in app/Http/Controllers/Admin/AccountTransactionController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/BusinessSettingsController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/CampaignController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/ContactController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/CustomerController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/CustomerWalletController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/DashboardController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/DeliveryMan/DeliveryManController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/DeliveryManDisbursementController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/FileManagerController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/FlashSaleController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/Item/AddonCategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/Item/CategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/ItemController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/LanguageController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/OrderController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/OtherBannerController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/POSController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/ProCustomerController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/Promotion/AdvertisementController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/Promotion/CashBackController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/ProvideDMEarningController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/ReportController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/ReviewsController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/SearchRoutingController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/SmartBannerController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/StoreDisbursementController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/Subscription/SubscriptionController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/SurgePriceController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/System/AddonController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/SystemController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/VendorController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/VendorTaxReportController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/WithdrawalMethodController.php
+
+No syntax errors detected in app/Http/Controllers/Admin/Zone/ZoneController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/AdvertisementController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Auth/VendorLoginController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/BannerController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/BrandController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CampaignController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CartController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CashBackController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CommonConditionController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/ConfigController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/ConversationController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CouponController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/CustomerController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/DeliverymanController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/ItemController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/ModuleController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/OrderController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/OtherBannerController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/ProCustomerController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/SearchController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/StoreCategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/StoreController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/AddOnController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/AdvertisementController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/BannerController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/BusinessSettingsController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/CategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/ConversationController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/CouponController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/DeliveryManController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/ItemController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/POSController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/ReportController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/StoreCategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/SubscriptionController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/VendorController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/Vendor/WithdrawMethodController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/WalletController.php
+
+No syntax errors detected in app/Http/Controllers/Api/V1/WishlistController.php
+
+No syntax errors detected in app/Http/Controllers/InstallController.php
+
+No syntax errors detected in app/Http/Controllers/LoginController.php
+
+No syntax errors detected in app/Http/Controllers/PaymentController.php
+
+No syntax errors detected in app/Http/Controllers/PaytmController.php
+
+No syntax errors detected in app/Http/Controllers/SslCommerzPaymentController.php
+
+No syntax errors detected in app/Http/Controllers/UpdateController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/AddOnController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/AdvertisementController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/BannerController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/BusinessSettingsController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/CampaignController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/CategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/ConversationController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/CouponController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/CustomRoleController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/DashboardController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/DeliveryManController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/EmployeeController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/ItemController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/OrderController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/POSController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/ReportController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/ReviewController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/SearchRoutingController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/StoreCategoryController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/SubscriptionController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/VendorTaxReportController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/WalletController.php
+
+No syntax errors detected in app/Http/Controllers/Vendor/WalletMethodController.php
+
+No syntax errors detected in app/Http/Controllers/VendorController.php
+
+No syntax errors detected in app/Http/Middleware/ActivationCheckMiddleware.php
+
+No syntax errors detected in app/Http/Middleware/AdminServiceModuleCheckMiddleware.php
+
+No syntax errors detected in app/Http/Middleware/CurrentModule.php
+
+No syntax errors detected in app/Http/Middleware/InstallationMiddleware.php
+
+No syntax errors detected in app/Http/Middleware/ProviderServiceModuleCheckMiddleware.php
+
+No syntax errors detected in app/Http/Requests/Admin/BannerAddRequest.php
+
+No syntax errors detected in app/Http/Requests/Admin/BannerUpdateRequest.php
+
+No syntax errors detected in app/Http/Requests/Admin/CategoryAddRequest.php
+
+No syntax errors detected in app/Http/Requests/Admin/CategoryUpdateRequest.php
+
+No syntax errors detected in app/Http/Requests/Admin/CouponAddRequest.php
+
+No syntax errors detected in app/Http/Requests/Admin/CouponUpdateRequest.php
+
+No syntax errors detected in app/Http/Requests/Admin/ModuleAddRequest.php
+
+No syntax errors detected in app/Library/ModuleConstants.php
+
+No syntax errors detected in app/Library/ModuleHelpers.php
+
+No syntax errors detected in app/Models/Brand.php
+
+No syntax errors detected in app/Models/CashBack.php
+
+No syntax errors detected in app/Models/CashBackHistory.php
+
+No syntax errors detected in app/Models/Category.php
+
+No syntax errors detected in app/Models/DeliveryMan.php
+
+No syntax errors detected in app/Models/Expense.php
+
+No syntax errors detected in app/Models/FAQ.php
+
+No syntax errors detected in app/Models/Item.php
+
+No syntax errors detected in app/Models/Module.php
+
+No syntax errors detected in app/Models/ModuleWiseBanner.php
+
+No syntax errors detected in app/Models/Order.php
+
+No syntax errors detected in app/Models/OrderProDiscount.php
+
+No syntax errors detected in app/Models/ProCustomerBenefitSetting.php
+
+No syntax errors detected in app/Models/Store.php
+
+No syntax errors detected in app/Models/StoreCategory.php
+
+No syntax errors detected in app/Models/StoreConfig.php
+
+No syntax errors detected in app/Models/Wishlist.php
+
+No syntax errors detected in app/Providers/ConfigServiceProvider.php
+
+No syntax errors detected in app/Providers/RouteServiceProvider.php
+
+No syntax errors detected in app/Repositories/AddonRepository.php
+
+No syntax errors detected in app/Repositories/AttributeRepository.php
+
+No syntax errors detected in app/Repositories/BannerRepository.php
+
+No syntax errors detected in app/Repositories/BrandRepository.php
+
+No syntax errors detected in app/Repositories/CashBackRepository.php
+
+No syntax errors detected in app/Repositories/CategoryRepository.php
+
+No syntax errors detected in app/Repositories/CommonConditionRepository.php
+
+No syntax errors detected in app/Repositories/ConversationRepository.php
+
+No syntax errors detected in app/Repositories/CouponRepository.php
+
+No syntax errors detected in app/Repositories/CustomRoleRepository.php
+
+No syntax errors detected in app/Repositories/DeliveryManRepository.php
+
+No syntax errors detected in app/Repositories/DmReviewRepository.php
+
+No syntax errors detected in app/Repositories/DmVehicleRepository.php
+
+No syntax errors detected in app/Repositories/EmployeeRepository.php
+
+No syntax errors detected in app/Repositories/MessageRepository.php
+
+No syntax errors detected in app/Repositories/ModuleRepository.php
+
+No syntax errors detected in app/Repositories/NotificationRepository.php
+
+No syntax errors detected in app/Repositories/OrderTransactionRepository.php
+
+No syntax errors detected in app/Repositories/RiderRepository.php
+
+No syntax errors detected in app/Repositories/StoreRepository.php
+
+No syntax errors detected in app/Repositories/TranslationRepository.php
+
+No syntax errors detected in app/Repositories/UnitRepository.php
+
+No syntax errors detected in app/Repositories/UserInfoRepository.php
+
+No syntax errors detected in app/Repositories/UserNotificationRepository.php
+
+No syntax errors detected in app/Repositories/WalletBonusRepository.php
+
+No syntax errors detected in app/Repositories/ZoneRepository.php
+
+No syntax errors detected in app/Services/AddonService.php
+
+No syntax errors detected in app/Services/CategoryService.php
+
+No syntax errors detected in app/Services/CouponService.php
+
+No syntax errors detected in app/Services/Search/AdminSearchRegistry.php
+
+No syntax errors detected in app/Services/Search/AdminSearchShortcuts.php
+
+No syntax errors detected in app/Services/Search/RouteIndex.php
+
+No syntax errors detected in app/Services/Search/SearchContext.php
+
+No syntax errors detected in app/Services/Search/SearchEngine.php
+
+No syntax errors detected in app/Services/Search/SearchEntity.php
+
+No syntax errors detected in app/Services/Search/SearchKeyword.php
+
+No syntax errors detected in app/Services/Search/VendorSearchRegistry.php
+
+No syntax errors detected in app/Services/Search/VendorSearchShortcuts.php
+
+No syntax errors detected in app/Services/StoreCategoryService.php
+
+No syntax errors detected in app/Services/TrendingSearchService.php
+
+No syntax errors detected in app/Services/ZoneService.php
+
+No syntax errors detected in app/Traits/ActivationClass.php
+
+No syntax errors detected in app/Traits/CreatesGuestAccount.php
+
+No syntax errors detected in app/Traits/HandlesMissingAddonRelations.php
+
+No syntax errors detected in app/Traits/ItemFilter.php
+
+No syntax errors detected in app/Traits/ManagesProCustomerSubscription.php
+
+No syntax errors detected in app/Traits/NotificationDataSetUpTrait.php
+
+No syntax errors detected in app/Traits/POSDeliveryTypeTrait.php
+
+No syntax errors detected in app/Traits/PlaceNewOrder.php
+
+No syntax errors detected in app/Traits/ReportFilter.php
+
+No syntax errors detected in app/Traits/ReportGeneratorTrait.php
+
+No syntax errors detected in app/helpers.php
+
+No syntax errors detected in bootstrap/app.php
+
+No syntax errors detected in config/auth.php
+
+No syntax errors detected in config/builder.php
+
+No syntax errors detected in config/layout.php
+
+No syntax errors detected in config/module.php
+
+No syntax errors detected in config/search.php
+
+No syntax errors detected in database/migrations/2026_05_12_120000_add_tenant_scope_to_auth_tables.php
+
+No syntax errors detected in database/migrations/2026_05_13_000000_add_store_id_to_carts_table.php
+
+No syntax errors detected in database/migrations/2026_05_13_000003_add_delivery_type_columns_to_orders_table.php
+
+No syntax errors detected in database/migrations/2026_05_13_100002_add_pro_status_to_users_table.php
+
+No syntax errors detected in database/migrations/2026_05_14_173407_add_can_edit_order_column_to_store_configs_table.php
+
+No syntax errors detected in database/migrations/2026_05_20_120000_add_unit_value_col_to_pharmacy_item_details_table.php
+
+No syntax errors detected in database/migrations/2026_05_20_120100_add_manufacturer_col_to_pharmacy_item_details_table.php
+
+No syntax errors detected in database/migrations/2026_06_01_000001_add_trip_and_ride_request_to_order_pro_discounts_table.php
+
+No syntax errors detected in database/migrations/2026_06_11_000001_add_short_description_to_modules_table.php
+
+No syntax errors detected in database/migrations/2026_06_17_000003_add_reel_id_to_carts_table.php
+
+No syntax errors detected in database/migrations/2026_06_18_000001_add_is_hidden_to_orders_table.php
+
+No syntax errors detected in database/migrations/2026_07_01_000002_add_service_id_to_wishlists_table.php
+
+No syntax errors detected in database/migrations/2026_07_06_000001_add_service_booking_id_col_to_expense_table.php
+
+No syntax errors detected in database/migrations/2026_07_07_000000_add_booking_settings_columns_to_store_configs_table.php
+
+No syntax errors detected in database/migrations/2026_07_07_000100_add_service_setting_columns_to_store_configs_table.php
+
+No syntax errors detected in database/migrations/2026_07_07_000200_add_choose_service_location_to_store_configs_table.php
+
+No syntax errors detected in database/migrations/2026_07_07_000300_drop_schedule_time_restriction_from_store_configs_table.php
+
+No syntax errors detected in database/migrations/2026_07_07_000400_add_serviceman_can_cancel_booking_to_store_configs_table.php
+
+No syntax errors detected in database/migrations/2026_07_12_000001_create_store_categories_table.php
+
+No syntax errors detected in database/migrations/2026_07_12_000002_add_store_category_id_to_items_table.php
+
+No syntax errors detected in database/migrations/2026_07_12_000004_add_store_category_id_to_temp_products_table.php
+
+No syntax errors detected in database/migrations/2026_07_12_000005_add_module_id_to_store_categories_table.php
+
+No syntax errors detected in database/migrations/2026_07_13_000001_add_edited_columns_to_orders_table.php
+
+No syntax errors detected in database/migrations/2026_07_13_000002_create_order_edit_logs_table.php
+
+No syntax errors detected in database/migrations/2026_07_14_000003_add_faqable_to_faqs_table.php
+
+No syntax errors detected in database/migrations/2026_07_15_000001_seed_review_section_business_settings.php
+
+No syntax errors detected in database/migrations/2026_07_16_000001_add_is_pos_to_orders_table.php
+
+No syntax errors detected in database/migrations/2026_07_25_000001_add_order_type_to_user_notifications_table.php
+
+No syntax errors detected in database/migrations/2026_07_28_000001_backfill_and_consolidate_role_permissions.php
+
+No syntax errors detected in database/migrations/2026_07_29_000001_delete_unused_module_wise_promotional_banners.php
+
+No syntax errors detected in database/migrations/2026_07_30_000001_add_service_columns_to_cash_back_tables.php
+
+No syntax errors detected in database/migrations/2026_07_30_000002_add_service_booking_id_to_order_pro_discounts_table.php
+
+No syntax errors detected in database/migrations/2026_07_30_000003_add_serviceman_columns_to_core_tables.php
+
+No syntax errors detected in resources/lang/ar/messages.php
+
+No syntax errors detected in resources/lang/bn/messages.php
+
+No syntax errors detected in resources/lang/en/messages.php
+
+No syntax errors detected in routes/admin.php
+
+No syntax errors detected in routes/admin/routes.php
+
+No syntax errors detected in routes/vendor.php
+
+No syntax errors detected in tests/Feature/ServiceRepeatBookingDiscountTest.php

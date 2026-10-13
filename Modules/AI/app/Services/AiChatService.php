@@ -2,12 +2,12 @@
 
 namespace Modules\AI\app\Services;
 
+use App\CentralLogics\Helpers;
 use Modules\AI\app\Agents\AiResponseContext;
 use Modules\AI\app\Agents\PlatformAssistantAgent;
 use Modules\AI\app\Agents\Tools\GetAvailableLanguagesTool;
 use Modules\AI\app\Models\AiConversation;
 use Modules\AI\app\Models\AiMessage;
-use App\Models\BusinessSetting;
 use App\Models\Module;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -41,11 +41,9 @@ class AiChatService
     }
 
     /**
-     * Send a user message, run the agent, persist the exchange, return the result.
-     *
-     * @return array{message: string, products: array, stores: array}
+     * Send a user message, run the agent, persist the exchange, return the assistant reply.
      */
-    public function chat(AiConversation $conversation, string $userMessage): array
+    public function chat(AiConversation $conversation, string $userMessage): AiMessage
     {
         if (! $conversation->title) {
             $conversation->update(['title' => mb_substr($userMessage, 0, 80)]);
@@ -60,19 +58,11 @@ class AiChatService
         $history = $this->buildHistory($conversation);
         $context = new AiResponseContext();
 
-        // Module gate — if no valid module is selected, short-circuit the LLM call
-        // and ask the user to switch to a specific module. Keeps the exchange
-        // persisted in conversation history, but saves the agent round-trip.
-        // The list of modules is pulled live from Module::active() so newly
-        // enabled add-ons (RideShare, Service, etc.) appear here automatically.
         if ($this->moduleType === 'general') {
             $available = Module::active()
                 ->orderBy('id')
                 ->pluck('module_name')
                 ->all();
-            // Render as "A, B, C, or D" — keeps the phrasing natural and
-            // automatically extends when a new module (Service, RideShare,
-            // future addons) goes active.
             if (empty($available)) {
                 $listText = 'one of our service modules';
             } elseif (count($available) === 1) {
@@ -99,10 +89,6 @@ class AiChatService
             );
 
             try {
-                // Attach a recent-items hint to the current user message so the model
-                // can resolve follow-ups like "large" / "the second one" without
-                // re-searching. The hint lives only on this turn's user message — it
-                // is never persisted, so it can't echo into future assistant replies.
                 $promptToSend = $this->withContextHint($userMessage, $conversation);
                 $response     = $agent->prompt($promptToSend);
                 $replyText    = $this->stripContextLeak($response->text ?? '');
@@ -120,6 +106,9 @@ class AiChatService
         $stores       = $context->getStores();
         $categories   = $context->getCategories();
         $cartItems    = $context->getCartItems();
+        $bogoOffers   = $context->getBogoOffers();
+        $bundles      = $context->getBundles();
+        $happyHours   = $context->getHappyHours();
         $toolsInvoked = $context->getToolsInvoked();
 
         $cartUpdated = count(array_intersect($toolsInvoked, [
@@ -128,7 +117,7 @@ class AiChatService
             'UpdateCartQuantityTool',
         ])) > 0;
 
-        AiMessage::create([
+        return AiMessage::create([
             'conversation_id' => $conversation->id,
             'role'            => 'assistant',
             'content'         => $replyText,
@@ -138,29 +127,15 @@ class AiChatService
                 'stores'       => $stores,
                 'categories'   => $categories,
                 'cart_items'   => $cartItems,
+                'bogo_offers'  => $bogoOffers,
+                'bundles'      => $bundles,
+                'happy_hours'  => $happyHours,
                 'cart_updated' => $cartUpdated,
             ],
         ]);
-
-        return [
-            'message'      => $replyText,
-            'products'     => $products,
-            'stores'       => $stores,
-            'categories'   => $categories,
-            'cart_items'   => $cartItems,
-            'cart_updated' => $cartUpdated,
-            'tool_name'    => $toolsInvoked ? implode(',', $toolsInvoked) : null,
-        ];
     }
 
-    // -------------------------------------------------------------------------
-    // Resolvers
-    // -------------------------------------------------------------------------
 
-    /**
-     * Resolve the human-readable module type (food|grocery|pharmacy|ecommerce|parcel|rental|service|ride-share)
-     * from the module ID passed via the request header.
-     */
     private function resolveModuleType(): string
     {
         if (! $this->moduleId) {
@@ -172,17 +147,13 @@ class AiChatService
         return $module?->module_type ?? 'general';
     }
 
-    /**
-     * Load currency settings from business_settings once per request.
-     * Provides symbol, position (left/right), and decimal places.
-     */
     private function resolveCurrency(): array
     {
-        $rows = BusinessSetting::whereIn('key', [
+        $rows = Helpers::get_business_settings_many([
             'currency',
             'currency_symbol_position',
             'digit_after_decimal_point',
-        ])->get(['key', 'value'])->pluck('value', 'key')->all();
+        ]);
 
         $symbol   = $rows['currency'] ?? '';
         $position = $rows['currency_symbol_position'] ?? 'left';
@@ -200,25 +171,17 @@ class AiChatService
         ];
     }
 
-    /**
-     * Load the user's AI persona/context string from users.user_context.
-     * This contains AI-generated text about the user's taste, profession, preferences, etc.
-     */
     private function resolveUserContext(): ?string
     {
         if (! $this->user) {
             return null;
         }
 
-        // user_context is a text column — reload just that column to avoid heavy appends
         $raw = User::where('id', $this->user->getKey())->value('user_context');
 
         return $raw ?: null;
     }
 
-    // -------------------------------------------------------------------------
-    // History builder
-    // -------------------------------------------------------------------------
 
     /**
      * Load prior user/assistant turns as laravel/ai Message objects for conversation memory.
@@ -248,13 +211,6 @@ class AiChatService
             ->all();
     }
 
-    /**
-     * Prefix the current user prompt with a private item/store reference hint
-     * derived from the most recent assistant message's stored metadata. The hint
-     * is only attached to the message we hand to the LLM this turn — it is never
-     * stored in the DB and never appears in past assistant turns, so the model
-     * cannot regurgitate it into a future reply.
-     */
     private function withContextHint(string $userMessage, AiConversation $conversation): string
     {
         $lastAssistant = $conversation->messages()
@@ -274,20 +230,12 @@ class AiChatService
         return $hint . "\n\n" . $userMessage;
     }
 
-    /**
-     * Defensive sanitiser — strip any leaked [INTERNAL CONTEXT ...] block from the
-     * assistant's reply before persisting or returning it.
-     */
     private function stripContextLeak(string $reply): string
     {
         $cleaned = preg_replace('/\[INTERNAL CONTEXT[^\]]*\]\s*/u', '', $reply);
         return trim($cleaned ?? $reply);
     }
 
-    /**
-     * Build the private reference hint used by withContextHint(). Returns an
-     * empty string when there is nothing useful to inject.
-     */
     private function buildContextHint(array $metadata): string
     {
         $parts = [];
@@ -300,10 +248,6 @@ class AiChatService
                     continue;
                 }
                 $label = $p['name'] . ' (ID:' . $p['id'] . ')';
-                // Prefer the unified variation_labels (covers both the non-food
-                // `variations` and food `food_variations` systems); fall back to
-                // the legacy `variations` column for products produced by tools
-                // that don't emit variation_labels yet.
                 $labels = $p['variation_labels'] ?? null;
                 if (empty($labels) && !empty($p['variations']) && is_array($p['variations'])) {
                     $labels = array_filter(array_column($p['variations'], 'type'));
@@ -329,6 +273,53 @@ class AiChatService
             }
             if (!empty($names)) {
                 $parts[] = 'stores — ' . implode(', ', $names);
+            }
+        }
+
+        $bogoOffers = $metadata['bogo_offers'] ?? [];
+        if (is_array($bogoOffers) && !empty($bogoOffers)) {
+            $labels = [];
+            foreach (array_slice($bogoOffers, 0, 6) as $o) {
+                if (!is_array($o) || empty($o['id']) || empty($o['title'])) {
+                    continue;
+                }
+                $labels[] = $o['title'] . ' (ID:' . $o['id'] . ')';
+            }
+            if (!empty($labels)) {
+                $parts[] = 'bogo offers — ' . implode(', ', $labels);
+            }
+        }
+
+        $bundles = $metadata['bundles'] ?? [];
+        if (is_array($bundles) && !empty($bundles)) {
+            $labels = [];
+            foreach (array_slice($bundles, 0, 6) as $b) {
+                if (!is_array($b) || empty($b['id']) || empty($b['name'])) {
+                    continue;
+                }
+                $labels[] = $b['name'] . ' (ID:' . $b['id'] . ')';
+            }
+            if (!empty($labels)) {
+                $parts[] = 'bundles — ' . implode(', ', $labels);
+            }
+        }
+
+        $happyHours = $metadata['happy_hours'] ?? [];
+        if (is_array($happyHours) && !empty($happyHours)) {
+            $labels = [];
+            foreach (array_slice($happyHours, 0, 2) as $h) {
+                if (!is_array($h) || empty($h['id']) || empty($h['title'])) {
+                    continue;
+                }
+                $label = $h['title'] . ' (ID:' . $h['id'] . ', ' . $h['discount'] . '% off';
+                if (!empty($h['ends_at'])) {
+                    $label .= ', ends ' . $h['ends_at'];
+                }
+                $label .= ')';
+                $labels[] = $label;
+            }
+            if (!empty($labels)) {
+                $parts[] = 'happy hours — ' . implode(', ', $labels);
             }
         }
 

@@ -9,7 +9,7 @@ use App\Http\Requests\StoreCategoryAddRequest;
 use App\Http\Requests\StoreCategoryUpdateRequest;
 use App\Models\Item;
 use App\Models\StoreCategory;
-use App\Services\StoreCategoryService;
+use App\Services\Store\StoreCategoryService;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +24,7 @@ class StoreCategoryController extends Controller
     {
         $this->middleware(function ($request, $next) {
             if (!Helpers::vendorCategoryStatus()) {
-                Toastr::warning(translate('messages.Store_category_feature_is_disabled'));
+                Toastr::warning(translate('messages.Store category feature is disabled'));
                 return back();
             }
             return $next($request);
@@ -38,6 +38,7 @@ class StoreCategoryController extends Controller
             'priority' => $request->query('priority'),
             'store_id' => Helpers::get_store_id(),
         ])
+            ->withStorage()
             ->latest()
             ->paginate(config('default_pagination'))
             ->appends($request->all());
@@ -47,8 +48,12 @@ class StoreCategoryController extends Controller
         return view('vendor-views.store-category.index', compact('categories', 'language'));
     }
 
-    public function create(): JsonResponse
+    public function create(Request $request): JsonResponse|RedirectResponse
     {
+        if (!$request->ajax()) {
+            return redirect()->route('vendor.store-category.list');
+        }
+
         $language = getWebConfig('language');
         $category = null;
 
@@ -65,16 +70,19 @@ class StoreCategoryController extends Controller
             priority: $request->filled('priority') ? (int) $request->priority : 0,
             image: $request->file('image')
         );
-        $this->service->saveFormTranslations($category, $request);
+        $this->service->saveFormTranslations($category, ['lang' => $request->lang, 'name' => $request->name]);
 
-        Toastr::success(translate('messages.Store_category_added_successfully'));
+        Toastr::success(translate('Added successfully'));
 
-        // Chain into the "Select Items For Category" off-canvas (assign flow).
         return redirect()->route('vendor.store-category.list', ['assign_items' => $category->id]);
     }
 
-    public function getUpdateView(string|int $id): JsonResponse
+    public function getUpdateView(Request $request, string|int $id): JsonResponse|RedirectResponse
     {
+        if (!$request->ajax()) {
+            return redirect()->route('vendor.store-category.list');
+        }
+
         $category = $this->ownedQuery()
             ->withoutGlobalScope('translate')
             ->with('translations')
@@ -95,30 +103,30 @@ class StoreCategoryController extends Controller
             priority: $request->filled('priority') ? (int) $request->priority : 0,
             image: $request->file('image')
         );
-        $this->service->saveFormTranslations($category, $request);
+        $this->service->saveFormTranslations($category, ['lang' => $request->lang, 'name' => $request->name]);
 
-        Toastr::success(translate('messages.Store_category_updated_successfully'));
+        Toastr::success(translate('Updated successfully'));
         return back();
     }
 
     public function updateStatus(Request $request): RedirectResponse
     {
         $this->service->updateStatus($this->ownedQuery()->findOrFail($request['id']), (int) $request['status']);
-        Toastr::success(translate('messages.Store_category_status_updated'));
+        Toastr::success(translate('messages.Store category status updated'));
         return back();
     }
 
     public function updatePriority(Request $request, $id): RedirectResponse
     {
         $this->service->updatePriority($this->ownedQuery()->findOrFail($id), (int) ($request->priority ?? 0));
-        Toastr::success(translate('messages.Store_category_priority_updated'));
+        Toastr::success(translate('messages.Store category priority updated'));
         return back();
     }
 
     public function delete(Request $request): RedirectResponse
     {
         $this->service->delete($this->ownedQuery()->findOrFail($request['id']));
-        Toastr::success(translate('messages.Store_category_removed_successfully'));
+        Toastr::success(translate('Deleted successfully'));
         return back();
     }
 
@@ -131,7 +139,7 @@ class StoreCategoryController extends Controller
             })
             ->orderBy('priority', 'desc')
             ->limit(20)
-            ->get(['id', 'name as text']);
+            ->get(['id', 'name as text'])->makeHidden('image_full_url');
 
         return response()->json($categories);
     }
@@ -159,11 +167,6 @@ class StoreCategoryController extends Controller
         return StoreCategory::where('store_id', Helpers::get_store_id());
     }
 
-    /**
-     * Render the "Select Items For Category" offcanvas.
-     * Lists items that are either uncategorized OR already assigned to this category,
-     * scoped to the logged-in vendor's store.
-     */
     public function assignItemsView(string|int $id, Request $request): JsonResponse
     {
         $storeId = Helpers::get_store_id();
@@ -185,9 +188,6 @@ class StoreCategoryController extends Controller
         ]);
     }
 
-    /**
-     * AJAX search endpoint — returns just the item list partial.
-     */
     public function searchAssignableItems(string|int $id, Request $request): JsonResponse
     {
         $category = $this->ownedQuery()->findOrFail($id);
@@ -202,11 +202,6 @@ class StoreCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Persist the item → store_category_id assignment.
-     * Items explicitly checked get this category id; previously-assigned items not
-     * present in the submitted list get cleared back to NULL.
-     */
     public function storeAssignedItems(string|int $id, Request $request): JsonResponse
     {
         $request->validate([
@@ -226,8 +221,6 @@ class StoreCategoryController extends Controller
 
         $model = $this->bindableModel();
 
-        // Only allow assigning records that belong to this vendor's store AND are
-        // either uncategorized or already in this category.
         $allowedNewIds = [];
         if (!empty($submittedIds)) {
             $allowedNewIds = $model::query()
@@ -248,7 +241,6 @@ class StoreCategoryController extends Controller
                 ->update(['store_category_id' => $category->id]);
         }
 
-        // Un-assign records previously in this category but unchecked.
         $model::query()
             ->where('store_id', $storeId)
             ->where('store_category_id', $category->id)
@@ -258,17 +250,12 @@ class StoreCategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => $this->isServiceModule()
-                ? translate('messages.Services_assigned_successfully')
-                : translate('messages.Items_assigned_successfully'),
+                ? translate('messages.Services assigned successfully')
+                : translate('messages.Items assigned successfully'),
             'assigned_count' => count($allowedNewIds),
         ]);
     }
 
-    /**
-     * The vendor's store-category feature binds the store's sellable records. For a Service-module
-     * store that's a Service; for every other module it's an Item. Both tables carry `store_id` +
-     * `store_category_id`, so the assign flow is identical apart from the model.
-     */
     private function isServiceModule(): bool
     {
         return Helpers::get_store_data()?->module_type === 'service' && addon_published_status('Service');
@@ -280,10 +267,6 @@ class StoreCategoryController extends Controller
         return $this->isServiceModule() ? \Modules\Service\Entities\Service::class : Item::class;
     }
 
-    /**
-     * Reusable builder for the records (items, or services on a service store) shown in the
-     * assign offcanvas — uncategorized OR already in this category, scoped to the vendor's store.
-     */
     private function queryAssignableItems(int $categoryId, ?string $search = null)
     {
         $storeId = Helpers::get_store_id();

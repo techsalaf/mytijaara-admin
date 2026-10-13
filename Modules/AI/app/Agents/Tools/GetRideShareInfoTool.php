@@ -2,29 +2,13 @@
 
 namespace Modules\AI\app\Agents\Tools;
 
+use App\CentralLogics\Helpers;
 use Modules\AI\app\Agents\AiResponseContext;
 use App\Models\BusinessSetting;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Ride-share policy / safety / pricing-rules answers, sourced from
- * BusinessSetting where possible. Returns curated text per topic so the
- * customer doesn't get a wall of raw config.
- *
- * NEVER writes safety alerts — those go through the in-app safety button
- * (audit §8). This tool only points the customer at the right path.
- *
- * Allowed BusinessSetting keys (whitelisted to avoid leaking unrelated
- * config; mirrors GetPlatformInfoTool's pattern):
- *   - emergency_other_number    : JSON array of fallback emergency contacts
- *   - safety_feature_status     : 0/1 toggle for in-app safety button
- *   - emergency_call_status     : 0/1 toggle for one-tap emergency call
- *   - min_idle_fee_time         : buffer minutes before idle fees apply
- *   - min_delay_fee_time        : buffer minutes before delay fees apply
- *   - ride_commission           : admin commission % (NOT shown to customer)
- */
 class GetRideShareInfoTool implements Tool
 {
     private const ALLOWED_KEYS = [
@@ -65,9 +49,7 @@ class GetRideShareInfoTool implements Tool
             return 'Topic must be one of: ' . implode(', ', self::VALID_TOPICS) . ', or null for a summary.';
         }
 
-        $settings = BusinessSetting::whereIn('key', self::ALLOWED_KEYS)
-            ->pluck('value', 'key')
-            ->all();
+        $settings = Helpers::get_business_settings_many(self::ALLOWED_KEYS);
 
         $parts = [];
         if ($topic === 'safety' || $topic === null) {
@@ -91,7 +73,6 @@ class GetRideShareInfoTool implements Tool
 
         $numbers = [];
         if ($rawNumbers) {
-            // Stored as JSON array per audit; tolerate scalar string too.
             $decoded = json_decode($rawNumbers, true);
             if (is_array($decoded)) {
                 foreach ($decoded as $entry) {
@@ -142,10 +123,6 @@ class GetRideShareInfoTool implements Tool
 
     private function cancellationBlock(): string
     {
-        // Cancellation fees are zone+category-specific and live in RideFare
-        // rows (cancellation_fee_percent, min_cancellation_fee, penalty_fee_for_cancel).
-        // We deliberately don't quote specific numbers here — they vary per
-        // category — and steer the customer to the app for the exact amount.
         return 'CANCELLATION:' . PHP_EOL
             . '• You can cancel from the ride request screen before the driver arrives.' . PHP_EOL
             . '• A cancellation fee may apply once a driver is en route; the amount depends on the vehicle category and how close the driver was.' . PHP_EOL

@@ -1,0 +1,15 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+Time: 04:29.289, Memory: 180.00 MB
+
+There was 1 failure:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\VendorOperationsTest::test_photo_to_product_workflow
+Expectation failed for method name is "sendTextMessage" when invoked 2 times.
+Method was expected to be called 2 times, actually called 0 times.
+
+FAILURES!
+Tests: 214, Assertions: 1125, Failures: 1, PHPUnit Deprecations: 50.

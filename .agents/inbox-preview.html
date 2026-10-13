@@ -1,0 +1,153 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/public/assets/admin/css/bootstrap.min.css"><link rel="stylesheet" href="/public/assets/admin/css/theme.minc619.css"><link rel="stylesheet" href="/public/assets/admin/vendor/icon-set/style.css"><style>
+    .wa-container { height: calc(100vh - 160px); display: flex; background: #efeae2; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .wa-sidebar { width: 350px; background: #ffffff; display: flex; flex-direction: column; border-right: 1px solid #d1d7db; }
+    .wa-sidebar-header { padding: 10px 16px; background: #f0f2f5; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d1d7db; }
+    .wa-search { padding: 8px 12px; background: #ffffff; border-bottom: 1px solid #d1d7db; }
+    .wa-search input { background: #f0f2f5; border: none; border-radius: 8px; padding: 6px 12px; width: 100%; font-size: 14px; }
+    .wa-filters { padding: 8px 12px; display: flex; gap: 8px; overflow-x: auto; background: #ffffff; border-bottom: 1px solid #d1d7db; scrollbar-width: none; }
+    .wa-filters::-webkit-scrollbar { display: none; }
+    .wa-filter-btn { padding: 6px 12px; border-radius: 16px; background: #f0f2f5; border: none; font-size: 13px; cursor: pointer; white-space: nowrap; color: #54656f; }
+    .wa-filter-btn.active { background: #008069; color: #ffffff; }
+    .wa-chat-list { flex-grow: 1; overflow-y: auto; background: #ffffff; }
+    .wa-chat-item { display: flex; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f2f2f2; text-decoration: none !important; color: inherit; }
+    .wa-chat-item:hover { background: #f5f6f6; }
+    .wa-chat-item.active { background: #f0f2f5; }
+    .wa-avatar { width: 48px; height: 48px; border-radius: 50%; background: #dfe5e7; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; margin-right: 15px; flex-shrink: 0; }
+    .wa-chat-info { flex-grow: 1; overflow: hidden; }
+    .wa-chat-title { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .wa-chat-name { font-size: 16px; font-weight: 500; color: #111b21; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wa-chat-time { font-size: 12px; color: #667781; }
+    .wa-chat-preview { display: flex; justify-content: space-between; align-items: center; }
+    .wa-chat-last-msg { font-size: 14px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .wa-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; background: #f4f7f6; }
+    .wa-chat-header { padding: 10px 16px; background: #f0f2f5; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #d1d7db; }
+    .wa-chat-messages { flex-grow: 1; overflow-y: auto; padding: 20px 5%; display: flex; flex-direction: column; }
+    .wa-message { max-width: 65%; margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; font-size: 14.5px; line-height: 1.4; position: relative; display: flex; flex-direction: column; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+    .wa-message.inbound { align-self: flex-start; background: #ffffff; border-top-left-radius: 0; }
+    .wa-message.outbound { align-self: flex-end; background: #d9fdd3; border-top-right-radius: 0; }
+    .wa-msg-meta { display: flex; justify-content: flex-end; align-items: center; margin-top: 4px; gap: 4px; }
+    .wa-msg-time { font-size: 11px; color: #667781; }
+    .wa-msg-origin { font-size: 10px; padding: 2px 4px; border-radius: 4px; background: rgba(0,0,0,0.05); color: #667781; }
+    .wa-msg-status { font-size: 14px; }
+    .wa-msg-status.read { color: #53bdeb; }
+    .wa-msg-status.delivered { color: #667781; }
+    .wa-msg-status.sent { color: #667781; }
+    .wa-msg-status.failed { color: #f15c6d; }
+
+    .wa-composer { padding: 12px 16px; background: #f0f2f5; display: flex; align-items: flex-end; gap: 12px; }
+    .wa-composer-input { flex-grow: 1; background: #ffffff; border-radius: 8px; padding: 10px 16px; border: none; outline: none; resize: none; max-height: 100px; overflow-y: auto; font-size: 15px; }
+    .wa-btn-send { background: #00a884; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .wa-btn-send:disabled { background: #879297; cursor: not-allowed; }
+    .wa-btn-action { background: none; border: none; color: #54656f; font-size: 24px; cursor: pointer; padding: 4px; }
+
+    .wa-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #667781; text-align: center; }
+    .wa-empty-state i { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+
+    .wa-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; color: white; font-weight: bold; }
+    .wa-badge-unread { background: #25d366; }
+    .wa-badge-ai { background: #8e24aa; }
+    .wa-badge-human { background: #ff9800; }
+    .wa-badge-paused { background: #f44336; }
+
+    .wa-container{min-height:520px;height:calc(100dvh - 155px)}.wa-sidebar{flex:0 0 310px;min-width:0}.wa-main,.wa-chat-info{min-width:0}.wa-main,.wa-chat-messages,.wa-chat-list{min-height:0}.wa-message{overflow-wrap:anywhere;max-width:85%}.wa-chat-header{gap:12px;flex-wrap:wrap}.wa-chat-header .d-flex{flex-wrap:wrap;gap:6px}.wa-avatar{color:#31564c;background:#e0eee9}.wa-chat-time{flex-shrink:0;margin-left:8px}.wa-composer-input{min-width:0}.wa-status-banner{padding:12px 18px;background:#fff;border-bottom:1px solid #e3e8e5;font-size:13px}.wa-mobile-back{display:none}.wa-search input:focus,.wa-composer-input:focus{outline:2px solid #008069;outline-offset:2px}
+    @media(max-width:1000px){.wa-sidebar{flex-basis:260px}.wa-message{max-width:92%}}
+    @media(max-width:700px){.wa-container{height:calc(100dvh - 130px);min-height:440px}.wa-sidebar{flex-basis:100%;width:100%}.wa-main{display:none}.wa-container.wa-open .wa-sidebar{display:none}.wa-container.wa-open .wa-main{display:flex;width:100%}.wa-mobile-back{display:inline-block}.wa-chat-header{padding:10px}.wa-chat-messages{padding:12px}.wa-composer{padding:10px;gap:6px}}
+</style>
+</head><body><div class="content container-fluid">
+    <div class="wa-container wa-open">
+        <!-- Sidebar -->
+        <div class="wa-sidebar">
+            <div class="wa-sidebar-header">
+                <h4 class="mb-0">Chats</h4>
+            </div>
+
+            <form class="wa-search" action="http://dashboard.mytijaara.test" method="GET">
+                <input type="hidden" name="filter" value="all">
+                <input type="text" name="search" placeholder="Search name or phone" value="">
+            </form>
+
+            <div class="wa-filters">
+                                <a href="http://localhost/mytijaara-admin?filter=all" class="wa-filter-btn active">All</a>
+                <a href="http://localhost/mytijaara-admin?filter=unread" class="wa-filter-btn ">Unread</a>
+                <a href="http://localhost/mytijaara-admin?filter=ai" class="wa-filter-btn ">AI Active</a>
+                <a href="http://localhost/mytijaara-admin?filter=human" class="wa-filter-btn ">Human</a>
+                <a href="http://localhost/mytijaara-admin?filter=stuck" class="wa-filter-btn ">Stuck</a>
+                <a href="http://localhost/mytijaara-admin?filter=incomplete" class="wa-filter-btn ">Incomplete</a>
+            </div>
+
+            <div class="wa-chat-list">
+                                    <a href="http://dashboard.mytijaara.test/admin/whatsapp/inbox/1" class="wa-chat-item active">
+                        <div class="wa-avatar">
+                            <i class="tio-user"></i>
+                        </div>
+                        <div class="wa-chat-info">
+                            <div class="wa-chat-title">
+                                <span class="wa-chat-name">Demo Shop Owner</span>
+                                <span class="wa-chat-time"></span>
+                            </div>
+                            <div class="wa-chat-preview">
+                                <span class="wa-chat-last-msg">
+                                                                            [redacted: credential step]
+                                                                    </span>
+                                <div class="d-flex align-items-center gap-1">
+                                                                            <span class="wa-badge wa-badge-ai">AI</span>
+                                                                    </div>
+                            </div>
+                        </div>
+                    </a>
+                
+                <div class="p-3">
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="wa-main">
+                            <div class="wa-chat-header"><a class="wa-mobile-back btn btn-sm btn-outline-secondary" href="http://dashboard.mytijaara.test/admin/whatsapp/inbox">Back to chats</a>
+                    <div class="d-flex align-items-center">
+                        <div class="wa-avatar" style="width:40px; height:40px; margin-right:12px;">
+                            <i class="tio-user"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 16px; font-weight: 500; color: #111b21;">Demo Shop Owner</div>
+                            <div style="font-size: 13px; color: #667781;">
+                                Application in progress
+                                &bull; Onboarding Active
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <form action="http://dashboard.mytijaara.test/admin/whatsapp/inbox/1/toggle-state" method="POST" class="d-inline">
+                            <input type="hidden" name="_token" value="" autocomplete="off">                                                            <input type="hidden" name="state" value="human_handoff">
+                                <button type="submit" class="btn btn-sm btn-outline-primary"><i class="tio-user"></i> Take Over</button>
+                                                    </form>
+                                                                        <a href="http://dashboard.mytijaara.test/admin/whatsapp/operations-center/conversation/1" class="btn btn-sm btn-outline-secondary" title="View Diagnostics &amp; Recovery">
+                            <i class="tio-settings"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="wa-status-banner"><strong>Account Password</strong> · The latest customer message has no recorded successful reply. Check the chat and delivery evidence.<br><span class="text-muted">Reply window open · Take over before sending a human reply.</span></div>
+                <div class="wa-chat-messages" id="chat-messages">
+                                                                                    <div class="wa-message inbound">
+                                                            <div>[redacted: credential step]</div>
+                            
+                            <div class="wa-msg-meta">
+                                                                <span class="wa-msg-time">Oct 8, 05:37</span>
+                                                            </div>
+                        </div>
+                                                        </div>
+
+                <div class="wa-composer">
+                    <a class="btn btn-sm btn-outline-secondary" href="http://dashboard.mytijaara.test/admin/whatsapp/resume-campaigns" title="Approved resume templates">Templates</a>
+                    <textarea id="messageText" class="wa-composer-input" placeholder="Take over to send a message" rows="1" disabled></textarea>
+                    <button id="btnSend" class="wa-btn-send" disabled>
+                        <i class="tio-send"></i>
+                    </button>
+                </div>
+                    </div>
+    </div>
+</div>
+</body></html>

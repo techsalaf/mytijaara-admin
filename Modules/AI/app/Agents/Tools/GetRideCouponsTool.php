@@ -9,26 +9,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Lists ride-share coupons currently applicable to the customer.
- *
- * Eligibility mirrors the host's CouponSetupRepository::getAppliedCoupon
- * logic, minus the per-trip fare check (we don't know the trip yet — this
- * is a passive listing). The audit (§4) confirmed:
- *
- *   - zone_coupon_type = 'all' OR a row exists in ride_zone_coupon_setups
- *     for one of the user's zones.
- *   - customer_coupon_type = 'all' OR a row exists in
- *     ride_customer_coupon_setups for this user.
- *   - category_coupon_type JSON contains 'all' or 'ride_request' (we only
- *     surface ride-applicable coupons here; parcel coupons stay out).
- *   - is_active = 1 and today is within [start_date, end_date].
- *
- * We deliberately do NOT call CouponSetupRepository::getAppliedCoupon
- * because that method demands a trip fare + level_id + booking context the
- * customer hasn't supplied yet. Chat is showing a menu, not validating a
- * booking.
- */
 class GetRideCouponsTool implements Tool
 {
     /**
@@ -56,8 +36,6 @@ class GetRideCouponsTool implements Tool
 
         $today = date('Y-m-d');
 
-        // ride_request is the category_coupon_type value the host uses for
-        // ride-side coupons (parcel uses 'parcel'). 'all' covers both.
         $query = CouponSetup::query()
             ->where('is_active', 1)
             ->whereDate('start_date', '<=', $today)
@@ -67,7 +45,6 @@ class GetRideCouponsTool implements Tool
                   ->orWhere('category_coupon_type', 'like', '%"ride_request"%');
             });
 
-        // Zone scope: 'all' OR our zones are linked in ride_zone_coupon_setups.
         if (!empty($this->zoneIds)) {
             $zoneIds = $this->zoneIds;
             $query->where(function ($q) use ($zoneIds) {
@@ -78,8 +55,6 @@ class GetRideCouponsTool implements Tool
             $query->where('zone_coupon_type', 'all');
         }
 
-        // Customer scope: 'all' OR a row exists in ride_customer_coupon_setups
-        // for this user. Guests can only see 'all'-customer coupons.
         if ($this->user) {
             $userId = $this->user->getKey();
             $query->where(function ($q) use ($userId) {
@@ -106,7 +81,6 @@ class GetRideCouponsTool implements Tool
             $code      = $c->getAttribute('coupon_code') ?: ('#' . $c->getKey());
             $amount    = (float) $c->getAttribute('coupon');
             $type      = (string) $c->getAttribute('amount_type');
-            // amount_type values from the host: 'percentage' or 'amount'.
             $discount  = $type === 'percentage'
                 ? round($amount) . '% off'
                 : 'flat ' . round($amount, 2) . ' off';

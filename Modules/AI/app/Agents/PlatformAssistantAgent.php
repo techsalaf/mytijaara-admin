@@ -4,6 +4,10 @@ namespace Modules\AI\app\Agents;
 
 use Modules\AI\app\Agents\Tools\AddToCartTool;
 use Modules\AI\app\Agents\Tools\GetBestDealsTool;
+use Modules\AI\app\Agents\Tools\GetBogoOfferDetailsTool;
+use Modules\AI\app\Agents\Tools\GetBogoOffersTool;
+use Modules\AI\app\Agents\Tools\GetBundlesTool;
+use Modules\AI\app\Agents\Tools\GetHappyHourTool;
 use Modules\AI\app\Agents\Tools\GetAvailableLanguagesTool;
 use Modules\AI\app\Agents\Tools\GetCartItemsTool;
 use Modules\AI\app\Agents\Tools\GetCategoriesTool;
@@ -62,9 +66,6 @@ class PlatformAssistantAgent implements Agent, Conversational, HasTools
         private readonly ?float            $longitude   = null,
     ) {}
 
-    // -------------------------------------------------------------------------
-    // Agent contract
-    // -------------------------------------------------------------------------
 
     public function instructions(): Stringable|string
     {
@@ -159,6 +160,9 @@ RULE 4 — TOOL ROUTING:
   Never claim items are "from X" or "in X" when the tag doesn't say so. If the result is the loose-keyword fallback, you MUST acknowledge there was no exact match — do not pretend the results are the user's specific item.
 - User asks what is popular/trending/best-selling → GetPopularItemsTool
 - User asks for deals/discounts/offers/cheap options → GetBestDealsTool
+- User asks about "bogo", "buy one get one", "buy 2 get 1", "b1g1", or "buy X get Y free" → GetBogoOffersTool. Follow-up "what's in that offer?" / "which stores have it?" / "how much?" → GetBogoOfferDetailsTool with the OFFER ID. See RULE 4B for the full nuance.
+- User asks about "happy hour", "any discounts on now", "which stores have offers today" → GetHappyHourTool. See RULE 4B.
+- User asks about "bundle", "combo", "value pack", "meal deal", or "set deal" → GetBundlesTool with search set to any specific keyword mentioned (e.g. store or product name), or null for all active bundles. See RULE 4B.
 - User asks for a store/restaurant/vendor/shop by name → SearchStoresTool with that name as query
 - User asks for "best/top/popular/trending/suggest/recommend stores/restaurants/shops" with no specific name → SearchStoresTool with query: null (or empty). Returns active stores in the customer's zone ranked the SAME way the storefront ranks them (promoted, then personalised, then open-now and popularity).
 - User asks for "nearest/nearby/closest/near me" → SearchStoresTool with query: "nearest" (or any near-intent word). When the request carries the customer's latitude/longitude headers, the tool orders by real distance from those coordinates. When coordinates are missing, the tool falls back to the promoted/popular sort and the result text will say "no GPS coordinates available" — relay that note to the user honestly.
@@ -175,6 +179,25 @@ RULE 4 — TOOL ROUTING:
 - User says "clear my cart" / "empty my cart" → RemoveFromCartTool with clear_all: true (omit store_id to clear all buckets, or pass store_id to clear one store's bucket)
 - User says "change quantity to N" / "make it N" / "I need N of this" / "update quantity" / "set to N" / "twice of this" → UpdateCartQuantityTool with the new ABSOLUTE quantity. ALWAYS pass both item_id and item_name.
 - User says "add N more" / "increase by N" / "another N" → UpdateCartQuantityTool with quantity = (current cart quantity for that item) + N. Read the current quantity from the cart shown most recently. ALWAYS pass item_name as a safety net.
+
+RULE 4B — BOGO, HAPPY HOUR, AND BUNDLES (do not confuse these three with each other or with an ordinary discount):
+
+BOGO offers — GetBogoOffersTool, then GetBogoOfferDetailsTool for a specific one:
+- NEVER invent or guess an offer, a store, what is in a bundle, or a price. If the tool returns nothing, say there are none running right now — do not fill the gap from memory.
+- A BOGO offer is a BUNDLE at a fixed price, not a discount on one item. Say what the customer buys and what they get free, in the tool's own words.
+- The same offer can run at several stores with DIFFERENT items and DIFFERENT prices, so never answer "what do I get?" for the offer in general — name the store (use GetBogoOfferDetailsTool for this).
+- You CANNOT add a BOGO bundle to the cart from chat. Adding one means choosing variations and add-ons for each of its items, which happens on the offer screen. Close by telling the customer to tap the offer card.
+- Only offers that can actually be ordered are returned, so never hedge with "if it's still available" — if you were given it, it can be taken.
+
+Happy hour — GetHappyHourTool:
+- A happy hour is a SCHEDULED WINDOW taking a percentage off a store's WHOLE menu. It is not a per-item discount, not a BOGO bundle, and not a bundle deal. Never mix the four up.
+- The rate is per store, not per window: quote the figure the tool gives for THAT store.
+- A store can be enrolled without its window being open right now — say which it is, do not imply a discount is live when it is not.
+
+Bundle deals — GetBundlesTool:
+- A bundle is a fixed SET of items sold together at one price — every member is charged, just less than buying them separately. Unlike BOGO, nothing in a bundle is free.
+- Do NOT use SearchProductsTool for this — a bundle is its own product, not an item match, and will never come back from a name search.
+- You CANNOT add a bundle to the cart from chat either, for the same reason as BOGO — the customer opens the bundle card in the app to take it.
 
 RULE 5 — PERSONALISE USING REAL DATA:
 Use the customer profile from USER CONTEXT to personalise which results to highlight (e.g. veg items for vegetarian users, budget options for price-sensitive users) — but you must still call the tools and return real data. Never skip the tool call based on assumptions.
@@ -266,6 +289,10 @@ INSTRUCTIONS;
             new SearchProductsTool($this->context, $this->moduleId, $this->zoneIds),
             new GetPopularItemsTool($this->context, $this->moduleId, $this->zoneIds),
             new GetBestDealsTool($this->context, $this->moduleId, $this->zoneIds),
+            new GetBogoOffersTool($this->context, $this->moduleId, $this->zoneIds, $this->user, $this->guestId),
+            new GetBogoOfferDetailsTool($this->context, $this->moduleId, $this->zoneIds, $this->user, $this->guestId),
+            new GetBundlesTool($this->context, $this->moduleId, $this->zoneIds),
+            new GetHappyHourTool($this->context, $this->moduleId, $this->zoneIds, $this->latitude, $this->longitude),
             new SearchStoresTool($this->context, $this->moduleId, $this->zoneIds, $this->latitude, $this->longitude, $this->user),
             new GetStoreDetailsTool($this->context, $this->moduleId, $this->zoneIds),
             new GetPlatformInfoTool($this->context),
@@ -279,7 +306,6 @@ INSTRUCTIONS;
             new UpdateUserContextTool($this->context, $this->user, $this->moduleType),
         ];
 
-        // Module-specific suggestion tools. Read-only, no actions.
         if ($this->moduleType === 'parcel') {
             $tools[] = new GetParcelCategoriesTool($this->context, $this->moduleId);
         }
@@ -304,9 +330,6 @@ INSTRUCTIONS;
         return $tools;
     }
 
-    // -------------------------------------------------------------------------
-    // Dynamic instruction builders
-    // -------------------------------------------------------------------------
 
     private function moduleInstructions(): string
     {
@@ -358,7 +381,8 @@ TOOL ROUTING:
   - Out-of-scope questions (account creation, tracking, refund status etc.) → politely
     explain that the assistant only helps with parcel category and pricing suggestions.
 NEVER CALL: AddToCartTool, GetCartItemsTool, UpdateCartQuantityTool, RemoveFromCartTool,
-SearchProductsTool, GetPopularItemsTool, GetBestDealsTool. These do not apply to parcel.
+SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, GetBogoOffersTool, GetBogoOfferDetailsTool, GetHappyHourTool, GetBundlesTool.
+These do not apply to parcel.
 BLOCK,
 
             'rental' => <<<'BLOCK'
@@ -392,7 +416,8 @@ distance). Show all available models in the response. Use the currency block abo
 formatting. When the user mentions a budget, match it to the model they specified
 (hourly_price for "/hour", day_wise_price for "/day", distance_price for "/km").
 NEVER CALL: AddToCartTool, GetCartItemsTool, UpdateCartQuantityTool, RemoveFromCartTool,
-SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, SearchStoresTool. Rental
+SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, GetBogoOffersTool, GetBogoOfferDetailsTool, GetHappyHourTool, GetBundlesTool,
+SearchStoresTool. Rental
 uses its own tools and booking happens elsewhere in the app.
 BLOCK,
 
@@ -428,7 +453,8 @@ PRICING CONTEXT: Each service has a base price (some carry a discount). Show the
 price and mention the original when discounted. Use the currency block above for formatting.
 When the user gives a budget, pass it as max_price and prefer sort=cheapest.
 NEVER CALL: AddToCartTool, GetCartItemsTool, UpdateCartQuantityTool, RemoveFromCartTool,
-SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, SearchStoresTool. Service uses
+SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, GetBogoOffersTool, GetBogoOfferDetailsTool, GetHappyHourTool, GetBundlesTool,
+SearchStoresTool. Service uses
 its own tools and booking happens elsewhere in the app.
 BLOCK,
 
@@ -472,8 +498,8 @@ SAFETY DEFLECTION: If the user mentions an active safety concern (driver acting 
 emergency), surface the emergency contact via GetRideShareInfoTool(topic='safety') and
 direct them to the in-app safety button. Do NOT promise to file a report yourself.
 NEVER CALL: AddToCartTool, GetCartItemsTool, UpdateCartQuantityTool, RemoveFromCartTool,
-SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, SearchStoresTool,
-GetRentalVehiclesTool, GetRentalCategoriesTool, GetRentalProvidersTool. Ride-share uses
+SearchProductsTool, GetPopularItemsTool, GetBestDealsTool, GetBogoOffersTool, GetBogoOfferDetailsTool, GetHappyHourTool, GetBundlesTool,
+SearchStoresTool, GetRentalVehiclesTool, GetRentalCategoriesTool, GetRentalProvidersTool. Ride-share uses
 its own tools.
 BLOCK,
 
@@ -513,50 +539,31 @@ BLOCK,
             "use the amount AS-IS — do NOT convert it. Only convert when the user genuinely uses a foreign currency.";
     }
 
-    /**
-     * Return common spoken names / aliases for a currency symbol so the AI
-     * recognises them as the system currency and skips conversion.
-     */
     private function currencyAliases(string $symbol): string
     {
         $map = [
-            // Bangladeshi Taka
             '৳'   => 'taka, tk, BDT, Bangladeshi taka',
             'BDT' => 'taka, tk, ৳, Bangladeshi taka',
-            // US Dollar
             '$'   => 'dollar, dollars, USD, US dollar',
             'USD' => 'dollar, dollars, $, US dollar',
-            // Euro
             '€'   => 'euro, euros, EUR',
             'EUR' => 'euro, euros, €',
-            // British Pound
             '£'   => 'pound, pounds, GBP, sterling',
             'GBP' => 'pound, pounds, £, sterling',
-            // Indian Rupee
             '₹'   => 'rupee, rupees, INR, Indian rupee',
             'INR' => 'rupee, rupees, ₹, Indian rupee',
-            // Pakistani Rupee
             'PKR' => 'rupee, rupees, Pakistani rupee',
-            // Saudi Riyal
             'SAR' => 'riyal, riyals, SR, Saudi riyal',
-            // UAE Dirham
             'AED' => 'dirham, dirhams, UAE dirham',
-            // Turkish Lira
             '₺'   => 'lira, TRY, Turkish lira',
             'TRY' => 'lira, ₺, Turkish lira',
-            // Nigerian Naira
             '₦'   => 'naira, NGN',
             'NGN' => 'naira, ₦',
-            // Indonesian Rupiah
             'IDR' => 'rupiah, Rp',
-            // Malaysian Ringgit
             'MYR' => 'ringgit, RM',
-            // Thai Baht
             '฿'   => 'baht, THB',
             'THB' => 'baht, ฿',
-            // Egyptian Pound
             'EGP' => 'pound, pounds, Egyptian pound',
-            // Kenyan Shilling
             'KES' => 'shilling, shillings, Kenyan shilling',
         ];
 
@@ -632,7 +639,6 @@ BLOCK,
             return $raw;
         }
 
-        // Group by scope tag for a readable block
         $grouped = [];
         foreach ($facts as $fact) {
             if (preg_match('/^\[([^\]]+)\]\s*(.+)$/', $fact, $m)) {
@@ -643,7 +649,6 @@ BLOCK,
         }
 
         $out = [];
-        // Always show global first
         foreach (['global', $this->moduleType] as $priority) {
             if (isset($grouped[$priority])) {
                 $out[] = "  [{$priority}]: " . implode('. ', $grouped[$priority]);

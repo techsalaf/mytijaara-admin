@@ -1,0 +1,368 @@
+isolation	Concierge regression tests	﻿2026-09-21T15:39:44.0612966Z ##[group]Run vendor/bin/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit concierge-results.xml
+isolation	Concierge regression tests	2026-09-21T15:39:44.0614004Z ^[[36;1mvendor/bin/phpunit Modules/WhatsAppVendorConcierge/tests --log-junit concierge-results.xml^[[0m
+isolation	Concierge regression tests	2026-09-21T15:39:44.0659350Z shell: /usr/bin/bash -e {0}
+isolation	Concierge regression tests	2026-09-21T15:39:44.0659665Z env:
+isolation	Concierge regression tests	2026-09-21T15:39:44.0659911Z   APP_ENV: testing
+isolation	Concierge regression tests	2026-09-21T15:39:44.0660174Z   APP_DEBUG: false
+isolation	Concierge regression tests	2026-09-21T15:39:44.0660767Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation	Concierge regression tests	2026-09-21T15:39:44.0661215Z   DB_CONNECTION: sqlite
+isolation	Concierge regression tests	2026-09-21T15:39:44.0661474Z   DB_DATABASE: :memory:
+isolation	Concierge regression tests	2026-09-21T15:39:44.0661734Z   CACHE_STORE: array
+isolation	Concierge regression tests	2026-09-21T15:39:44.0662007Z   LOG_CHANNEL: single
+isolation	Concierge regression tests	2026-09-21T15:39:44.0662274Z   ISOLATION_MYSQL: 1
+isolation	Concierge regression tests	2026-09-21T15:39:44.0662568Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation	Concierge regression tests	2026-09-21T15:39:44.0662882Z   COMPOSER_NO_INTERACTION: 1
+isolation	Concierge regression tests	2026-09-21T15:39:44.0663181Z   COMPOSER_NO_AUDIT: 1
+isolation	Concierge regression tests	2026-09-21T15:39:44.0663456Z ##[endgroup]
+isolation	Concierge regression tests	2026-09-21T15:39:44.2096246Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+isolation	Concierge regression tests	2026-09-21T15:39:44.2096633Z 
+isolation	Concierge regression tests	2026-09-21T15:39:44.2096774Z Runtime:       PHP 8.3.33
+isolation	Concierge regression tests	2026-09-21T15:39:44.2097190Z Configuration: /home/runner/work/mytijaara-admin/mytijaara-admin/phpunit.xml
+isolation	Concierge regression tests	2026-09-21T15:39:44.2097539Z 
+isolation	Concierge regression tests	2026-09-21T15:39:57.8827715Z EEEEE.FF..EEE...F...E....FFFFF......EF..FE.E...................  63 / 134 ( 47%)
+isolation	Concierge regression tests	2026-09-21T15:40:33.2258153Z .........EFF..EEEEEE........FFFF............................... 126 / 134 ( 94%)
+isolation	Concierge regression tests	2026-09-21T15:40:34.8797881Z .....E.E                                                        134 / 134 (100%)
+isolation	Concierge regression tests	2026-09-21T15:40:34.8798289Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8798416Z Time: 00:50.669, Memory: 131.00 MB
+isolation	Concierge regression tests	2026-09-21T15:40:34.8798627Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8798940Z There were 21 errors:
+isolation	Concierge regression tests	2026-09-21T15:40:34.8799115Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8799744Z 1) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::tokens_are_hashed_regenerated_and_atomically_single_use
+isolation	Concierge regression tests	2026-09-21T15:40:34.8800978Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8801573Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8802036Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8803062Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8804138Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8805517Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:21
+isolation	Concierge regression tests	2026-09-21T15:40:34.8806356Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8806915Z 2) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::expired_invalid_revoked_and_abandoned_tokens_are_rejected
+isolation	Concierge regression tests	2026-09-21T15:40:34.8808263Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8808833Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8809269Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8810294Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8811564Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8812609Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:42
+isolation	Concierge regression tests	2026-09-21T15:40:34.8813239Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8813793Z 3) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::url_uses_configured_https_origin_despite_request_host
+isolation	Concierge regression tests	2026-09-21T15:40:34.8814931Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8815532Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8816279Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8817474Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8818650Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8819921Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:59
+isolation	Concierge regression tests	2026-09-21T15:40:34.8820874Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8821431Z 4) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::password_validation_and_successful_https_continuation
+isolation	Concierge regression tests	2026-09-21T15:40:34.8834982Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8835469Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8835867Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8836717Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8837582Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8838520Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:70
+isolation	Concierge regression tests	2026-09-21T15:40:34.8839049Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8839543Z 5) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::failed_password_attempts_are_atomically_limited_and_revoke_the_link
+isolation	Concierge regression tests	2026-09-21T15:40:34.8840575Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8841034Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8841408Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8842274Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8843138Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8844047Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:87
+isolation	Concierge regression tests	2026-09-21T15:40:34.8844560Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8844938Z 6) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_preflight_command_passes
+isolation	Concierge regression tests	2026-09-21T15:40:34.8845701Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:preflight" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8846408Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8846783Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8847944Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8849164Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.8850556Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/MaintenanceCommandsTest.php:25
+isolation	Concierge regression tests	2026-09-21T15:40:34.8851318Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8851884Z 7) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_process_stuck_sessions_dry_run_and_execution
+isolation	Concierge regression tests	2026-09-21T15:40:34.8853062Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:process-stuck-sessions" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8853593Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8854007Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8854910Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8856039Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.8857100Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/MaintenanceCommandsTest.php:103
+isolation	Concierge regression tests	2026-09-21T15:40:34.8857810Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8858312Z 8) Modules\WhatsAppVendorConcierge\tests\Hardening\MaintenanceCommandsTest::test_cleanup_media_dry_run_and_execution
+isolation	Concierge regression tests	2026-09-21T15:40:34.8859410Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:cleanup-media" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8859902Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8860456Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8861469Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8862580Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.8863724Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/MaintenanceCommandsTest.php:157
+isolation	Concierge regression tests	2026-09-21T15:40:34.8864388Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8864891Z 9) Modules\WhatsAppVendorConcierge\tests\Hardening\NotificationConcurrencyTest::test_decision_state_is_synchronized_when_delivery_fails
+isolation	Concierge regression tests	2026-09-21T15:40:34.8866540Z TypeError: MockObject_WhatsAppGateway_109b304d::sendTemplateMessage(): Argument #4 ($language) must be of type string, null given, called in /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Jobs/SendVendorStatusNotification.php on line 226
+isolation	Concierge regression tests	2026-09-21T15:40:34.8867725Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8868221Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Jobs/SendVendorStatusNotification.php:226
+isolation	Concierge regression tests	2026-09-21T15:40:34.8869349Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/NotificationConcurrencyTest.php:134
+isolation	Concierge regression tests	2026-09-21T15:40:34.8869985Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8870584Z 10) Modules\WhatsAppVendorConcierge\tests\Hardening\PreflightTest::test_strict_preflight_passes_for_a_complete_test_configuration
+isolation	Concierge regression tests	2026-09-21T15:40:34.8871541Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:preflight" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8872049Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8872477Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8873597Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8874858Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.8875970Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/PreflightTest.php:21
+isolation	Concierge regression tests	2026-09-21T15:40:34.8876605Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8877160Z 11) Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest::test_payment_link_generation_and_pending_transition
+isolation	Concierge regression tests	2026-09-21T15:40:34.8878340Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.subscription-payment] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8878994Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8879495Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8880715Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:375
+isolation	Concierge regression tests	2026-09-21T15:40:34.8881785Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:415
+isolation	Concierge regression tests	2026-09-21T15:40:34.8882880Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.8884292Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/SubscriptionLifecycleService.php:50
+isolation	Concierge regression tests	2026-09-21T15:40:34.8885557Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/SubscriptionLifecycleTest.php:179
+isolation	Concierge regression tests	2026-09-21T15:40:34.8886262Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8886791Z 12) Modules\WhatsAppVendorConcierge\tests\Hardening\SubscriptionLifecycleTest::test_expired_link_detection_and_regeneration
+isolation	Concierge regression tests	2026-09-21T15:40:34.8887945Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.subscription-payment] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8888618Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8889107Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8890206Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:375
+isolation	Concierge regression tests	2026-09-21T15:40:34.8891410Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:415
+isolation	Concierge regression tests	2026-09-21T15:40:34.8892487Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.8893714Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/SubscriptionLifecycleService.php:50
+isolation	Concierge regression tests	2026-09-21T15:40:34.8894884Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/SubscriptionLifecycleTest.php:307
+isolation	Concierge regression tests	2026-09-21T15:40:34.8895571Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8896141Z 13) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::test_queue_failure_does_not_abort_a_host_denial
+isolation	Concierge regression tests	2026-09-21T15:40:34.8897423Z Mockery\Exception\InvalidCountException: Method connection(<Any Arguments>) from Mockery_1_Illuminate_Support_Testing_Fakes_QueueFake should be called
+isolation	Concierge regression tests	2026-09-21T15:40:34.8898310Z  exactly 1 times but called 0 times.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8898558Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8899031Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/mockery/mockery/library/Mockery/CountValidator/Exact.php:32
+isolation	Concierge regression tests	2026-09-21T15:40:34.8900074Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/mockery/mockery/library/Mockery/Expectation.php:739
+isolation	Concierge regression tests	2026-09-21T15:40:34.8901287Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/mockery/mockery/library/Mockery/ExpectationDirector.php:202
+isolation	Concierge regression tests	2026-09-21T15:40:34.8902264Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/mockery/mockery/library/Mockery/Container.php:583
+isolation	Concierge regression tests	2026-09-21T15:40:34.8903229Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/mockery/mockery/library/Mockery/Container.php:519
+isolation	Concierge regression tests	2026-09-21T15:40:34.8904177Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/mockery/mockery/library/Mockery.php:176
+isolation	Concierge regression tests	2026-09-21T15:40:34.8905458Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Testing/Concerns/InteractsWithTestCaseLifecycle.php:147
+isolation	Concierge regression tests	2026-09-21T15:40:34.8906732Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Testing/TestCase.php:85
+isolation	Concierge regression tests	2026-09-21T15:40:34.8907942Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/HardeningTestCase.php:52
+isolation	Concierge regression tests	2026-09-21T15:40:34.8908592Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8909237Z 14) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_passes_exact_approved_contract_without_sending_messages
+isolation	Concierge regression tests	2026-09-21T15:40:34.8910626Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8911237Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8911736Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8912882Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8914072Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+isolation	Concierge regression tests	2026-09-21T15:40:34.8915404Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+isolation	Concierge regression tests	2026-09-21T15:40:34.8916596Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/ApprovedTemplateContractTest.php:55
+isolation	Concierge regression tests	2026-09-21T15:40:34.8917315Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8917866Z 15) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_wrong_locale_and_lists_the_available_locale
+isolation	Concierge regression tests	2026-09-21T15:40:34.8918952Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8919496Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8919965Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8921243Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8922442Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+isolation	Concierge regression tests	2026-09-21T15:40:34.8923552Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+isolation	Concierge regression tests	2026-09-21T15:40:34.8924760Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/ApprovedTemplateContractTest.php:65
+isolation	Concierge regression tests	2026-09-21T15:40:34.8925479Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8925939Z 16) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_missing_templates
+isolation	Concierge regression tests	2026-09-21T15:40:34.8927039Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8927670Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8928167Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8929385Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8930735Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+isolation	Concierge regression tests	2026-09-21T15:40:34.8931959Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+isolation	Concierge regression tests	2026-09-21T15:40:34.8933238Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/ApprovedTemplateContractTest.php:71
+isolation	Concierge regression tests	2026-09-21T15:40:34.8934006Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8934462Z 17) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_unapproved_templates
+isolation	Concierge regression tests	2026-09-21T15:40:34.8935714Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8936298Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8936731Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8937778Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8938753Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+isolation	Concierge regression tests	2026-09-21T15:40:34.8939787Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+isolation	Concierge regression tests	2026-09-21T15:40:34.8940979Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/ApprovedTemplateContractTest.php:77
+isolation	Concierge regression tests	2026-09-21T15:40:34.8941552Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8941964Z 18) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_fails_wrong_parameter_count
+isolation	Concierge regression tests	2026-09-21T15:40:34.8942981Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8943658Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8944089Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8945048Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8946004Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+isolation	Concierge regression tests	2026-09-21T15:40:34.8946951Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+isolation	Concierge regression tests	2026-09-21T15:40:34.8947966Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/ApprovedTemplateContractTest.php:83
+isolation	Concierge regression tests	2026-09-21T15:40:34.8948557Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8949107Z 19) Modules\WhatsAppVendorConcierge\tests\Unit\ApprovedTemplateContractTest::test_audit_does_not_print_provider_credentials_or_raw_errors
+isolation	Concierge regression tests	2026-09-21T15:40:34.8950113Z Symfony\Component\Console\Exception\CommandNotFoundException: The command "whatsapp:check-templates" does not exist.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8950823Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8951286Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Console/Application.php:162
+isolation	Concierge regression tests	2026-09-21T15:40:34.8952288Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:447
+isolation	Concierge regression tests	2026-09-21T15:40:34.8953303Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:451
+isolation	Concierge regression tests	2026-09-21T15:40:34.8954352Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/PendingCommand.php:675
+isolation	Concierge regression tests	2026-09-21T15:40:34.8955514Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/ApprovedTemplateContractTest.php:90
+isolation	Concierge regression tests	2026-09-21T15:40:34.8956114Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8956632Z 20) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_generates_secure_password_token_and_sends_cta_url
+isolation	Concierge regression tests	2026-09-21T15:40:34.8957722Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8958262Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8958696Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8959654Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8960908Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8962039Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/VendorOnboardingService.php:1161
+isolation	Concierge regression tests	2026-09-21T15:40:34.8963005Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/VendorOnboardingService.php:912
+isolation	Concierge regression tests	2026-09-21T15:40:34.8963716Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/WhatsAppVendorConciergeTest.php:1276
+isolation	Concierge regression tests	2026-09-21T15:40:34.8964115Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8964424Z 21) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppVendorConciergeTest::it_renders_and_submits_secure_password_over_https
+isolation	Concierge regression tests	2026-09-21T15:40:34.8965345Z Symfony\Component\Routing\Exception\RouteNotFoundException: Route [whatsapp.onboarding.password] not defined.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8965818Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8966255Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Routing/UrlGenerator.php:534
+isolation	Concierge regression tests	2026-09-21T15:40:34.8966878Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Foundation/helpers.php:870
+isolation	Concierge regression tests	2026-09-21T15:40:34.8967510Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/CredentialTokenService.php:39
+isolation	Concierge regression tests	2026-09-21T15:40:34.8968183Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/app/Services/VendorOnboardingService.php:1161
+isolation	Concierge regression tests	2026-09-21T15:40:34.8969014Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/WhatsAppVendorConciergeTest.php:1355
+isolation	Concierge regression tests	2026-09-21T15:40:34.8969404Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8969475Z --
+isolation	Concierge regression tests	2026-09-21T15:40:34.8969561Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8969635Z There were 16 failures:
+isolation	Concierge regression tests	2026-09-21T15:40:34.8969747Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8970032Z 1) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::credential_routes_enforce_throttling
+isolation	Concierge regression tests	2026-09-21T15:40:34.8970632Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8970904Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8971067Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8971379Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8972033Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8972705Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:16
+isolation	Concierge regression tests	2026-09-21T15:40:34.8973411Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:120
+isolation	Concierge regression tests	2026-09-21T15:40:34.8973799Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8974079Z 2) Modules\WhatsAppVendorConcierge\tests\Hardening\CredentialSecurityTest::csrf_remains_enabled_for_password_posts
+isolation	Concierge regression tests	2026-09-21T15:40:34.8974522Z Expected response status code [419] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8974785Z Failed asserting that 404 is identical to 419.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8974946Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8975243Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8975883Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8976541Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/CredentialSecurityTest.php:132
+isolation	Concierge regression tests	2026-09-21T15:40:34.8976918Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8977195Z 3) Modules\WhatsAppVendorConcierge\tests\Hardening\MediaSecurityPolicyTest::kyc_access_requires_admin_authorization
+isolation	Concierge regression tests	2026-09-21T15:40:34.8977696Z Expected response status code [201, 301, 302, 303, 307, 308] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8978009Z Failed asserting that false is true.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8978152Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8978454Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8979099Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:200
+isolation	Concierge regression tests	2026-09-21T15:40:34.8979882Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/MediaSecurityPolicyTest.php:102
+isolation	Concierge regression tests	2026-09-21T15:40:34.8980264Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8980740Z 4) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::every_operations_route_rejects_anonymous_access
+isolation	Concierge regression tests	2026-09-21T15:40:34.8981240Z Expected response status code [401] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8981502Z Failed asserting that 404 is identical to 401.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8981664Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8981959Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8982595Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8983282Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:121
+isolation	Concierge regression tests	2026-09-21T15:40:34.8984007Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/OperationsAuthorizationTest.php:26
+isolation	Concierge regression tests	2026-09-21T15:40:34.8984395Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8984695Z 5) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::unrelated_admin_role_cannot_read_or_send
+isolation	Concierge regression tests	2026-09-21T15:40:34.8985259Z Expected response status code [403] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8985523Z Failed asserting that 404 is identical to 403.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8985681Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8985971Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8986606Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8987267Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:141
+isolation	Concierge regression tests	2026-09-21T15:40:34.8987973Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/OperationsAuthorizationTest.php:37
+isolation	Concierge regression tests	2026-09-21T15:40:34.8988362Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8988752Z 6) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::authorized_admin_can_read_events_by_canonical_foreign_key_and_queue_messages
+isolation	Concierge regression tests	2026-09-21T15:40:34.8989306Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8989559Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8989714Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8990001Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8990819Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8991485Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:16
+isolation	Concierge regression tests	2026-09-21T15:40:34.8992191Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/OperationsAuthorizationTest.php:49
+isolation	Concierge regression tests	2026-09-21T15:40:34.8992590Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8992860Z 7) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::expired_admin_session_is_rejected
+isolation	Concierge regression tests	2026-09-21T15:40:34.8993301Z Expected response status code [401] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8993562Z Failed asserting that 404 is identical to 401.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8993722Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8994017Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8994655Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8995310Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:121
+isolation	Concierge regression tests	2026-09-21T15:40:34.8996013Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/OperationsAuthorizationTest.php:61
+isolation	Concierge regression tests	2026-09-21T15:40:34.8996522Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8996876Z 8) Modules\WhatsAppVendorConcierge\tests\Hardening\OperationsAuthorizationTest::debug_does_not_sign_payloads_and_is_absent_in_production
+isolation	Concierge regression tests	2026-09-21T15:40:34.8997381Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8997635Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.8997792Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.8998083Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.8998712Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.8999362Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:16
+isolation	Concierge regression tests	2026-09-21T15:40:34.9000059Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/OperationsAuthorizationTest.php:69
+isolation	Concierge regression tests	2026-09-21T15:40:34.9000578Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9000890Z 9) Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signed_batched_status_webhook_only_dispatches_receipt_jobs
+isolation	Concierge regression tests	2026-09-21T15:40:34.9001476Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9001743Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9001894Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9002193Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.9002834Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.9003491Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:16
+isolation	Concierge regression tests	2026-09-21T15:40:34.9004172Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/ReceiptSecurityTest.php:22
+isolation	Concierge regression tests	2026-09-21T15:40:34.9004545Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9004808Z 10) Modules\WhatsAppVendorConcierge\tests\Hardening\ReceiptSecurityTest::signature_and_verification_fail_closed
+isolation	Concierge regression tests	2026-09-21T15:40:34.9005239Z Expected response status code [401] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9005499Z Failed asserting that 404 is identical to 401.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9005644Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9005936Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.9006559Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.9007211Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/Concerns/AssertsStatusCodes.php:121
+isolation	Concierge regression tests	2026-09-21T15:40:34.9007885Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Hardening/ReceiptSecurityTest.php:70
+isolation	Concierge regression tests	2026-09-21T15:40:34.9008252Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9008576Z 11) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_approved
+isolation	Concierge regression tests	2026-09-21T15:40:34.9009213Z The expected [Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification] job was not pushed.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9009608Z Failed asserting that false is true.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9009745Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9010058Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Testing/Fakes/QueueFake.php:121
+isolation	Concierge regression tests	2026-09-21T15:40:34.9010849Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.9011532Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/AdminApprovalNotificationTest.php:85
+isolation	Concierge regression tests	2026-09-21T15:40:34.9011923Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9012239Z 12) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::it_dispatches_whatsapp_message_when_vendor_is_denied
+isolation	Concierge regression tests	2026-09-21T15:40:34.9012984Z The expected [Modules\WhatsAppVendorConcierge\app\Jobs\SendVendorStatusNotification] job was not pushed.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9013378Z Failed asserting that false is true.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9013516Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9013831Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Testing/Fakes/QueueFake.php:121
+isolation	Concierge regression tests	2026-09-21T15:40:34.9014481Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:363
+isolation	Concierge regression tests	2026-09-21T15:40:34.9015144Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/AdminApprovalNotificationTest.php:131
+isolation	Concierge regression tests	2026-09-21T15:40:34.9015531Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9015772Z 13) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_dispatches_message_via_api
+isolation	Concierge regression tests	2026-09-21T15:40:34.9016191Z Expected response status code [202] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9016454Z Failed asserting that 404 is identical to 202.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9016612Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9016915Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.9017661Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.9018306Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/WhatsAppApiControllerTest.php:41
+isolation	Concierge regression tests	2026-09-21T15:40:34.9018680Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9018936Z 14) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_lists_conversations_and_history
+isolation	Concierge regression tests	2026-09-21T15:40:34.9019355Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9019619Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9019775Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9020069Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.9020848Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.9021493Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/WhatsAppApiControllerTest.php:75
+isolation	Concierge regression tests	2026-09-21T15:40:34.9021879Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9022129Z 15) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_returns_onboarding_analytics
+isolation	Concierge regression tests	2026-09-21T15:40:34.9022569Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9022827Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9022975Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9023266Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.9023891Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.9024526Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/WhatsAppApiControllerTest.php:99
+isolation	Concierge regression tests	2026-09-21T15:40:34.9024900Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9025158Z 16) Modules\WhatsAppVendorConcierge\tests\Unit\WhatsAppApiControllerTest::it_tests_webhook_signature_calculation
+isolation	Concierge regression tests	2026-09-21T15:40:34.9025587Z Expected response status code [200] but received 404.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9025835Z Failed asserting that 404 is identical to 200.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9025990Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9026281Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponseAssert.php:45
+isolation	Concierge regression tests	2026-09-21T15:40:34.9026912Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Testing/TestResponse.php:175
+isolation	Concierge regression tests	2026-09-21T15:40:34.9027550Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/WhatsAppApiControllerTest.php:126
+isolation	Concierge regression tests	2026-09-21T15:40:34.9027922Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9027985Z --
+isolation	Concierge regression tests	2026-09-21T15:40:34.9028074Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9028143Z There was 1 risky test:
+isolation	Concierge regression tests	2026-09-21T15:40:34.9028403Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9028701Z 1) Modules\WhatsAppVendorConcierge\tests\Unit\AdminApprovalNotificationTest::test_queue_failure_does_not_abort_a_host_denial
+isolation	Concierge regression tests	2026-09-21T15:40:34.9029208Z * Test code or tested code did not remove its own error handlers
+isolation	Concierge regression tests	2026-09-21T15:40:34.9029411Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9029547Z * Test code or tested code did not remove its own exception handlers
+isolation	Concierge regression tests	2026-09-21T15:40:34.9029776Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9030117Z /home/runner/work/mytijaara-admin/mytijaara-admin/Modules/WhatsAppVendorConcierge/tests/Unit/AdminApprovalNotificationTest.php:29
+isolation	Concierge regression tests	2026-09-21T15:40:34.9030663Z 
+isolation	Concierge regression tests	2026-09-21T15:40:34.9030736Z ERRORS!
+isolation	Concierge regression tests	2026-09-21T15:40:34.9031003Z Tests: 134, Assertions: 602, Errors: 21, Failures: 16, PHPUnit Deprecations: 50, Risky: 1.
+isolation	Concierge regression tests	2026-09-21T15:40:34.9040830Z ##[error]Process completed with exit code 2.

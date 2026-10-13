@@ -8,7 +8,7 @@ use App\Models\Cart;
 use App\Models\Item;
 use App\Models\Store;
 use App\Models\User;
-use App\CentralLogics\PersonalizationService;
+use App\Services\Customer\PersonalizationService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
@@ -42,7 +42,6 @@ class AddToCartTool implements Tool
     {
         $this->context->recordTool('AddToCartTool');
 
-        // Support both authenticated users and guests
         if (! $this->user && ! $this->guestId) {
             return 'Cannot add to cart: no customer identity available. The chat session must include either a logged-in user or a guest_id.';
         }
@@ -64,15 +63,10 @@ class AddToCartTool implements Tool
         ];
 
         /** @var Item|null $item */
-        // Look up WITHOUT the active scope first — so we can give a specific reason if unavailable
         $item = $itemId > 0
             ? Item::withoutGlobalScopes()->find($itemId, $itemColumns)
             : null;
 
-        // Name-based recovery — when the LLM passed a wrong/missing item_id but
-        // provided the item_name the user typed, try to resolve it inside the
-        // current module/zone before declaring failure. Scoped to the current
-        // module so a food add can never accidentally resolve an e-commerce item.
         if (! $item && $itemName !== null && $itemName !== '') {
             $item = Item::withoutGlobalScopes()
                 ->when($this->moduleId, fn ($q) => $q->where('module_id', $this->moduleId))
@@ -91,7 +85,6 @@ class AddToCartTool implements Tool
                 : "Item #{$itemId} does not exist in our system.";
         }
 
-        // Validate item is actually orderable
         if ((int) $item->getAttribute('status') !== 1) {
             return "\"{$item->getAttribute('name')}\" is currently inactive and cannot be added to cart.";
         }
@@ -100,7 +93,6 @@ class AddToCartTool implements Tool
             return "\"{$item->getAttribute('name')}\" is pending approval and cannot be added to cart yet.";
         }
 
-        // Validate store is active
         $store = Store::select(['id', 'name', 'status'])->find((int) $item->getAttribute('store_id'));
         if (! $store || (int) $store->status !== 1) {
             return "\"{$item->getAttribute('name')}\" is from a store that is currently inactive.";
@@ -109,37 +101,22 @@ class AddToCartTool implements Tool
         $name   = $item->getAttribute('name');
         $isFood = $this->moduleType === 'food';
 
-        // --- Variation gate ---
-        // 6amMart stores variations in TWO different shapes depending on module:
-        //   food  → food_variations: [{name, type, required, values:[{label, optionPrice}]}]
-        //           cart row shape:  [{name, values:{label:[...]}}], price = base + Σ optionPrice
-        //           (the customer MUST pick one option from EVERY required group)
-        //   other → variations:      [{type, price, stock}]
-        //           cart row shape:  [{type, price, stock}], price = variant price (replaces base)
-        // We must write the SAME shape the storefront/checkout reads, otherwise
-        // Helpers::cart_product_data_formatting can't render the row and the cart
-        // item modal shows no selection.
         if ($isFood) {
             $resolution = $this->resolveFoodVariation($item, $variationType);
         } else {
             $resolution = $this->resolveLegacyVariation($item, $variationType);
         }
 
-        // The customer still needs to choose — return the prompt and DO NOT add.
         if ($resolution['needs_choice']) {
             return $resolution['prompt'];
         }
 
-        $selectedVariation = $resolution['selected'];   // array stored in cart.variation
-        $variationLabel    = $resolution['label'];      // human label, e.g. "Large, Extra sauce"
+        $selectedVariation = $resolution['selected'];
+        $variationLabel    = $resolution['label'];
         $price             = $resolution['price'];
         $rawStock          = $resolution['stock'];
-        $variationNeedle   = $resolution['needle'];     // representative string for the dedup LIKE
+        $variationNeedle   = $resolution['needle'];
 
-        // Stock enforcement mirrors PlaceNewOrder: only the modules whose
-        // config('module.<type>.stock') flag is true track inventory at order
-        // time (grocery, pharmacy, e-commerce). For food / parcel / rental /
-        // ride-share, stock is informational and never blocks.
         $tracksStock = (bool) (config('module.' . $this->moduleType . '.stock') ?? false);
         $stock       = $tracksStock
             ? (is_numeric($rawStock) ? (int) $rawStock : 0)
@@ -160,18 +137,13 @@ class AddToCartTool implements Tool
             return "Cannot add {$quantity} of {$name} — maximum allowed per cart is {$maxQty}.";
         }
 
-        // Always scope the cart row to the item's own module so adding an item
-        // from a different module never conflicts with another module's cart.
         $moduleId = (int) $item->getAttribute('module_id');
 
-        // Identity: authenticated user gets is_guest=false + user_id=integer
-        // Guest gets is_guest=true + user_id=guest_id string (matches 6amMart cart system)
         $isGuest    = $this->user === null;
         $cartUserId = $isGuest ? $this->guestId : $this->user->getKey();
 
         $itemStoreId = (int) $item->getAttribute('store_id');
 
-        // --- Check existing cart row (same item + variation + store) ---
         $existing = Cart::where('item_id', $itemId)
             ->where('item_type', Item::class)
             ->where('user_id', $cartUserId)
@@ -215,10 +187,8 @@ class AddToCartTool implements Tool
             'variation'   => json_encode($selectedVariation),
         ]);
 
-        // Mirror the host controller — authenticated cart adds feed the
-        // personalization signal (CartController::add_to_cart).
         if (! $isGuest && $this->user) {
-            PersonalizationService::recordItemAction((int) $this->user->getKey(), $itemId, 'cart');
+            app(PersonalizationService::class)->recordItemAction((int) $this->user->getKey(), $itemId, 'cart');
         }
 
         $this->publishCartSnapshot($cartUserId, $isGuest, $moduleId);
@@ -226,9 +196,6 @@ class AddToCartTool implements Tool
         return "Added {$quantity}× {$name}{$vLabel} to your cart (price: {$price} each).";
     }
 
-    // -------------------------------------------------------------------------
-    // Variation resolvers
-    // -------------------------------------------------------------------------
 
     /**
      * Resolve a FOOD item's option selection into the cart's stored shape.
@@ -237,7 +204,7 @@ class AddToCartTool implements Tool
      *   [{name, type:"single"|"multi", min, max, required:"on"|"off",
      *     values:[{label, optionPrice}, ...]}]
      *
-     * Cart row shape we must write (read by Helpers::cart_product_data_formatting
+     * Cart row shape we must write (read by Common\Item\CartProductResource
      * and OrderActionsProvider::liveLinePrice):
      *   [{name, values:{label:[chosenLabel, ...]}}]
      *
@@ -269,11 +236,6 @@ class AddToCartTool implements Tool
 
             $chosen = $this->matchGroupLabels($tokens, $values);
 
-            // Over-selection guard: if the customer's words map to MORE options
-            // than this group allows (a pick-one group has max=1), treat it as an
-            // unmade choice and re-prompt — never silently add several options and
-            // sum their prices (the old substring match did exactly that, e.g.
-            // "plate" matched BOTH "Half plate" and "Full plate").
             if ($max > 0 && count($chosen) > $max) {
                 $missing[] = $group;
                 continue;
@@ -292,7 +254,6 @@ class AddToCartTool implements Tool
             }
         }
 
-        // A required group wasn't satisfied (or nothing was chosen at all) — ask.
         if (! empty($missing)) {
             return [
                 'needs_choice' => true,
@@ -310,7 +271,7 @@ class AddToCartTool implements Tool
             'selected'     => $selected,
             'label'        => implode(', ', $labels),
             'price'        => round($basePrice + $extra, 2),
-            'stock'        => $item->getAttribute('stock'),  // food stock is item-level
+            'stock'        => $item->getAttribute('stock'),
             'needle'       => $labels[0] ?? '',
         ];
     }
@@ -376,14 +337,7 @@ class AddToCartTool implements Tool
         ];
     }
 
-    // -------------------------------------------------------------------------
-    // Matching helpers
-    // -------------------------------------------------------------------------
 
-    /**
-     * Split a user/LLM choice string into individual option tokens.
-     * "Large, Extra cheese" → ["large", "extra cheese"].
-     */
     private function splitChoices(?string $raw): array
     {
         if ($raw === null) {
@@ -396,11 +350,6 @@ class AddToCartTool implements Tool
         ), fn ($p) => $p !== ''));
     }
 
-    /**
-     * Normalise a label/token for tolerant comparison: lowercase, trim, and
-     * strip any trailing price hint the model tends to append, e.g.
-     * "Large (+350)" / "Large - 350" / "Large +৳350" → "large".
-     */
     private function normalizeLabel(string $value): string
     {
         $value = trim($value);
@@ -434,7 +383,6 @@ class AddToCartTool implements Tool
             }
         }
 
-        // Pass 1 — exact normalized equality.
         $chosen = [];
         foreach ($labels as $orig => $norm) {
             if ($norm !== '' && in_array($norm, $tokens, true)) {
@@ -445,8 +393,6 @@ class AddToCartTool implements Tool
             return array_keys($chosen);
         }
 
-        // Pass 2 — unique substring disambiguation (skip tokens shorter than 2,
-        // and any token that hits more than one label in this group).
         foreach ($tokens as $tok) {
             if (mb_strlen($tok) < 2) {
                 continue;
@@ -483,10 +429,6 @@ class AddToCartTool implements Tool
         return \is_array($decoded) ? $decoded : [];
     }
 
-    /**
-     * Tolerant non-food variant match: exact (case-insensitive) first, then a
-     * normalised contains-match so "large", "Large", "Large (350)" all resolve.
-     */
     private function matchVariation(array $variations, string $type): ?array
     {
         $needle = $this->normalizeLabel($type);
@@ -507,9 +449,6 @@ class AddToCartTool implements Tool
         return null;
     }
 
-    // -------------------------------------------------------------------------
-    // Prompt builders
-    // -------------------------------------------------------------------------
 
     private function buildVariationPrompt(string $name, int $itemId, array $variations, string $prefix = ''): string
     {
@@ -550,9 +489,6 @@ class AddToCartTool implements Tool
         return "{$prefix}NOT added yet — {$name} [ID:{$itemId}] needs a choice for EACH of these required groups: " . implode(' | ', $blocks);
     }
 
-    // -------------------------------------------------------------------------
-    // Cart snapshot
-    // -------------------------------------------------------------------------
 
     /**
      * Re-read the cart after a mutation and publish a fresh snapshot to the
@@ -570,7 +506,7 @@ class AddToCartTool implements Tool
             ->where('is_guest', $isGuest)
             ->where('item_type', Item::class)
             ->when($moduleId, fn ($q) => $q->where('module_id', $moduleId))
-            ->with('item:id,name,price,discount,discount_type,store_id,image')
+            ->with(['item:id,name,price,discount,discount_type,store_id,image', 'item.storage'])
             ->get();
 
         $storeIds   = $carts->pluck('store_id')->filter()->unique()->values()->all();
@@ -611,11 +547,6 @@ class AddToCartTool implements Tool
         $this->context->addCartItems($data);
     }
 
-    /**
-     * Human-readable label for a stored cart `variation` value (food:
-     * [{name, values:{label:[...]}}], non-food: [{type:"..."}]). Peels up to two
-     * json-encode layers because cart rows are written pre-encoded by convention.
-     */
     private function cartVariationLabel(mixed $raw): string
     {
         for ($i = 0; $i < 2 && is_string($raw); $i++) {

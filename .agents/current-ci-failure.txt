@@ -1,0 +1,1331 @@
+Gate Tests	Build Assets	﻿2026-09-21T15:23:47.3836193Z ##[group]Run npm run build
+Gate Tests	Build Assets	2026-09-21T15:23:47.3836548Z ^[[36;1mnpm run build^[[0m
+Gate Tests	Build Assets	2026-09-21T15:23:47.3881047Z shell: /usr/bin/bash -e {0}
+Gate Tests	Build Assets	2026-09-21T15:23:47.3881551Z env:
+Gate Tests	Build Assets	2026-09-21T15:23:47.3881804Z   COMPOSER_PROCESS_TIMEOUT: 0
+Gate Tests	Build Assets	2026-09-21T15:23:47.3882365Z   COMPOSER_NO_INTERACTION: 1
+Gate Tests	Build Assets	2026-09-21T15:23:47.3882674Z   COMPOSER_NO_AUDIT: 1
+Gate Tests	Build Assets	2026-09-21T15:23:47.3882970Z ##[endgroup]
+Gate Tests	Build Assets	2026-09-21T15:23:47.5026871Z 
+Gate Tests	Build Assets	2026-09-21T15:23:47.5027817Z > build
+Gate Tests	Build Assets	2026-09-21T15:23:47.5028583Z > vite build && npm run ensure:symlink
+Gate Tests	Build Assets	2026-09-21T15:23:47.5029102Z 
+Gate Tests	Build Assets	2026-09-21T15:23:47.7197803Z ^[[36mvite v5.4.21 ^[[32mbuilding for production...^[[36m^[[39m
+Gate Tests	Build Assets	2026-09-21T15:23:47.7939465Z transforming...
+Gate Tests	Build Assets	2026-09-21T15:23:50.0494757Z ^[[32m✓^[[39m 636 modules transformed.
+Gate Tests	Build Assets	2026-09-21T15:23:50.2026359Z rendering chunks...
+Gate Tests	Build Assets	2026-09-21T15:23:50.3455949Z computing gzip size...
+Gate Tests	Build Assets	2026-09-21T15:23:50.3620332Z ^[[2mpublic/build/^[[22m^[[32mmanifest.json            ^[[39m^[[1m^[[2m  0.28 kB^[[22m^[[1m^[[22m^[[2m │ gzip:   0.15 kB^[[22m
+Gate Tests	Build Assets	2026-09-21T15:23:50.3623215Z ^[[2mpublic/build/^[[22m^[[2massets/^[[22m^[[35mapp-VGlbpKwI.css  ^[[39m^[[1m^[[2m  0.99 kB^[[22m^[[1m^[[22m^[[2m │ gzip:   0.37 kB^[[22m
+Gate Tests	Build Assets	2026-09-21T15:23:50.3625807Z ^[[2mpublic/build/^[[22m^[[2massets/^[[22m^[[36mapp-CCKw3Io8.js   ^[[39m^[[1m^[[2m495.23 kB^[[22m^[[1m^[[22m^[[2m │ gzip: 163.09 kB^[[22m
+Gate Tests	Build Assets	2026-09-21T15:23:50.3627187Z ^[[32m✓ built in 2.61s^[[39m
+Gate Tests	Build Assets	2026-09-21T15:23:50.5018989Z 
+Gate Tests	Build Assets	2026-09-21T15:23:50.5019612Z > ensure:symlink
+Gate Tests	Build Assets	2026-09-21T15:23:50.5020366Z > test -L build || ln -s public/build build
+Gate Tests	Build Assets	2026-09-21T15:23:50.5020806Z 
+Gate Tests	Build Assets	2026-09-21T15:23:50.5070159Z ln: failed to create symbolic link 'build': File exists
+Gate Tests	Build Assets	2026-09-21T15:23:50.5195995Z ##[error]Process completed with exit code 1.
+isolation / isolation	UNKNOWN STEP	﻿2026-09-21T15:22:44.0395282Z Current runner version: '2.337.0'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0422616Z ##[group]Runner Image Provisioner
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0423565Z Hosted Compute Agent
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0424191Z Version: 20260828.587
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0424896Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0425651Z Build Date: 2026-08-28T16:44:25Z
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0426332Z Worker ID: {b0fdf1fd-48f0-43dd-a1ad-63f6ae0a7e6d}
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0427677Z Azure Region: westus2
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0428291Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0429933Z ##[group]Operating System
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0430675Z Ubuntu
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0431186Z 24.04.5
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0431749Z LTS
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0432270Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0432870Z ##[group]Runner Image
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0433537Z Image: ubuntu-24.04
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0434085Z Version: 20260907.300.1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0435451Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0436969Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0438552Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0439728Z ##[group]GITHUB_TOKEN Permissions
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0442036Z Contents: read
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0442643Z Metadata: read
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0443263Z Packages: read
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0443875Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0446048Z Secret source: Actions
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0447093Z Cache mode: write
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0448446Z Prepare workflow directory
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0923078Z Prepare all required actions
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.0971679Z Getting action download info
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.4802906Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.5912628Z Download action repository 'shivammathur/setup-php@v2' (SHA:f3e473d116dcccaddc5834248c87452386958240)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:44.8020629Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.0255616Z Uses: techsalaf/mytijaara-admin/.github/workflows/whatsapp-isolation.yml@refs/heads/main (d76e3efcd7ded59f15c4dce180483cd18b959d1e)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.0260827Z Complete job name: isolation / isolation
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.0800804Z ##[group]Checking docker version
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.0813946Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1641513Z '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1657007Z Docker daemon API version: '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1658133Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1822304Z '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1834748Z Docker client API version: '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1842348Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1846653Z ##[group]Clean up resources from previous jobs
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1853380Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=1afab4"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.1997143Z ##[command]/usr/bin/docker network prune --force --filter "label=1afab4"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2133714Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2134234Z ##[group]Create local container network
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2144730Z ##[command]/usr/bin/docker network create --label 1afab4 github_network_c9520eac8297474fb94473c87386ce3b
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2650794Z 5881472e8f93237534ff2bf08da044871f63921177400b90058467b1cfde2164
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2671821Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2696469Z ##[group]Starting mysql service container
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:45.2718775Z ##[command]/usr/bin/docker pull mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.1881814Z 8.0: Pulling from library/mysql
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4719043Z edf85873f64e: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4719882Z 6ef6c7b50a93: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4720475Z e3e5d1ac74c1: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4721035Z 0d74d296605b: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4721579Z 297d04cfe470: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4722097Z 4c8a3e0d4e4b: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4722483Z a63160a5eda1: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4723566Z 7534d1db9f8d: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4724170Z 49ec2dab01d9: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4724814Z ab24264a27e9: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4725464Z 96d30d9fbee8: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4726144Z a63160a5eda1: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4726541Z 7534d1db9f8d: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4726846Z 49ec2dab01d9: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4727319Z ab24264a27e9: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4727936Z 96d30d9fbee8: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4728629Z 0d74d296605b: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4728935Z 297d04cfe470: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.4729237Z 4c8a3e0d4e4b: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.7258218Z 6ef6c7b50a93: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.7258833Z 6ef6c7b50a93: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.7709974Z e3e5d1ac74c1: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.7711091Z e3e5d1ac74c1: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.9490831Z edf85873f64e: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:46.9492360Z edf85873f64e: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.0120038Z 297d04cfe470: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.0124049Z 297d04cfe470: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.0483869Z 0d74d296605b: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.0484657Z 0d74d296605b: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.1819719Z 4c8a3e0d4e4b: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.1820971Z 4c8a3e0d4e4b: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.2893976Z 7534d1db9f8d: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.2896082Z 7534d1db9f8d: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.4686137Z a63160a5eda1: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.5264971Z ab24264a27e9: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.5265853Z ab24264a27e9: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.7100220Z 96d30d9fbee8: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.7101214Z 96d30d9fbee8: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.9129216Z 49ec2dab01d9: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:47.9130042Z 49ec2dab01d9: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:48.4602161Z edf85873f64e: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:48.9396366Z 6ef6c7b50a93: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:48.9619369Z e3e5d1ac74c1: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:49.1700544Z 0d74d296605b: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:49.1815829Z 297d04cfe470: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:49.1941491Z 4c8a3e0d4e4b: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:49.9818219Z a63160a5eda1: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:49.9931263Z 7534d1db9f8d: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:57.9914521Z 49ec2dab01d9: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0043743Z ab24264a27e9: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0142924Z 96d30d9fbee8: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0186893Z Digest: sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0199078Z Status: Downloaded newer image for mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0208678Z docker.io/library/mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0288619Z ##[command]/usr/bin/docker create --name d8861b8e37a44f94b89467b21e48ec4a_mysql80_09db30 --label 1afab4 --network github_network_c9520eac8297474fb94473c87386ce3b --network-alias mysql -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10 -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" -e GITHUB_ACTIONS=true -e CI=true mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0567621Z 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.0592009Z ##[command]/usr/bin/docker start 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.2846135Z 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.2875022Z ##[command]/usr/bin/docker ps --all --filter id=8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3009589Z 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65 Up Less than a second (health: starting)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3034387Z ##[command]/usr/bin/docker port 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3185107Z 3306/tcp -> 0.0.0.0:3306
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3185946Z 3306/tcp -> [::]:3306
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3245008Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3254349Z ##[group]Waiting for all services to be ready
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3279035Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3451035Z starting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:22:58.3472573Z mysql service is starting, waiting 2 seconds before checking again.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:00.3479131Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:00.3608225Z starting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:00.3620687Z mysql service is starting, waiting 4 seconds before checking again.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:04.6295315Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:04.6427594Z starting
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:04.6441936Z mysql service is starting, waiting 7 seconds before checking again.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.5540940Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.5674158Z healthy
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.5690694Z mysql service is healthy.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.5691432Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6065923Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6073903Z ##[group]Run actions/checkout@v4
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6074342Z with:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6074553Z   fetch-depth: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6074795Z   repository: techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6078129Z   token: ***
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6078355Z   ssh-strict: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6078565Z   ssh-user: git
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6078788Z   persist-credentials: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6079028Z   clean: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6079242Z   sparse-checkout-cone-mode: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6079503Z   fetch-tags: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6079711Z   show-progress: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6079922Z   lfs: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6080171Z   submodules: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6080387Z   set-safe-directory: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6080637Z   allow-unsafe-pr-checkout: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6081133Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6081327Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6081535Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6081836Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6082196Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6082425Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6082634Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6082840Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6083053Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.6083262Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7168756Z Syncing repository: techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7170388Z ##[group]Getting Git version info
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7171122Z Working directory is '/home/runner/work/mytijaara-admin/mytijaara-admin'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7172140Z [command]/usr/bin/git version
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7230620Z git version 2.55.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7259754Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7277961Z Temporarily overriding HOME='/home/runner/work/_temp/d0d9b04f-bf9d-4743-8a4c-9ee4bdf94dce' before making global git config changes
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7279401Z Adding repository directory to the temporary git global config as a safe directory
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7286441Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7339194Z Deleting the contents of '/home/runner/work/mytijaara-admin/mytijaara-admin'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7342722Z ##[group]Initializing the repository
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7348409Z [command]/usr/bin/git init /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7459120Z hint: Using 'master' as the name for the initial branch. This default branch name
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7463022Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7463738Z hint: to use in all of your new repositories, which will suppress this warning,
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7464260Z hint: call:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7464554Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7464986Z hint: 	git config --global init.defaultBranch <name>
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7465435Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7465846Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7466466Z hint: 'development'. The just-created branch can be renamed via this command:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7466974Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7467279Z hint: 	git branch -m <name>
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7467990Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7468637Z hint: Disable this message with "git config set advice.defaultBranchName false"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7469797Z Initialized empty Git repository in /home/runner/work/mytijaara-admin/mytijaara-admin/.git/
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7474857Z [command]/usr/bin/git remote add origin https://github.com/techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7529136Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7529571Z ##[group]Disabling automatic garbage collection
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7535693Z [command]/usr/bin/git config --local gc.auto 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7574261Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7574996Z ##[group]Setting up auth
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7584714Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.7634493Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8057488Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8102226Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8335669Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8374553Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8611353Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8656578Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8657354Z ##[group]Fetching the repository
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:12.8668424Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9313658Z From https://github.com/techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9314606Z  * [new branch]      main       -> origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9326551Z [command]/usr/bin/git branch --list --remote origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9356707Z   origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9366421Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9392795Z d76e3efcd7ded59f15c4dce180483cd18b959d1e
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9398965Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9399454Z ##[group]Determining the checkout info
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9400526Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9409267Z [command]/usr/bin/git sparse-checkout disable
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9476684Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9511314Z ##[group]Checking out the ref
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:15.9516971Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.5992432Z Switched to a new branch 'main'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.5996796Z branch 'main' set up to track 'origin/main'.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6028174Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6078406Z [command]/usr/bin/git log -1 --format=%H
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6106724Z d76e3efcd7ded59f15c4dce180483cd18b959d1e
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6322472Z ##[group]Run shivammathur/setup-php@v2
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6322891Z with:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6323093Z   php-version: 8.3
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6323426Z   extensions: mbstring, dom, fileinfo, pdo_mysql, pdo_sqlite, zip, gd, curl
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6323824Z   ini-file: production
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6326741Z   github-token: ***
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6326958Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6327144Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6327347Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6328001Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6328362Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6328579Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6328790Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6328992Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6329208Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6329428Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.6730444Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.7151862Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:16.7152754Z ^[[90;1m==> ^[[0m^[[37;1mSetup PHP^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9020297Z ^[[32;1m✓ ^[[0m^[[34;1mPHP ^[[0m^[[90;1mUpdated to PHP 8.3.33^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9021014Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9021581Z ^[[90;1m==> ^[[0m^[[37;1mSetup Extensions^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9835066Z ^[[32;1m✓ ^[[0m^[[34;1mmbstring ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9863092Z ^[[32;1m✓ ^[[0m^[[34;1mdom ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9894040Z ^[[32;1m✓ ^[[0m^[[34;1mfileinfo ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9910182Z ^[[32;1m✓ ^[[0m^[[34;1mpdo_mysql ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9930258Z ^[[32;1m✓ ^[[0m^[[34;1mpdo_sqlite ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9959087Z ^[[32;1m✓ ^[[0m^[[34;1mzip ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:19.9988280Z ^[[32;1m✓ ^[[0m^[[34;1mgd ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.0018285Z ^[[32;1m✓ ^[[0m^[[34;1mcurl ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.0018940Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.0019912Z ^[[90;1m==> ^[[0m^[[37;1mSetup Tools^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.2957272Z ^[[32;1m✓ ^[[0m^[[34;1mcomposer ^[[0m^[[90;1mAdded composer 2.10.3^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.2957993Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.2969909Z ^[[90;1m==> ^[[0m^[[37;1mSponsor setup-php^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.2970557Z ^[[32;1m✓ ^[[0m^[[34;1msetup-php ^[[0m^[[90;1mhttps://setup-php.com/sponsor^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3136328Z ##[group]Run composer install --no-interaction --prefer-dist --no-progress
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3136912Z ^[[36;1mcomposer install --no-interaction --prefer-dist --no-progress^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3182304Z shell: /usr/bin/bash -e {0}
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3182581Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3182778Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3182997Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3183315Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3183684Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3183909Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3184142Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3184352Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3184562Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3184781Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3185029Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3185258Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.3185473Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.5397752Z Installing dependencies from lock file (including require-dev)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.5521041Z Verifying lock file contents can be installed on current platform.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7706900Z Package operations: 208 installs, 0 updates, 0 removals
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7714979Z   - Downloading php-http/discovery (1.20.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7719837Z   - Downloading wikimedia/composer-merge-plugin (v2.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7723315Z   - Downloading aws/aws-crt-php (v1.2.7)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7726594Z   - Downloading symfony/finder (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7729799Z   - Downloading symfony/polyfill-mbstring (v1.38.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7732762Z   - Downloading symfony/deprecation-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7735606Z   - Downloading symfony/var-dumper (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7739471Z   - Downloading psr/log (3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7743037Z   - Downloading php-debugbar/php-debugbar (v2.2.6)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7746511Z   - Downloading voku/portable-ascii (2.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7749831Z   - Downloading symfony/polyfill-php80 (v1.37.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7752631Z   - Downloading symfony/polyfill-ctype (v1.37.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7755823Z   - Downloading phpoption/phpoption (1.9.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7758612Z   - Downloading graham-campbell/result-type (v1.1.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7761080Z   - Downloading vlucas/phpdotenv (v5.6.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7763218Z   - Downloading symfony/css-selector (v7.4.9)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7766320Z   - Downloading tijsverkoyen/css-to-inline-styles (v2.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7768181Z   - Downloading symfony/polyfill-uuid (v1.37.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7771081Z   - Downloading symfony/uid (v7.4.9)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7772509Z   - Downloading symfony/routing (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7774738Z   - Downloading symfony/process (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7776198Z   - Downloading symfony/polyfill-php85 (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7778202Z   - Downloading symfony/polyfill-php84 (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7781747Z   - Downloading symfony/polyfill-php83 (v1.38.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7782879Z   - Downloading symfony/polyfill-intl-normalizer (v1.38.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7788759Z   - Downloading symfony/polyfill-intl-idn (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7789606Z   - Downloading symfony/mime (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7790308Z   - Downloading psr/container (2.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7791061Z   - Downloading symfony/service-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7791874Z   - Downloading psr/event-dispatcher (1.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7793030Z   - Downloading symfony/event-dispatcher-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7794594Z   - Downloading symfony/event-dispatcher (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7796870Z   - Downloading doctrine/lexer (3.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7799130Z   - Downloading egulias/email-validator (4.0.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7800665Z   - Downloading symfony/mailer (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7802304Z   - Downloading symfony/http-foundation (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7803826Z   - Downloading symfony/error-handler (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7805703Z   - Downloading symfony/http-kernel (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7807123Z   - Downloading symfony/polyfill-intl-grapheme (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7809031Z   - Downloading symfony/string (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7810604Z   - Downloading symfony/console (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7812606Z   - Downloading ramsey/collection (2.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7814538Z   - Downloading brick/math (0.14.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7816067Z   - Downloading ramsey/uuid (4.9.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7817894Z   - Downloading psr/simple-cache (3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7819796Z   - Downloading nunomaduro/termwind (v2.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7821385Z   - Downloading symfony/translation-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7822924Z   - Downloading symfony/translation (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7824393Z   - Downloading psr/clock (1.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7827379Z   - Downloading symfony/clock (v7.4.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7829624Z   - Downloading carbonphp/carbon-doctrine-types (3.2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7831464Z   - Downloading nesbot/carbon (3.13.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7833466Z   - Downloading monolog/monolog (3.10.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7835012Z   - Downloading psr/http-message (2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7836521Z   - Downloading psr/http-factory (1.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7838736Z   - Downloading league/uri-interfaces (7.8.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7840085Z   - Downloading league/uri (7.8.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7841653Z   - Downloading league/mime-type-detection (1.16.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7843113Z   - Downloading league/flysystem-local (3.31.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7844522Z   - Downloading league/flysystem (3.35.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7846364Z   - Downloading nette/utils (v4.1.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7848101Z   - Downloading nette/schema (v1.3.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7850162Z   - Downloading dflydev/dot-access-data (v3.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7851591Z   - Downloading league/config (v1.2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7853129Z   - Downloading league/commonmark (2.8.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7855190Z   - Downloading laravel/serializable-closure (v2.0.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7856628Z   - Downloading laravel/prompts (v0.3.21)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7859059Z   - Downloading guzzlehttp/uri-template (v1.0.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7860678Z   - Downloading psr/http-client (1.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7862683Z   - Downloading ralouphie/getallheaders (3.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7864170Z   - Downloading guzzlehttp/psr7 (2.12.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7865697Z   - Downloading guzzlehttp/promises (2.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7867207Z   - Downloading guzzlehttp/guzzle (7.12.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7869561Z   - Downloading fruitcake/php-cors (v1.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7871565Z   - Downloading dragonmantank/cron-expression (v3.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7873037Z   - Downloading doctrine/inflector (2.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7874601Z   - Downloading laravel/framework (v12.62.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7876585Z   - Downloading barryvdh/laravel-debugbar (v3.16.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7878744Z   - Downloading masterminds/html5 (2.10.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7880583Z   - Downloading thecodingmachine/safe (v3.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7882494Z   - Downloading sabberworm/php-css-parser (v9.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7884299Z   - Downloading dompdf/php-svg-lib (1.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7885751Z   - Downloading dompdf/php-font-lib (1.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7887155Z   - Downloading dompdf/dompdf (v3.1.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7889148Z   - Downloading barryvdh/laravel-dompdf (v3.1.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7891238Z   - Downloading brian2694/laravel-toastr (5.61)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7893093Z   - Downloading clue/redis-protocol (v0.3.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7894529Z   - Downloading psr/cache (3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7896080Z   - Downloading doctrine/deprecations (1.1.6)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7897787Z   - Downloading doctrine/dbal (4.4.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7908932Z   - Downloading fakerphp/faker (v1.24.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7909582Z   - Downloading rize/uri-template (0.4.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7910150Z   - Downloading grpc/grpc (1.81.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7910675Z   - Downloading google/protobuf (v5.35.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7911536Z   - Downloading google/longrunning (0.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7912102Z   - Downloading firebase/php-jwt (v6.11.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7912679Z   - Downloading google/auth (v1.52.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7913166Z   - Downloading google/grpc-gcp (0.4.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7913705Z   - Downloading google/common-protos (4.14.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7914758Z   - Downloading google/gax (v1.43.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7917270Z   - Downloading google/cloud-core (v1.72.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7919650Z   - Downloading gregwar/captcha (v1.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7922091Z   - Downloading inertiajs/inertia-laravel (v3.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7924557Z   - Downloading intervention/gif (4.2.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7926316Z   - Downloading intervention/image (3.11.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7928984Z   - Downloading iyzico/iyzipay-php (v2.0.61)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7931394Z   - Downloading mtdowling/jmespath.php (2.9.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7933844Z   - Downloading lcobucci/jwt (5.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7936219Z   - Downloading fig/http-message-util (1.1.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7938813Z   - Downloading beste/clock (3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7941177Z   - Downloading kreait/firebase-tokens (5.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7943059Z   - Downloading google/cloud-storage (v1.51.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7945391Z   - Downloading cuyz/valinor (2.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7947281Z   - Downloading beste/json (1.7.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7949322Z   - Downloading beste/in-memory-cache (1.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7951029Z   - Downloading kreait/firebase-php (7.24.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7952771Z   - Downloading symfony/filesystem (v7.4.11)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7954647Z   - Downloading aws/aws-sdk-php (3.386.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7956424Z   - Downloading laravel/ai (v0.6.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7958502Z   - Downloading laravel/pail (v1.2.7)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7960386Z   - Downloading symfony/psr-http-message-bridge (v7.4.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7962782Z   - Downloading paragonie/random_compat (v9.99.100)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7964574Z   - Downloading paragonie/constant_time_encoding (v3.1.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7966916Z   - Downloading phpseclib/phpseclib (3.0.55)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7969608Z   - Downloading nyholm/psr7 (1.8.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7971434Z   - Downloading league/event (2.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7973149Z   - Downloading lcobucci/clock (3.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7975600Z   - Downloading defuse/php-encryption (v2.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7977333Z   - Downloading league/oauth2-server (8.5.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7979430Z   - Downloading laravel/passport (v12.4.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7981131Z   - Downloading laravel/pint (v1.29.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7983519Z   - Downloading react/event-loop (v1.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7985908Z   - Downloading evenement/evenement (v3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7989642Z   - Downloading react/stream (v1.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7991385Z   - Downloading react/promise (v3.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7993034Z   - Downloading react/cache (v1.2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7994929Z   - Downloading react/dns (v1.14.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7996939Z   - Downloading react/socket (v1.17.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.7998858Z   - Downloading react/promise-timer (v1.11.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8001191Z   - Downloading ratchet/rfc6455 (v0.4.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8003638Z   - Downloading pusher/pusher-php-server (7.2.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8005396Z   - Downloading clue/redis-react (v2.8.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8007133Z   - Downloading laravel/reverb (v1.10.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8009346Z   - Downloading symfony/yaml (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8011074Z   - Downloading laravel/sail (v1.63.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8013484Z   - Downloading nikic/php-parser (v5.7.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8015810Z   - Downloading psy/psysh (v0.12.23)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8017746Z   - Downloading laravel/tinker (v2.11.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8019628Z   - Downloading league/flysystem-aws-s3-v3 (3.35.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8022164Z   - Downloading markbaker/matrix (3.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8023882Z   - Downloading markbaker/complex (3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8026618Z   - Downloading maennchen/zipstream-php (3.2.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8029094Z   - Downloading ezyang/htmlpurifier (v4.19.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8031009Z   - Downloading composer/pcre (3.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8033446Z   - Downloading phpoffice/phpspreadsheet (1.30.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8035051Z   - Downloading composer/semver (3.4.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8037749Z   - Downloading maatwebsite/excel (3.1.69)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8040293Z   - Downloading madnest/madzipper (1.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8042003Z   - Downloading brick/geo (0.13.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8076827Z   - Downloading matanyadaev/laravel-eloquent-spatial (4.8.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8078183Z   - Downloading mercadopago/dx-php (3.8.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8078968Z   - Downloading hamcrest/hamcrest-php (v2.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8079713Z   - Downloading mockery/mockery (1.6.12)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8080489Z   - Downloading setasign/fpdi (v2.6.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8081209Z   - Downloading myclabs/deep-copy (1.13.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8081962Z   - Downloading mpdf/psr-log-aware-trait (v3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8082780Z   - Downloading mpdf/psr-http-message-shim (v2.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8083511Z   - Downloading mpdf/mpdf (v8.3.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8084110Z   - Downloading filp/whoops (2.18.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8084818Z   - Downloading nunomaduro/collision (v8.9.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8085564Z   - Downloading nwidart/laravel-modules (v12.0.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8086418Z   - Downloading php-http/multipart-stream-builder (1.4.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8087233Z   - Downloading openai-php/client (v0.17.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8088529Z   - Downloading openai-php/laravel (v0.17.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8089331Z   - Downloading phonepe/phonepe-pg-php-sdk (1.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8090156Z   - Downloading staabm/side-effects-detector (1.0.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8090942Z   - Downloading sebastian/version (5.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8091627Z   - Downloading sebastian/type (5.1.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8092329Z   - Downloading sebastian/recursion-context (6.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8093119Z   - Downloading sebastian/object-reflector (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8093920Z   - Downloading sebastian/object-enumerator (6.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8094689Z   - Downloading sebastian/global-state (7.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8095428Z   - Downloading sebastian/exporter (6.3.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8096210Z   - Downloading sebastian/environment (7.2.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8096890Z   - Downloading sebastian/diff (6.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8098276Z   - Downloading sebastian/comparator (6.3.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8100232Z   - Downloading sebastian/code-unit (3.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8102141Z   - Downloading sebastian/cli-parser (3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8104592Z   - Downloading phpunit/php-timer (7.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8106389Z   - Downloading phpunit/php-text-template (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8108421Z   - Downloading phpunit/php-invoker (5.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8110493Z   - Downloading phpunit/php-file-iterator (5.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8112894Z   - Downloading theseer/tokenizer (1.3.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8114743Z   - Downloading sebastian/lines-of-code (3.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8116596Z   - Downloading sebastian/complexity (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8118819Z   - Downloading sebastian/code-unit-reverse-lookup (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8120492Z   - Downloading phpunit/php-code-coverage (11.0.12)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8122870Z   - Downloading phar-io/version (3.2.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8124587Z   - Downloading phar-io/manifest (2.0.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8126304Z   - Downloading phpunit/phpunit (11.5.55)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8129170Z   - Downloading openspout/openspout (v4.32.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8131625Z   - Downloading rap2hpoutre/fast-excel (dev-master c92c13d)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8133960Z   - Downloading rmccue/requests (v2.0.18)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8136344Z   - Downloading razorpay/razorpay (2.9.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8139122Z   - Downloading stripe/stripe-php (v10.21.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8141487Z   - Downloading tightenco/ziggy (v2.6.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8144125Z   - Downloading twilio/sdk (6.44.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:20.8146337Z   - Downloading xendit/xendit-php (2.19.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9402574Z   - Installing php-http/discovery (1.20.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9612543Z   - Installing wikimedia/composer-merge-plugin (v2.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9686167Z   - Installing aws/aws-crt-php (v1.2.7): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9692109Z   - Installing symfony/finder (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9698377Z   - Installing symfony/polyfill-mbstring (v1.38.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9704388Z   - Installing symfony/deprecation-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9753005Z   - Installing symfony/var-dumper (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9776987Z   - Installing psr/log (3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9788413Z   - Installing php-debugbar/php-debugbar (v2.2.6): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9789330Z   - Installing voku/portable-ascii (2.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9830509Z   - Installing symfony/polyfill-php80 (v1.37.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9870434Z   - Installing symfony/polyfill-ctype (v1.37.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9871637Z   - Installing phpoption/phpoption (1.9.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9872663Z   - Installing graham-campbell/result-type (v1.1.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9873654Z   - Installing vlucas/phpdotenv (v5.6.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9874576Z   - Installing symfony/css-selector (v7.4.9): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9875879Z   - Installing tijsverkoyen/css-to-inline-styles (v2.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9876932Z   - Installing symfony/polyfill-uuid (v1.37.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9878227Z   - Installing symfony/uid (v7.4.9): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9879095Z   - Installing symfony/routing (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9879985Z   - Installing symfony/process (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9880945Z   - Installing symfony/polyfill-php85 (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9881941Z   - Installing symfony/polyfill-php84 (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9882909Z   - Installing symfony/polyfill-php83 (v1.38.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9883973Z   - Installing symfony/polyfill-intl-normalizer (v1.38.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9885090Z   - Installing symfony/polyfill-intl-idn (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9886028Z   - Installing symfony/mime (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9887417Z   - Installing psr/container (2.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9890216Z   - Installing symfony/service-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9892676Z   - Installing psr/event-dispatcher (1.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9895091Z   - Installing symfony/event-dispatcher-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9897470Z   - Installing symfony/event-dispatcher (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9900183Z   - Installing doctrine/lexer (3.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9902883Z   - Installing egulias/email-validator (4.0.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9905318Z   - Installing symfony/mailer (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9907996Z   - Installing symfony/http-foundation (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9910467Z   - Installing symfony/error-handler (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9912974Z   - Installing symfony/http-kernel (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9915535Z   - Installing symfony/polyfill-intl-grapheme (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9918087Z   - Installing symfony/string (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9920420Z   - Installing symfony/console (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9923119Z   - Installing ramsey/collection (2.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9925425Z   - Installing brick/math (0.14.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9928295Z   - Installing ramsey/uuid (4.9.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9936723Z   - Installing psr/simple-cache (3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9938055Z   - Installing nunomaduro/termwind (v2.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9939125Z   - Installing symfony/translation-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9940557Z   - Installing symfony/translation (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9943125Z   - Installing psr/clock (1.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9945780Z   - Installing symfony/clock (v7.4.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9948966Z   - Installing carbonphp/carbon-doctrine-types (3.2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9951517Z   - Installing nesbot/carbon (3.13.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9954343Z   - Installing monolog/monolog (3.10.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9956459Z   - Installing psr/http-message (2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9958913Z   - Installing psr/http-factory (1.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9961091Z   - Installing league/uri-interfaces (7.8.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9963100Z   - Installing league/uri (7.8.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9965298Z   - Installing league/mime-type-detection (1.16.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9967448Z   - Installing league/flysystem-local (3.31.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9970004Z   - Installing league/flysystem (3.35.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:25.9978518Z   - Installing nette/utils (v4.1.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0008684Z   - Installing nette/schema (v1.3.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0028663Z   - Installing dflydev/dot-access-data (v3.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0029420Z   - Installing league/config (v1.2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0029996Z   - Installing league/commonmark (2.8.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0030591Z   - Installing laravel/serializable-closure (v2.0.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0031100Z   - Installing laravel/prompts (v0.3.21): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0031839Z   - Installing guzzlehttp/uri-template (v1.0.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0032370Z   - Installing psr/http-client (1.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0032923Z   - Installing ralouphie/getallheaders (3.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0033463Z   - Installing guzzlehttp/psr7 (2.12.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0033864Z   - Installing guzzlehttp/promises (2.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0034254Z   - Installing guzzlehttp/guzzle (7.12.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0034636Z   - Installing fruitcake/php-cors (v1.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0035078Z   - Installing dragonmantank/cron-expression (v3.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0035787Z   - Installing doctrine/inflector (2.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0036191Z   - Installing laravel/framework (v12.62.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0036762Z   - Installing barryvdh/laravel-debugbar (v3.16.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0037206Z   - Installing masterminds/html5 (2.10.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0037946Z   - Installing thecodingmachine/safe (v3.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0038566Z   - Installing sabberworm/php-css-parser (v9.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0039107Z   - Installing dompdf/php-svg-lib (1.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0039504Z   - Installing dompdf/php-font-lib (1.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0039884Z   - Installing dompdf/dompdf (v3.1.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0040298Z   - Installing barryvdh/laravel-dompdf (v3.1.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0040885Z   - Installing brian2694/laravel-toastr (5.61): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0041881Z   - Installing clue/redis-protocol (v0.3.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0042322Z   - Installing psr/cache (3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0042706Z   - Installing doctrine/deprecations (1.1.6): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0043105Z   - Installing doctrine/dbal (4.4.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0043754Z   - Installing fakerphp/faker (v1.24.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0044458Z   - Installing rize/uri-template (0.4.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0044972Z   - Installing grpc/grpc (1.81.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0045336Z   - Installing google/protobuf (v5.35.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0045717Z   - Installing google/longrunning (0.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0046474Z   - Installing firebase/php-jwt (v6.11.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0049164Z   - Installing google/auth (v1.52.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0051662Z   - Installing google/grpc-gcp (0.4.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0054002Z   - Installing google/common-protos (4.14.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0056226Z   - Installing google/gax (v1.43.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0058861Z   - Installing google/cloud-core (v1.72.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0061128Z   - Installing gregwar/captcha (v1.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0063373Z   - Installing inertiajs/inertia-laravel (v3.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0065924Z   - Installing intervention/gif (4.2.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0068469Z   - Installing intervention/image (3.11.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0070653Z   - Installing iyzico/iyzipay-php (v2.0.61): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0072893Z   - Installing mtdowling/jmespath.php (2.9.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0075202Z   - Installing lcobucci/jwt (5.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0077991Z   - Installing fig/http-message-util (1.1.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0080175Z   - Installing beste/clock (3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0082332Z   - Installing kreait/firebase-tokens (5.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0084513Z   - Installing google/cloud-storage (v1.51.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0086584Z   - Installing cuyz/valinor (2.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0089302Z   - Installing beste/json (1.7.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0091669Z   - Installing beste/in-memory-cache (1.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0093900Z   - Installing kreait/firebase-php (7.24.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0096097Z   - Installing symfony/filesystem (v7.4.11): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0098338Z   - Installing aws/aws-sdk-php (3.386.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0100690Z   - Installing laravel/ai (v0.6.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0102951Z   - Installing laravel/pail (v1.2.7): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0105324Z   - Installing symfony/psr-http-message-bridge (v7.4.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0107475Z   - Installing paragonie/random_compat (v9.99.100): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0110084Z   - Installing paragonie/constant_time_encoding (v3.1.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0112246Z   - Installing phpseclib/phpseclib (3.0.55): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0114445Z   - Installing nyholm/psr7 (1.8.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0116658Z   - Installing league/event (2.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0119194Z   - Installing lcobucci/clock (3.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0121457Z   - Installing defuse/php-encryption (v2.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0123697Z   - Installing league/oauth2-server (8.5.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0125955Z   - Installing laravel/passport (v12.4.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0128103Z   - Installing laravel/pint (v1.29.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0130823Z   - Installing react/event-loop (v1.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0132912Z   - Installing evenement/evenement (v3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0135146Z   - Installing react/stream (v1.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0137651Z   - Installing react/promise (v3.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0139986Z   - Installing react/cache (v1.2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0142153Z   - Installing react/dns (v1.14.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0144486Z   - Installing react/socket (v1.17.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0146716Z   - Installing react/promise-timer (v1.11.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0149192Z   - Installing ratchet/rfc6455 (v0.4.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0151487Z   - Installing pusher/pusher-php-server (7.2.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0153671Z   - Installing clue/redis-react (v2.8.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0155879Z   - Installing laravel/reverb (v1.10.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0158222Z   - Installing symfony/yaml (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0161053Z   - Installing laravel/sail (v1.63.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0163292Z   - Installing nikic/php-parser (v5.7.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0165506Z   - Installing psy/psysh (v0.12.23): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0167732Z   - Installing laravel/tinker (v2.11.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0170394Z   - Installing league/flysystem-aws-s3-v3 (3.35.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0172590Z   - Installing markbaker/matrix (3.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0174887Z   - Installing markbaker/complex (3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0177135Z   - Installing maennchen/zipstream-php (3.2.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0179691Z   - Installing ezyang/htmlpurifier (v4.19.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0181882Z   - Installing composer/pcre (3.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0184192Z   - Installing phpoffice/phpspreadsheet (1.30.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0186374Z   - Installing composer/semver (3.4.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0188912Z   - Installing maatwebsite/excel (3.1.69): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0191146Z   - Installing madnest/madzipper (1.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0193381Z   - Installing brick/geo (0.13.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0195758Z   - Installing matanyadaev/laravel-eloquent-spatial (4.8.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0197980Z   - Installing mercadopago/dx-php (3.8.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0200502Z   - Installing hamcrest/hamcrest-php (v2.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0202720Z   - Installing mockery/mockery (1.6.12): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0205061Z   - Installing setasign/fpdi (v2.6.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0207306Z   - Installing myclabs/deep-copy (1.13.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0209949Z   - Installing mpdf/psr-log-aware-trait (v3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0212291Z   - Installing mpdf/psr-http-message-shim (v2.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0214368Z   - Installing mpdf/mpdf (v8.3.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0216700Z   - Installing filp/whoops (2.18.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0219495Z   - Installing nunomaduro/collision (v8.9.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0221889Z   - Installing nwidart/laravel-modules (v12.0.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0224332Z   - Installing php-http/multipart-stream-builder (1.4.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0226657Z   - Installing openai-php/client (v0.17.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0229299Z   - Installing openai-php/laravel (v0.17.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0231575Z   - Installing phonepe/phonepe-pg-php-sdk (1.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0235325Z   - Installing staabm/side-effects-detector (1.0.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0237711Z   - Installing sebastian/version (5.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0240291Z   - Installing sebastian/type (5.1.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0242574Z   - Installing sebastian/recursion-context (6.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0244798Z   - Installing sebastian/object-reflector (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0247088Z   - Installing sebastian/object-enumerator (6.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0249909Z   - Installing sebastian/global-state (7.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0252131Z   - Installing sebastian/exporter (6.3.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0254328Z   - Installing sebastian/environment (7.2.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0256435Z   - Installing sebastian/diff (6.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0259224Z   - Installing sebastian/comparator (6.3.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0261502Z   - Installing sebastian/code-unit (3.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0263810Z   - Installing sebastian/cli-parser (3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0265911Z   - Installing phpunit/php-timer (7.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0268259Z   - Installing phpunit/php-text-template (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0270463Z   - Installing phpunit/php-invoker (5.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0272574Z   - Installing phpunit/php-file-iterator (5.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0274634Z   - Installing theseer/tokenizer (1.3.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0276751Z   - Installing sebastian/lines-of-code (3.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0279420Z   - Installing sebastian/complexity (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0281760Z   - Installing sebastian/code-unit-reverse-lookup (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0283917Z   - Installing phpunit/php-code-coverage (11.0.12): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0286062Z   - Installing phar-io/version (3.2.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0288298Z   - Installing phar-io/manifest (2.0.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0290640Z   - Installing phpunit/phpunit (11.5.55): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0292895Z   - Installing openspout/openspout (v4.32.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0295198Z   - Installing rap2hpoutre/fast-excel (dev-master c92c13d): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0297435Z   - Installing rmccue/requests (v2.0.18): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0299939Z   - Installing razorpay/razorpay (2.9.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0302154Z   - Installing stripe/stripe-php (v10.21.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0304346Z   - Installing tightenco/ziggy (v2.6.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0306502Z   - Installing twilio/sdk (6.44.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:26.0309078Z   - Installing xendit/xendit-php (2.19.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:28.6219149Z Generating optimized autoload files
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.2426882Z > Illuminate\Foundation\ComposerScripts::postAutoloadDump
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.3004356Z > @php artisan package:discover --ansi
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6170400Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6171258Z   ^[[37;44m INFO ^[[39;49m Discovering packages.  
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6171613Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6229444Z   barryvdh/laravel-debugbar ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6245756Z   barryvdh/laravel-dompdf ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6263253Z   brian2694/laravel-toastr ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6278144Z   inertiajs/inertia-laravel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6298614Z   laravel/ai ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6318086Z   laravel/pail ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6336081Z   laravel/passport ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6355339Z   laravel/reverb ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6375118Z   laravel/sail ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6393720Z   laravel/tinker ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6411200Z   maatwebsite/excel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6429128Z   madnest/madzipper ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6440621Z   matanyadaev/laravel-eloquent-spatial ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6460228Z   nesbot/carbon ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6477235Z   nunomaduro/collision ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6494759Z   nunomaduro/termwind ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6510965Z   nwidart/laravel-modules ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6529705Z   openai-php/laravel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6548326Z   rap2hpoutre/fast-excel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6568802Z   tightenco/ziggy ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6571472Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6681345Z 121 packages you are using are looking for funding.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.6681900Z Use the `composer fund` command to find out more!
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7109480Z ##[group]Run php scripts/check-core-boundary.php "$COMPARE_BASE"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7110000Z ^[[36;1mphp scripts/check-core-boundary.php "$COMPARE_BASE"^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7146480Z shell: /usr/bin/bash -e {0}
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7146743Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7146943Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7147173Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7147723Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7148128Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7148359Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7148579Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7148795Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7149014Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7149258Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7149513Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7149757Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7150032Z   COMPARE_BASE: 66d23ea41da871830544a30265f7e42480239cd1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:31.7150363Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2977061Z Unapproved core patch: app/Builder/CapabilityProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2978172Z Unapproved core patch: app/Builder/CartProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2978959Z Unapproved core patch: app/Builder/CategoryProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2979741Z Unapproved core patch: app/Builder/CheckoutProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2980621Z Unapproved core patch: app/Builder/CouponProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2981500Z Unapproved core patch: app/Builder/CurrencyProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2982396Z Unapproved core patch: app/Builder/CustomerAuthProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2983284Z Unapproved core patch: app/Builder/LocaleProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2984062Z Unapproved core patch: app/Builder/OrderActionsProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2985392Z Unapproved core patch: app/Builder/OrderProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2986219Z Unapproved core patch: app/Builder/Resources/FoodDetailsResource.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2987218Z Unapproved core patch: app/Builder/Resources/ItemCardResource.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2988397Z Unapproved core patch: app/Builder/Resources/ItemDetailResource.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2989242Z Unapproved core patch: app/Builder/StorefrontScopeResolver.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2989923Z Unapproved core patch: app/CentralLogics/CustomerLogic.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2990346Z Unapproved core patch: app/CentralLogics/DeliveryFeeLogic.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2990750Z Unapproved core patch: app/CentralLogics/Helpers.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2991124Z Unapproved core patch: app/CentralLogics/OrderLogic.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2991545Z Unapproved core patch: app/CentralLogics/PersonalizationService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2991975Z Unapproved core patch: app/CentralLogics/ProductLogic.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2992366Z Unapproved core patch: app/CentralLogics/StoreLogic.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2992769Z Unapproved core patch: app/Console/Commands/GenerateAdminRoute.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2993216Z Unapproved core patch: app/Console/Commands/GenerateVendorRoute.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2993717Z Unapproved core patch: app/Contracts/Repositories/AddonRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2994281Z Unapproved core patch: app/Contracts/Repositories/BannerRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2994837Z Unapproved core patch: app/Contracts/Repositories/CashBackRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2995391Z Unapproved core patch: app/Contracts/Repositories/CategoryRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2995954Z Unapproved core patch: app/Contracts/Repositories/ConversationRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2996624Z Unapproved core patch: app/Contracts/Repositories/DeliveryManRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2997207Z Unapproved core patch: app/Contracts/Repositories/DmReviewRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2998135Z Unapproved core patch: app/Contracts/Repositories/DmVehicleRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2998701Z Unapproved core patch: app/Contracts/Repositories/EmployeeRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.2999504Z Unapproved core patch: app/Contracts/Repositories/ModuleRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3000095Z Unapproved core patch: app/Contracts/Repositories/RepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3000657Z Unapproved core patch: app/Contracts/Repositories/RiderRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3001222Z Unapproved core patch: app/Contracts/Repositories/ZoneRepositoryInterface.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3001767Z Unapproved core patch: app/Enums/ExportFileNames/Admin/Category.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3002283Z Unapproved core patch: app/Exports/CustomerServiceRequestExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3002774Z Unapproved core patch: app/Exports/ParcelReportExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3003279Z Unapproved core patch: app/Exports/ParcelTransactionReportExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3003807Z Unapproved core patch: app/Exports/ServiceExpenseReportExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3004254Z Unapproved core patch: app/Exports/ServiceExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3004696Z Unapproved core patch: app/Exports/ServiceRequestListExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3005201Z Unapproved core patch: app/Exports/ServiceReviewExport.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3005749Z Unapproved core patch: app/Http/Controllers/Admin/AccountTransactionController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3006348Z Unapproved core patch: app/Http/Controllers/Admin/BusinessSettingsController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3006910Z Unapproved core patch: app/Http/Controllers/Admin/CampaignController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3007411Z Unapproved core patch: app/Http/Controllers/Admin/ContactController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3008261Z Unapproved core patch: app/Http/Controllers/Admin/CustomerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3009112Z Unapproved core patch: app/Http/Controllers/Admin/CustomerWalletController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3010397Z Unapproved core patch: app/Http/Controllers/Admin/DashboardController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3010968Z Unapproved core patch: app/Http/Controllers/Admin/DeliveryMan/DeliveryManController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3011636Z Unapproved core patch: app/Http/Controllers/Admin/DeliveryManDisbursementController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3012224Z Unapproved core patch: app/Http/Controllers/Admin/FileManagerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3012745Z Unapproved core patch: app/Http/Controllers/Admin/FlashSaleController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3013305Z Unapproved core patch: app/Http/Controllers/Admin/Item/AddonCategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3013863Z Unapproved core patch: app/Http/Controllers/Admin/Item/CategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3014370Z Unapproved core patch: app/Http/Controllers/Admin/ItemController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3014859Z Unapproved core patch: app/Http/Controllers/Admin/LanguageController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3015352Z Unapproved core patch: app/Http/Controllers/Admin/OrderController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3015863Z Unapproved core patch: app/Http/Controllers/Admin/OtherBannerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3016406Z Unapproved core patch: app/Http/Controllers/Admin/POSController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3016911Z Unapproved core patch: app/Http/Controllers/Admin/ProCustomerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3017743Z Unapproved core patch: app/Http/Controllers/Admin/Promotion/AdvertisementController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3018423Z Unapproved core patch: app/Http/Controllers/Admin/Promotion/CashBackController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3019027Z Unapproved core patch: app/Http/Controllers/Admin/ProvideDMEarningController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3019579Z Unapproved core patch: app/Http/Controllers/Admin/ReportController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3020076Z Unapproved core patch: app/Http/Controllers/Admin/ReviewsController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3020595Z Unapproved core patch: app/Http/Controllers/Admin/SearchRoutingController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3021151Z Unapproved core patch: app/Http/Controllers/Admin/SmartBannerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3021730Z Unapproved core patch: app/Http/Controllers/Admin/StoreDisbursementController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3022525Z Unapproved core patch: app/Http/Controllers/Admin/Subscription/SubscriptionController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3023190Z Unapproved core patch: app/Http/Controllers/Admin/SurgePriceController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3023742Z Unapproved core patch: app/Http/Controllers/Admin/System/AddonController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3024274Z Unapproved core patch: app/Http/Controllers/Admin/SystemController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3024815Z Unapproved core patch: app/Http/Controllers/Admin/VendorTaxReportController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3025372Z Unapproved core patch: app/Http/Controllers/Admin/WithdrawalMethodController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3025972Z Unapproved core patch: app/Http/Controllers/Admin/Zone/ZoneController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3026537Z Unapproved core patch: app/Http/Controllers/Api/V1/AdvertisementController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3027153Z Unapproved core patch: app/Http/Controllers/Api/V1/Auth/VendorLoginController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3027919Z Unapproved core patch: app/Http/Controllers/Api/V1/BannerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3028402Z Unapproved core patch: app/Http/Controllers/Api/V1/BrandController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3028926Z Unapproved core patch: app/Http/Controllers/Api/V1/CampaignController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3029451Z Unapproved core patch: app/Http/Controllers/Api/V1/CartController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3029984Z Unapproved core patch: app/Http/Controllers/Api/V1/CashBackController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3030513Z Unapproved core patch: app/Http/Controllers/Api/V1/CategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3031077Z Unapproved core patch: app/Http/Controllers/Api/V1/CommonConditionController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3031670Z Unapproved core patch: app/Http/Controllers/Api/V1/ConfigController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3032201Z Unapproved core patch: app/Http/Controllers/Api/V1/ConversationController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3032901Z Unapproved core patch: app/Http/Controllers/Api/V1/CouponController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3033415Z Unapproved core patch: app/Http/Controllers/Api/V1/CustomerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3033972Z Unapproved core patch: app/Http/Controllers/Api/V1/DeliverymanController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3034523Z Unapproved core patch: app/Http/Controllers/Api/V1/ItemController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3035039Z Unapproved core patch: app/Http/Controllers/Api/V1/ModuleController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3035591Z Unapproved core patch: app/Http/Controllers/Api/V1/OrderController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3036136Z Unapproved core patch: app/Http/Controllers/Api/V1/OtherBannerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3036708Z Unapproved core patch: app/Http/Controllers/Api/V1/ProCustomerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3037244Z Unapproved core patch: app/Http/Controllers/Api/V1/SearchController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3037989Z Unapproved core patch: app/Http/Controllers/Api/V1/StoreCategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3038563Z Unapproved core patch: app/Http/Controllers/Api/V1/StoreController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3039117Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/AddOnController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3039735Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/AdvertisementController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3040306Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/BannerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3040864Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/BusinessSettingsController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3041487Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/CategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3042116Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/ConversationController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3042728Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/CouponController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3043307Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/DeliveryManController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3043913Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/ItemController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3044452Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/POSController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3045174Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/ReportController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3045811Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/StoreCategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3046475Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/SubscriptionController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3047088Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/VendorController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3047917Z Unapproved core patch: app/Http/Controllers/Api/V1/Vendor/WithdrawMethodController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3048528Z Unapproved core patch: app/Http/Controllers/Api/V1/WalletController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3049050Z Unapproved core patch: app/Http/Controllers/Api/V1/WishlistController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3049521Z Unapproved core patch: app/Http/Controllers/InstallController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3049959Z Unapproved core patch: app/Http/Controllers/LoginController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3050394Z Unapproved core patch: app/Http/Controllers/PaymentController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3050837Z Unapproved core patch: app/Http/Controllers/PaytmController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3051327Z Unapproved core patch: app/Http/Controllers/SslCommerzPaymentController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3051817Z Unapproved core patch: app/Http/Controllers/UpdateController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3052265Z Unapproved core patch: app/Http/Controllers/Vendor/AddOnController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3052755Z Unapproved core patch: app/Http/Controllers/Vendor/AdvertisementController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3053251Z Unapproved core patch: app/Http/Controllers/Vendor/BannerController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3053762Z Unapproved core patch: app/Http/Controllers/Vendor/BusinessSettingsController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3054277Z Unapproved core patch: app/Http/Controllers/Vendor/CampaignController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3054906Z Unapproved core patch: app/Http/Controllers/Vendor/CategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3055400Z Unapproved core patch: app/Http/Controllers/Vendor/ConversationController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3055891Z Unapproved core patch: app/Http/Controllers/Vendor/CouponController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3056375Z Unapproved core patch: app/Http/Controllers/Vendor/CustomRoleController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3056869Z Unapproved core patch: app/Http/Controllers/Vendor/DashboardController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3057366Z Unapproved core patch: app/Http/Controllers/Vendor/DeliveryManController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3058163Z Unapproved core patch: app/Http/Controllers/Vendor/EmployeeController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3058782Z Unapproved core patch: app/Http/Controllers/Vendor/ItemController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3059389Z Unapproved core patch: app/Http/Controllers/Vendor/OrderController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3059846Z Unapproved core patch: app/Http/Controllers/Vendor/POSController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3060312Z Unapproved core patch: app/Http/Controllers/Vendor/ReportController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3060776Z Unapproved core patch: app/Http/Controllers/Vendor/ReviewController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3061269Z Unapproved core patch: app/Http/Controllers/Vendor/SearchRoutingController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3061790Z Unapproved core patch: app/Http/Controllers/Vendor/StoreCategoryController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3062304Z Unapproved core patch: app/Http/Controllers/Vendor/SubscriptionController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3062863Z Unapproved core patch: app/Http/Controllers/Vendor/VendorTaxReportController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3063390Z Unapproved core patch: app/Http/Controllers/Vendor/WalletController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3063881Z Unapproved core patch: app/Http/Controllers/Vendor/WalletMethodController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3064358Z Unapproved core patch: app/Http/Controllers/VendorController.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3064815Z Unapproved core patch: app/Http/Middleware/ActivationCheckMiddleware.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3065341Z Unapproved core patch: app/Http/Middleware/AdminServiceModuleCheckMiddleware.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3065823Z Unapproved core patch: app/Http/Middleware/CurrentModule.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3066586Z Unapproved core patch: app/Http/Middleware/InstallationMiddleware.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3067769Z Unapproved core patch: app/Http/Middleware/ProviderServiceModuleCheckMiddleware.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3068778Z Unapproved core patch: app/Http/Requests/Admin/BannerAddRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3069801Z Unapproved core patch: app/Http/Requests/Admin/BannerUpdateRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3070647Z Unapproved core patch: app/Http/Requests/Admin/CategoryAddRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3071136Z Unapproved core patch: app/Http/Requests/Admin/CategoryUpdateRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3071605Z Unapproved core patch: app/Http/Requests/Admin/CouponAddRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3072060Z Unapproved core patch: app/Http/Requests/Admin/CouponUpdateRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3072525Z Unapproved core patch: app/Http/Requests/Admin/ModuleAddRequest.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3072932Z Unapproved core patch: app/Library/ModuleConstants.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3073300Z Unapproved core patch: app/Library/ModuleHelpers.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3073641Z Unapproved core patch: app/Models/Brand.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3073954Z Unapproved core patch: app/Models/CashBack.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3074293Z Unapproved core patch: app/Models/CashBackHistory.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3074630Z Unapproved core patch: app/Models/Category.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3074955Z Unapproved core patch: app/Models/DeliveryMan.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3075278Z Unapproved core patch: app/Models/Expense.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3075586Z Unapproved core patch: app/Models/FAQ.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3075879Z Unapproved core patch: app/Models/Item.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3076180Z Unapproved core patch: app/Models/Module.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3076515Z Unapproved core patch: app/Models/ModuleWiseBanner.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3077023Z Unapproved core patch: app/Models/Order.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3077350Z Unapproved core patch: app/Models/OrderProDiscount.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3078324Z Unapproved core patch: app/Models/ProCustomerBenefitSetting.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3078800Z Unapproved core patch: app/Models/Store.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3079252Z Unapproved core patch: app/Models/StoreCategory.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3079600Z Unapproved core patch: app/Models/StoreConfig.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3079933Z Unapproved core patch: app/Models/Wishlist.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3080307Z Unapproved core patch: app/Providers/ConfigServiceProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3080732Z Unapproved core patch: app/Providers/RouteServiceProvider.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3081156Z Unapproved core patch: app/Providers/RouteServiceProvider.txt
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3081571Z Unapproved core patch: app/Repositories/AddonRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3082007Z Unapproved core patch: app/Repositories/AttributeRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3082448Z Unapproved core patch: app/Repositories/BannerRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3082861Z Unapproved core patch: app/Repositories/BrandRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3083275Z Unapproved core patch: app/Repositories/CashBackRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3083696Z Unapproved core patch: app/Repositories/CategoryRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3084144Z Unapproved core patch: app/Repositories/CommonConditionRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3084612Z Unapproved core patch: app/Repositories/ConversationRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3085052Z Unapproved core patch: app/Repositories/CouponRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3085475Z Unapproved core patch: app/Repositories/CustomRoleRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3085914Z Unapproved core patch: app/Repositories/DeliveryManRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3086347Z Unapproved core patch: app/Repositories/DmReviewRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3086771Z Unapproved core patch: app/Repositories/DmVehicleRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3087239Z Unapproved core patch: app/Repositories/EmployeeRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3087919Z Unapproved core patch: app/Repositories/MessageRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3088495Z Unapproved core patch: app/Repositories/ModuleRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3088958Z Unapproved core patch: app/Repositories/NotificationRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3089433Z Unapproved core patch: app/Repositories/OrderTransactionRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3089879Z Unapproved core patch: app/Repositories/RiderRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3090280Z Unapproved core patch: app/Repositories/StoreRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3090705Z Unapproved core patch: app/Repositories/TranslationRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3091125Z Unapproved core patch: app/Repositories/UnitRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3091529Z Unapproved core patch: app/Repositories/UserInfoRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3091972Z Unapproved core patch: app/Repositories/UserNotificationRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3092436Z Unapproved core patch: app/Repositories/WalletBonusRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3092863Z Unapproved core patch: app/Repositories/ZoneRepository.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3093245Z Unapproved core patch: app/Services/AddonService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3093608Z Unapproved core patch: app/Services/CategoryService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3093977Z Unapproved core patch: app/Services/CouponService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3094375Z Unapproved core patch: app/Services/Search/AdminSearchRegistry.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3094820Z Unapproved core patch: app/Services/Search/AdminSearchShortcuts.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3095237Z Unapproved core patch: app/Services/Search/RouteIndex.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3095625Z Unapproved core patch: app/Services/Search/SearchContext.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3096021Z Unapproved core patch: app/Services/Search/SearchEngine.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3096414Z Unapproved core patch: app/Services/Search/SearchEntity.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3096927Z Unapproved core patch: app/Services/Search/SearchKeyword.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3097346Z Unapproved core patch: app/Services/Search/VendorSearchRegistry.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3098049Z Unapproved core patch: app/Services/Search/VendorSearchShortcuts.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3098492Z Unapproved core patch: app/Services/StoreCategoryService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3098899Z Unapproved core patch: app/Services/TrendingSearchService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3099277Z Unapproved core patch: app/Services/ZoneService.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3099629Z Unapproved core patch: app/Traits/ActivationClass.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3099997Z Unapproved core patch: app/Traits/CreatesGuestAccount.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3100423Z Unapproved core patch: app/Traits/HandlesMissingAddonRelations.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3100819Z Unapproved core patch: app/Traits/ItemFilter.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3101219Z Unapproved core patch: app/Traits/ManagesProCustomerSubscription.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3101680Z Unapproved core patch: app/Traits/NotificationDataSetUpTrait.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3102110Z Unapproved core patch: app/Traits/POSDeliveryTypeTrait.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3102480Z Unapproved core patch: app/Traits/PlaceNewOrder.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3102827Z Unapproved core patch: app/Traits/ReportFilter.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3103195Z Unapproved core patch: app/Traits/ReportGeneratorTrait.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3103554Z Unapproved core patch: app/helpers.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3113383Z Unapproved core patch: bootstrap/app.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3113724Z Unapproved core patch: config/auth.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3114019Z Unapproved core patch: config/builder.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3114324Z Unapproved core patch: config/layout.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3114612Z Unapproved core patch: config/module.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3114907Z Unapproved core patch: config/search.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3115354Z Unapproved core patch: database/migrations/2026_05_12_120000_add_tenant_scope_to_auth_tables.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3115973Z Unapproved core patch: database/migrations/2026_05_13_000000_add_store_id_to_carts_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3116625Z Unapproved core patch: database/migrations/2026_05_13_000003_add_delivery_type_columns_to_orders_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3117445Z Unapproved core patch: database/migrations/2026_05_13_100002_add_pro_status_to_users_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3118405Z Unapproved core patch: database/migrations/2026_05_14_173407_add_can_edit_order_column_to_store_configs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3119149Z Unapproved core patch: database/migrations/2026_05_20_120000_add_unit_value_col_to_pharmacy_item_details_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3119889Z Unapproved core patch: database/migrations/2026_05_20_120100_add_manufacturer_col_to_pharmacy_item_details_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3120641Z Unapproved core patch: database/migrations/2026_06_01_000001_add_trip_and_ride_request_to_order_pro_discounts_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3121364Z Unapproved core patch: database/migrations/2026_06_11_000001_add_short_description_to_modules_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3121988Z Unapproved core patch: database/migrations/2026_06_17_000003_add_reel_id_to_carts_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3122572Z Unapproved core patch: database/migrations/2026_06_18_000001_add_is_hidden_to_orders_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3123180Z Unapproved core patch: database/migrations/2026_07_01_000002_add_service_id_to_wishlists_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3123839Z Unapproved core patch: database/migrations/2026_07_06_000001_add_service_booking_id_col_to_expense_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3124550Z Unapproved core patch: database/migrations/2026_07_07_000000_add_booking_settings_columns_to_store_configs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3125276Z Unapproved core patch: database/migrations/2026_07_07_000100_add_service_setting_columns_to_store_configs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3125995Z Unapproved core patch: database/migrations/2026_07_07_000200_add_choose_service_location_to_store_configs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3126870Z Unapproved core patch: database/migrations/2026_07_07_000300_drop_schedule_time_restriction_from_store_configs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3127875Z Unapproved core patch: database/migrations/2026_07_07_000400_add_serviceman_can_cancel_booking_to_store_configs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3128622Z Unapproved core patch: database/migrations/2026_07_12_000001_create_store_categories_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3129256Z Unapproved core patch: database/migrations/2026_07_12_000002_add_store_category_id_to_items_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3129924Z Unapproved core patch: database/migrations/2026_07_12_000004_add_store_category_id_to_temp_products_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3130598Z Unapproved core patch: database/migrations/2026_07_12_000005_add_module_id_to_store_categories_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3131239Z Unapproved core patch: database/migrations/2026_07_13_000001_add_edited_columns_to_orders_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3131847Z Unapproved core patch: database/migrations/2026_07_13_000002_create_order_edit_logs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3132433Z Unapproved core patch: database/migrations/2026_07_14_000003_add_faqable_to_faqs_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3133049Z Unapproved core patch: database/migrations/2026_07_15_000001_seed_review_section_business_settings.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3133666Z Unapproved core patch: database/migrations/2026_07_16_000001_add_is_pos_to_orders_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3134301Z Unapproved core patch: database/migrations/2026_07_25_000001_add_order_type_to_user_notifications_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3134987Z Unapproved core patch: database/migrations/2026_07_28_000001_backfill_and_consolidate_role_permissions.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3135685Z Unapproved core patch: database/migrations/2026_07_29_000001_delete_unused_module_wise_promotional_banners.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3136372Z Unapproved core patch: database/migrations/2026_07_30_000001_add_service_columns_to_cash_back_tables.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3137070Z Unapproved core patch: database/migrations/2026_07_30_000002_add_service_booking_id_to_order_pro_discounts_table.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3137971Z Unapproved core patch: database/migrations/2026_07_30_000003_add_serviceman_columns_to_core_tables.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3138486Z Unapproved core patch: resources/lang/ar/messages.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3138967Z Unapproved core patch: resources/lang/bn/messages.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3139398Z Unapproved core patch: resources/views/admin-views/account/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3139912Z Unapproved core patch: resources/views/admin-views/advertisement/create.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3140449Z Unapproved core patch: resources/views/admin-views/advertisement/details.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3140981Z Unapproved core patch: resources/views/admin-views/advertisement/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3141503Z Unapproved core patch: resources/views/admin-views/advertisement/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3142054Z Unapproved core patch: resources/views/admin-views/advertisement/request-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3142595Z Unapproved core patch: resources/views/admin-views/banner/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3143069Z Unapproved core patch: resources/views/admin-views/banner/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3143628Z Unapproved core patch: resources/views/admin-views/business-settings/app-settings.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3144267Z Unapproved core patch: resources/views/admin-views/business-settings/fcm-index-service.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3145028Z Unapproved core patch: resources/views/admin-views/business-settings/landing-page-settings/react-landing-page-faq.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3145776Z Unapproved core patch: resources/views/admin-views/business-settings/language/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3146418Z Unapproved core patch: resources/views/admin-views/business-settings/notification_setup.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3147098Z Unapproved core patch: resources/views/admin-views/business-settings/notification_setup_service.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3148192Z Unapproved core patch: resources/views/admin-views/business-settings/settings/business-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3148883Z Unapproved core patch: resources/views/admin-views/business-settings/settings/customer-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3149557Z Unapproved core patch: resources/views/admin-views/business-settings/settings/order-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3150213Z Unapproved core patch: resources/views/admin-views/business-settings/settings/store-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3150803Z Unapproved core patch: resources/views/admin-views/campaign/basic/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3151323Z Unapproved core patch: resources/views/admin-views/campaign/basic/view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3151841Z Unapproved core patch: resources/views/admin-views/campaign/item/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3152364Z Unapproved core patch: resources/views/admin-views/campaign/item/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3152879Z Unapproved core patch: resources/views/admin-views/campaign/item/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3153436Z Unapproved core patch: resources/views/admin-views/campaign/item/partials/_table.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3153990Z Unapproved core patch: resources/views/admin-views/campaign/item/view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3154496Z Unapproved core patch: resources/views/admin-views/category/_edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3154988Z Unapproved core patch: resources/views/admin-views/category/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3155546Z Unapproved core patch: resources/views/admin-views/category/partials/_list-main.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3156138Z Unapproved core patch: resources/views/admin-views/category/partials/_list-sub.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3156687Z Unapproved core patch: resources/views/admin-views/category/sub-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3157184Z Unapproved core patch: resources/views/admin-views/coupon/_view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3157906Z Unapproved core patch: resources/views/admin-views/coupon/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3158384Z Unapproved core patch: resources/views/admin-views/coupon/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3158877Z Unapproved core patch: resources/views/admin-views/custom-role/create.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3159518Z Unapproved core patch: resources/views/admin-views/custom-role/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3160085Z Unapproved core patch: resources/views/admin-views/custom-role/partials/_view_role.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3160693Z Unapproved core patch: resources/views/admin-views/customer/customer-rental-view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3161267Z Unapproved core patch: resources/views/admin-views/customer/customer-view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3161783Z Unapproved core patch: resources/views/admin-views/customer/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3162312Z Unapproved core patch: resources/views/admin-views/customer/partials/_tab_view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3162865Z Unapproved core patch: resources/views/admin-views/dashboard-ecommerce.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3163396Z Unapproved core patch: resources/views/admin-views/dashboard-food.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3163909Z Unapproved core patch: resources/views/admin-views/dashboard-grocery.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3164433Z Unapproved core patch: resources/views/admin-views/dashboard-parcel.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3164951Z Unapproved core patch: resources/views/admin-views/dashboard-pharmacy.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3165473Z Unapproved core patch: resources/views/admin-views/dashboard-users.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3165964Z Unapproved core patch: resources/views/admin-views/dashboard.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3166471Z Unapproved core patch: resources/views/admin-views/delivery-man/view/info.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3167046Z Unapproved core patch: resources/views/admin-views/delivery-man/view/order_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3167855Z Unapproved core patch: resources/views/admin-views/module/create.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3168361Z Unapproved core patch: resources/views/admin-views/notification/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3169072Z Unapproved core patch: resources/views/admin-views/order/distaptch_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3169588Z Unapproved core patch: resources/views/admin-views/order/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3170127Z Unapproved core patch: resources/views/admin-views/order/offline_verification_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3170689Z Unapproved core patch: resources/views/admin-views/order/order-view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3171244Z Unapproved core patch: resources/views/admin-views/order/parcel-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3171779Z Unapproved core patch: resources/views/admin-views/order/parcel-order-view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3172327Z Unapproved core patch: resources/views/admin-views/order/partials/_invoice.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3172957Z Unapproved core patch: resources/views/admin-views/other-banners/partial/_bottom-section-banner.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3173626Z Unapproved core patch: resources/views/admin-views/other-banners/promotional-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3174219Z Unapproved core patch: resources/views/admin-views/partials/_image-uploader.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3174731Z Unapproved core patch: resources/views/admin-views/pos/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3175215Z Unapproved core patch: resources/views/admin-views/pos/invoice.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3175729Z Unapproved core patch: resources/views/admin-views/pro-customer/transactions.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3176315Z Unapproved core patch: resources/views/admin-views/product/partials/_review-table.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3176888Z Unapproved core patch: resources/views/admin-views/product/reviews-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3177394Z Unapproved core patch: resources/views/admin-views/product/view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3178180Z Unapproved core patch: resources/views/admin-views/report/admin-earning-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3178754Z Unapproved core patch: resources/views/admin-views/report/day-wise-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3179321Z Unapproved core patch: resources/views/admin-views/report/disbursement-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3180081Z Unapproved core patch: resources/views/admin-views/report/expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3180758Z Unapproved core patch: resources/views/admin-views/report/order-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3181354Z Unapproved core patch: resources/views/admin-views/report/order-transaction-statement.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3181973Z Unapproved core patch: resources/views/admin-views/report/other-expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3182562Z Unapproved core patch: resources/views/admin-views/report/parcel-expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3183133Z Unapproved core patch: resources/views/admin-views/report/parcel-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3183714Z Unapproved core patch: resources/views/admin-views/report/parcel-transaction-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3184319Z Unapproved core patch: resources/views/admin-views/report/partials/_day_table.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3184919Z Unapproved core patch: resources/views/admin-views/report/partials/_report_module_tabs.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3185525Z Unapproved core patch: resources/views/admin-views/report/rental-expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3186139Z Unapproved core patch: resources/views/admin-views/report/rideshare-expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3186754Z Unapproved core patch: resources/views/admin-views/report/service-expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3187388Z Unapproved core patch: resources/views/admin-views/report/store-earning-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3188242Z Unapproved core patch: resources/views/admin-views/store-category/_edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3188769Z Unapproved core patch: resources/views/admin-views/store-category/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3189319Z Unapproved core patch: resources/views/admin-views/store-disbursement/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3189877Z Unapproved core patch: resources/views/admin-views/store-disbursement/view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3190584Z Unapproved core patch: resources/views/admin-views/subscription/package/create.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3191160Z Unapproved core patch: resources/views/admin-views/subscription/package/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3191740Z Unapproved core patch: resources/views/admin-views/subscription/package/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3192359Z Unapproved core patch: resources/views/admin-views/subscription/package/package-details.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3192982Z Unapproved core patch: resources/views/admin-views/subscription/subscriber/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3193604Z Unapproved core patch: resources/views/admin-views/subscription/subscriber/transaction.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3194287Z Unapproved core patch: resources/views/admin-views/subscription/subscriber/vendor-subscription.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3195000Z Unapproved core patch: resources/views/admin-views/subscription/subscriber/wallet-transaction.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3195680Z Unapproved core patch: resources/views/admin-views/test/business-setting/customer-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3196474Z Unapproved core patch: resources/views/admin-views/test/version-four-test/additional-setup/partials/_edit-faq-offcanvas.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3197262Z Unapproved core patch: resources/views/admin-views/test/version-four-test/pro-customer-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3198156Z Unapproved core patch: resources/views/admin-views/test/version-four-test/transaction/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3198805Z Unapproved core patch: resources/views/admin-views/vendor/recommended_store_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3199365Z Unapproved core patch: resources/views/admin-views/vendor/view/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3199873Z Unapproved core patch: resources/views/admin-views/vendor/view/order.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3200406Z Unapproved core patch: resources/views/admin-views/vendor/view/partials/_order.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3201037Z Unapproved core patch: resources/views/admin-views/vendor/view/partials/digital_transaction.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3201629Z Unapproved core patch: resources/views/admin-views/vendor/view/review.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3202289Z Unapproved core patch: resources/views/admin-views/vendor/view/subscription.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3202831Z Unapproved core patch: resources/views/admin-views/wallet/withdraw.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3203344Z Unapproved core patch: resources/views/admin-views/zone/module-setup.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3203877Z Unapproved core patch: resources/views/admin-views/zone/smart-banner/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3204457Z Unapproved core patch: resources/views/admin-views/zone/smart-banner/partials/_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3205034Z Unapproved core patch: resources/views/admin-views/zone/surge-price/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3205572Z Unapproved core patch: resources/views/admin-views/zone/surge-price/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3206105Z Unapproved core patch: resources/views/admin-views/zone/surge-setup.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3206629Z Unapproved core patch: resources/views/email-templates/new-email-format-3.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3207173Z Unapproved core patch: resources/views/email-templates/new-email-format-6.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3207926Z Unapproved core patch: resources/views/email-templates/new-email-format-9.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3208499Z Unapproved core patch: resources/views/email-templates/service/new-email-format-1.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3209110Z Unapproved core patch: resources/views/email-templates/service/new-email-format-3.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3209707Z Unapproved core patch: resources/views/email-templates/service/new-email-format-5.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3210305Z Unapproved core patch: resources/views/email-templates/service/new-email-format-6.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3210903Z Unapproved core patch: resources/views/file-exports/admin-earning-transaction.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3211579Z Unapproved core patch: resources/views/file-exports/basic-campaign.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3212088Z Unapproved core patch: resources/views/file-exports/category-export.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3212653Z Unapproved core patch: resources/views/file-exports/customer-service-request-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3213220Z Unapproved core patch: resources/views/file-exports/expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3213713Z Unapproved core patch: resources/views/file-exports/item-campaign.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3214200Z Unapproved core patch: resources/views/file-exports/order-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3214683Z Unapproved core patch: resources/views/file-exports/parcel-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3215225Z Unapproved core patch: resources/views/file-exports/parcel-transaction-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3215798Z Unapproved core patch: resources/views/file-exports/service-expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3216326Z Unapproved core patch: resources/views/file-exports/service-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3216840Z Unapproved core patch: resources/views/file-exports/service-request-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3217391Z Unapproved core patch: resources/views/file-exports/store-category-export.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3218172Z Unapproved core patch: resources/views/file-exports/store-order-transaction.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3218725Z Unapproved core patch: resources/views/file-exports/store-orders-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3219265Z Unapproved core patch: resources/views/file-exports/transaction-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3219757Z Unapproved core patch: resources/views/layouts/admin/app.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3220232Z Unapproved core patch: resources/views/layouts/admin/partials/_footer.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3220741Z Unapproved core patch: resources/views/layouts/admin/partials/_header.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3221260Z Unapproved core patch: resources/views/layouts/admin/partials/_header_v2.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3221801Z Unapproved core patch: resources/views/layouts/admin/partials/_logout_modal.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3222507Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_ecommerce.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3223086Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_food.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3223646Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_grocery.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3224223Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_pharmacy.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3224783Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_v2.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3225348Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_v2_dispatch.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3225945Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_v2_finance.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3226540Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_v2_reports.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3227136Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_v2_settings.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3228025Z Unapproved core patch: resources/views/layouts/admin/partials/_sidebar_v2_users.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3228604Z Unapproved core patch: resources/views/layouts/admin/partials/_v2_profile_pop.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3229123Z Unapproved core patch: resources/views/layouts/landing/_seo.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3229570Z Unapproved core patch: resources/views/layouts/vendor/app.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3230054Z Unapproved core patch: resources/views/layouts/vendor/partials/_header.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3230582Z Unapproved core patch: resources/views/layouts/vendor/partials/_header_v2.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3231115Z Unapproved core patch: resources/views/layouts/vendor/partials/_sidebar.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3231784Z Unapproved core patch: resources/views/layouts/vendor/partials/_sidebar_v2.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3232269Z Unapproved core patch: resources/views/order-invoice.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3232741Z Unapproved core patch: resources/views/partials/_verified_store_badge.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3233254Z Unapproved core patch: resources/views/partials/delivery-type-row.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3233770Z Unapproved core patch: resources/views/partials/delivery-type-selector.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3234312Z Unapproved core patch: resources/views/partials/pro-delivery-discount-row.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3234836Z Unapproved core patch: resources/views/storefront-order-invoice.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3235336Z Unapproved core patch: resources/views/subscription/partials/_billing.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3235861Z Unapproved core patch: resources/views/subscription/partials/_empty-state.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3236400Z Unapproved core patch: resources/views/subscription/partials/_plan-modal.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3236957Z Unapproved core patch: resources/views/subscription/partials/_plan-overview.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3237777Z Unapproved core patch: resources/views/subscription/partials/_product-warning-modal.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3238380Z Unapproved core patch: resources/views/subscription/partials/_renew-modal.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3238905Z Unapproved core patch: resources/views/subscription/partials/_scripts.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3239435Z Unapproved core patch: resources/views/vendor-views/advertisement/create.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3239955Z Unapproved core patch: resources/views/vendor-views/advertisement/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3240467Z Unapproved core patch: resources/views/vendor-views/advertisement/list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3240979Z Unapproved core patch: resources/views/vendor-views/auth/general-info.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3241569Z Unapproved core patch: resources/views/vendor-views/business-settings/notification-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3242234Z Unapproved core patch: resources/views/vendor-views/business-settings/restaurant-index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3242812Z Unapproved core patch: resources/views/vendor-views/campaign/item_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3243427Z Unapproved core patch: resources/views/vendor-views/coupon/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3243908Z Unapproved core patch: resources/views/vendor-views/coupon/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3244399Z Unapproved core patch: resources/views/vendor-views/custom-role/create.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3244907Z Unapproved core patch: resources/views/vendor-views/custom-role/edit.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3245466Z Unapproved core patch: resources/views/vendor-views/custom-role/partials/_view_role.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3246060Z Unapproved core patch: resources/views/vendor-views/delivery-man/reviews-list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3246597Z Unapproved core patch: resources/views/vendor-views/order/order-view.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3247092Z Unapproved core patch: resources/views/vendor-views/pos/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3247995Z Unapproved core patch: resources/views/vendor-views/report/disbursement-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3248602Z Unapproved core patch: resources/views/vendor-views/report/expense-report.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3249128Z Unapproved core patch: resources/views/vendor-views/review/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3249619Z Unapproved core patch: resources/views/vendor-views/shop/shopInfo.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3250166Z Unapproved core patch: resources/views/vendor-views/store-category/_assign_items.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3250776Z Unapproved core patch: resources/views/vendor-views/store-category/_assign_items_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3251453Z Unapproved core patch: resources/views/vendor-views/subscription/subscriber/vendor-subscription.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3252084Z Unapproved core patch: resources/views/vendor-views/wallet/disbursement.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3252736Z Unapproved core patch: resources/views/vendor-views/wallet/index.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3253229Z Unapproved core patch: resources/views/vendor-views/wallet/payment_list.blade.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3253656Z Unapproved core patch: routes/admin/routes.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3253961Z Unapproved core patch: routes/vendor.php
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3263798Z ##[error]Process completed with exit code 1.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3339643Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3340913Z ##[group]Run actions/upload-artifact@v4
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3341178Z with:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3341376Z   name: isolation-results
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3341609Z   path: *-results.xml
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3341840Z   if-no-files-found: warn
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3342065Z   compression-level: 6
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3342280Z   overwrite: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3342494Z   include-hidden-files: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3342733Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3342920Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3343114Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3343406Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3343801Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3344020Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3344232Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3344436Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3344640Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3344848Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3345092Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3345324Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.3345528Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.5009805Z (node:11307) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.5011021Z (Use `node --trace-deprecation ...` to show where the warning was created)
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.5095532Z ##[warning]No files were found with the provided path: *-results.xml. No artifacts will be uploaded.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.5292157Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.5295209Z Post job cleanup.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6404781Z [command]/usr/bin/git version
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6478378Z git version 2.55.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6513747Z Temporarily overriding HOME='/home/runner/work/_temp/0dbe2e4d-6fca-4639-9707-7ce397f568c6' before making global git config changes
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6515306Z Adding repository directory to the temporary git global config as a safe directory
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6524588Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6620054Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.6664259Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7010974Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7048193Z http.https://github.com/.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7062928Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7109175Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7504961Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7559751Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7952414Z Print service container logs: d8861b8e37a44f94b89467b21e48ec4a_mysql80_09db30
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.7956761Z ##[command]/usr/bin/docker logs --details 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8086226Z  2026-09-21T15:22:58.572837Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8088227Z  2026-09-21 15:22:58+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8089215Z  2026-09-21 15:22:58+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8090223Z  2026-09-21 15:22:58+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8091148Z  2026-09-21 15:22:58+00:00 [Note] [Entrypoint]: Initializing database files
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8092630Z  2026-09-21T15:22:58.572917Z 0 [System] [MY-013169] [Server] /usr/sbin/mysqld (mysqld 8.0.46) initializing of server in progress as process 81
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8093806Z  2026-09-21 15:23:01+00:00 [Note] [Entrypoint]: Database files initialized
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8094801Z  2026-09-21T15:22:58.577614Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8095680Z  2026-09-21 15:23:01+00:00 [Note] [Entrypoint]: Starting temporary server
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8096722Z  2026-09-21T15:22:58.708887Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8097752Z  2026-09-21 15:23:01+00:00 [Note] [Entrypoint]: Temporary server started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8099243Z  2026-09-21T15:22:59.277047Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8100804Z  '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8101849Z  2026-09-21T15:23:01.721384Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8103785Z  2026-09-21T15:23:01.722735Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 125
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8104621Z  2026-09-21T15:23:01.731655Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8105193Z  2026-09-21T15:23:01.807515Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8105773Z  2026-09-21T15:23:01.944908Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8106608Z  2026-09-21T15:23:01.944941Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8108244Z  2026-09-21T15:23:01.946505Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8109465Z  2026-09-21T15:23:01.962451Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Socket: /var/run/mysqld/mysqlx.sock
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8110482Z  2026-09-21T15:23:01.962521Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server - GPL.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8111399Z  Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8112004Z  Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8112812Z  Warning: Unable to load '/usr/share/zoneinfo/leapseconds' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8113340Z  Warning: Unable to load '/usr/share/zoneinfo/tzdata.zi' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8114051Z  Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8114575Z  Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8115259Z  2026-09-21T15:23:03.821297Z 10 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.46).
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8116105Z  2026-09-21T15:23:04.450524Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete (mysqld 8.0.46)  MySQL Community Server - GPL.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8117136Z  2026-09-21T15:23:05.008717Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8118451Z  2026-09-21T15:23:05.010029Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8119082Z  2026-09-21T15:23:05.015001Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8119648Z  2026-09-21T15:23:05.089653Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8120218Z  2026-09-21T15:23:05.247250Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8121038Z  2026-09-21T15:23:05.247292Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8122211Z  2026-09-21T15:23:05.248891Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8123349Z  2026-09-21T15:23:05.261780Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8124463Z  2026-09-21T15:23:05.262053Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8125241Z  
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8125513Z  2026-09-21 15:23:03+00:00 [Note] [Entrypoint]: Stopping temporary server
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8125965Z  2026-09-21 15:23:04+00:00 [Note] [Entrypoint]: Temporary server stopped
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8126297Z  
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8126607Z  2026-09-21 15:23:04+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8126999Z  
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8133315Z Stop and remove container: d8861b8e37a44f94b89467b21e48ec4a_mysql80_09db30
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:34.8138257Z ##[command]/usr/bin/docker rm --force 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:37.2886214Z 8e2907f93e1de9615f2662acf9edcb6d0afabe967213fe1052e4b895dd614b65
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:37.2914405Z Remove container network: github_network_c9520eac8297474fb94473c87386ce3b
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:37.2919211Z ##[command]/usr/bin/docker network rm github_network_c9520eac8297474fb94473c87386ce3b
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:37.3967389Z github_network_c9520eac8297474fb94473c87386ce3b
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:37.4038664Z Cleaning up orphan processes
+isolation / isolation	UNKNOWN STEP	2026-09-21T15:23:37.4386634Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

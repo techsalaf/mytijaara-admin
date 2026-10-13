@@ -3,12 +3,12 @@
     <thead>
         <tr>
             <th>{{ translate('messages.SL') }}</th>
-            <th>{{ translate('messages.service_name') }}</th>
-            <th>{{ translate('messages.category') }}</th>
-            <th>{{ translate('messages.provider') }}</th>
-            <th>{{ translate('messages.zone') }}</th>
-            <th>{{ translate('messages.base_price') }}</th>
-            <th>{{ translate('messages.status') }}</th>
+            <th>{{ translate('Service name') }}</th>
+            <th>{{ translate('messages.Category') }}</th>
+            <th>{{ translate('messages.Provider') }}</th>
+            <th>{{ translate('messages.Zone') }}</th>
+            <th>{{ translate('Base price') }}</th>
+            <th>{{ translate('messages.Status') }}</th>
         </tr>
     </thead>
     <tbody>
@@ -20,7 +20,7 @@
                 <td>{{ $service->store?->name ?? translate('messages.N/A') }}</td>
                 <td>{{ $service->store?->zone?->name ?? translate('messages.N/A') }}</td>
                 <td>{{ Helpers::format_currency($service->base_price) }}</td>
-                <td>{{ $service->is_rejected ? translate('messages.rejected') : translate('messages.pending') }}</td>
+                <td>{{ $service->is_rejected ? translate('messages.rejected') : translate('Pending') }}</td>
             </tr>
         @endforeach
     </tbody>

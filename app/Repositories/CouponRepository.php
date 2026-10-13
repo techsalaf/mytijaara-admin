@@ -28,12 +28,12 @@ class CouponRepository implements CouponRepositoryInterface
 
     public function getFirstWhere(array $params, array $relations = []): ?Model
     {
-        return $this->coupon->where($params)->first();
+        return $this->coupon->with($relations)->where($params)->first();
     }
 
     public function getList(array $orderBy = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
     {
-        return $this->coupon->paginate($dataLimit);
+        return $this->coupon->with($relations)->paginate($dataLimit);
     }
 
     public function getListWhere(?string $searchValue = null, array $filters = [], array $relations = [], int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator
@@ -73,7 +73,7 @@ class CouponRepository implements CouponRepositoryInterface
 
     public function getFirstWithoutGlobalScopeWhere(array $params, array $relations = []): ?Model
     {
-        return $this->coupon->withoutGlobalScope('translate')->where($params)->first();
+        return $this->coupon->with($relations)->withoutGlobalScope('translate')->with('translations')->where($params)->first();
     }
 
     public function getExportList(Request $request): Collection

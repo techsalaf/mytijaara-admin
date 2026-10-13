@@ -1,0 +1,16 @@
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.5.9
+Configuration: C:\xampp\htdocs\mytijaara-admin\phpunit.xml
+
+Time: 00:19.883, Memory: 86.00 MB
+
+There was 1 failure:
+
+1) Modules\WhatsAppVendorConcierge\tests\Hardening\ProductListingFlowTest::test_exact_production_failure_recovers_valid_details_and_only_asks_missing_category
+Failed asserting that 'Nothing was created: Media file not found. Use Edit followed by the field name, or Support.' [ASCII](length: 91) contains "Product #" [ASCII](length: 9).
+
+C:\xampp\htdocs\mytijaara-admin\Modules\WhatsAppVendorConcierge\tests\Hardening\ProductListingFlowTest.php:147
+
+FAILURES!
+Tests: 19, Assertions: 86, Failures: 1, PHPUnit Deprecations: 50.

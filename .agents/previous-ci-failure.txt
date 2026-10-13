@@ -1,0 +1,1136 @@
+isolation / isolation	UNKNOWN STEP	﻿2026-09-21T14:46:14.0725130Z Current runner version: '2.337.0'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0753573Z ##[group]Runner Image Provisioner
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0754493Z Hosted Compute Agent
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0755176Z Version: 20260828.587
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0755912Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0756688Z Build Date: 2026-08-28T16:44:25Z
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0757472Z Worker ID: {db388b8e-7313-4324-b1d0-0c2dd5ed27f2}
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0758263Z Azure Region: northcentralus
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0759205Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0760657Z ##[group]Operating System
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0761312Z Ubuntu
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0761941Z 24.04.5
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0762493Z LTS
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0763025Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0763722Z ##[group]Runner Image
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0764339Z Image: ubuntu-24.04
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0764965Z Version: 20260907.300.1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0766329Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0768026Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0769436Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0770975Z ##[group]GITHUB_TOKEN Permissions
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0773297Z Contents: read
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0774106Z Metadata: read
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0774712Z Packages: read
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0775285Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0777578Z Secret source: Actions
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0778897Z Cache mode: write
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.0780139Z Prepare workflow directory
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.1247498Z Prepare all required actions
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.1299064Z Getting action download info
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.4087009Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.5047195Z Download action repository 'shivammathur/setup-php@v2' (SHA:f3e473d116dcccaddc5834248c87452386958240)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.7245093Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.9523366Z Uses: techsalaf/mytijaara-admin/.github/workflows/whatsapp-isolation.yml@refs/heads/main (66d23ea41da871830544a30265f7e42480239cd1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:14.9528184Z Complete job name: isolation / isolation
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0066140Z ##[group]Checking docker version
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0079318Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0681793Z '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0700652Z Docker daemon API version: '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0701475Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0901266Z '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0921827Z Docker client API version: '1.48'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0928046Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0933319Z ##[group]Clean up resources from previous jobs
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.0940499Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=156350"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1111004Z ##[command]/usr/bin/docker network prune --force --filter "label=156350"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1263209Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1263758Z ##[group]Create local container network
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1273899Z ##[command]/usr/bin/docker network create --label 156350 github_network_881752c6c8f9489d80e5e82327955763
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1896813Z 9589db3b5047012c11e4e811ca56a85ba0580e10a1e897741ab15a9154334fe2
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1914506Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1942013Z ##[group]Starting mysql service container
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.1963915Z ##[command]/usr/bin/docker pull mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.6422440Z 8.0: Pulling from library/mysql
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7707722Z edf85873f64e: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7713196Z 6ef6c7b50a93: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7714168Z e3e5d1ac74c1: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7715047Z 0d74d296605b: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7715910Z 297d04cfe470: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7716845Z 4c8a3e0d4e4b: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7717765Z a63160a5eda1: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7719214Z 7534d1db9f8d: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7720063Z 49ec2dab01d9: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7720946Z ab24264a27e9: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7721820Z 96d30d9fbee8: Pulling fs layer
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7722683Z 0d74d296605b: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7723492Z 7534d1db9f8d: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7724416Z 49ec2dab01d9: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7725392Z ab24264a27e9: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7726216Z 96d30d9fbee8: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7727029Z 297d04cfe470: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7727839Z 4c8a3e0d4e4b: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.7728839Z a63160a5eda1: Waiting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.8532518Z 6ef6c7b50a93: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.8643928Z e3e5d1ac74c1: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.9578030Z 297d04cfe470: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.9583650Z 297d04cfe470: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.9634647Z 0d74d296605b: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:15.9636140Z 0d74d296605b: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.0167202Z edf85873f64e: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.0171813Z edf85873f64e: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.0366364Z 4c8a3e0d4e4b: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.0372864Z 4c8a3e0d4e4b: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.1140329Z 7534d1db9f8d: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.1154536Z 7534d1db9f8d: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.2032555Z ab24264a27e9: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.2035810Z ab24264a27e9: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.2391600Z a63160a5eda1: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.2393289Z a63160a5eda1: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.2997636Z 96d30d9fbee8: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.2998910Z 96d30d9fbee8: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.5567133Z 49ec2dab01d9: Verifying Checksum
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:16.5567831Z 49ec2dab01d9: Download complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:17.4124505Z edf85873f64e: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:20.4353155Z 6ef6c7b50a93: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:20.4560312Z e3e5d1ac74c1: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:20.6564638Z 0d74d296605b: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:20.6669147Z 297d04cfe470: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:20.6755834Z 4c8a3e0d4e4b: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:21.4773335Z a63160a5eda1: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:21.4909531Z 7534d1db9f8d: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.3813331Z 49ec2dab01d9: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.3938127Z ab24264a27e9: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4060321Z 96d30d9fbee8: Pull complete
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4098925Z Digest: sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4107180Z Status: Downloaded newer image for mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4116894Z docker.io/library/mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4193575Z ##[command]/usr/bin/docker create --name 1696240b6ec14b0196cadaf0e7e0bf9e_mysql80_9aaa84 --label 156350 --network github_network_881752c6c8f9489d80e5e82327955763 --network-alias mysql -p 3306:3306 --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10 -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" -e GITHUB_ACTIONS=true -e CI=true mysql:8.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4452812Z 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.4477701Z ##[command]/usr/bin/docker start 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.7801096Z 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.7821963Z ##[command]/usr/bin/docker ps --all --filter id=6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.7970590Z 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422 Up Less than a second (health: starting)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.7992930Z ##[command]/usr/bin/docker port 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8134427Z 3306/tcp -> 0.0.0.0:3306
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8135234Z 3306/tcp -> [::]:3306
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8184798Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8194246Z ##[group]Waiting for all services to be ready
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8207689Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8356551Z starting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:29.8382989Z mysql service is starting, waiting 2 seconds before checking again.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:31.8387340Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:31.8539279Z starting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:31.8554106Z mysql service is starting, waiting 3 seconds before checking again.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:35.5425943Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:35.5575271Z starting
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:35.5578357Z mysql service is starting, waiting 7 seconds before checking again.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8349646Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8481871Z healthy
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8499424Z mysql service is healthy.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8500230Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8869533Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8877498Z ##[group]Run actions/checkout@v4
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8877899Z with:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8878113Z   fetch-depth: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8878359Z   repository: techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8881042Z   token: ***
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8881264Z   ssh-strict: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8881504Z   ssh-user: git
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8881725Z   persist-credentials: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8881971Z   clean: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8882193Z   sparse-checkout-cone-mode: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8882452Z   fetch-tags: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8882669Z   show-progress: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8882881Z   lfs: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8883141Z   submodules: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8883366Z   set-safe-directory: true
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8883624Z   allow-unsafe-pr-checkout: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8884037Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8884229Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8884439Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8884733Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8885103Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8885323Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8885541Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8885748Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8885958Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.8886184Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.9955729Z Syncing repository: techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.9957739Z ##[group]Getting Git version info
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.9958471Z Working directory is '/home/runner/work/mytijaara-admin/mytijaara-admin'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.9959688Z [command]/usr/bin/git version
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.9970312Z git version 2.55.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:42.9991357Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0006188Z Temporarily overriding HOME='/home/runner/work/_temp/438f5c02-01c6-4815-8eeb-9c1948392994' before making global git config changes
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0007550Z Adding repository directory to the temporary git global config as a safe directory
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0013482Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0082614Z Deleting the contents of '/home/runner/work/mytijaara-admin/mytijaara-admin'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0084387Z ##[group]Initializing the repository
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0085675Z [command]/usr/bin/git init /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0171987Z hint: Using 'master' as the name for the initial branch. This default branch name
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0173420Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0174362Z hint: to use in all of your new repositories, which will suppress this warning,
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0175011Z hint: call:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0175315Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0175832Z hint: 	git config --global init.defaultBranch <name>
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0176339Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0176807Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0177609Z hint: 'development'. The just-created branch can be renamed via this command:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0178219Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0178779Z hint: 	git branch -m <name>
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0179140Z hint:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0179649Z hint: Disable this message with "git config set advice.defaultBranchName false"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0192989Z Initialized empty Git repository in /home/runner/work/mytijaara-admin/mytijaara-admin/.git/
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0196075Z [command]/usr/bin/git remote add origin https://github.com/techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0244696Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0245128Z ##[group]Disabling automatic garbage collection
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0251680Z [command]/usr/bin/git config --local gc.auto 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0286738Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0287162Z ##[group]Setting up auth
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0296152Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0334781Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0713534Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.0761059Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.1036670Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.1079747Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.1336423Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.1382790Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.1383245Z ##[group]Fetching the repository
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:43.1392902Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8556447Z From https://github.com/techsalaf/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8557091Z  * [new branch]      main       -> origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8568496Z [command]/usr/bin/git branch --list --remote origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8603510Z   origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8614716Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8646896Z 66d23ea41da871830544a30265f7e42480239cd1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8657982Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8658754Z ##[group]Determining the checkout info
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8659403Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8660473Z [command]/usr/bin/git sparse-checkout disable
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8716030Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8752167Z ##[group]Checking out the ref
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:45.8756853Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5403568Z Switched to a new branch 'main'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5406713Z branch 'main' set up to track 'origin/main'.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5436005Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5486684Z [command]/usr/bin/git log -1 --format=%H
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5519442Z 66d23ea41da871830544a30265f7e42480239cd1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5751096Z ##[group]Run shivammathur/setup-php@v2
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5751426Z with:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5751634Z   php-version: 8.3
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5751984Z   extensions: mbstring, dom, fileinfo, pdo_mysql, pdo_sqlite, zip, gd, curl
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5752379Z   ini-file: production
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5754750Z   github-token: ***
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5754978Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5755172Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5755384Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5755686Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5756043Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5756267Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5756486Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5756718Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5756940Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.5757150Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.6176686Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.6635506Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:46.6636328Z ^[[90;1m==> ^[[0m^[[37;1mSetup PHP^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.5591045Z ^[[32;1m✓ ^[[0m^[[34;1mPHP ^[[0m^[[90;1mUpdated to PHP 8.3.33^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.5591663Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.5591936Z ^[[90;1m==> ^[[0m^[[37;1mSetup Extensions^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6560791Z ^[[32;1m✓ ^[[0m^[[34;1mmbstring ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6593528Z ^[[32;1m✓ ^[[0m^[[34;1mdom ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6627536Z ^[[32;1m✓ ^[[0m^[[34;1mfileinfo ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6645212Z ^[[32;1m✓ ^[[0m^[[34;1mpdo_mysql ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6666614Z ^[[32;1m✓ ^[[0m^[[34;1mpdo_sqlite ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6700951Z ^[[32;1m✓ ^[[0m^[[34;1mzip ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6735541Z ^[[32;1m✓ ^[[0m^[[34;1mgd ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6769554Z ^[[32;1m✓ ^[[0m^[[34;1mcurl ^[[0m^[[90;1mEnabled^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6770000Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:52.6770312Z ^[[90;1m==> ^[[0m^[[37;1mSetup Tools^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0163853Z ^[[32;1m✓ ^[[0m^[[34;1mcomposer ^[[0m^[[90;1mAdded composer 2.10.3^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0164789Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0165776Z ^[[90;1m==> ^[[0m^[[37;1mSponsor setup-php^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0166499Z ^[[32;1m✓ ^[[0m^[[34;1msetup-php ^[[0m^[[90;1mhttps://setup-php.com/sponsor^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0368316Z ##[group]Run composer install --no-interaction --prefer-dist --no-progress
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0369233Z ^[[36;1mcomposer install --no-interaction --prefer-dist --no-progress^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0418173Z shell: /usr/bin/bash -e {0}
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0418460Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0419010Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0419239Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0419549Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0419926Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0420175Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0420394Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0420638Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0420852Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0421082Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0421337Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0421571Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.0421800Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.2735798Z Installing dependencies from lock file (including require-dev)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.2829798Z Verifying lock file contents can be installed on current platform.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4485264Z Package operations: 208 installs, 0 updates, 0 removals
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4493137Z   - Downloading php-http/discovery (1.20.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4497813Z   - Downloading wikimedia/composer-merge-plugin (v2.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4501424Z   - Downloading aws/aws-crt-php (v1.2.7)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4504555Z   - Downloading symfony/finder (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4507531Z   - Downloading symfony/polyfill-mbstring (v1.38.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4510591Z   - Downloading symfony/deprecation-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4513490Z   - Downloading symfony/var-dumper (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4516656Z   - Downloading psr/log (3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4520168Z   - Downloading php-debugbar/php-debugbar (v2.2.6)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4523434Z   - Downloading voku/portable-ascii (2.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4526303Z   - Downloading symfony/polyfill-php80 (v1.37.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4529065Z   - Downloading symfony/polyfill-ctype (v1.37.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4532465Z   - Downloading phpoption/phpoption (1.9.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4539551Z   - Downloading graham-campbell/result-type (v1.1.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4579593Z   - Downloading vlucas/phpdotenv (v5.6.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4580158Z   - Downloading symfony/css-selector (v7.4.9)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4580722Z   - Downloading tijsverkoyen/css-to-inline-styles (v2.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4581293Z   - Downloading symfony/polyfill-uuid (v1.37.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4581777Z   - Downloading symfony/uid (v7.4.9)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4582235Z   - Downloading symfony/routing (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4582669Z   - Downloading symfony/process (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4583125Z   - Downloading symfony/polyfill-php85 (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4583621Z   - Downloading symfony/polyfill-php84 (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4584029Z   - Downloading symfony/polyfill-php83 (v1.38.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4584384Z   - Downloading symfony/polyfill-intl-normalizer (v1.38.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4584753Z   - Downloading symfony/polyfill-intl-idn (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4585085Z   - Downloading symfony/mime (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4585363Z   - Downloading psr/container (2.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4585716Z   - Downloading symfony/service-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4586041Z   - Downloading psr/event-dispatcher (1.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4586387Z   - Downloading symfony/event-dispatcher-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4586745Z   - Downloading symfony/event-dispatcher (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4587040Z   - Downloading doctrine/lexer (3.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4587330Z   - Downloading egulias/email-validator (4.0.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4587630Z   - Downloading symfony/mailer (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4587956Z   - Downloading symfony/http-foundation (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4588280Z   - Downloading symfony/error-handler (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4589158Z   - Downloading symfony/http-kernel (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4589702Z   - Downloading symfony/polyfill-intl-grapheme (v1.38.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4590218Z   - Downloading symfony/string (v7.4.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4590652Z   - Downloading symfony/console (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4591092Z   - Downloading ramsey/collection (2.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4591532Z   - Downloading brick/math (0.14.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4591937Z   - Downloading ramsey/uuid (4.9.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4592355Z   - Downloading psr/simple-cache (3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4592815Z   - Downloading nunomaduro/termwind (v2.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4593328Z   - Downloading symfony/translation-contracts (v3.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4593901Z   - Downloading symfony/translation (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4594353Z   - Downloading psr/clock (1.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4594765Z   - Downloading symfony/clock (v7.4.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4595262Z   - Downloading carbonphp/carbon-doctrine-types (3.2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4595791Z   - Downloading nesbot/carbon (3.13.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4596221Z   - Downloading monolog/monolog (3.10.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4597472Z   - Downloading psr/http-message (2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4599007Z   - Downloading psr/http-factory (1.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4601573Z   - Downloading league/uri-interfaces (7.8.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4602686Z   - Downloading league/uri (7.8.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4604130Z   - Downloading league/mime-type-detection (1.16.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4605406Z   - Downloading league/flysystem-local (3.31.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4606711Z   - Downloading league/flysystem (3.35.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4608752Z   - Downloading nette/utils (v4.1.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4610175Z   - Downloading nette/schema (v1.3.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4612158Z   - Downloading dflydev/dot-access-data (v3.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4613358Z   - Downloading league/config (v1.2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4614661Z   - Downloading league/commonmark (2.8.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4616553Z   - Downloading laravel/serializable-closure (v2.0.13)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4617737Z   - Downloading laravel/prompts (v0.3.21)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4619979Z   - Downloading guzzlehttp/uri-template (v1.0.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4621248Z   - Downloading psr/http-client (1.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4623130Z   - Downloading ralouphie/getallheaders (3.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4624340Z   - Downloading guzzlehttp/psr7 (2.12.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4625688Z   - Downloading guzzlehttp/promises (2.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4627013Z   - Downloading guzzlehttp/guzzle (7.12.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4629315Z   - Downloading fruitcake/php-cors (v1.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4631230Z   - Downloading dragonmantank/cron-expression (v3.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4632441Z   - Downloading doctrine/inflector (2.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4634071Z   - Downloading laravel/framework (v12.62.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4635950Z   - Downloading barryvdh/laravel-debugbar (v3.16.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4637704Z   - Downloading masterminds/html5 (2.10.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4639812Z   - Downloading thecodingmachine/safe (v3.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4641729Z   - Downloading sabberworm/php-css-parser (v9.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4643492Z   - Downloading dompdf/php-svg-lib (1.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4644718Z   - Downloading dompdf/php-font-lib (1.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4646095Z   - Downloading dompdf/dompdf (v3.1.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4647454Z   - Downloading barryvdh/laravel-dompdf (v3.1.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4649507Z   - Downloading brian2694/laravel-toastr (5.61)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4651285Z   - Downloading clue/redis-protocol (v0.3.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4652503Z   - Downloading psr/cache (3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4653845Z   - Downloading doctrine/deprecations (1.1.6)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4655119Z   - Downloading doctrine/dbal (4.4.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4656991Z   - Downloading fakerphp/faker (v1.24.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4658921Z   - Downloading rize/uri-template (0.4.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4660726Z   - Downloading grpc/grpc (1.81.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4662613Z   - Downloading google/protobuf (v5.35.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4664141Z   - Downloading google/longrunning (0.7.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4665739Z   - Downloading firebase/php-jwt (v6.11.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4666928Z   - Downloading google/auth (v1.52.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4668259Z   - Downloading google/grpc-gcp (0.4.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4669783Z   - Downloading google/common-protos (4.14.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4671151Z   - Downloading google/gax (v1.43.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4672432Z   - Downloading google/cloud-core (v1.72.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4674309Z   - Downloading gregwar/captcha (v1.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4676116Z   - Downloading inertiajs/inertia-laravel (v3.1.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4677893Z   - Downloading intervention/gif (4.2.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4679284Z   - Downloading intervention/image (3.11.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4681331Z   - Downloading iyzico/iyzipay-php (v2.0.61)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4683121Z   - Downloading mtdowling/jmespath.php (2.9.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4685018Z   - Downloading lcobucci/jwt (5.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4686855Z   - Downloading fig/http-message-util (1.1.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4688736Z   - Downloading beste/clock (3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4690705Z   - Downloading kreait/firebase-tokens (5.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4692060Z   - Downloading google/cloud-storage (v1.51.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4693934Z   - Downloading cuyz/valinor (2.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4695164Z   - Downloading beste/json (1.7.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4696524Z   - Downloading beste/in-memory-cache (1.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4697817Z   - Downloading kreait/firebase-php (7.24.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4699488Z   - Downloading symfony/filesystem (v7.4.11)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4701111Z   - Downloading aws/aws-sdk-php (3.386.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4702938Z   - Downloading laravel/ai (v0.6.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4704548Z   - Downloading laravel/pail (v1.2.7)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4706332Z   - Downloading symfony/psr-http-message-bridge (v7.4.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4708443Z   - Downloading paragonie/random_compat (v9.99.100)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4710365Z   - Downloading paragonie/constant_time_encoding (v3.1.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4712330Z   - Downloading phpseclib/phpseclib (3.0.55)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4714358Z   - Downloading nyholm/psr7 (1.8.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4716389Z   - Downloading league/event (2.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4719320Z   - Downloading lcobucci/clock (3.5.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4752589Z   - Downloading defuse/php-encryption (v2.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4753344Z   - Downloading league/oauth2-server (8.5.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4753858Z   - Downloading laravel/passport (v12.4.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4754332Z   - Downloading laravel/pint (v1.29.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4754839Z   - Downloading react/event-loop (v1.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4755323Z   - Downloading evenement/evenement (v3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4755784Z   - Downloading react/stream (v1.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4756209Z   - Downloading react/promise (v3.3.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4756631Z   - Downloading react/cache (v1.2.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4757054Z   - Downloading react/dns (v1.14.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4757484Z   - Downloading react/socket (v1.17.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4757924Z   - Downloading react/promise-timer (v1.11.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4758392Z   - Downloading ratchet/rfc6455 (v0.4.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4759069Z   - Downloading pusher/pusher-php-server (7.2.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4759570Z   - Downloading clue/redis-react (v2.8.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4760090Z   - Downloading laravel/reverb (v1.10.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4760540Z   - Downloading symfony/yaml (v7.4.14)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4760957Z   - Downloading laravel/sail (v1.63.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4761391Z   - Downloading nikic/php-parser (v5.7.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4761836Z   - Downloading psy/psysh (v0.12.23)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4762259Z   - Downloading laravel/tinker (v2.11.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4769874Z   - Downloading league/flysystem-aws-s3-v3 (3.35.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4770560Z   - Downloading markbaker/matrix (3.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4771083Z   - Downloading markbaker/complex (3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4772084Z   - Downloading maennchen/zipstream-php (3.2.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4772729Z   - Downloading ezyang/htmlpurifier (v4.19.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4773249Z   - Downloading composer/pcre (3.4.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4773821Z   - Downloading phpoffice/phpspreadsheet (1.30.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4774426Z   - Downloading composer/semver (3.4.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4774883Z   - Downloading maatwebsite/excel (3.1.69)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4775323Z   - Downloading madnest/madzipper (1.6.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4775890Z   - Downloading brick/geo (0.13.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4776416Z   - Downloading matanyadaev/laravel-eloquent-spatial (4.8.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4777495Z   - Downloading mercadopago/dx-php (3.8.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4779702Z   - Downloading hamcrest/hamcrest-php (v2.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4781486Z   - Downloading mockery/mockery (1.6.12)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4783235Z   - Downloading setasign/fpdi (v2.6.8)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4785031Z   - Downloading myclabs/deep-copy (1.13.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4786868Z   - Downloading mpdf/psr-log-aware-trait (v3.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4788202Z   - Downloading mpdf/psr-http-message-shim (v2.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4789660Z   - Downloading mpdf/mpdf (v8.3.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4791439Z   - Downloading filp/whoops (2.18.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4792833Z   - Downloading nunomaduro/collision (v8.9.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4794771Z   - Downloading nwidart/laravel-modules (v12.0.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4796071Z   - Downloading php-http/multipart-stream-builder (1.4.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4797862Z   - Downloading openai-php/client (v0.17.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4799306Z   - Downloading openai-php/laravel (v0.17.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4801110Z   - Downloading phonepe/phonepe-pg-php-sdk (1.0.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4803674Z   - Downloading staabm/side-effects-detector (1.0.5)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4805411Z   - Downloading sebastian/version (5.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4806759Z   - Downloading sebastian/type (5.1.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4808075Z   - Downloading sebastian/recursion-context (6.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4809731Z   - Downloading sebastian/object-reflector (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4811201Z   - Downloading sebastian/object-enumerator (6.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4812497Z   - Downloading sebastian/global-state (7.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4813742Z   - Downloading sebastian/exporter (6.3.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4815041Z   - Downloading sebastian/environment (7.2.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4816291Z   - Downloading sebastian/diff (6.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4817588Z   - Downloading sebastian/comparator (6.3.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4819028Z   - Downloading sebastian/code-unit (3.0.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4820304Z   - Downloading sebastian/cli-parser (3.0.2)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4822029Z   - Downloading phpunit/php-timer (7.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4823332Z   - Downloading phpunit/php-text-template (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4824640Z   - Downloading phpunit/php-invoker (5.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4825919Z   - Downloading phpunit/php-file-iterator (5.1.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4827610Z   - Downloading theseer/tokenizer (1.3.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4839338Z   - Downloading sebastian/lines-of-code (3.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4849419Z   - Downloading sebastian/complexity (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4849958Z   - Downloading sebastian/code-unit-reverse-lookup (4.0.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4850516Z   - Downloading phpunit/php-code-coverage (11.0.12)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4850843Z   - Downloading phar-io/version (3.2.1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4851133Z   - Downloading phar-io/manifest (2.0.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4851415Z   - Downloading phpunit/phpunit (11.5.55)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4851713Z   - Downloading openspout/openspout (v4.32.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4852096Z   - Downloading rap2hpoutre/fast-excel (dev-master c92c13d)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4852440Z   - Downloading rmccue/requests (v2.0.18)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4852726Z   - Downloading razorpay/razorpay (2.9.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4853020Z   - Downloading stripe/stripe-php (v10.21.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4853323Z   - Downloading tightenco/ziggy (v2.6.3)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4853888Z   - Downloading twilio/sdk (6.44.4)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:53.4854169Z   - Downloading xendit/xendit-php (2.19.0)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.0549898Z   - Installing php-http/discovery (1.20.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1038843Z   - Installing wikimedia/composer-merge-plugin (v2.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1117183Z   - Installing aws/aws-crt-php (v1.2.7): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1123227Z   - Installing symfony/finder (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1129605Z   - Installing symfony/polyfill-mbstring (v1.38.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1135575Z   - Installing symfony/deprecation-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1184234Z   - Installing symfony/var-dumper (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1224153Z   - Installing psr/log (3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1224940Z   - Installing php-debugbar/php-debugbar (v2.2.6): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1225874Z   - Installing voku/portable-ascii (2.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1226614Z   - Installing symfony/polyfill-php80 (v1.37.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1227438Z   - Installing symfony/polyfill-ctype (v1.37.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1339383Z   - Installing phpoption/phpoption (1.9.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1359476Z   - Installing graham-campbell/result-type (v1.1.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1379328Z   - Installing vlucas/phpdotenv (v5.6.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1399958Z   - Installing symfony/css-selector (v7.4.9): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1432651Z   - Installing tijsverkoyen/css-to-inline-styles (v2.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1433446Z   - Installing symfony/polyfill-uuid (v1.37.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1434031Z   - Installing symfony/uid (v7.4.9): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1434632Z   - Installing symfony/routing (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1435253Z   - Installing symfony/process (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1435915Z   - Installing symfony/polyfill-php85 (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1436639Z   - Installing symfony/polyfill-php84 (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1437235Z   - Installing symfony/polyfill-php83 (v1.38.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1437702Z   - Installing symfony/polyfill-intl-normalizer (v1.38.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1438183Z   - Installing symfony/polyfill-intl-idn (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1438828Z   - Installing symfony/mime (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1439210Z   - Installing psr/container (2.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1439617Z   - Installing symfony/service-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1440051Z   - Installing psr/event-dispatcher (1.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1440533Z   - Installing symfony/event-dispatcher-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1441009Z   - Installing symfony/event-dispatcher (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1441412Z   - Installing doctrine/lexer (3.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1441799Z   - Installing egulias/email-validator (4.0.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1442196Z   - Installing symfony/mailer (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1442593Z   - Installing symfony/http-foundation (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1443002Z   - Installing symfony/error-handler (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1443398Z   - Installing symfony/http-kernel (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1443849Z   - Installing symfony/polyfill-intl-grapheme (v1.38.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1444283Z   - Installing symfony/string (v7.4.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1444647Z   - Installing symfony/console (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1445230Z   - Installing ramsey/collection (2.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1445586Z   - Installing brick/math (0.14.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1445910Z   - Installing ramsey/uuid (4.9.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1446242Z   - Installing psr/simple-cache (3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1446619Z   - Installing nunomaduro/termwind (v2.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1447047Z   - Installing symfony/translation-contracts (v3.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1447484Z   - Installing symfony/translation (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1447847Z   - Installing psr/clock (1.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1448192Z   - Installing symfony/clock (v7.4.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1448811Z   - Installing carbonphp/carbon-doctrine-types (3.2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1449246Z   - Installing nesbot/carbon (3.13.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1449604Z   - Installing monolog/monolog (3.10.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1449964Z   - Installing psr/http-message (2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1450313Z   - Installing psr/http-factory (1.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1450685Z   - Installing league/uri-interfaces (7.8.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1451061Z   - Installing league/uri (7.8.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1510265Z   - Installing league/mime-type-detection (1.16.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1524268Z   - Installing league/flysystem-local (3.31.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1525147Z   - Installing league/flysystem (3.35.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1526093Z   - Installing nette/utils (v4.1.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1526619Z   - Installing nette/schema (v1.3.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1527058Z   - Installing dflydev/dot-access-data (v3.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1527461Z   - Installing league/config (v1.2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1527968Z   - Installing league/commonmark (2.8.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1539642Z   - Installing laravel/serializable-closure (v2.0.13): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1540656Z   - Installing laravel/prompts (v0.3.21): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1541440Z   - Installing guzzlehttp/uri-template (v1.0.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1542090Z   - Installing psr/http-client (1.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1542710Z   - Installing ralouphie/getallheaders (3.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1543356Z   - Installing guzzlehttp/psr7 (2.12.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1544341Z   - Installing guzzlehttp/promises (2.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1546947Z   - Installing guzzlehttp/guzzle (7.12.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1549933Z   - Installing fruitcake/php-cors (v1.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1552134Z   - Installing dragonmantank/cron-expression (v3.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1554325Z   - Installing doctrine/inflector (2.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1556606Z   - Installing laravel/framework (v12.62.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1569423Z   - Installing barryvdh/laravel-debugbar (v3.16.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1589301Z   - Installing masterminds/html5 (2.10.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1589979Z   - Installing thecodingmachine/safe (v3.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1590620Z   - Installing sabberworm/php-css-parser (v9.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1591179Z   - Installing dompdf/php-svg-lib (1.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1591686Z   - Installing dompdf/php-font-lib (1.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1592090Z   - Installing dompdf/dompdf (v3.1.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1592508Z   - Installing barryvdh/laravel-dompdf (v3.1.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1592964Z   - Installing brian2694/laravel-toastr (5.61): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1593750Z   - Installing clue/redis-protocol (v0.3.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1594308Z   - Installing psr/cache (3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1594891Z   - Installing doctrine/deprecations (1.1.6): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1595476Z   - Installing doctrine/dbal (4.4.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1595983Z   - Installing fakerphp/faker (v1.24.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1596654Z   - Installing rize/uri-template (0.4.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1597300Z   - Installing grpc/grpc (1.81.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1597926Z   - Installing google/protobuf (v5.35.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1598746Z   - Installing google/longrunning (0.7.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1611763Z   - Installing firebase/php-jwt (v6.11.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1612451Z   - Installing google/auth (v1.52.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1613057Z   - Installing google/grpc-gcp (0.4.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1613699Z   - Installing google/common-protos (4.14.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1614341Z   - Installing google/gax (v1.43.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1614938Z   - Installing google/cloud-core (v1.72.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1615557Z   - Installing gregwar/captcha (v1.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1616489Z   - Installing inertiajs/inertia-laravel (v3.1.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1619263Z   - Installing intervention/gif (4.2.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1621845Z   - Installing intervention/image (3.11.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1624029Z   - Installing iyzico/iyzipay-php (v2.0.61): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1626823Z   - Installing mtdowling/jmespath.php (2.9.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1629256Z   - Installing lcobucci/jwt (5.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1631991Z   - Installing fig/http-message-util (1.1.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1634393Z   - Installing beste/clock (3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1636992Z   - Installing kreait/firebase-tokens (5.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1639752Z   - Installing google/cloud-storage (v1.51.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1642135Z   - Installing cuyz/valinor (2.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1644534Z   - Installing beste/json (1.7.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1646967Z   - Installing beste/in-memory-cache (1.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1649589Z   - Installing kreait/firebase-php (7.24.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1652078Z   - Installing symfony/filesystem (v7.4.11): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1654696Z   - Installing aws/aws-sdk-php (3.386.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1657208Z   - Installing laravel/ai (v0.6.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1659841Z   - Installing laravel/pail (v1.2.7): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1662651Z   - Installing symfony/psr-http-message-bridge (v7.4.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1664624Z   - Installing paragonie/random_compat (v9.99.100): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1667262Z   - Installing paragonie/constant_time_encoding (v3.1.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1669804Z   - Installing phpseclib/phpseclib (3.0.55): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1672278Z   - Installing nyholm/psr7 (1.8.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1674651Z   - Installing league/event (2.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1677051Z   - Installing lcobucci/clock (3.5.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1679748Z   - Installing defuse/php-encryption (v2.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1682304Z   - Installing league/oauth2-server (8.5.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1684775Z   - Installing laravel/passport (v12.4.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1687288Z   - Installing laravel/pint (v1.29.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1690316Z   - Installing react/event-loop (v1.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1692527Z   - Installing evenement/evenement (v3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1694938Z   - Installing react/stream (v1.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1697408Z   - Installing react/promise (v3.3.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1700026Z   - Installing react/cache (v1.2.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1702480Z   - Installing react/dns (v1.14.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1704927Z   - Installing react/socket (v1.17.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1707404Z   - Installing react/promise-timer (v1.11.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1710019Z   - Installing ratchet/rfc6455 (v0.4.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1712679Z   - Installing pusher/pusher-php-server (7.2.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1715044Z   - Installing clue/redis-react (v2.8.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1717467Z   - Installing laravel/reverb (v1.10.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1720081Z   - Installing symfony/yaml (v7.4.14): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1722507Z   - Installing laravel/sail (v1.63.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1725017Z   - Installing nikic/php-parser (v5.7.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1727433Z   - Installing psy/psysh (v0.12.23): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1730087Z   - Installing laravel/tinker (v2.11.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1732574Z   - Installing league/flysystem-aws-s3-v3 (3.35.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1734916Z   - Installing markbaker/matrix (3.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1737462Z   - Installing markbaker/complex (3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1740140Z   - Installing maennchen/zipstream-php (3.2.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1742602Z   - Installing ezyang/htmlpurifier (v4.19.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1744997Z   - Installing composer/pcre (3.4.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1747512Z   - Installing phpoffice/phpspreadsheet (1.30.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1749993Z   - Installing composer/semver (3.4.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1752511Z   - Installing maatwebsite/excel (3.1.69): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1754958Z   - Installing madnest/madzipper (1.6.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1757382Z   - Installing brick/geo (0.13.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1760226Z   - Installing matanyadaev/laravel-eloquent-spatial (4.8.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1762749Z   - Installing mercadopago/dx-php (3.8.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1765278Z   - Installing hamcrest/hamcrest-php (v2.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1767669Z   - Installing mockery/mockery (1.6.12): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1770294Z   - Installing setasign/fpdi (v2.6.8): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1773002Z   - Installing myclabs/deep-copy (1.13.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1775512Z   - Installing mpdf/psr-log-aware-trait (v3.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1777994Z   - Installing mpdf/psr-http-message-shim (v2.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1780445Z   - Installing mpdf/mpdf (v8.3.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1782875Z   - Installing filp/whoops (2.18.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1785420Z   - Installing nunomaduro/collision (v8.9.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1787812Z   - Installing nwidart/laravel-modules (v12.0.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1790922Z   - Installing php-http/multipart-stream-builder (1.4.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1793602Z   - Installing openai-php/client (v0.17.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1795941Z   - Installing openai-php/laravel (v0.17.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1798153Z   - Installing phonepe/phonepe-pg-php-sdk (1.0.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1801673Z   - Installing staabm/side-effects-detector (1.0.5): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1804045Z   - Installing sebastian/version (5.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1805810Z   - Installing sebastian/type (5.1.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1807913Z   - Installing sebastian/recursion-context (6.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1810481Z   - Installing sebastian/object-reflector (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1812606Z   - Installing sebastian/object-enumerator (6.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1814650Z   - Installing sebastian/global-state (7.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1816771Z   - Installing sebastian/exporter (6.3.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1819021Z   - Installing sebastian/environment (7.2.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1821060Z   - Installing sebastian/diff (6.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1823156Z   - Installing sebastian/comparator (6.3.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1825195Z   - Installing sebastian/code-unit (3.0.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1827520Z   - Installing sebastian/cli-parser (3.0.2): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1829797Z   - Installing phpunit/php-timer (7.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1831875Z   - Installing phpunit/php-text-template (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1833847Z   - Installing phpunit/php-invoker (5.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1835887Z   - Installing phpunit/php-file-iterator (5.1.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1837831Z   - Installing theseer/tokenizer (1.3.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1840122Z   - Installing sebastian/lines-of-code (3.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1841917Z   - Installing sebastian/complexity (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1844019Z   - Installing sebastian/code-unit-reverse-lookup (4.0.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1845893Z   - Installing phpunit/php-code-coverage (11.0.12): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1847832Z   - Installing phar-io/version (3.2.1): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1850316Z   - Installing phar-io/manifest (2.0.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1852353Z   - Installing phpunit/phpunit (11.5.55): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1854416Z   - Installing openspout/openspout (v4.32.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1856534Z   - Installing rap2hpoutre/fast-excel (dev-master c92c13d): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1859001Z   - Installing rmccue/requests (v2.0.18): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1861162Z   - Installing razorpay/razorpay (2.9.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1863201Z   - Installing stripe/stripe-php (v10.21.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1865230Z   - Installing tightenco/ziggy (v2.6.3): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1867226Z   - Installing twilio/sdk (6.44.4): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:46:58.1869487Z   - Installing xendit/xendit-php (2.19.0): Extracting archive
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:00.8853422Z Generating optimized autoload files
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.3386168Z > Illuminate\Foundation\ComposerScripts::postAutoloadDump
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.3982063Z > @php artisan package:discover --ansi
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8440068Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8440760Z   ^[[37;44m INFO ^[[39;49m Discovering packages.  
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8441047Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8497914Z   barryvdh/laravel-debugbar ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8512310Z   barryvdh/laravel-dompdf ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8525136Z   brian2694/laravel-toastr ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8539045Z   inertiajs/inertia-laravel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8558832Z   laravel/ai ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8578102Z   laravel/pail ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8594960Z   laravel/passport ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8610553Z   laravel/reverb ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8626294Z   laravel/sail ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8641805Z   laravel/tinker ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8656713Z   maatwebsite/excel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8671582Z   madnest/madzipper ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8681555Z   matanyadaev/laravel-eloquent-spatial ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8698116Z   nesbot/carbon ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8717044Z   nunomaduro/collision ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8732007Z   nunomaduro/termwind ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8747958Z   nwidart/laravel-modules ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8765458Z   openai-php/laravel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8779361Z   rap2hpoutre/fast-excel ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8797696Z   tightenco/ziggy ^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m^[[90m.^[[39m ^[[32;1mDONE^[[39;22m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8800520Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8921295Z 121 packages you are using are looking for funding.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.8921966Z Use the `composer fund` command to find out more!
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9405782Z ##[group]Run php scripts/check-core-boundary.php "$COMPARE_BASE"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9406278Z ^[[36;1mphp scripts/check-core-boundary.php "$COMPARE_BASE"^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9447366Z shell: /usr/bin/bash -e {0}
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9447643Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9447863Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9448085Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9448384Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9448954Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9449186Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9449399Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9449609Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9449818Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9450030Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9450295Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9450525Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9450794Z   COMPARE_BASE: b87aa24269a0074a546c79e224691508222fd0f0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:03.9451096Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2750590Z Core boundary passed: no forbidden host dependencies; changed core paths and protected write owners checked.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2877056Z ##[group]Run vendor/bin/phpunit tests/Architecture --log-junit host-results.xml
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2877646Z ^[[36;1mvendor/bin/phpunit tests/Architecture --log-junit host-results.xml^[[0m
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2917500Z shell: /usr/bin/bash -e {0}
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2917756Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2917957Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2918168Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2918476Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2919077Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2919308Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2919516Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2919939Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2920156Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2920375Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2920628Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2920861Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.2921076Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.4464619Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.4464941Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.4465053Z Runtime:       PHP 8.3.33
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.4465439Z Configuration: /home/runner/work/mytijaara-admin/mytijaara-admin/phpunit.xml
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:04.4465775Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1278341Z ........................EEEEEEEE....                              36 / 36 (100%)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1289751Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1290349Z Time: 00:17.680, Memory: 24.00 MB
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1290741Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1291061Z There were 8 errors:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1291395Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1292219Z 1) Tests\Architecture\MySqlHostRegistrationTest::test_valid_web_registration_retains_distinct_translations_without_module_classes
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1295702Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_af88bf7f8a750b11, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1299584Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1302599Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1304941Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1306372Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1307816Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1309384Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1310796Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1313623Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1315429Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1321630Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1323533Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1325421Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1326926Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:85
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1327861Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1328139Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1329955Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1331278Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1332105Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1333686Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1335290Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1337081Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1338848Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1340474Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1342124Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1343717Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1345370Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1347044Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1348919Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1350487Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1351896Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:85
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1352694Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1353415Z 2) Tests\Architecture\MySqlHostRegistrationTest::test_outside_zone_rejects_without_creating_vendor
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1356651Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_8d4009b1bf873033, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(50 50)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1359476Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1360301Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1361936Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1363583Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1365235Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1366888Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1368497Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1370206Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1371767Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1373807Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1375591Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1377139Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1378702Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:97
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1379998Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1380303Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1381708Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1383119Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1383745Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1385102Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1386448Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1387978Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1389411Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1390287Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1391135Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1391984Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1392835Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1393676Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1394586Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1395359Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1396047Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:97
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1396452Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1396887Z 3) Tests\Architecture\MySqlHostRegistrationTest::test_vendor_api_registration_preserves_response_and_translations_without_module
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1399208Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_83cc6030fc338120, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1400811Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1401237Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1402068Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1403002Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1403852Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1404672Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1405921Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1407026Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1408385Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1409912Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1411528Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1412860Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/Api/V1/Auth/VendorLoginController.php:167
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1413766Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:110
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1414257Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1414458Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1415310Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1416025Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1416738Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1417815Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1419529Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1421291Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1422611Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1423755Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1424746Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1439819Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1441283Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1442398Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1443668Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1444564Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/Api/V1/Auth/VendorLoginController.php:167
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1445329Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:110
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1445747Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1446358Z 4) Tests\Architecture\MySqlHostRegistrationTest::test_vendor_login_and_mobile_and_web_availability_work_without_module
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1448942Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_2f3b8758a235deaa, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1450795Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1451468Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1452638Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1453793Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1454942Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1455941Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1457069Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1459723Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1460989Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1461860Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1463065Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1464097Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1465192Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:122
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1465622Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1465730Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1466469Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1467073Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1467459Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1468430Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1469772Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1470870Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1472038Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1473048Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1474145Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1474968Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1475793Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1476619Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1477469Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1478248Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1479235Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:122
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1479650Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1480252Z 5) Tests\Architecture\MySqlHostRegistrationTest::test_subscription_requires_package_before_persistence
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1483225Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_8057d9bb858b67c4, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1485521Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1486140Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1487449Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1489288Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1490598Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1491700Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1492516Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1493325Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1494174Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1495019Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1495886Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1496673Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1497374Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:155
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1497789Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1497883Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1498749Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1499374Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1499746Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1500555Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1501353Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1502350Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1503178Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1504002Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1504806Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1505604Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1506603Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1507468Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1508789Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1509611Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1510308Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:155
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1510709Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1511293Z 6) Tests\Architecture\MySqlHostRegistrationTest::test_subscription_selection_stays_unactivated
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1513927Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_979a6f2ba7eac3d8, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1516517Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1517109Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1519390Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1520776Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1522166Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1523481Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1524818Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1525661Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1526501Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1527332Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1528180Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1529278Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1529984Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:162
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1530410Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1530501Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1531151Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1531758Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1532133Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1532936Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1533718Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1534519Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1535334Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1536159Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1536973Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1538000Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1539036Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1539909Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1540768Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1541536Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1542481Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:162
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1542909Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1543241Z 7) Tests\Architecture\MySqlHostRegistrationTest::test_registration_email_preferences_are_honoured
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1544947Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_9b7302b0882ecb09, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1546298Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1546704Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1547514Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1548315Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1549348Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1550184Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1550990Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1551784Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1552605Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1553459Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1554323Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1555102Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1555788Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:184
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1556196Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1556281Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1556931Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1557545Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1557916Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1559070Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1559872Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1560849Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1561676Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1562491Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1563291Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1564115Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1565089Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1565925Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1566785Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1567550Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1568237Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:184
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1568851Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1569304Z 8) Tests\Architecture\MySqlHostRegistrationTest::test_published_rental_registration_requires_pickup_and_honours_provider_mail_preferences
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1571135Z Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical. (Connection: isolation, Host: 127.0.0.1, Port: 3306, Database: mytijaara_isolation_ea52ea0a521f681a, SQL: select * from `zones` where ST_CONTAINS(`coordinates`, ST_GeomFromText('POINT(5 5)', 0, 'axis-order=long-lat')) and `id` = 1 limit 1)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1572492Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1572863Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1573669Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1574457Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1575287Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1576101Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1576912Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1577715Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1578683Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1579560Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1580422Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1581205Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1581907Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:206
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1582331Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1582421Z Caused by
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1583166Z PDOException: SQLSTATE[HY000]: General error: 3033 Binary geometry function st_contains given two geometries of different srids: 4326 and 0, which should have been identical.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1583934Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1584311Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:425
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1585111Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:827
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1585887Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:794
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1586656Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Connection.php:411
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1587457Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3505
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1588400Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3490
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1589428Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:4080
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1590248Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3489
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1591076Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:902
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1591906Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:884
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1592764Z /home/runner/work/mytijaara-admin/mytijaara-admin/vendor/laravel/framework/src/Illuminate/Database/Concerns/BuildsQueries.php:366
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1593541Z /home/runner/work/mytijaara-admin/mytijaara-admin/app/Http/Controllers/VendorController.php:119
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1594235Z /home/runner/work/mytijaara-admin/mytijaara-admin/tests/Architecture/MySqlHostRegistrationTest.php:206
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1594634Z 
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1594750Z ERRORS!
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1595039Z Tests: 36, Assertions: 131, Errors: 8, PHPUnit Deprecations: 1.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1604704Z ##[error]Process completed with exit code 2.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1678717Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1680018Z ##[group]Run actions/upload-artifact@v4
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1680308Z with:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1680541Z   name: isolation-results
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1680809Z   path: *-results.xml
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1681049Z   if-no-files-found: warn
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1681290Z   compression-level: 6
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1681521Z   overwrite: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1681752Z   include-hidden-files: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1681998Z env:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1682196Z   APP_ENV: testing
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1682413Z   APP_DEBUG: false
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1682716Z   APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1683122Z   DB_CONNECTION: sqlite
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1683360Z   DB_DATABASE: :memory:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1683586Z   CACHE_STORE: array
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1683809Z   LOG_CHANNEL: single
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1684037Z   ISOLATION_MYSQL: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1684264Z   COMPOSER_PROCESS_TIMEOUT: 0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1684524Z   COMPOSER_NO_INTERACTION: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1684784Z   COMPOSER_NO_AUDIT: 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.1685011Z ##[endgroup]
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.3399854Z (node:4531) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.3401060Z (Use `node --trace-deprecation ...` to show where the warning was created)
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.3470546Z With the provided path, there will be 1 file uploaded
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.3474019Z Artifact name is valid!
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.3474444Z Root directory input is valid!
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.6170982Z Beginning upload of artifact content to blob storage
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.6394858Z (node:4531) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.7422103Z Uploaded bytes 2735
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.7750511Z Finished uploading artifact content to blob storage!
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.7751547Z SHA256 digest of uploaded artifact zip is f901a3dda46f166a24dd85290cca3daf851fb507d6232471e1d0f38e0b24537e
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.7752852Z Finalizing artifact upload
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.9909543Z Artifact isolation-results.zip successfully finalized. Artifact ID 10646160214
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.9910607Z Artifact isolation-results has been successfully uploaded! Final size is 2735 bytes. Artifact ID is 10646160214
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:22.9915824Z Artifact download URL: https://github.com/techsalaf/mytijaara-admin/actions/runs/35614380724/artifacts/10646160214
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.0106509Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.0107714Z Post job cleanup.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.0980774Z [command]/usr/bin/git version
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1027203Z git version 2.55.0
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1069421Z Temporarily overriding HOME='/home/runner/work/_temp/65e75d45-fbbd-403a-ae0c-66a2e112f5d4' before making global git config changes
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1070451Z Adding repository directory to the temporary git global config as a safe directory
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1075914Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mytijaara-admin/mytijaara-admin
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1121742Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1159216Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1439473Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1475457Z http.https://github.com/.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1500891Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1539916Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1831204Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.1875529Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2278258Z Print service container logs: 1696240b6ec14b0196cadaf0e7e0bf9e_mysql80_9aaa84
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2284896Z ##[command]/usr/bin/docker logs --details 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2416185Z  2026-09-21 14:46:29+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2419385Z  2026-09-21T14:46:30.088477Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2420614Z  2026-09-21T14:46:30.088568Z 0 [System] [MY-013169] [Server] /usr/sbin/mysqld (mysqld 8.0.46) initializing of server in progress as process 80
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2421356Z  2026-09-21T14:46:30.093631Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2421900Z  2026-09-21T14:46:30.201213Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2422774Z  2026-09-21T14:46:30.776200Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2423877Z  2026-09-21T14:46:33.125149Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2424780Z  2026-09-21T14:46:33.126693Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 124
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2425389Z  2026-09-21T14:46:33.136399Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2426245Z  2026-09-21T14:46:33.206932Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2426809Z  2026-09-21T14:46:33.333385Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2427599Z  2026-09-21T14:46:33.333426Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2428910Z  2026-09-21T14:46:33.335019Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2430288Z  2026-09-21T14:46:33.347772Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Socket: /var/run/mysqld/mysqlx.sock
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2431390Z  2026-09-21T14:46:33.347838Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server - GPL.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2432404Z  Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2433103Z  Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2433782Z  Warning: Unable to load '/usr/share/zoneinfo/leapseconds' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2434441Z  Warning: Unable to load '/usr/share/zoneinfo/tzdata.zi' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2434955Z  Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2435606Z  Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2436406Z  2026-09-21T14:46:34.931298Z 10 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.46).
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2437357Z  2026-09-21T14:46:35.819065Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete (mysqld 8.0.46)  MySQL Community Server - GPL.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2439256Z  2026-09-21T14:46:36.115646Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2441193Z  2026-09-21T14:46:36.117068Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 1
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2442208Z  2026-09-21T14:46:36.122483Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2443092Z  2026-09-21T14:46:36.193159Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2444005Z  2026-09-21T14:46:36.295773Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2445280Z  2026-09-21T14:46:36.295817Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2447134Z  2026-09-21T14:46:36.297425Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2449090Z  2026-09-21T14:46:36.310603Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2450908Z  2026-09-21T14:46:36.310679Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2452303Z  2026-09-21 14:46:29+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2453162Z  2026-09-21 14:46:29+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2453973Z  2026-09-21 14:46:30+00:00 [Note] [Entrypoint]: Initializing database files
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2454909Z  2026-09-21 14:46:32+00:00 [Note] [Entrypoint]: Database files initialized
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2455584Z  2026-09-21 14:46:32+00:00 [Note] [Entrypoint]: Starting temporary server
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2456257Z  2026-09-21 14:46:33+00:00 [Note] [Entrypoint]: Temporary server started.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2457113Z  '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2457620Z  
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2457992Z  2026-09-21 14:46:34+00:00 [Note] [Entrypoint]: Stopping temporary server
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2458831Z  2026-09-21 14:46:35+00:00 [Note] [Entrypoint]: Temporary server stopped
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2459353Z  
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2459815Z  2026-09-21 14:46:35+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2460223Z  
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2466381Z Stop and remove container: 1696240b6ec14b0196cadaf0e7e0bf9e_mysql80_9aaa84
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.2472533Z ##[command]/usr/bin/docker rm --force 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.5421080Z 6e0187ff80378f84b18a5e1ac8d5af2066c4f977b189b052f966e2765df44422
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.5455115Z Remove container network: github_network_881752c6c8f9489d80e5e82327955763
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.5459776Z ##[command]/usr/bin/docker network rm github_network_881752c6c8f9489d80e5e82327955763
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.6567998Z github_network_881752c6c8f9489d80e5e82327955763
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.6645137Z Cleaning up orphan processes
+isolation / isolation	UNKNOWN STEP	2026-09-21T14:47:23.6973475Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

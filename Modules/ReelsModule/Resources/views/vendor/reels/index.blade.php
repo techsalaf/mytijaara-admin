@@ -1,6 +1,6 @@
 @extends('layouts.vendor.app')
 
-@section('title', translate('messages.Reels_List'))
+@section('title', translate('Reels list'))
 @section('vendor_reels', 'active')
 @section('vendor_reels_list', 'active')
 
@@ -13,60 +13,51 @@
 @endpush
 
 @php
-    $storeLabel = \App\CentralLogics\Helpers::getStoreLabelByModuleType($store?->module_type ?? $store?->module?->module_type);
-    $storeInformationLabel = $storeLabel . ' ' . translate('messages.information');
-    $deletedStoreLabel = $storeLabel . ' ' . translate('messages.deleted');
-    // Services are booked, not sold: show booking wording for the service module.
     $isServiceModule = ($store?->module_type ?? $store?->module?->module_type) === 'service';
+    $statusClasses = [
+        'live' => 'text-success bg-success bg-opacity-10',
+        'upcoming' => 'text-info bg-info bg-opacity-10',
+        'expired' => 'text-danger bg-danger bg-opacity-10',
+        'deactivated' => 'text-warning bg-warning bg-opacity-10',
+    ];
+    $reelStateLabels = [
+        'live' => translate('messages.live'),
+        'upcoming' => translate('messages.upcoming'),
+        'expired' => translate('Expired'),
+        'deactivated' => translate('Deactivated'),
+    ];
+    $productLabel = $isServiceModule ? translate('messages.Service') : translate('messages.Product');
+    $salesLabel = $isServiceModule ? translate('messages.Bookings') : translate('messages.Sales');
+    $orderButtonLabel = $isServiceModule ? translate('messages.Book Now') : translate('messages.Order now');
+    $reelStatusOptions = ['live', 'upcoming', 'expired', 'deactivated'];
+    $selectedReelStatuses = array_values(array_filter((array) request('reel_status', [])));
+    $datePreset = request('filter') === 'all_time' ? '' : (string) request('filter', '');
+    $activeFilterCount = (empty($selectedReelStatuses) ? 0 : 1)
+        + ($datePreset === '' ? 0 : 1)
+        + (request()->filled('from') ? 1 : 0)
+        + (request()->filled('to') ? 1 : 0);
+    $filterClearUrl = route('vendor.reels.index', array_filter(['search' => request('search')]));
 @endphp
 
 @section('content')
 <div class="content container-fluid">
-    <div class="mb-3">
-        <h2 class="fs-20 text-capitalize lh-1 mb-0">{{ translate('messages.Reels_list') }}</h2>
-        <p class="mb-0">{{ translate('messages.Manage_your_stores_video_content') }}</p>
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1 class="page-header-title">
+                <i class="tio-play-circle-outlined"></i>
+                <span>{{ translate('Reels list') }}
+                    <span class="badge badge-soft-dark ml-2">{{ $reels->total() }}</span>
+                </span>
+            </h1>
+            <p class="page-header-desc">{{ translate('Short videos you post to promote your items, and how each one is performing.') }}</p>
+        </div>
+        <a href="{{ route('vendor.reels.create') }}" class="btn btn--primary"><i class="tio-add"></i> {{ translate('Create reels') }}</a>
     </div>
 
     <div class="row g-3">
         <div class="col-12">
             <div class="card card-body">
-                <h3 class="mb-3">{{ translate('messages.Filter_Data') }}</h3>
-                <form action="{{ route('vendor.reels.index') }}" method="GET">
-                    <div class="row g-3">
-                        <div class="col-sm-6 col-md-3">
-                            <select class="form-control set-filter" name="filter"
-                                    data-url="{{ url()->full() }}" data-filter="filter">
-                                <option value="all_time" {{ request('filter', 'all_time') === 'all_time' ? 'selected' : '' }}>{{ translate('messages.All_Time') }}</option>
-                                <option value="this_year" {{ request('filter') === 'this_year' ? 'selected' : '' }}>{{ translate('messages.This_Year') }}</option>
-                                <option value="previous_year" {{ request('filter') === 'previous_year' ? 'selected' : '' }}>{{ translate('messages.Previous_Year') }}</option>
-                                <option value="this_month" {{ request('filter') === 'this_month' ? 'selected' : '' }}>{{ translate('messages.This_Month') }}</option>
-                                <option value="this_week" {{ request('filter') === 'this_week' ? 'selected' : '' }}>{{ translate('messages.This_Week') }}</option>
-                                <option value="custom" {{ request('filter') === 'custom' ? 'selected' : '' }}>{{ translate('messages.Custom') }}</option>
-                            </select>
-                        </div>
-                        @if (request('filter') === 'custom')
-                            <div class="col-sm-6 col-md-3">
-                                <input type="date" name="from" id="from_date" class="form-control"
-                                    placeholder="{{ translate('Start Date') }}"
-                                    value="{{ request('from') }}" required>
-                            </div>
-                            <div class="col-sm-6 col-md-3">
-                                <input type="date" name="to" id="to_date" class="form-control"
-                                    placeholder="{{ translate('End Date') }}"
-                                    value="{{ request('to') }}" required>
-                            </div>
-                        @endif
-                        <div class="col-sm-6 col-md-3 ml-auto">
-                            <button type="submit" class="btn btn-primary btn-block h--45px">{{ translate('messages.Filter') }}</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-12">
-            <div class="card card-body">
-                <h4 class="mb-3">{{ translate('messages.Reels_Overview') }}</h4>
+                <h4 class="mb-3">{{ translate('Reels overview') }}</h4>
                 <div class="row g-3">
                     @foreach ($overviewCards as $card)
                         <div class="col-sm-6 col-lg-4">
@@ -96,139 +87,172 @@
 
         <div class="col-12">
             <div class="card">
-                <div class="card-header py-1 border-0">
-                    <div class="search--button-wrapper justify-content-end flex-wrap">
-                        <h4 class="flex-grow-1 d-flex gap-2 align-items-center text-capitalize lh-1 mb-0">
-                            <span>{{ translate('messages.Reels_list') }}</span>
-                            <span class="badge badge-soft-dark">{{ $reels->total() }}</span>
-                        </h4>
+                <div class="card-header py-2 border-0">
+                    <div class="search--button-wrapper flex-wrap">
+                        @include('partials._table-head', [
+                            'subtitle' => translate('messages.Every reel you have posted, with how it is performing and when it runs.'),
+                        ])
                         <form class="search-form min--260" action="{{ route('vendor.reels.index') }}" method="GET">
                             @foreach(request()->except(['search', 'page']) as $key => $value)
-                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                @if(is_array($value))
+                                    @foreach($value as $item)
+                                        <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                                    @endforeach
+                                @else
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                @endif
                             @endforeach
                             <div class="input-group input--group">
-                                <input type="search" name="search" class="form-control h--40px" placeholder="{{ translate('messages.Search_here') }}" value="{{ request('search') }}">
+                                <input type="search" name="search" class="form-control h--40px" placeholder="{{ translate('Search') }}" value="{{ request('search') }}">
                                 <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                             </div>
                         </form>
+
+                        <div class="hs-unfold">
+                            <a class="btn btn-sm btn-white h--40px filter-button-show" href="javascript:;"
+                               role="button" aria-expanded="false" aria-controls="datatableFilterSidebar">
+                                <i class="tio-filter-list mr-1"></i> {{ translate('messages.Filter') }}
+                                @if ($activeFilterCount)
+                                    <span class="badge badge-success badge-pill ml-1">{{ $activeFilterCount }}</span>
+                                @endif
+                            </a>
+                        </div>
                     </div>
                 </div>
 
                 <div class="table-responsive datatable-custom">
-                    <table class="table table-hover table-borderless table-thead-bordered table-nowrap table-align-middle card-table fz--14px text-title">
+                    <table class="table table-hover table-borderless table-thead-bordered table-nowrap table-align-middle card-table fz--14px text-title table--wrap-head">
                         <thead class="thead-light">
                             <tr>
-                                <th>{{ translate('messages.Sl') }}</th>
-                                <th>{{ translate('messages.Reel_Id') }}</th>
-                                <th>{{ translate('messages.Reel_information') }}</th>
-                                <th>{{ $storeInformationLabel }}</th>
-                                <th class="text-center">{{ translate('messages.Total_Views') }}</th>
-                                <th class="text-center">{{ translate('messages.Total_Likes') }}</th>
-                                <th class="text-center">{{ translate('messages.Total_Store_visit') }}</th>
-                                <th>{{ translate('messages.Reel_Duration') }}</th>
-                                <th class="text-center">{{ translate('messages.Reels_Status') }}</th>
+                                <th>{{ translate('messages.Reel') }}</th>
+                                <th>{{ $productLabel }}</th>
+                                <th>{{ translate('messages.Engagement') }}</th>
+                                <th class="col--numeric">{{ $salesLabel }}</th>
+                                <th>{{ translate('messages.Duration') }}</th>
                                 <th class="text-center">{{ translate('messages.Status') }}</th>
                                 <th class="text-center">{{ translate('messages.Action') }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($reels as $key => $reel)
-                                @php
-                                    $statusClasses = [
-                                        'live' => 'text-success bg-success bg-opacity-10',
-                                        'upcoming' => 'text-info bg-info bg-opacity-10',
-                                        'expired' => 'text-danger bg-danger bg-opacity-10',
-                                        'deactivated' => 'text-warning bg-warning bg-opacity-10',
-                                    ];
-                                @endphp
+                            @forelse($reels as $reel)
+                                @php($windowState = $reel->window_state_label)
+                                @php($today = \Carbon\Carbon::now()->startOfDay())
+                                @php($daysToStart = $reel->start_date ? (int) $today->diffInDays($reel->start_date->copy()->startOfDay(), false) : null)
+                                @php($daysLeft = $reel->end_date ? (int) $today->diffInDays($reel->end_date->copy()->startOfDay(), false) : null)
                                 <tr>
-                                    <td>{{ $reels->firstItem() + $key }}</td>
-                                    <td><a href="javascript:;">{{ $reel->id }}</a></td>
                                     <td>
-                                        <a class="media align-items-center min-w-300px overflow-hidden" href="javascript:;">
-                                            <img class="avatar h-160px w-100px mr-3 onerror-image" src="{{ $reel->thumbnail_full_url ?? asset('public/assets/admin/img/160x160/img2.jpg') }}" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}" alt="">
-                                            <div class="media-body"><div class="text-title text-wrap line--limit-2 min-w-160 max-w-200px mb-0">{{ $reel->description }}</div></div>
+                                        <a class="table-rest-info table-rest-info--portrait offcanvas-trigger" href="javascript:;" data-target="#reelsDetailsOffcanvas{{ $reel->id }}" title="{{ $reel->description }}">
+                                            <img class="onerror-image" src="{{ $reel->thumbnail_full_url ?? asset('public/assets/admin/img/160x160/img2.jpg') }}" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}" alt="">
+                                            <div class="info max-w-200px">
+                                                <div class="text--title text-wrap line--limit-2">{{ $reel->description }}</div>
+                                                <div class="font-light">ID:{{ $reel->id }} &middot; {{ optional($reel->created_at)->format('d M Y') }}</div>
+                                            </div>
                                         </a>
                                     </td>
                                     <td>
-                                        <a class="media align-items-center min-w-220 overflow-hidden" href="javascript:;">
-                                            <img class="avatar avatar-lg mr-3 rounded-circle border onerror-image" src="{{ $reel->store?->logo_full_url ?? asset('public/assets/admin/img/160x160/img2.jpg') }}" data-onerror-image="{{ asset('public/assets/admin/img/160x160/img2.jpg') }}" alt="">
-                                            <div class="media-body"><h5 class="text-wrap line--limit-1 min-w-160 max-w-200px mb-0">{{ $reel->store?->name ?? $deletedStoreLabel }}</h5></div>
-                                        </a>
+                                        @if ($reel->productable)
+                                            <span class="text--title text-wrap line--limit-1 max-w-200px">{{ $reel->productable->name }}</span>
+                                            @if ($reel->order_now_button)
+                                                <div class="cell-chips mt-1"><span class="cell-chip">{{ $orderButtonLabel }}</span></div>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">{{ translate('messages.N/A') }}</span>
+                                        @endif
                                     </td>
-                                    <td class="text-center">{{ $reel->total_views }}</td>
-                                    <td class="text-center">{{ $reel->total_likes }}</td>
-                                    <td class="text-center">{{ $reel->total_store_visits }}</td>
-                                    <td>@if($reel->is_always_visible) {{ translate('messages.Always_Visible') }} @else {{ optional($reel->start_date)->format('d M Y') }} - {{ optional($reel->end_date)->format('d M Y') }} @endif</td>
-                                    <td class="text-center"><span class="{{ $statusClasses[$reel->reel_status_label] ?? 'text-muted bg-light' }} px-2 py-1 rounded-20 w-max-content mx-auto d-inline-block">{{ translate('messages.' . ucfirst($reel->reel_status_label)) }}</span></td>
                                     <td>
-                                        <label class="toggle-switch toggle-switch-sm" for="reelStatus{{ $reel->id }}">
-                                            <input type="checkbox" data-id="reelStatus{{ $reel->id }}" data-image-on="{{ asset('public/assets/admin/img/modal/reel-stratus-on.png') }}" data-image-off="{{ asset('public/assets/admin/img/modal/reel-stratus-off.png') }}" data-title-on="{{ translate('messages.want_to_turn_on_the_reel?') }}" data-title-off="{{ translate('messages.want_to_turn_off_the_reel?') }}" data-text-on="<p>{{ translate('messages.if_you_turn_on_the_reel,_it_will_be_visible_to_customers.') }}</p>" data-text-off="<p>{{ translate('messages.if_you_turn_off_the_reel,_it_will_no_longer_be_visible_to_customers.') }}</p>" class="toggle-switch-input dynamic-checkbox" id="reelStatus{{ $reel->id }}" {{ $reel->status ? 'checked' : '' }}>
-                                            <span class="toggle-switch-label"><span class="toggle-switch-indicator"></span></span>
-                                        </label>
+                                        <span class="d-block text--title">{{ number_format($reel->total_views) }} {{ translate('messages.Views') }}</span>
+                                        <span class="d-block fs-12 text-muted">{{ number_format($reel->total_likes) }} {{ translate('messages.Likes') }} &middot; {{ number_format($reel->total_store_visits) }} {{ translate('Store visits') }}</span>
+                                    </td>
+                                    <td class="col--numeric">
+                                        <span class="d-block text--title">{{ \App\CentralLogics\Helpers::format_currency($reel->total_order_amount ?? 0) }}</span>
+                                        <span class="d-block fs-12 text-muted">{{ number_format($reel->total_orders ?? 0) }} {{ $salesLabel }}</span>
+                                    </td>
+                                    <td>
+                                        @if ($reel->is_always_visible)
+                                            <span class="d-block text--title">{{ translate('Always visible') }}</span>
+                                        @else
+                                            <span class="d-block text--title">{{ optional($reel->start_date)->format('d M Y') }} - {{ optional($reel->end_date)->format('d M Y') }}</span>
+                                            @if ($windowState === 'upcoming' && $daysToStart !== null && $daysToStart <= 90)
+                                                <span class="d-block fs-12 text-muted">{{ $daysToStart > 1 ? translate('Starts') . ' ' . \Carbon\Carbon::parse($reel->start_date)->startOfDay()->diffForHumans(\Carbon\Carbon::now()->startOfDay(), \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW) : translate('Starts tomorrow') }}</span>
+                                            @elseif ($windowState !== 'upcoming' && $daysLeft !== null && abs($daysLeft) <= 90)
+                                                <span class="d-block fs-12 text-muted">
+                                                    @if ($daysLeft > 1)
+                                                        {{ translate('Ends') }} {{ \Carbon\Carbon::parse($reel->end_date)->startOfDay()->diffForHumans(\Carbon\Carbon::now()->startOfDay(), \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW) }}
+                                                    @elseif ($daysLeft === 1)
+                                                        {{ translate('Ends tomorrow') }}
+                                                    @elseif ($daysLeft === 0)
+                                                        {{ translate('Ends today') }}
+                                                    @elseif ($daysLeft === -1)
+                                                        {{ translate('Ended yesterday') }}
+                                                    @else
+                                                        {{ translate('Ended') }} {{ \Carbon\Carbon::parse($reel->end_date)->startOfDay()->diffForHumans(\Carbon\Carbon::now()->startOfDay(), \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW) }}
+                                                    @endif
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="status-toggle" data-status="{{ $reel->status ? 1 : 0 }}">
+                                            <label class="toggle-switch toggle-switch-sm" for="reelStatus{{ $reel->id }}">
+                                                <input type="checkbox" data-id="reelStatus{{ $reel->id }}" data-type="status" data-image-on="{{ asset('public/assets/admin/img/modal/reel-stratus-on.png') }}" data-image-off="{{ asset('public/assets/admin/img/modal/reel-stratus-off.png') }}" data-title-on="{{ translate('messages.Want to turn on the reel?') }}" data-title-off="{{ translate('messages.Want to turn off the reel?') }}" data-text-on="<p>{{ translate('messages.If you turn on the reel, it will be visible to customers.') }}</p>" data-text-off="<p>{{ translate('messages.If you turn off the reel, it will no longer be visible to customers.') }}</p>" data-label-on="{{ $reelStateLabels[$windowState] ?? $windowState }}" data-label-off="{{ $reelStateLabels['deactivated'] }}" class="toggle-switch-input dynamic-checkbox" id="reelStatus{{ $reel->id }}" {{ $reel->status ? 'checked' : '' }}>
+                                                <span class="toggle-switch-label"><span class="toggle-switch-indicator"></span></span>
+                                            </label>
+                                            <span class="status-toggle__text {{ $statusClasses[$reel->reel_status_label] ?? '' }} px-2 py-1 rounded-20" aria-live="polite">{{ $reelStateLabels[$reel->reel_status_label] ?? $reel->reel_status_label }}</span>
+                                        </div>
                                         <form action="{{ route('vendor.reels.status', [$reel->id, $reel->status ? 0 : 1]) }}" method="GET" id="reelStatus{{ $reel->id }}_form"></form>
                                     </td>
                                     <td>
                                         <div class="btn--container justify-content-center">
-                                            <a class="btn action-btn btn--warning btn-outline-warning offcanvas-trigger" href="javascript:;" data-target="#reelsDetailsOffcanvas{{ $reel->id }}" title="{{ translate('messages.view') }}"><i class="tio-invisible"></i></a>
-                                            <a class="btn action-btn btn--primary btn-outline-primary" href="{{ route('vendor.reels.edit', $reel->id) }}" title="{{ translate('messages.edit') }}"><i class="tio-edit"></i></a>
-                                            <a class="btn action-btn btn-outline-danger btn--danger" data-toggle="modal" data-target="#confirmation-deletes-{{ $reel->id }}" title="{{ translate('messages.delete') }}"><i class="tio-delete-outlined"></i></a>
+                                            <a class="btn action-btn action-btn--view offcanvas-trigger" href="javascript:;" data-target="#reelsDetailsOffcanvas{{ $reel->id }}" title="{{ translate('messages.View') }}"><i class="tio-visible-outlined"></i></a>
+                                            <a class="btn action-btn action-btn--edit" href="{{ route('vendor.reels.edit', $reel->id) }}" title="{{ translate('Edit') }}"><i class="tio-edit"></i></a>
+                                            <a class="btn action-btn action-btn--delete" data-toggle="modal" data-target="#confirmation-deletes-{{ $reel->id }}" title="{{ translate('messages.Delete') }}"><i class="tio-delete-outlined"></i></a>
                                         </div>
 
-
-                                            <div class="modal fade" id="confirmation-deletes-{{ $reel->id }}" tabindex="-1" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered status-warning-modal" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header px-2 pt-2 border-0">
-                                                            <button type="button"
-                                                                class="close btn btn--reset btn-circle"
-                                                                data-dismiss="modal" aria-label="Close">
-                                                                <span aria-hidden="true" class="tio-clear fs-20 opacity-70"></span>
-                                                            </button>
-                                                        </div>
-                                                            <form action="{{ route('vendor.reels.destroy', $reel->id) }}" method="post">
-                                                                @csrf
-                                                                @method('delete')
-
-
-                                                            <div class="modal-body pb-4 pt-0">
-                                                                <div class="max-349 mx-auto mt-2 mb-20">
-                                                                    <div class="text-center">
+                                        <div class="modal fade" id="confirmation-deletes-{{ $reel->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered status-warning-modal" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header px-2 pt-2 border-0">
+                                                        <button type="button" class="close btn btn--reset btn-circle" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true" class="tio-clear fs-20 opacity-70"></span>
+                                                        </button>
+                                                    </div>
+                                                    <form action="{{ route('vendor.reels.destroy', $reel->id) }}" method="post">
+                                                        @csrf
+                                                        @method('delete')
+                                                        <div class="modal-body pb-4 pt-0">
+                                                            <div class="max-349 mx-auto mt-2 mb-20">
+                                                                <div class="text-center">
                                                                     <img src="{{ asset('public/assets/admin/img/delete.png') }}" alt="icon" class="mb-20">
-                                                                    <h3 class="mb-2 fs-18">{{ translate('messages.Want_to_delete_this_Reel') }}</h3>
+                                                                    <h3 class="mb-2 fs-18">{{ translate('Want to delete this reel?') }}</h3>
                                                                     <p class="text-wrap mb-0">
                                                                         @if ($reel->reel_status_label == 'live')
                                                                             {{ translate('This reel is currently live and has engagement. If you delete it, it will no longer be visible to customers.') }}
-                                                                            @else
+                                                                        @else
                                                                             {{ translate('Please confirm before deleting this reel. This will permanently remove this from the reel list.') }}
-
-                                                                         @endif
+                                                                        @endif
                                                                     </p>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="modal-footer justify-content-center border-0 pt-0 pb-4 gap-2">
-                                                                    <button type="submit" class="btn min-w-120px btn-danger min-h-45px">{{ translate('messages.Yes,_Delete') }}</button>
-                                                                    <button type="button" class="btn min-w-120px btn--reset min-h-45px" data-dismiss="modal">{{ translate('messages.cancel') }}</button>
                                                                 </div>
                                                             </div>
-                                                        </form>
-                                                    </div>
+                                                            <div class="modal-footer justify-content-center border-0 pt-0 pb-4 gap-2">
+                                                                <button type="submit" class="btn min-w-120px btn-danger min-h-45px"><i class="tio-delete-outlined"></i> {{ translate('Yes, delete') }}</button>
+                                                                <button type="button" class="btn min-w-120px btn--reset min-h-45px" data-dismiss="modal"><i class="tio-clear-circle-outlined"></i> {{ translate('messages.Cancel') }}</button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
                                                 </div>
                                             </div>
-
-
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
-                                   <tr>
-                                        <td colspan="11">
-                                            <div class="empty--data">
-                                                <img src="{{ asset('public/assets/admin/svg/illustrations/sorry.svg') }}" alt="public">
-                                                <h5>{{ translate('messages.no_data_found') }}</h5>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty--data">
+                                            <img src="{{ asset('public/assets/admin/svg/illustrations/sorry.svg') }}" alt="public">
+                                            <h5>{{ translate('No data found') }}</h5>
+                                        </div>
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -240,19 +264,80 @@
         </div>
     </div>
 
+    <div id="datatableFilterSidebar" class="filter-drawer sidebar sidebar-bordered sidebar-box-shadow">
+        <div class="card card-lg sidebar-card sidebar-footer-fixed">
+            @include('partials._filter-drawer-head', [
+                'fd_title' => translate('messages.Reel filter'),
+                'fd_subtitle' => translate('messages.Narrow your reel list down by status and upload date.'),
+            ])
+
+            <form class="card-body sidebar-body sidebar-scrollbar" action="{{ route('vendor.reels.index') }}" method="GET" id="reel_filter_form">
+                <input type="hidden" name="search" value="{{ request('search') }}">
+
+                <small class="text-cap mb-3">{{ translate('messages.Reel Status') }}</small>
+                <div class="fd-grid">
+                    @foreach ($reelStatusOptions as $status)
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" id="filterReelStatus{{ ucfirst($status) }}"
+                                   name="reel_status[]" value="{{ $status }}"
+                                   {{ in_array($status, $selectedReelStatuses) ? 'checked' : '' }}>
+                            <label class="custom-control-label" for="filterReelStatus{{ ucfirst($status) }}">{{ $reelStateLabels[$status] }}</label>
+                        </div>
+                    @endforeach
+                </div>
+
+                <hr class="my-4">
+
+                <small class="text-cap mb-3">{{ translate('messages.Reel Upload Date') }}</small>
+                <div class="form-group">
+                    <select name="filter" id="reel_filter_period" class="form-control">
+                        <option value="">{{ translate('All time') }}</option>
+                        <option value="this_week" {{ $datePreset === 'this_week' ? 'selected' : '' }}>{{ translate('This week') }}</option>
+                        <option value="this_month" {{ $datePreset === 'this_month' ? 'selected' : '' }}>{{ translate('This month') }}</option>
+                        <option value="this_year" {{ $datePreset === 'this_year' ? 'selected' : '' }}>{{ translate('This year') }}</option>
+                        <option value="previous_year" {{ $datePreset === 'previous_year' ? 'selected' : '' }}>{{ translate('Previous year') }}</option>
+                        <option value="custom" {{ $datePreset === 'custom' ? 'selected' : '' }}>{{ translate('messages.Custom') }}</option>
+                    </select>
+                </div>
+
+                <div class="form-group {{ $datePreset === 'custom' ? '' : 'd-none' }}" id="reel_filter_custom_range">
+                    <div class="fd-daterange">
+                        <div>
+                            <label class="fd-sublabel" for="reel_filter_from">{{ translate('Start date') }}</label>
+                            <input type="date" name="from" id="reel_filter_from" class="form-control" value="{{ request('from') }}"
+                                   {{ $datePreset === 'custom' ? 'required' : 'disabled' }}>
+                        </div>
+                        <div>
+                            <label class="fd-sublabel" for="reel_filter_to">{{ translate('End date') }}</label>
+                            <input type="date" name="to" id="reel_filter_to" class="form-control" value="{{ request('to') }}"
+                                   {{ $datePreset === 'custom' ? 'required' : 'disabled' }}>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer sidebar-footer">
+                    <div class="row gx-2">
+                        <div class="col">
+                            <a class="btn btn-block btn-white" href="{{ $filterClearUrl }}">
+                                <i class="tio-clear-circle-outlined"></i> {{ translate('Clear all') }}
+                            </a>
+                        </div>
+                        <div class="col">
+                            <button type="submit" class="btn btn-block btn-primary">
+                                <i class="tio-filter-list"></i> {{ translate('messages.Filter') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @foreach ($reels as $reel)
-        @php
-            $offcanvasStatusClasses = [
-                'live' => 'text-success bg-success bg-opacity-10',
-                'upcoming' => 'text-info bg-info bg-opacity-10',
-                'expired' => 'text-danger bg-danger bg-opacity-10',
-                'deactivated' => 'text-warning bg-warning bg-opacity-10',
-            ];
-        @endphp
         <div id="reelsDetailsOffcanvas{{ $reel->id }}" style="overflow-y: auto;" class="custom-offcanvas d-flex flex-column justify-content-between global_guideline_offcanvas">
             <div>
                 <div class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
-                    <h3 class="mb-0">{{ translate('messages.Reels_Details') }}</h3>
+                    <h3 class="mb-0">{{ translate('Reels details') }}</h3>
                     <button type="button" class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary offcanvas-close fz-15px p-0" aria-label="Close">&times;</button>
                 </div>
                 <div class="p-3">
@@ -261,7 +346,7 @@
                             <img src="{{ $reel->thumbnail_full_url ?? asset('public/assets/admin/img/160x160/img2.jpg') }}" alt="" class="reels-thumbnail">
                             <video class="reels-video" width="400" height="470" preload="none" controls>
                                 <source src="{{ $reel->video_full_url }}" type="video/mp4">
-                                {{ translate('messages.Your_browser_does_not_support_the_video_tag.') }}
+                                {{ translate('messages.Your browser does not support the video tag.') }}
                             </video>
                             <div class="reels-play-btn">
                                 <div class="d-flex justify-content-center align-items-center w-100 h-100">
@@ -274,37 +359,37 @@
                     <div class="bg-light p-3 rounded mb-3">
                         <div class="d-flex gap-2 align-items-center justify-content-between mb-3">
                             <div class="flex-grow-1">
-                                {{ translate('messages.Reel_Id') }}: <span class="text-title">{{ $reel->id }}</span>
+                                {{ translate('Reel ID') }}: <span class="text-title">{{ $reel->id }}</span>
                             </div>
-                            <span class="{{ $offcanvasStatusClasses[$reel->reel_status_label] ?? 'text-muted bg-light' }} px-2 py-1 rounded-20 w-max-content flex-shrink-0">
-                                {{ translate('messages.' . ucfirst($reel->reel_status_label)) }}
+                            <span class="{{ $statusClasses[$reel->reel_status_label] ?? 'text-muted bg-light' }} px-2 py-1 rounded-20 w-max-content flex-shrink-0">
+                                {{ $reelStateLabels[$reel->reel_status_label] ?? $reel->reel_status_label }}
                             </span>
                         </div>
-                        <h4 class="mb-2">{{ translate('messages.Short_Description') }}</h4>
+                        <h4 class="mb-2">{{ translate('Short description') }}</h4>
                         <p class="fw-medium mb-0">{{ $reel->description }}</p>
                     </div>
 
                     <div class="bg-light p-3 rounded mb-3">
-                        <h4 class="mb-2">{{ translate('messages.Reel_Validity') }}</h4>
+                        <h4 class="mb-2">{{ translate('Reel validity') }}</h4>
                         <div class="d-flex align-items-stretch">
                             <div class="w-50 pe-3">
-                                {{ translate('messages.Upload_Date') }}: <span class="text-title">{{ optional($reel->created_at)->format('d M Y') }}</span>
+                                {{ translate('Upload date') }}: <span class="text-title">{{ optional($reel->created_at)->format('d M Y') }}</span>
                             </div>
                             <div class="border-start"></div>
                             <div class="w-50 ps-3">
-                                {{ translate('messages.Expired_Date') }}:
+                                {{ translate('Expired date') }}:
                                 <span class="text-title">
-                                    {{ $reel->is_always_visible ? translate('messages.Always_Visible') : optional($reel->end_date)->format('d M Y') }}
+                                    {{ $reel->is_always_visible ? translate('Always visible') : optional($reel->end_date)->format('d M Y') }}
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     <div class="bg-light p-3 rounded mb-3">
-                        <h4 class="mb-2">{{ translate('messages.Reel_Earning') }}</h4>
+                        <h4 class="mb-2">{{ translate('Reel earning') }}</h4>
                         <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap">
-                            <div>{{ $isServiceModule ? translate('messages.Service') : translate('messages.Product') }}: <span class="text-title fw-medium">{{ $reel->productable?->name ?? translate('messages.N/A') }}</span></div>
-                            <div>{{ $isServiceModule ? translate('messages.Book Now') : translate('messages.Order_Now') }}: <span class="text-title fw-medium">{{ $reel->order_now_button ? translate('messages.on') : translate('messages.off') }}</span></div>
+                            <div>{{ $productLabel }}: <span class="text-title fw-medium">{{ $reel->productable?->name ?? translate('messages.N/A') }}</span></div>
+                            <div>{{ $orderButtonLabel }}: <span class="text-title fw-medium">{{ $reel->order_now_button ? translate('messages.on') : translate('messages.off') }}</span></div>
                         </div>
                     </div>
 
@@ -328,7 +413,7 @@
                         <div class="col-sm-4">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-shop-outlined fs-16"></i> {{ translate('messages.Store_Visits') }}
+                                    <i class="tio-shop-outlined fs-16"></i> {{ translate('Store visits') }}
                                 </div>
                                 <h5 class="text-info">{{ $reel->total_store_visits }}</h5>
                             </div>
@@ -336,17 +421,17 @@
                         <div class="col-sm-6">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-shopping-cart fs-16"></i> {{ $isServiceModule ? translate('messages.Total Booking') : translate('messages.Total_Sale') }}
+                                    <i class="tio-shopping-cart fs-16"></i> {{ $isServiceModule ? translate('Total booking') : translate('Total sale') }}
                                 </div>
-                                <h5 class="text-info">{{ $reel->order_count ?? 0 }}</h5>
+                                <h5 class="text-info">{{ number_format($reel->total_orders ?? 0) }}</h5>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="bg-light rounded p-2 text-center">
                                 <div class="d-flex gap-1 justify-content-center align-items-center fs-12">
-                                    <i class="tio-money fs-16"></i> {{ $isServiceModule ? translate('messages.Total Booking Amount') : translate('messages.Total_Sale_Amount') }}
+                                    <i class="tio-money fs-16"></i> {{ $isServiceModule ? translate('Total booking amount') : translate('Total sale amount') }}
                                 </div>
-                                <h5 class="text-info">{{ \App\CentralLogics\Helpers::format_currency($reel->total_sale_amount ?? 0) }}</h5>
+                                <h5 class="text-info">{{ \App\CentralLogics\Helpers::format_currency($reel->total_order_amount ?? 0) }}</h5>
                             </div>
                         </div>
                     </div>
@@ -361,6 +446,11 @@
 @push('script_2')
 <script>
 "use strict";
+$(document).on('change', '#reel_filter_period', function () {
+    const isCustom = $(this).val() === 'custom';
+    $('#reel_filter_custom_range').toggleClass('d-none', !isCustom);
+    $('#reel_filter_from, #reel_filter_to').prop({ required: isCustom, disabled: !isCustom });
+});
 $(document).on('click', '.offcanvas-trigger', function () { $($(this).data('target')).addClass('active'); $('body').addClass('overflow-hidden'); });
 $(document).on('click', '.offcanvas-close, #offcanvasOverlay', function () {
     $(this).closest('.custom-offcanvas').removeClass('active');

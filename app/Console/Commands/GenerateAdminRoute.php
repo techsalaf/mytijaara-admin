@@ -25,9 +25,6 @@ class GenerateAdminRoute extends Command
      */
     protected $description = 'Generate admin formatted routes';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
 
@@ -41,9 +38,6 @@ class GenerateAdminRoute extends Command
             'system-currency', 'status', 'paidStatus', 'priority', 'remove-proof-image', 'select-customer', 'orders', 'logs',
             'refund_mode', 'account-transaction/create', 'provide-deliveryman-earnings/create', 'system-addons', 'social-media/create',
             'drivemond', 'trashed','admin/transactions/report/vendor-wise-taxes','admin/transactions/report/vendor-tax-report',
-            // Per-provider tax detail report requires an ?id= provider param (Store::findOrFail),
-            // so it must not be surfaced as a standalone search page — it 404s without a provider.
-            // Matches both the 'admin/transactions/service/report/...' and 'admin/service/report/...' prefixes.
             'service/report/provider-tax-report',
         ];
 
@@ -66,9 +60,6 @@ class GenerateAdminRoute extends Command
                     $formattedRoutes= $this->genetateRouteJsonFileFormate($formattedRoutes,$bladePath,$routeName, $uri);
 
                 }
-                // else{
-                //     info("Route excluded: " . $route->getName() . " - " . $uri);
-                // }
             }
         }
         $formattedRoutes= $this->manualyAddedBladePath($formattedRoutes);
@@ -111,9 +102,16 @@ class GenerateAdminRoute extends Command
             $uri = $route->uri();
             $action = $route->getAction();
 
+            // $action['controller'] is a plain "Class@method" string for the classic
+            // Controller::class.'@method' route syntax, but Laravel leaves array-callable routes
+            // ([Controller::class, 'method']) resolved the same way in every version this app has
+            // run — except this codebase has routes defined both ways, and on at least one of
+            // them the resolved value has no '@' at all, which made explode() return a single
+            // element and crashed the WHOLE command on an undefined index. Skip anything that
+            // doesn't look like "Class@method" instead of crashing on it.
             $controller = $action['controller'] ?? null;
-            if ($controller) {
-                list($controllerClass, $method) = explode('@', $controller);
+            if ($controller && is_string($controller) && str_contains($controller, '@')) {
+                list($controllerClass, $method) = explode('@', $controller, 2);
 
                 if (class_exists($controllerClass) && method_exists($controllerClass, $method)) {
                     $reflectionMethod = new \ReflectionMethod($controllerClass, $method);
@@ -147,8 +145,8 @@ class GenerateAdminRoute extends Command
         $action = $route->getAction();
         $controller = $action['controller'] ?? null;
 
-        if ($controller) {
-            list($controllerClass, $method) = explode('@', $controller);
+        if ($controller && is_string($controller) && str_contains($controller, '@')) {
+            list($controllerClass, $method) = explode('@', $controller, 2);
 
             if (class_exists($controllerClass) && method_exists($controllerClass, $method)) {
                 return $this->extractViewPathFromMethod($controllerClass, $method, 0);
@@ -200,6 +198,29 @@ class GenerateAdminRoute extends Command
                 return $viewBasePaths;
             }
             return str_replace('.', '/', $bladePath);
+        }
+
+        // A newer style used by controllers like BundleController: `view(self::VIEW_PATH.'.list', ...)`
+        // — a class constant concatenated with a literal suffix, rather than one literal string.
+        // The plain-literal regex above only matches when the character right after `view(` is a
+        // quote, so it silently skipped every route built this way (that's why Bundle never showed
+        // up in the admin search page index at all, despite its routes existing and being reachable).
+        if (preg_match('/view\(\s*(?:self|static|' . preg_quote($controllerClass, '/') . ')::([A-Za-z0-9_]+)\s*\.\s*[\'"](.*?)[\'"]/', $methodBody, $constMatches)) {
+            $constName = $constMatches[1];
+            $suffix = $constMatches[2];
+
+            try {
+                $reflectionClass = new \ReflectionClass($controllerClass);
+                // defined()/constant() can't see a private/protected constant from outside its
+                // class (VIEW_PATH is private) — ReflectionClass::getConstant() correctly bypasses
+                // visibility for introspection, which is exactly what this needs.
+                if ($reflectionClass->hasConstant($constName)) {
+                    $bladePath = $reflectionClass->getConstant($constName) . $suffix;
+
+                    return str_replace('.', '/', $bladePath);
+                }
+            } catch (\ReflectionException $exception) {
+            }
         }
 
         if (preg_match('/view\(\s*([\\\\A-Za-z0-9_]+)::([A-Za-z0-9_]+)\s*\[\s*VIEW\s*\]/', $methodBody, $enumMatches)) {
@@ -406,11 +427,12 @@ class GenerateAdminRoute extends Command
             'admin-views.addon.bulk-import' => ['admin/addon/bulk-import'],
             'admin-views.addon.bulk-export' => ['admin/addon/bulk-export'],
             'admin-views.wallet-bonus.index' => ['admin/users/customer/wallet/bonus'],
-            'admin-views.dm-vehicle.list' => ['admin/users/delivery-man/vehicle'],
+            'admin-views.vehicle-category.list' => ['admin/delivery-management/vehicle-category'],
             'admin-views.delivery-man.index' => ['admin/users/delivery-man/add'],
             'admin-views.delivery-man.list' => ['admin/users/delivery-man'],
             'admin-views.delivery-man.new' => ['admin/users/delivery-man/new'],
             'admin-views.delivery-man.deny' => ['admin/users/delivery-man/deny'],
+            'admin-views.custom-role.index' => ['admin/users/custom-role'],
             'admin-views.custom-role.create' => ['admin/users/custom-role/create'],
             'admin-views.employee.add-new' => ['admin/users/employee/store'],
             'admin-views.campaign.item.list' => ['admin/campaign/item/list'],
@@ -504,10 +526,8 @@ class GenerateAdminRoute extends Command
             'ride-share::admin.rider-management.rider.deny' => ['admin/users/rider/deny'],
             'admin-views.report.admin-earning-report' => ['admin/transactions/report/admin-earning-report?tab=all','admin/transactions/report/admin-earning-report?tab=parcel'],
             'rental::admin.report.earning-report.partials.render._earning-transaction-table' => ['admin/transactions/report/admin-earning-report?tab=rental'],
-            // 'ride-share::admin.reports.admin-earning-report' => ['admin/transactions/ride-share/report/admin-earning-report']
             'rental::provider.report.earning-report.partials.render._earning-transaction-table' => ['admin/transactions/report/store-earning-report?tab=rental'],
 
-            // Service module admin pages (list/datatable pages excluded from auto-scan because their controllers return response()->json for ajax filtering)
             'service::admin.dashboard' => ['admin/service'],
             'service::admin.service.list' => ['admin/service/list'],
             'service::admin.service.index' => ['admin/service/add'],
@@ -615,13 +635,6 @@ class GenerateAdminRoute extends Command
         return $formattedRoutes;
     }
 
-    /**
-     * Force the search title of specific pages to match their side-nav label verbatim, so a
-     * keyword search surfaces them under the exact name the user sees in the navigation
-     * (see Modules/Service/Resources/views/admin/partials/_sidebar_v2_service.blade.php).
-     * Keyed by URI so it corrects both auto-scanned and manually-added entries without
-     * touching their keywords (content matching is preserved).
-     */
     private function applyNavTitleOverrides(array $routes): array
     {
         $overrides = $this->navTitleOverrides();
@@ -639,7 +652,6 @@ class GenerateAdminRoute extends Command
     private function navTitleOverrides(): array
     {
         return [
-            // Service module – "Service Management" side-nav section
             'admin/service/add'                  => 'Add new',
             'admin/service/list'                 => 'List',
             'admin/service/gallery'              => 'Service Gallery',
@@ -649,7 +661,6 @@ class GenerateAdminRoute extends Command
             'admin/service/bulk-import'          => 'Bulk import',
             'admin/service/bulk-export'          => 'Bulk export',
 
-            // Service module – "Provider management" side-nav section
             'admin/service/provider/list'         => 'Providers list',
             'admin/service/provider/create'       => 'Add Provider',
             'admin/service/provider/request-list' => 'New Providers',

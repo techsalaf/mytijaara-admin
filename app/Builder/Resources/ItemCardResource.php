@@ -6,19 +6,6 @@ use App\Builder\Support\ItemPricing;
 use App\Models\Item;
 use Modules\Builder\ValueObjects\Storefront\ItemCardDTO;
 
-/**
- * Canonical transformer that maps an App\Models\Item into the exact shape
- * Modules/Builder/resources/js/Components/shared/ItemCard.jsx consumes.
- *
- * Covers the union of all 8 CARD_TYPE variants:
- *   id, name, slug, image, price (final), oldPrice (original), discountPercent,
- *   rating, rating_count, currency, isVeg, isNonVeg, inCart, cartQty, isWishlist.
- *
- * Accepts a $context array so callers can inject:
- *   - 'currency'         => string symbol (default '$')
- *   - 'cart_lookup'      => callable(int $itemId): ?array  // e.g. fn($id) => $cart[$id] ?? null
- *   - 'wishlist_lookup'  => callable(int $itemId): bool
- */
 class ItemCardResource
 {
     public static function fromCollection(iterable $items, array $context = []): array
@@ -76,28 +63,11 @@ class ItemCardResource
     {
         $pricing = ItemPricing::compute($item);
 
-        // The card needs one boolean to route Add-to-Cart: does this item
-        // require user choices before it can land in the cart?
-        //   - food: only when at least one food_variation has required='on'.
-        //     Optional add-ons / optional variations don't force the modal.
-        //   - non-food: when the item has any catalog variations rows.
-        // Required variations always force the modal, regardless of module type
-        // or whether the `module` relation resolved — a food item whose module_id
-        // didn't hydrate must still be detected. Non-food items additionally force
-        // it when they carry any catalog variations.
         $moduleType = $item->module?->module_type;
         $isFood = $moduleType === 'food';
         $needsConfig = self::hasRequiredVariation($item)
             || (!$isFood && self::hasNonFoodVariations($item));
 
-        // Veg/non-veg badge visibility is gated by THREE things, not just the
-        // item's own flag:
-        //   1. The module supports veg_non_veg (only `food` in config/module.php).
-        //   2. The store toggles `veg` / `non_veg` ON in vendor business settings.
-        //      Vendors who flip "veg" off should not see veg badges on their items.
-        //   3. The item itself has the veg flag set (1 = veg, 0 = non-veg).
-        // Raw attribute read (not cast) so a null `veg` doesn't coerce to 0 and
-        // falsely flag every grocery/pharmacy item as non-veg.
         $vegRaw            = $item->getAttributes()['veg'] ?? null;
         $moduleAllowsVeg   = (bool) config("module.{$moduleType}.veg_non_veg", false);
         $storeAllowsVeg    = (int) ($item->store?->veg ?? 0) === 1;
@@ -105,10 +75,6 @@ class ItemCardResource
         $isVeg    = $moduleAllowsVeg && $storeAllowsVeg    && $vegRaw !== null && (int) $vegRaw === 1;
         $isNonVeg = $moduleAllowsVeg && $storeAllowsNonVeg && $vegRaw !== null && (int) $vegRaw === 0;
 
-        // Inventory cap for the card's +/- stepper. Only modules with the
-        // `stock` capability track it (config/module.php — `food` does not, so
-        // its rows sit at 0 without being depleted); when untracked the card
-        // must not cap anything.
         $tracksStock = (bool) config("module.{$moduleType}.stock", false);
         $stock       = $tracksStock ? (int) ($item->getAttributes()['stock'] ?? 0) : 0;
 
@@ -134,8 +100,6 @@ class ItemCardResource
             'price'           => $pricing['price'],
             'oldPrice'        => $pricing['oldPrice'],
             'discountPercent' => $pricing['discountPercent'],
-            // Flat/amount discounts: the storefront's useDiscountLabel() reads
-            // discountType + discountAmount to show "$X off" instead of a %.
             'discountAmount'  => $pricing['discountAmount'],
             'discountType'    => $pricing['discountType'],
             'discountSource'  => $pricing['discountSource'],
@@ -158,9 +122,6 @@ class ItemCardResource
 
     private static function hasRequiredVariation(Item $item): bool
     {
-        // Check every known variation column so requiredness never depends on
-        // which column an install stores it in (`food_variations` for food,
-        // `variations` for the legacy/non-food shape).
         foreach (['food_variations', 'variations'] as $column) {
             foreach (self::decodeJsonField($item->getAttributes()[$column] ?? null) as $variation) {
                 $required = $variation['required'] ?? 'off';

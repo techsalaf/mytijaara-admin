@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Rules\ImageFile;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
@@ -37,11 +38,11 @@ class SmartBannerController extends Controller
             $q->where('zone_id', $zone_id);
         })->get();
         $positions = [
-            'top' => translate('messages.top'),
-            'bottom' => translate('messages.bottom'),
+            'top' => translate('messages.Top'),
+            'bottom' => translate('messages.Bottom'),
         ];
 
-        $banners = SmartBanner::where('zone_id', $zone_id)
+        $banners = SmartBanner::withStorage()->with('module')->where('zone_id', $zone_id)
             ->when($request->search, function ($q) use ($request) {
                 $keywords = explode(' ', $request->search);
                 $q->where(function ($inner) use ($keywords) {
@@ -83,7 +84,7 @@ class SmartBannerController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => translate('messages.smart_banner_created_successfully'),
+                'message' => translate('Added successfully'),
                 'data' => $this->formatForJson($banner->fresh()),
             ]);
         } catch (\Throwable $e) {
@@ -94,7 +95,7 @@ class SmartBannerController extends Controller
 
     public function edit($id): JsonResponse
     {
-        $banner = SmartBanner::withoutGlobalScopes(['translate'])->with('translations')->findOrFail($id);
+        $banner = SmartBanner::withoutGlobalScopes(['translate'])->withStorage()->with('translations')->findOrFail($id);
         return response()->json([
             'status' => true,
             'data' => $this->formatForJson($banner, true),
@@ -127,7 +128,7 @@ class SmartBannerController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => translate('messages.smart_banner_updated_successfully'),
+                'message' => translate('Updated successfully'),
                 'data' => $this->formatForJson($banner->fresh()),
             ]);
         } catch (\Throwable $e) {
@@ -138,7 +139,7 @@ class SmartBannerController extends Controller
 
     public function view($id): JsonResponse
     {
-        $banner = SmartBanner::with(['translations', 'module'])->findOrFail($id);
+        $banner = SmartBanner::withStorage()->with(['translations', 'module'])->findOrFail($id);
         return response()->json([
             'status' => true,
             'data' => $this->formatForJson($banner),
@@ -150,7 +151,7 @@ class SmartBannerController extends Controller
         $banner = SmartBanner::findOrFail($id);
         $banner->status = (bool) $status;
         $banner->save();
-        Toastr::success(translate('messages.smart_banner_status_updated'));
+        Toastr::success(translate('messages.Smart banner status updated'));
         return back();
     }
 
@@ -163,7 +164,7 @@ class SmartBannerController extends Controller
         $banner->translations()->delete();
         $banner->storage()->delete();
         $banner->delete();
-        Toastr::success(translate('messages.smart_banner_deleted_successfully'));
+        Toastr::success(translate('Deleted successfully'));
         return back();
     }
 
@@ -180,6 +181,7 @@ class SmartBannerController extends Controller
     public function storesByModuleZone($module_id, $zone_id): JsonResponse
     {
         $stores = Store::withoutGlobalScopes()
+            ->with(['translations' => fn ($query) => $query->where('locale', app()->getLocale())])
             ->where('module_id', $module_id)
             ->where('zone_id', $zone_id)
             ->where('status', 1)
@@ -208,16 +210,15 @@ class SmartBannerController extends Controller
             'title' => 'required|array',
             'title.0' => 'required|string|max:50',
             'subtitle' => 'nullable|array',
-            'image' => ($existing && $existing->image) ? 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048' : 'required|image|mimes:jpg,jpeg,png,svg|max:2048',
+            'image' => ($existing && $existing->image) ? ImageFile::rules('nullable') : ImageFile::rules('required'),
         ];
 
         $messages = [
-            'module_id.required' => translate('messages.please_select_a_module'),
+            'module_id.required' => translate('messages.Please select a module'),
             'redirect_target_id.required_if' => $this->isProviderModule($module)
-                ? translate('messages.please_select_a_provider')
-                : translate('messages.please_select_a_store'),
-            'title.0.required' => translate('messages.default_title_required'),
-            'image.required' => translate('messages.banner_image_required'),
+                ? translate('messages.Please select a provider')
+                : translate('messages.Please select a store'),
+            'title.0.required' => translate('messages.Default title required'),
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -368,7 +369,7 @@ class SmartBannerController extends Controller
             if ($datesOverlap && $timesOverlap) {
                 abort(response()->json([
                     'status' => false,
-                    'message' => translate('messages.this_banner_overlaps_with_another_in_the_same_position._please_change_the_position_or_reschedule.'),
+                    'message' => translate('messages.This banner overlaps with another in the same position. please change the position or reschedule.'),
                 ], 409));
             }
         }
@@ -401,22 +402,22 @@ class SmartBannerController extends Controller
         $endDateFormatted = $banner->end_date ? Carbon::parse($banner->end_date)->format('m/d/Y') : null;
 
 
-        $timeRangeFormatted = translate('messages.all_day');
+        $timeRangeFormatted = translate('messages.All day');
         if ($banner->start_time) {
             $startTime = Carbon::parse($banner->start_time)->format('g:i A');
             $endTime = $banner->end_time
                 ? Carbon::parse($banner->end_time)->format('g:i A')
-                : translate('messages.until_you_turn_off');
+                : translate('messages.Until you turn off');
             $timeRangeFormatted = $startTime . ' - ' . $endTime;
         }
 
         $redirectTypeLabels = [
-            'category' => translate('messages.category'),
-            'module_home' => translate('messages.module_home'),
+            'category' => translate('messages.Category'),
+            'module_home' => translate('messages.Module home'),
             'store_page' => $this->isProviderModule($banner->module)
-                ? translate('messages.provider_page')
-                : translate('messages.store_page'),
-            'offer_page' => translate('messages.offer_page'),
+                ? translate('messages.Provider page')
+                : translate('messages.Store page'),
+            'offer_page' => translate('messages.Offer page'),
         ];
 
         $targetLabel = $this->resolveTargetLabel($banner);
@@ -425,7 +426,7 @@ class SmartBannerController extends Controller
             'id' => $banner->id,
             'zone_id' => $banner->zone_id,
             'module_id' => $banner->module_id,
-            'module_name' => $banner->module ? translate($banner->module->module_name) : null,
+            'module_name' => $banner->module?->module_name,
             'active_days' => $banner->active_days,
             'start_date' => $banner->start_date,
             'end_date' => $banner->end_date,
@@ -458,7 +459,7 @@ class SmartBannerController extends Controller
             return optional(Category::find($banner->redirect_target_id))->name;
         }
         if ($banner->redirect_type === 'store_page') {
-            return optional(Store::withoutGlobalScopes()->find($banner->redirect_target_id))->name;
+            return optional(Store::withoutGlobalScopes()->with('translations')->find($banner->redirect_target_id))->name;
         }
         return null;
     }

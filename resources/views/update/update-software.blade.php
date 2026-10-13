@@ -74,12 +74,12 @@
                                                 <div class="d-flex gap-3 align-items-center">
                                                     <img src="{{ asset('public/assets/installation') }}/assets/img/svg-icons/curl-enabled.svg" alt="">
                                                     <div class="d-flex align-items-center gap-2 text-danger justify-content-between flex-grow-1">
-                                                        {{ translate($key) . ' ' . translate('Enabled') }}
+                                                        {{ $key . ' ' . translate('Enabled') }}
 
                                                         <span class="cursor-pointer" data-bs-toggle="tooltip"
                                                               data-bs-placement="top" data-bs-custom-class="custom-tooltip"
                                                               data-bs-html="true" data-bs-delay='{"hide":1000}'
-                                                              data-bs-title="{{ translate($key) }} extension is not enabled in your server. To enable go to PHP version > extensions and select {{ translate($key) }}.">
+                                                              data-bs-title="{{ $key }} extension is not enabled in your server. To enable go to PHP version > extensions and select {{ $key }}.">
                                                             <img src="{{ asset('public/assets/installation') }}/assets/img/svg-icons/info.svg"
                                                                  class="svg text-danger" alt="">
                                                         </span>
@@ -103,7 +103,7 @@
                                                         <span class="cursor-pointer" data-bs-toggle="tooltip"
                                                               data-bs-placement="top" data-bs-custom-class="custom-tooltip"
                                                               data-bs-html="true" data-bs-delay='{"hide":1000}'
-                                                              data-bs-title="Write permission is required for: <br> {{ $file['path'] }}">
+                                                              data-bs-title="{{ $file['requirement'] }} <br> {{ $file['path'] }}">
                                                             <img
                                                                 src="{{asset('public/assets/installation')}}/assets/img/svg-icons/info.svg"
                                                                 class="svg text-danger" alt="">

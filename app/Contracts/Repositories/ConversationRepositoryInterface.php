@@ -40,9 +40,10 @@ interface ConversationRepositoryInterface extends RepositoryInterface
 
     /**
      * @param Request $request
+     * @param int $user
      * @param int|string $dataLimit
      * @param int|null $offset
      * @return Collection|LengthAwarePaginator
      */
-    public function getDmConversationList(Request $request, int|string $dataLimit = DEFAULT_DATA_LIMIT, int $user,  ?int $offset = null ): Collection|LengthAwarePaginator;
+    public function getDmConversationList(Request $request, int $user, int|string $dataLimit = DEFAULT_DATA_LIMIT, ?int $offset = null): Collection|LengthAwarePaginator;
 }

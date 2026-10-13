@@ -294,17 +294,6 @@ class SearchEntity
         });
     }
 
-    private static function applyNameConcat(Builder $query, array $columns, string $like): void
-    {
-        [$first, $last] = $columns;
-        $value = '%' . $like . '%';
-
-        $query->orWhereRaw("CONCAT({$first}, ' ', {$last}) LIKE ?", [$value])
-            ->orWhereRaw("CONCAT({$last}, ' ', {$first}) LIKE ?", [$value])
-            ->orWhereRaw("CONCAT({$first}, {$last}) LIKE ?", [$value])
-            ->orWhereRaw("CONCAT({$last}, {$first}) LIKE ?", [$value]);
-    }
-
     public function matchingRoutes(RouteIndex $index, string $variant = ''): array
     {
         if ($this->routeFilter === null) {
@@ -366,5 +355,16 @@ class SearchEntity
     public function moduleTypeValue(): ?string
     {
         return $this->moduleType;
+    }
+
+    private static function applyNameConcat(Builder $query, array $columns, string $like): void
+    {
+        [$first, $last] = $columns;
+        $value = '%' . $like . '%';
+
+        $query->orWhereRaw("CONCAT({$first}, ' ', {$last}) LIKE ?", [$value])
+            ->orWhereRaw("CONCAT({$last}, ' ', {$first}) LIKE ?", [$value])
+            ->orWhereRaw("CONCAT({$first}, {$last}) LIKE ?", [$value])
+            ->orWhereRaw("CONCAT({$last}, {$first}) LIKE ?", [$value]);
     }
 }

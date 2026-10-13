@@ -57,18 +57,8 @@
     },
     "autoload": {
         "files": [
-            "app/CentralLogics/BannerLogic.php",
-            "app/CentralLogics/CategoryLogic.php",
-            "app/CentralLogics/CampaignLogic.php",
-            "app/CentralLogics/ProductLogic.php",
-            "app/CentralLogics/StoreLogic.php",
             "app/CentralLogics/Helpers.php",
-            "app/CentralLogics/CustomerLogic.php",
             "app/helpers.php",
-            "app/CentralLogics/OrderLogic.php",
-            "app/CentralLogics/CouponLogic.php",
-            "app/CentralLogics/SMS_module.php",
-            "app/CentralLogics/FileManagerLogic.php",
             "app/Library/Constant.php",
             "app/Library/Responses.php",
             "app/Utils/language.php",

@@ -8,15 +8,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 
-/**
- * Service-module service suggestions. Read-only — listings only, no booking.
- * Registered only when the conversation's moduleType is 'service'.
- *
- * Returns a text summary (no product cards) listing name, category, effective
- * price (with original when discounted), rating, booking count and provider
- * for each service, so the LLM can answer "cleaning services", "best rated
- * services", "AC repair under 1000" etc. with real numbers.
- */
 class GetServicesTool implements Tool
 {
     /**

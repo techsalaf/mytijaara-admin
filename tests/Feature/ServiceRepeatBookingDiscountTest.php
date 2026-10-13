@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\CentralLogics\CouponLogic;
+use App\Services\Marketing\CouponService;
 use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
 use App\Models\Coupon;
@@ -10,8 +10,7 @@ use App\Models\Store;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Service\Entities\ServiceBooking;
-use Modules\Service\Http\Controllers\Api\V1\Customer\BookingController;
-use Modules\Service\Lib\RepeatBookingCreator;
+use Modules\Service\Services\ServiceBookingService;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -24,7 +23,7 @@ class ServiceRepeatBookingDiscountTest extends TestCase
 
     private function pricing(array $detailsResponse, $coupon, $userId, int $isGuest, Store $provider, bool $applyFirstOrder, int $repeatCount): array
     {
-        $controller = app(BookingController::class);
+        $controller = app(ServiceBookingService::class);
         $method = new ReflectionMethod($controller, 'calculateBookingPricing');
         $method->setAccessible(true);
 
@@ -84,7 +83,6 @@ class ServiceRepeatBookingDiscountTest extends TestCase
 
     public function test_repeat_percent_coupon_caps_on_series_then_splits(): void
     {
-        // 10% of (100 x 10 = 1000) = 100, capped at 30, split across 10 -> 3 each.
         $coupon = $this->coupon('percent', 10, 30);
 
         $result = $this->pricing($this->details(self::PRICE), $coupon, null, 1, $this->provider(), true, self::N);
@@ -96,7 +94,6 @@ class ServiceRepeatBookingDiscountTest extends TestCase
 
     public function test_repeat_fixed_amount_coupon_splits_across_series(): void
     {
-        // Flat 30 for the whole series, split across 10 -> 3 each.
         $coupon = $this->coupon('amount', 30);
 
         $single = $this->pricing($this->details(self::PRICE), $coupon, null, 1, $this->provider(), true, 1);
@@ -108,7 +105,6 @@ class ServiceRepeatBookingDiscountTest extends TestCase
 
     public function test_repeat_uncapped_percent_coupon_matches_per_occurrence(): void
     {
-        // No cap: 10% per occurrence == 10% of the series / N. Per-occurrence figure is identical.
         $coupon = $this->coupon('percent', 10, 0);
 
         $result = $this->pricing($this->details(self::PRICE), $coupon, null, 1, $this->provider(), true, self::N);
@@ -140,8 +136,7 @@ class ServiceRepeatBookingDiscountTest extends TestCase
 
     public function test_pro_discount_caps_on_series_then_splits(): void
     {
-        // Exercises the same helper the pricing pipeline caps with: 10% of 1000 = 100, capped 30.
-        $controller = app(BookingController::class);
+        $controller = app(ServiceBookingService::class);
         $proOffer = [
             'status' => true,
             'benefit' => [
@@ -166,7 +161,7 @@ class ServiceRepeatBookingDiscountTest extends TestCase
         foreach ([['percent', 15, 0], ['percent', 25, 20], ['amount', 40, 0]] as [$type, $value, $max]) {
             $coupon = $this->coupon($type, $value, $max);
 
-            $expected = CouponLogic::get_discount($coupon, self::PRICE);
+            $expected = app(CouponService::class)->calculateDiscount($coupon, self::PRICE);
             $expected = Helpers::minDiscountCheck(productPrice: self::PRICE, discount: $expected)['discount_applied'];
 
             $result = $this->pricing($this->details(self::PRICE), $coupon, null, 1, $provider, true, 1);
@@ -187,7 +182,7 @@ class ServiceRepeatBookingDiscountTest extends TestCase
             $dates[] = now()->addDays($i)->toDateTimeString();
         }
 
-        $created = app(RepeatBookingCreator::class)->createChunk($parent->id, $template, $dates);
+        $created = app(ServiceBookingService::class)->createChunk($parent->id, $template, $dates);
 
         $this->assertSame(self::N, $created);
 
@@ -215,9 +210,8 @@ class ServiceRepeatBookingDiscountTest extends TestCase
         for ($i = 1; $i <= self::N; $i++) {
             $dates[] = now()->addDays($i)->toDateTimeString();
         }
-        app(RepeatBookingCreator::class)->createChunk($parent->id, $template, $dates);
+        app(ServiceBookingService::class)->createChunk($parent->id, $template, $dates);
 
-        // 1 parent + N children all carry the coupon_code, but the series must count once.
         $usage = (int) ServiceBooking::userCouponUsage($user->id, $coupon->code)->get($coupon->code, 0);
         $this->assertSame(1, $usage, 'the whole series counts as a single coupon use, not N+1');
     }

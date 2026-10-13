@@ -41,9 +41,6 @@ class SearchProductsTool implements Tool
     {
         $args    = $request->all();
         $query   = trim((string) ($args['query'] ?? ''));
-        // Keep the requested limit raw here; the real cap is applied AFTER we
-        // know the match kind — a store-name match means the customer wants the
-        // whole menu, so it gets a much higher ceiling than a keyword search.
         $requestedLimit = isset($args['limit']) && $args['limit'] !== null ? (int) $args['limit'] : null;
         $limit   = min($requestedLimit ?? 8, 12);
         $maxPrice = ($args['max_price'] ?? null) !== null ? (float) $args['max_price'] : null;
@@ -52,28 +49,13 @@ class SearchProductsTool implements Tool
 
         $keywords = array_filter(array_map('trim', explode(' ', $query)));
 
-        // "Browse everything" intent — "all foods", "show me all items", the bare
-        // module-type word, etc. MUST skip the store/category cascade: a generic
-        // word like "food" matches a store NAME ("Italian Fast Food", "Food Fair")
-        // and wrongly narrows the result to that one store. When this is set, the
-        // search returns popular items across ALL stores in the module/zone.
         $browseAll = $this->isGenericBrowse($query);
 
-        // Auto-resolution cascade when no explicit category_id was passed.
-        // Order: STORE → CATEGORY → exact-NAME → loose-NAME. Store and category
-        // matches require the FULL phrase (no per-keyword OR) so a multi-word
-        // query like "Buffalo Pizza" cannot accidentally fire the "Pizza"
-        // category just because one keyword happens to name a category.
         $storeIds   = [];
         $autoCatIds = [];
-        $matchKind  = 'name';      // strict full-phrase name match
-        $looseName  = false;       // fallback flag — true after strict missed
+        $matchKind  = 'name';
+        $looseName  = false;
 
-        // For store/category matching, drop the generic module word the customer
-        // often appends ("SK General Store grocery", "grocery from X"). Leaving
-        // "grocery"/"food"/"items" in makes the store-name LIKE fail because the
-        // store name ("Sk General Store") doesn't contain that extra word. The
-        // original $query is still used for item-name search below.
         $core         = $this->coreSearchQuery($query);
         $cascadeQuery = $core !== '' ? $core : $query;
 
@@ -101,9 +83,6 @@ class SearchProductsTool implements Tool
             }
         }
 
-        // A store/category match — or a "show me everything" browse — is a
-        // "give me the full list" request, so raise the ceiling. A plain keyword
-        // search stays tight to avoid a wall of results.
         if ($browseAll || $matchKind === 'store' || $matchKind === 'category') {
             $limit = min($requestedLimit ?? 30, 50);
         }
@@ -190,20 +169,12 @@ class SearchProductsTool implements Tool
         return count($products) . ' product(s) found for "' . $query . '"' . $matchedAs . ': ' . $lines;
     }
 
-    /**
-     * "Browse everything" intent — "all foods", "show me all items", "any food",
-     * the bare module-type word, etc. Such queries must NOT hit the store/category
-     * cascade, because a word like "food" matches a store name ("Italian Fast
-     * Food", "Food Fair") and wrongly narrows the result to that one store.
-     * Returns true → the search returns popular items across ALL stores.
-     */
     private function isGenericBrowse(string $query): bool
     {
         $q = strtolower(trim($query));
         if ($q === '') {
             return true;
         }
-        // Drop scattered filler words ("show me all the …").
         $q = preg_replace('/\b(show|me|give|list|all|any|some|the|please|see|view|browse|available)\b/u', ' ', $q) ?? $q;
         $q = trim(preg_replace('/\s+/', ' ', $q) ?? '');
 
@@ -216,13 +187,6 @@ class SearchProductsTool implements Tool
         return in_array($q, $generic, true);
     }
 
-    /**
-     * Strip generic module words + filler so a "<store name> + type" phrase still
-     * resolves to the store. "sk general store grocery" → "sk general store";
-     * "grocery from FreshMart" → "fresh mart"-ish core. Only used for the
-     * store/category cascade — item-name search keeps the original query.
-     * Returns '' when nothing specific remains (caller falls back to $query).
-     */
     private function coreSearchQuery(string $query): string
     {
         $strip = [

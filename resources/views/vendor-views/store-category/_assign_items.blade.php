@@ -8,10 +8,9 @@
     .assign-items-scroll .assign-item-row:has(.assign-item-checkbox:checked) {
         background-color: #E6F0FE;
     }
-    /* Locked rows (already saved to this category) — user can't uncheck. */
     .assign-items-scroll .assign-item-row.is-locked > label { cursor: not-allowed; }
     .assign-items-scroll .assign-item-row.is-locked .assign-item-checkbox {
-        opacity: 1; /* keep the primary tick visible — Bootstrap dims disabled */
+        opacity: 1;
         background-color: var(--bs-primary, #0d6efd);
         border-color: var(--bs-primary, #0d6efd);
     }
@@ -26,7 +25,7 @@
 
     @php($isService = $isService ?? false)
     <div class="custom-offcanvas-header bg--secondary d-flex justify-content-between align-items-center px-3 py-3">
-        <h3 class="mb-0">{{ $isService ? translate('Select Services For Category') : translate('Select Items For Category') }}</h3>
+        <h3 class="mb-0">{{ $isService ? translate('Select Services For Category') : translate('Select items for category') }}</h3>
         <button type="button"
             class="btn-close w-25px h-25px border rounded-circle d-center bg--secondary text-dark offcanvas-close fz-15px p-0"
             aria-label="Close">&times;</button>
@@ -40,7 +39,7 @@
                 @if($isService)
                     {{ translate('Once you create store categories, you must add your services to those categories. Without assigning services, they will not appear on your store details page. If you want to proceed with the main category, you can skip adding any store categories.') }}
                 @else
-                    {{ translate('Once you create store categories, you must add your items to those categories. Without assigning items, they will not appear on your store details page. If you want to proceed with the main category, you can skip adding any store categories.') }}
+                    {{ translate('Items must be assigned to a store category to appear on your store page. Skip to use the main category.') }}
                 @endif
             </div>
         </div>
@@ -51,20 +50,20 @@
                 <i class="tio-warning-outlined mt-1" style="color: #E53935;"></i>
                 <div class="fs-12 text-body">
                     {{ translate('There are') }}
-                    <strong>{{ $unassignedCount }} {{ $isService ? translate('services') : translate('items') }}</strong>
-                    {{ translate('that are unassigned to any category. Please assign them to a category so they can be visible on the store details page.') }}
+                    <strong>{{ $unassignedCount }} {{ $isService ? translate('Services') : translate('Items') }}</strong>
+                    {{ translate('That are unassigned. Assign them to a category so they show on the store details page.') }}
                 </div>
             </div>
         @endif
 
         <div class="form-group mb-3">
             <input type="text" name="assign_search" class="form-control h--40px"
-                placeholder="{{ translate('Search here') }}"
+                placeholder="{{ translate('Search') }}"
                 autocomplete="off">
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-            <h6 class="mb-0">{{ $isService ? translate('Service List') : translate('Item List') }}</h6>
+            <h6 class="mb-0">{{ $isService ? translate('Service list') : translate('Item list') }}</h6>
             <span class="badge badge-soft-primary fs-12">
                 <span id="assignItemsSelectedCount">0</span> {{ translate('Selected') }}
             </span>
@@ -80,7 +79,7 @@
     </div>
 
     <div class="align-items-center bg-white bottom-0 d-flex gap-3 justify-content-center offcanvas-footer p-3">
-        <button type="button" class="btn w-100 btn--reset h--40px reset-assign-btn">{{ translate('Reset') }}</button>
-        <button type="submit" class="btn w-100 btn--primary h--40px">{{ translate('Save') }}</button>
+        <button type="button" class="btn w-100 btn--reset h--40px reset-assign-btn"><i class="tio-refresh"></i> {{ translate('Reset') }}</button>
+        <button type="submit" class="btn w-100 btn--primary h--40px"><i class="tio-save"></i> {{ translate('Save') }}</button>
     </div>
 </form>

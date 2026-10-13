@@ -1,0 +1,2 @@
+from pathlib import Path
+p=Path('Modules/WhatsAppVendorConcierge/tests/Hardening/ProductListingFlowTest.php');s=p.read_text(encoding='utf-8').replace("['type'=>'text','content'=>['text'=>$text]]", "['type'=>'text','raw_text'=>$text,'content'=>['text'=>$text]]");s=s.replace("Schema::table('categories',", "Schema::table('items',fn(Blueprint $t)=>[$t->text('food_variations')->nullable(),$t->unsignedBigInteger('unit_id')->nullable(),$t->text('images')->nullable()]);Schema::table('categories',");p.write_text(s,encoding='utf-8')
