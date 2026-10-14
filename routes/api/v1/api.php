@@ -21,9 +21,9 @@ use App\Http\Controllers\Api\V1\DeliveryMan\Report\EarningReportController;
 use App\Http\Controllers\Api\V1\DeliveryMan\Wallet\WalletController as DeliveryManWalletController;
 use App\Http\Controllers\Api\V1\DeliveryMan\Auth\PasswordResetController as DeliveryManPasswordResetController;
 use App\Http\Controllers\Api\V1\Customer\Auth\PasswordResetController;
-use App\Http\Controllers\Api\V1\Vendor\Auth\PasswordResetController as VendorPasswordResetController;
+use App\Http\Controllers\Api\V1\Auth\VendorPasswordResetController;
 use App\Http\Controllers\Api\V1\DeliveryMan\Auth\LoginController as DeliveryManLoginController;
-use App\Http\Controllers\Api\V1\Vendor\Auth\LoginController as VendorLoginController;
+use App\Http\Controllers\Api\V1\Auth\VendorLoginController;
 use App\Http\Controllers\Api\V1\Common\DeliveryMan\VehicleController;
 use App\Http\Controllers\Api\V1\Common\Item\{
     AddonCategoryController,
@@ -234,13 +234,13 @@ Route::middleware('localization')->group(function () {
         });
         Route::middleware('actch:vendor_app')->prefix('vendor')->group(function () {
             Route::controller(VendorLoginController::class)->group(function () {
-                Route::post('login', 'login');
+                Route::post('login', 'login')->middleware('throttle:10,1');
                 Route::post('register', 'register')->withoutMiddleware('actch:vendor_app');
             });
             Route::controller(VendorPasswordResetController::class)->group(function () {
-                Route::post('forgot-password', 'sendOtp');
-                Route::post('verify-token', 'verifyOtp');
-                Route::put('reset-password', 'resetPassword');
+                Route::post('forgot-password', 'reset_password_request')->middleware('throttle:5,1');
+                Route::post('verify-token', 'verify_token')->middleware('throttle:5,1');
+                Route::put('reset-password', 'reset_password_submit')->middleware('throttle:5,1');
             });
         });
     });
