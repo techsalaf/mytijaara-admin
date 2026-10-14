@@ -8675,4 +8675,13 @@
   'Selection required' => 'Selection required',
   'Do you want to deny this new vehicle request?' => 'Do you want to deny this new vehicle request?',
   'Do you want to approve this new vehicle request?' => 'Do you want to approve this new vehicle request?',
+  'You_must_select_a_package' => 'You must select a package',
+  'You_must_select_a_pickup_zone' => 'You must select a pickup zone',
+  'The password is compromised. Please choose a different one' => 'The password is compromised. Please choose a different one',
+  'store_self_registration_disabled' => 'Store self registration disabled',
+  'Credential_do_not_match,_please_try_again' => 'Credential do not match, please try again',
+  'Not found' => 'Not found',
+  'Reset authorization is invalid or expired. Please request a new code.' => 'Reset authorization is invalid or expired. Please request a new code.',
+  'Token verified successfully.' => 'Token verified successfully.',
+  'If the account exists, password reset instructions have been sent.' => 'If the account exists, password reset instructions have been sent.',
 );

@@ -23,8 +23,12 @@ class PaymentController extends Controller
 
     private function extendWithPaymentGatewayTrait()
     {
-        $extendedControllerClass = $this->generateExtendedControllerClass();
-        eval($extendedControllerClass);
+        // GEMINI-MTJ: Prevent fatal error on redeclaring ExtendedController if already defined
+        if (!class_exists('ExtendedController', false)) {
+            $extendedControllerClass = $this->generateExtendedControllerClass();
+            eval($extendedControllerClass);
+        }
+        // GEMINI-MTJ: End prevent fatal error
     }
 
     private function generateExtendedControllerClass()

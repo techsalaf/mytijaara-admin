@@ -8,14 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
-/**
- * Update mode.
- *
- * prepare:updatable copies this file over app/Providers/RouteServiceProvider.php, so a prepared
- * package boots serving routes/update.php and nothing else. UpdateController::update_software()
- * copies app/Providers/RouteServiceProvider.txt back over it once the wizard finishes, which is
- * what returns the site to normal routing.
- */
 class RouteServiceProvider extends ServiceProvider
 {
     /**
@@ -26,6 +18,7 @@ class RouteServiceProvider extends ServiceProvider
      * @var string
      */
     protected $namespace = 'App\Http\Controllers';
+
 
     /**
      * The path to the "home" route for your application.
@@ -38,35 +31,69 @@ class RouteServiceProvider extends ServiceProvider
 
     /**
      * Define your route model bindings, pattern filters, etc.
+     *
+     * @return void
      */
-    public function boot(): void
+    public function boot()
     {
         $this->configureRateLimiting();
 
-        // booted(), so the wizard registers after every module provider and keeps `/`. The
-        // Builder storefront claims `/` with no domain constraint and boots later, and a
-        // later registration replaces an earlier one for the same method + domain + URI -
-        // which left the wizard 404ing from the storefront with this file correctly in place.
-        // The core copy of that module guards the panel host, but an update package carries
-        // no Modules/, so the add-on already on disk may predate the guard.
-        //
-        // $this->routes() is unusable here: it only stores a callback for the parent's
-        // booting hook, which has already fired. The lookups need refreshing for the same
-        // reason - route() will not resolve without it.
-        $this->app->booted(function () {
-            Route::middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/update.php'));
+        $this->routes(function () {
+            $namespace = $this->namespace;
 
-            $this->app['router']->getRoutes()->refreshNameLookups();
-            $this->app['router']->getRoutes()->refreshActionLookups();
+            // Panel routes only. These are the ones the storefront's unconstrained
+            // `/` can shadow, so they are pinned to the canonical host.
+            $registerHostRoutes = function () use ($namespace) {
+                Route::middleware('web')
+                    ->namespace($namespace)
+                    ->group(base_path('routes/web.php'));
+
+                Route::prefix('admin')
+                    ->middleware('web')
+                    ->group(base_path('routes/admin.php'));
+
+                Route::prefix('vendor-panel')
+                    ->middleware('web')
+                    ->namespace($namespace)
+                    ->group(base_path('routes/vendor.php'));
+
+                Route::prefix('admin')
+                    ->middleware('web')
+                    ->namespace($namespace)
+                    ->group(base_path('routes/admin/routes.php'));
+            };
+
+            // The API is deliberately left unconstrained, the way every module's API
+            // already is. An `api/v1/...` path cannot be shadowed by the storefront,
+            // and the apps may be pointed at either the www or the apex host: pinning
+            // the API to one of them means the other 404s, or gets redirected - and a
+            // client downgrades a redirected POST to GET, which every POST-only
+            // endpoint then rejects with "The GET method is not supported".
+            Route::prefix('api/v1')
+                ->middleware('api')
+                ->namespace($namespace)
+                ->group(base_path('routes/api/v1/api.php'));
+
+            Route::prefix('api/v2')
+                ->middleware('api')
+                ->namespace($namespace)
+                ->group(base_path('routes/api/v2/api.php'));
+
+            $hostDomain = config('app.host_domain');
+            if ($hostDomain) {
+                Route::domain($hostDomain)->group($registerHostRoutes);
+            } else {
+                $registerHostRoutes();
+            }
         });
     }
 
     /**
      * Configure the rate limiters for the application.
+     *
+     * @return void
      */
-    protected function configureRateLimiting(): void
+    protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(600)->by(optional($request->user())->id ?: $request->ip());
