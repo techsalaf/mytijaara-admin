@@ -8671,7 +8671,7 @@
   'Do you want to remove this main subcategory from featured?' => 'Do you want to remove this main subcategory from featured?',
   'Do you want to featured this main subcategory?' => 'Do you want to featured this main subcategory?',
   'All deliverymen' => 'All deliverymen',
-  'upto' => 'Upto',
+  'upto' => 'Up to',
   'Selection required' => 'Selection required',
   'Do you want to deny this new vehicle request?' => 'Do you want to deny this new vehicle request?',
   'Do you want to approve this new vehicle request?' => 'Do you want to approve this new vehicle request?',

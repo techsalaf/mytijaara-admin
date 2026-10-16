@@ -130,5 +130,8 @@ final class RegistrationSchema {
         Schema::create('notification_settings', function (Blueprint $t) {
             $t->id(); $t->string('type'); $t->string('key'); $t->string('module_type')->nullable(); $t->string('mail_status')->default('inactive'); $t->timestamps();
         });
+        Schema::create('store_configs', function (Blueprint $t) {
+            $t->id(); $t->unsignedBigInteger('store_id'); $t->boolean('is_recommended')->default(0); $t->boolean('is_recommended_deleted')->default(0); $t->timestamps();
+        });
     }
 }

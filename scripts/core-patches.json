@@ -663,36 +663,6 @@
       ],
       "upgrade": "Review generic service/model/schema integration on host upgrades",
       "owner": "MyTijaara backend maintainers"
-    },
-    "app/Http/Controllers/PaymentController.php": {
-      "purpose": "Prevent fatal class redeclaration of ExtendedController when PaymentController is instantiated multiple times",
-      "reason_in_core": "PaymentController dynamically declares ExtendedController via eval without checking class_exists",
-      "upstream_behavior": "Executes eval only if ExtendedController does not already exist; payment processing behavior is unchanged",
-      "tests": [
-        "HostWithoutConciergeTest"
-      ],
-      "upgrade": "Check upstream PaymentController on host upgrades",
-      "owner": "MyTijaara backend maintainers"
-    },
-    "app/Providers/RouteServiceProvider.php": {
-      "purpose": "Restore normal host routing configuration after platform 4.2 import left wizard stub",
-      "reason_in_core": "6amMart update package replaces RouteServiceProvider with update wizard stub which only loads routes/update.php",
-      "upstream_behavior": "Loads API v1/v2, web, admin, and vendor routes as canonical host provider; storefront domain isolation preserved",
-      "tests": [
-        "HostWithoutConciergeTest"
-      ],
-      "upgrade": "Re-verify route definitions on host upgrades",
-      "owner": "MyTijaara backend maintainers"
-    },
-    "app/Providers/RouteServiceProvider.txt": {
-      "purpose": "Canonical route provider backup kept in sync with RouteServiceProvider.php for installer and update commands",
-      "reason_in_core": "6amMart installer/updater copies RouteServiceProvider.txt over RouteServiceProvider.php when finishing setup",
-      "upstream_behavior": "Matches RouteServiceProvider.php exactly",
-      "tests": [
-        "HostWithoutConciergeTest"
-      ],
-      "upgrade": "Sync with RouteServiceProvider.php on host upgrades",
-      "owner": "MyTijaara backend maintainers"
     }
   },
   "separate_addon_changes": [
