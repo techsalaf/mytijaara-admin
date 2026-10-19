@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Traits\System\ActivationTrait;
+use App\Traits\ActivationClass;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 
 class ActivationCheckMiddleware
 {
-    use ActivationTrait;
+    use ActivationClass;
 
     /**
      * Handle an incoming request.
@@ -21,17 +21,7 @@ class ActivationCheckMiddleware
      */
     public function handle(Request $request, Closure $next, $area = null): mixed
     {
-        $response = $this->checkActivationCache(app: $area);
-        if (!$response) {
-            if (!strpos(url()->current(), '/api/v1')) {
-                return Redirect::away(route(base64_decode('c3lzdGVtLmFjdGl2YXRpb24tY2hlY2s=')))->send();
-            }
-
-            return response()->json([
-                'code' => 503,
-                'message' => 'Please check activation for '. str_replace('_', ' ', $area),
-            ], 503);
-        }
+        // NulledMaster: Always allow request, no activation check needed
         return $next($request);
     }
 }

@@ -1,68 +1,68 @@
 <?php return array (
-  'admin_panel' => 
+  'admin_panel' =>
   array (
-    'active' => '0',
-    'name' => '1',
-    'email' => '1',
-    'username' => '1',
-    'purchase_key' => '1',
+    'active' => '1',
+    'name' => 'NulledMaster',
+    'email' => 'free@nulledmaster.com',
+    'username' => 'NulledMaster',
+    'purchase_key' => 'NULLED-FREE-FOR-ALL',
     'software_id' => 'MzY3NzIxMTI=',
     'domain' => '',
     'software_type' => 'product',
   ),
-  'vendor_panel' => 
+  'vendor_panel' =>
   array (
-    'active' => '0',
-    'name' => '',
-    'email' => '',
-    'username' => '',
-    'purchase_key' => '',
+    'active' => '1',
+    'name' => 'NulledMaster',
+    'email' => 'free@nulledmaster.com',
+    'username' => 'NulledMaster',
+    'purchase_key' => 'NULLED-FREE-FOR-ALL',
     'software_id' => '',
     'domain' => '',
     'software_type' => 'addon',
   ),
-  'user_app' => 
+  'user_app' =>
   array (
-    'active' => '0',
-    'name' => '',
-    'email' => '',
-    'username' => '',
-    'purchase_key' => '',
+    'active' => '1',
+    'name' => 'NulledMaster',
+    'email' => 'free@nulledmaster.com',
+    'username' => 'NulledMaster',
+    'purchase_key' => 'NULLED-FREE-FOR-ALL',
     'software_id' => '',
     'domain' => '',
     'software_type' => 'addon',
   ),
-  'vendor_app' => 
+  'vendor_app' =>
   array (
-    'active' => 0,
-    'name' => '',
-    'email' => '',
-    'username' => 'admin@admin.com',
-    'purchase_key' => '12345678',
+    'active' => '1',
+    'name' => 'NulledMaster',
+    'email' => 'free@nulledmaster.com',
+    'username' => 'NulledMaster',
+    'purchase_key' => 'NULLED-FREE-FOR-ALL',
     'software_id' => 'MzY3NzIxNzM=',
-    'domain' => 'localhost:8000',
+    'domain' => '',
     'software_type' => 'addon',
   ),
-  'deliveryman_app' => 
+  'deliveryman_app' =>
   array (
-    'active' => 1,
-    'name' => '',
-    'email' => '',
-    'username' => 'admin@admin.com',
-    'purchase_key' => '12345678',
+    'active' => '1',
+    'name' => 'NulledMaster',
+    'email' => 'free@nulledmaster.com',
+    'username' => 'NulledMaster',
+    'purchase_key' => 'NULLED-FREE-FOR-ALL',
     'software_id' => 'MzY3NzIxNDg=',
-    'domain' => 'localhost:8000',
+    'domain' => '',
     'software_type' => 'addon',
   ),
-  'react_web' => 
+  'react_web' =>
   array (
-    'active' => 1,
-    'name' => '',
-    'email' => '',
-    'username' => 'admin@admin.com',
-    'purchase_key' => '12345678',
+    'active' => '1',
+    'name' => 'NulledMaster',
+    'email' => 'free@nulledmaster.com',
+    'username' => 'NulledMaster',
+    'purchase_key' => 'NULLED-FREE-FOR-ALL',
     'software_id' => 'NDUzNzAzNTE=',
-    'domain' => 'localhost:8000',
+    'domain' => '',
     'software_type' => 'addon',
   ),
 );

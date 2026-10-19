@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\Store;
-use App\Support\Notification\Fcm\WebPushServiceWorker;
 use App\Models\Setting;
 use App\Models\DataSetting;
 
@@ -17,7 +17,7 @@ use App\Models\BusinessSetting;
 use App\Models\Coupon;
 use App\Models\DeliveryHistory;
 use App\Models\Module;
-use App\Traits\System\ActivationTrait;
+use App\Traits\ActivationClass;
 use Illuminate\Support\Facades\DB;
 use App\Models\NotificationSetting;
 use Brian2694\Toastr\Facades\Toastr;
@@ -27,14 +27,10 @@ use Illuminate\Support\Facades\Artisan;
 
 class UpdateController extends Controller
 {
-    use ActivationTrait;
-
-    private const MODULE_STATUS_FILE = 'modules_statuses.json';
+    use ActivationClass;
 
     public function update_software_index()
     {
-        $this->discardCompiledRoutes();
-
         $permission = Helpers::system_permission_check();
 
         $phpVersion = number_format((float)phpversion(), 2, '.', '');
@@ -45,221 +41,18 @@ class UpdateController extends Controller
         return view('update.update-software', compact('permission', 'phpVersion', 'buyerUsername', 'purchaseCode', 'fileChecks'));
     }
 
-    /**
-     * Take the Builder add-on out of the boot path for the length of the update.
-     *
-     * The update package carries core only -- no Modules/ -- so a client's Builder copy stays
-     * at whatever version they last installed while core moves forward. Its adapters live in
-     * core (app/Builder) but their contracts live in the add-on, its storefront claims a root
-     * route on every hostname, and its provider is package-discovered, so it registers before
-     * the application's own. Any one of those can take the panel or the updater down on the
-     * first request after the files are replaced, and none of it can be fixed by shipping
-     * module code the package does not contain.
-     *
-     * Deactivating it in modules_statuses.json stops nwidart from loading the module at all,
-     * which needs no cooperation from whatever version of the module is on disk. The cached
-     * provider manifest names the same providers, so it goes with it.
-     *
-     * @return bool|null what the file said before, to hand back to restoreBuilderModule()
-     */
-    private function suspendBuilderModule(): ?bool
-    {
-        try {
-            $path = base_path(self::MODULE_STATUS_FILE);
-
-            if (!is_file($path) || !is_writable($path)) {
-                return null;
-            }
-
-            $statuses = json_decode((string) file_get_contents($path), true);
-
-            if (!is_array($statuses) || !array_key_exists('Builder', $statuses)) {
-                return null;
-            }
-
-            $previous = (bool) $statuses['Builder'];
-
-            if ($previous === false) {
-                return false;
-            }
-
-            $statuses['Builder'] = false;
-            file_put_contents($path, json_encode($statuses, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-            $this->forgetModuleManifest();
-
-            return $previous;
-        } catch (\Throwable $throwable) {
-            info('update: could not suspend the Builder module -- '.$throwable->getMessage());
-
-            return null;
-        }
-    }
-
-    /**
-     * Put Builder back exactly as it was. Called only once the update has gone through: an
-     * update that failed halfway is safer with the add-on still off -- the panel works, the
-     * storefront is down, and the add-on page turns it back on in one click -- than with a
-     * module the new core cannot boot against.
-     */
-    private function restoreBuilderModule(?bool $previous): void
-    {
-        if ($previous !== true) {
-            return;
-        }
-
-        try {
-            $path = base_path(self::MODULE_STATUS_FILE);
-            $statuses = json_decode((string) file_get_contents($path), true);
-
-            if (!is_array($statuses)) {
-                return;
-            }
-
-            $statuses['Builder'] = true;
-            file_put_contents($path, json_encode($statuses, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-            $this->forgetModuleManifest();
-        } catch (\Throwable $throwable) {
-            info('update: could not restore the Builder module -- '.$throwable->getMessage());
-        }
-    }
-
-    private function forgetModuleManifest(): void
-    {
-        $manifest = base_path('bootstrap/cache/modules.php');
-
-        if (is_file($manifest)) {
-            @unlink($manifest);
-        }
-    }
-
-    /**
-     * Drop the compiled route and config caches before the wizard renders.
-     *
-     * A route cache makes Laravel skip the RouteServiceProvider's registration entirely, so while
-     * one is on disk the panel routes are whatever was compiled -- and if it was compiled in wizard
-     * mode it holds routes/update.php and nothing else. Restoring the real provider then changes
-     * nothing: `admin.dashboard` still does not exist, and everything that builds a panel URL dies
-     * with "Route [admin.dashboard] not defined" on a site that looks fully updated.
-     *
-     * clearStaleCaches() already covers the end of a successful run. This covers the rest: a cache
-     * shipped inside the package, one left by the client's own `artisan optimize`, and the case
-     * where the update aborts early and never reaches the clear. Neither cache can be correct at
-     * this point -- both were built either by the previous version or by the wizard -- so dropping
-     * them costs nothing.
-     */
-    private function discardCompiledRoutes(): void
-    {
-        foreach (['route:clear', 'config:clear'] as $command) {
-            try {
-                Artisan::call($command);
-            } catch (\Throwable $throwable) {
-                info('update: '.$command.' failed on the wizard page -- '.$throwable->getMessage());
-            }
-        }
-    }
-
-    /**
-     * Every compiled cache the new code must not be read through.
-     *
-     * The route cache is the one that bites: while the update is running the shipped
-     * RouteServiceProvider serves only routes/update.php, so a route cache written in that
-     * state -- or one carried over from the previous version -- keeps the panel routes missing
-     * after the update has finished, and every admin URL 404s on a site that is otherwise fine.
-     * The provider manifest and the module manifest (bootstrap/cache/services.php,
-     * modules.php) are the same hazard one level up: they name provider classes, so a stale
-     * copy can point at a class this version renamed or removed and fail at boot.
-     *
-     * Each one is guarded on its own. A cache that cannot be cleared -- a database cache store
-     * whose table does not exist yet, say -- must not abort the update at this point.
-     */
-    private function clearStaleCaches(): void
-    {
-        foreach (['cache:clear', 'view:clear', 'route:clear', 'config:clear', 'clear-compiled'] as $command) {
-            try {
-                Artisan::call($command);
-            } catch (\Throwable $throwable) {
-                info('update: '.$command.' failed -- '.$throwable->getMessage());
-            }
-        }
-
-        // nwidart writes its own provider manifest and has no artisan command to drop it.
-        $moduleManifest = base_path('bootstrap/cache/modules.php');
-
-        if (is_file($moduleManifest)) {
-            @unlink($moduleManifest);
-        }
-
-        // Per-addon provider manifests, in the same PackageManifest shape as services.php and
-        // carrying the same hazard: they name provider classes. No artisan command knows about
-        // them, and some on a long-lived install date back several releases.
-        foreach (glob(base_path('bootstrap/cache').'/*_module.php') ?: [] as $addonManifest) {
-            @unlink($addonManifest);
-        }
-
-        $this->resetOpcache();
-    }
-
-    /**
-     * Drop the opcode cache, so the PHP that just replaced the old PHP is the PHP that runs.
-     *
-     * An update replaces files underneath a running interpreter. With opcache.validate_timestamps=1
-     * -- the default -- the new mtime is noticed within revalidate_freq seconds and this is merely
-     * belt and braces. Hosts tune it to 0 for throughput, though, and then a replaced file keeps
-     * executing its OLD bytecode until the pool is reloaded: the update reports success, the files
-     * on disk are correct, and the site still runs the previous release, fixes included. None of
-     * artisan's clear commands touch this -- clear-compiled removes Laravel's own compiled files.
-     *
-     * Only this process's cache can be reset from here. Other php-fpm workers hold their own copies,
-     * so a reload is still the reliable move on a tuned host; this at least guarantees the request
-     * that finishes the update is not itself served stale.
-     */
-    private function resetOpcache(): void
-    {
-        if (! function_exists('opcache_reset')) {
-            return;
-        }
-
-        try {
-            @opcache_reset();
-        } catch (\Throwable $throwable) {
-            info('update: opcache_reset failed -- '.$throwable->getMessage());
-        }
-    }
-
     public function update_software(Request $request)
     {
-        // Checked before the first write, so an incomplete package changes nothing. Without
-        // the restore file the update completes, the copy() below returns false silently, and
-        // every URL bounces back to this wizard - a finished update that looks like it never
-        // ran.
-        $restoreRoutes = base_path('app/Providers/RouteServiceProvider.txt');
-
-        if (!is_readable($restoreRoutes)) {
-            Toastr::error('Update package is incomplete: app/Providers/RouteServiceProvider.txt is missing or unreadable. Nothing has been changed - re-upload the package and try again.');
-
-            return back();
-        }
-
-        // A .txt holding the wizard's own routing restores nothing - it puts this page back
-        // over itself and every URL keeps landing here. Caught before the first write, the
-        // same as a missing file.
-        if (Helpers::is_wizard_route_provider($restoreRoutes)) {
-            Toastr::error('app/Providers/RouteServiceProvider.txt contains the update wizard\'s routing instead of the panel\'s, so restoring it would leave every URL on this page. Nothing has been changed - replace it with the real provider and try again.');
-
-            return back();
-        }
-
-        $builderWasEnabled = $this->suspendBuilderModule();
-
         if (env('SOFTWARE_VERSION') == '1.0') {
             $filesystem = new Filesystem;
             $filesystem->cleanDirectory('database/migrations');
         }
 
-        Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username']);
-        Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key']);
+        // NulledMaster: Set default values for update, no purchase code needed
+        Helpers::setEnvironmentValue('BUYER_USERNAME', $request['username'] ?? 'NulledMaster');
+        Helpers::setEnvironmentValue('PURCHASE_CODE', $request['purchase_key'] ?? 'NULLED-FREE-FOR-ALL');
         Helpers::setEnvironmentValue('APP_MODE', 'live');
-        Helpers::setEnvironmentValue('SOFTWARE_VERSION', '4.2');
+        Helpers::setEnvironmentValue('SOFTWARE_VERSION', '4.0.1');
         Helpers::setEnvironmentValue('REACT_APP_KEY', '45370351');
         Helpers::setEnvironmentValue('APP_NAME', '6amMart' . time());
 
@@ -279,25 +72,16 @@ class UpdateController extends Controller
             }
         }
 
+        // version_2.11.1
         Artisan::call('cache:table');
-        Helpers::setEnvironmentValueIfMissing('CACHE_DRIVER', 'file');
-        Helpers::setEnvironmentValueIfMissing('APP_CACHE_STORE', env('CACHE_DRIVER', 'file'));
-        Helpers::setEnvironmentValueIfMissing('APP_CACHE_MAX_PAGE', 3);
-        Helpers::setEnvironmentValueIfMissing('QUEUE_CONNECTION', 'sync');
-        Helpers::setEnvironmentValueIfMissing('NOTIFICATION_MODE', 'after_response');
-        Helpers::setEnvironmentValueIfMissing('NOTIFICATION_QUEUE_CONNECTION', 'database');
+        Helpers::setEnvironmentValue('CACHE_DRIVER', 'database');
 
         Artisan::call('migrate', ['--force' => true]);
-        // Leaving update mode. The source was checked above, so a failure here is app/Providers/
-        // being unwritable. Reported, not swallowed: the migrations have already run.
         $previousRouteServiceProvier = base_path('app/Providers/RouteServiceProvider.php');
-
-        if (!copy($restoreRoutes, $previousRouteServiceProvier)) {
-            Toastr::error('The update finished but normal routing could not be restored: app/Providers/RouteServiceProvider.php is not writable. Fix the permission and run the update again - the database work is already done.');
-
-            return back();
-        }
-        $this->clearStaleCaches();
+        $newRouteServiceProvier = base_path('app/Providers/RouteServiceProvider.txt');
+        copy($newRouteServiceProvier, $previousRouteServiceProvier);
+        Artisan::call('cache:clear');
+        Artisan::call('view:clear');
         Helpers::insert_business_settings_key("mobile_app_section_heading", "Download the App for Enjoy Best Restaurant Test");
         Helpers::insert_business_settings_key("mobile_app_section_text", "Default Text Mobile App Section");
         Helpers::insert_business_settings_key("feature_section_description", "Feature section description");
@@ -310,6 +94,7 @@ class UpdateController extends Controller
             "web_app_url" => "https://6ammart-web.6amtech.com/"
         ]));
 
+        //version 1.5.0
         Helpers::insert_business_settings_key("wallet_status", "0");
         Helpers::insert_business_settings_key("loyalty_point_status", "0");
         Helpers::insert_business_settings_key("ref_earning_status", "0");
@@ -324,6 +109,9 @@ class UpdateController extends Controller
         Helpers::insert_business_settings_key('social_login', '[{"login_medium":"google","client_id":"","client_secret":"","status":"0"},{"login_medium":"facebook","client_id":"","client_secret":"","status":""}]');
         Helpers::insert_business_settings_key('system_language', '[{"id":1,"direction":"ltr","code":"en","status":1,"default":true}]');
         Helpers::insert_business_settings_key('language', '["en"]');
+        //version 2.0.1
+        // Helpers::insert_business_settings_key('otp_interval_time', '30');
+        // Helpers::insert_business_settings_key('max_otp_hit', '5');
 
         Helpers::insert_business_settings_key("home_delivery_status", "1");
         Helpers::insert_business_settings_key("takeaway_status", "1");
@@ -338,6 +126,7 @@ class UpdateController extends Controller
             DB::statement($email_tempaltes);
         }
 
+        //version 2.2.0
         Helpers::insert_data_settings_key('admin_login_url', 'login_admin', 'admin');
         Helpers::insert_data_settings_key('admin_employee_login_url', 'login_admin_employee', 'admin-employee');
         Helpers::insert_data_settings_key('store_login_url', 'login_store', 'vendor');
@@ -433,7 +222,7 @@ class UpdateController extends Controller
         Helpers::insert_business_settings_key('country_picker_status', '1');
         Helpers::insert_business_settings_key('manual_login_status', '1');
 
-        WebPushServiceWorker::generate();
+        $this->firebase_message_config_file_gen();
 
         $recaptcha = BusinessSetting::where('key', 'recaptcha')->first();
         if ($recaptcha?->value) {
@@ -462,8 +251,9 @@ class UpdateController extends Controller
                 'test_values' => json_encode($liveValues),
             ]);
         }
+        // version 3.1
         $free_delivery_over_status = BusinessSetting::where('key', 'free_delivery_over_status')->first();
-        $free_delivery_over = Helpers::get_business_settings('free_delivery_over', false);
+        $free_delivery_over = BusinessSetting::where('key', 'free_delivery_over')->first()?->value;
         if ($free_delivery_over_status?->value == 1 && $free_delivery_over > 0) {
             $free_delivery_over_status->key = 'admin_free_delivery_status';
             $free_delivery_over_status->save();
@@ -472,10 +262,8 @@ class UpdateController extends Controller
             ]);
         }
 
+        // version 3.7
         Module::regenerateSlugs();
-
-        $this->restoreBuilderModule($builderWasEnabled);
-        $this->clearStaleCaches();
 
         $data = DataSetting::where('type', 'login_admin')->pluck('value')->first();
         return redirect('/login/' . $data);
@@ -734,6 +522,99 @@ class UpdateController extends Controller
         }
     }
 
+    private function firebase_message_config_file_gen()
+    {
+        $config = Helpers::get_business_settings('fcm_credentials');
+
+        $apiKey            = $config['apiKey'] ?? '';
+        $authDomain        = $config['authDomain'] ?? '';
+        $projectId         = $config['projectId'] ?? '';
+        $storageBucket     = $config['storageBucket'] ?? '';
+        $messagingSenderId = $config['messagingSenderId'] ?? '';
+        $appId             = $config['appId'] ?? '';
+        $measurementId     = $config['measurementId'] ?? '';
+
+        $filePath = base_path('firebase-messaging-sw.js');
+
+        try {
+            if (file_exists($filePath) && !is_writable($filePath)) {
+                if (!chmod($filePath, 0644)) {
+                    throw new \Exception('File is not writable and permission change failed: ' . $filePath);
+                }
+            }
+
+            // Modern compat SDK (10.x) with onBackgroundMessage + click
+            // routing. Single SW shared by host's legacy push paths and
+            // Builder storefront customers.
+            $fileContent = <<<JS
+                importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
+                importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
+
+                firebase.initializeApp({
+                    apiKey: "$apiKey",
+                    authDomain: "$authDomain",
+                    projectId: "$projectId",
+                    storageBucket: "$storageBucket",
+                    messagingSenderId: "$messagingSenderId",
+                    appId: "$appId",
+                    measurementId: "$measurementId"
+                });
+
+                const messaging = firebase.messaging();
+
+                messaging.onBackgroundMessage((payload) => {
+                    const data = payload.data || {};
+                    const title = data.title || (payload.notification && payload.notification.title) || "Notification";
+                    const body  = data.body  || (payload.notification && payload.notification.body)  || "";
+                    const image = data.image || (payload.notification && payload.notification.image) || undefined;
+
+                    self.registration.showNotification(title, {
+                        body,
+                        icon: image,
+                        data,
+                    });
+                });
+
+                self.addEventListener("notificationclick", (event) => {
+                    event.notification.close();
+                    const data = event.notification.data || {};
+                    const url = resolveTargetUrl(data);
+
+                    event.waitUntil(
+                        self.clients
+                            .matchAll({ type: "window", includeUncontrolled: true })
+                            .then((windowClients) => {
+                                const existing = windowClients.find((c) => c.url.startsWith(self.location.origin));
+                                if (existing) {
+                                    existing.focus();
+                                    return existing.navigate(url);
+                                }
+                                return self.clients.openWindow(url);
+                            }),
+                    );
+                });
+
+                function resolveTargetUrl(data) {
+                    const base = self.location.origin;
+                    if (data && data.type === "order_status" && data.order_id) {
+                        return base + "/profile?page=orders&orderId=" + encodeURIComponent(data.order_id);
+                    }
+                    if (data && data.type === "message") {
+                        return base + "/profile?page=inbox";
+                    }
+                    return base + "/";
+                }
+                JS;
+
+
+            if (file_put_contents($filePath, $fileContent) === false) {
+                throw new \Exception('Failed to write to file: ' . $filePath);
+            }
+
+        } catch (\Exception $e) {
+            //
+        }
+    }
 
 
 }
