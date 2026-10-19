@@ -76,6 +76,7 @@ use App\Models\ParcelCancellation;
 use App\Models\ParcelReturnFees;
 use App\Models\VisitorLog;
 use App\Services\Zone\ZoneService;
+use App\Services\System\ModuleService;
 use Illuminate\Http\UploadedFile;
 use Modules\RideShare\Entities\ReviewModule\RideReview;
 
@@ -2377,6 +2378,14 @@ class Helpers
         return app(ZoneService::class)->getDropdown((bool) $activeOnly);
     }
     // GEMINI-MYTJ: End zones dropdown compatibility wrapper.
+
+    // GEMINI-MYTJ: Preserve the legacy layout helper while delegating module
+    // lookup and caching to the canonical module service.
+    public static function ride_share_module_id()
+    {
+        return app(ModuleService::class)->findRideShareModuleId();
+    }
+    // GEMINI-MYTJ: End ride-share module compatibility wrapper.
 
     public static function admin_workspace_modules()
     {

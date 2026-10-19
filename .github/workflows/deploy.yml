@@ -235,9 +235,13 @@ jobs:
           # code file before maintenance or live writes. Runtime paths are denied.
           ssh mytijaara-deploy "php '$INCOMING/scripts/safe-code-release.php' prepare '$DEPLOY_PATH' '$JOURNAL' '$INCOMING'"
           RUN_MIGRATE="false"
-          if [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ]; then
+          # GEMINI-MYTJ: Always run Laravel's idempotent migration command on
+          # push deployments. A migration can be older than the recent-commit
+          # detection window while still being unapplied on production.
+          if [ "$MIGRATIONS_CHANGED" = "true" ] || [ "$FORCE_MIGRATE" = "true" ] || [ "${{ github.event_name }}" = "push" ]; then
             RUN_MIGRATE="true"
           fi
+          # GEMINI-MYTJ: End production migration safeguard.
           ssh mytijaara-deploy "bash '$INCOMING/scripts/apply-code-release.sh' '$DEPLOY_PATH' '$JOURNAL' '$INCOMING' '$RUN_MIGRATE' '$RUN_SEED'"
           ssh mytijaara-deploy "php '$DEPLOY_PATH/scripts/prune-releases.php' '$DEPLOY_PATH' --force"
           echo "Deploy complete. Recoverable code journal: $JOURNAL"
