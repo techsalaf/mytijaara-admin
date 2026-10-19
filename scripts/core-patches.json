@@ -3,6 +3,16 @@
   "baseline_limit": "First repository import, not a verified licensed vendor release",
   "owner": "MyTijaara backend maintainers",
   "patches": {
+    "app/Providers/RouteServiceProvider.php": {
+      "purpose": "Restore canonical application routing after an accidental wizard-mode runtime provider",
+      "reason_in_core": "The deployment runtime must register web, panel, and API routes so isolation gates and production POST endpoints do not return 405",
+      "marker": "GEMINI-MYTJ"
+    },
+    "app/Providers/RouteServiceProvider.txt": {
+      "purpose": "Keep the post-install route restore template aligned with the canonical runtime provider",
+      "reason_in_core": "Install/update recovery must restore normal application routes rather than the wizard stub",
+      "marker": "GEMINI-MYTJ"
+    },
     "app/Http/Controllers/Admin/VendorController.php": {
       "purpose": "Authoritative route decisions and generic application/status event integration",
       "upstream_behavior": "Same admin success redirect and mail preference checks; intentional POST/idempotency safety correction",
