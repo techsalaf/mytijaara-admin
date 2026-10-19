@@ -13,7 +13,9 @@ return new class extends Migration
         }
 
         Schema::create('job_batches', function (Blueprint $table) {
-            $table->string('id')->primary();
+            // GEMINI-MYTJ-START: Keep the batch primary key within legacy MySQL's 1000-byte index limit.
+            $table->string('id', 191)->primary();
+            // GEMINI-MYTJ-END: Keep the batch primary key within legacy MySQL's 1000-byte index limit.
             $table->string('name');
             $table->integer('total_jobs');
             $table->integer('pending_jobs');
