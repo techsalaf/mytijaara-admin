@@ -19,7 +19,9 @@ jobs:
       APP_DEBUG: 'false'
       APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
       DB_CONNECTION: sqlite
-      DB_DATABASE: ':memory:'
+      # GEMINI-MYTJ: Use a shared file so the migration process and PHPUnit
+      # process see the same schema.
+      DB_DATABASE: /tmp/mytijaara-isolation.sqlite
       CACHE_STORE: array
       LOG_CHANNEL: single
       ISOLATION_MYSQL: '1'
@@ -36,6 +38,15 @@ jobs:
         env:
           COMPARE_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'bf5ca49f' }}
         run: php scripts/check-core-boundary.php "$COMPARE_BASE"
+      # GEMINI-MYTJ: Build the SQLite schema before isolation tests. The
+      # suite uses application routes that require migrated tables such as
+      # store_configs; without this step the reusable workflow fails before
+      # deployment can be considered.
+      - name: Prepare isolation database
+        run: |
+          touch /tmp/mytijaara-isolation.sqlite
+          php artisan migrate --database=sqlite --force --no-interaction
+      # GEMINI-MYTJ: End isolation database setup.
       - name: Host absent-module, source contract and MySQL tests
         run: vendor/bin/phpunit tests/Architecture --log-junit host-results.xml
       - name: Concierge regression tests
