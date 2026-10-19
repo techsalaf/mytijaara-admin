@@ -9,6 +9,12 @@
       "marker": "GEMINI-MYTJ",
       "owner": "MyTijaara backend maintainers"
     },
+    "database/migrations/2026_08_25_000003_create_notification_delivery_logs_table.php": {
+      "purpose": "Constrain the indexed notification name for legacy MySQL compatibility",
+      "reason_in_core": "Namecheap's MySQL server rejects the notification/status composite index when notification uses the default 255-character length",
+      "marker": "GEMINI-MYTJ",
+      "owner": "MyTijaara backend maintainers"
+    },
     "app/Providers/RouteServiceProvider.php": {
       "purpose": "Restore canonical application routing after an accidental wizard-mode runtime provider",
       "reason_in_core": "The deployment runtime must register web, panel, and API routes so isolation gates and production POST endpoints do not return 405",

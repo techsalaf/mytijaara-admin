@@ -15,7 +15,9 @@ return new class extends Migration
         Schema::create('notification_delivery_logs', function (Blueprint $table) {
             $table->id();
             $table->string('dedupe_key', 64)->unique();
-            $table->string('notification');
+            // GEMINI-MYTJ-START: Keep the composite notification/status index below legacy MySQL's 1000-byte limit.
+            $table->string('notification', 191);
+            // GEMINI-MYTJ-END: Keep the composite notification/status index below legacy MySQL's 1000-byte limit.
             $table->string('channel', 32);
             $table->string('recipient_type', 32)->nullable();
             $table->string('recipient_id', 64)->nullable();
