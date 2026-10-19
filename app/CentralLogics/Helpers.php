@@ -2462,6 +2462,66 @@ class Helpers
         return route('admin.business-settings.business-setup');
     }
 
+    // GEMINI-MYTJ-START: Restore the complete admin workspace URL API used by
+    // the v2 header and breadcrumb service through one permission-aware helper.
+    public static function users_workspace_landing_url()
+    {
+        return self::workspace_route([
+            ['user_overview', 'admin.users.dashboard', []],
+            ['employee_role', 'admin.users.custom-role.create', []],
+            ['employee', 'admin.users.employee.list', []],
+            ['customer_management', 'admin.users.customer.list', []],
+            ['cashback', 'admin.users.cashback.add-new', []],
+        ]);
+    }
+
+    public static function finance_workspace_landing_url()
+    {
+        return self::workspace_route([
+            ['collect_cash', 'admin.transactions.account-transaction.index', []],
+            ['provide_dm_earning', 'admin.transactions.provide-deliveryman-earnings.index', []],
+            ['disbursement', 'admin.transactions.store-disbursement.list', []],
+            ['withdraw_list', 'admin.transactions.store.withdraw_list', []],
+        ]);
+    }
+
+    public static function reports_workspace_landing_url()
+    {
+        return self::workspace_route([
+            ['report', 'admin.transactions.report.day-wise-report', []],
+            ['transaction_report', 'admin.transactions.report.transaction-report', []],
+            ['disbursement_report', 'admin.transactions.report.disbursement-report', []],
+        ]);
+    }
+
+    public static function workspace_landing_url($workspace)
+    {
+        return match ($workspace) {
+            'users' => self::users_workspace_landing_url(),
+            'finance' => self::finance_workspace_landing_url(),
+            'reports' => self::reports_workspace_landing_url(),
+            'settings' => self::settings_workspace_landing_url(),
+            'dispatch' => \Illuminate\Support\Facades\Route::has('admin.dispatch.dashboard')
+                ? route('admin.dispatch.dashboard')
+                : null,
+            'module' => self::admin_landing_url(),
+            default => null,
+        };
+    }
+
+    private static function workspace_route(array $candidates)
+    {
+        foreach ($candidates as [$permission, $routeName, $parameters]) {
+            if (self::module_permission_check($permission)
+                && \Illuminate\Support\Facades\Route::has($routeName)) {
+                return route($routeName, $parameters);
+            }
+        }
+
+        return null;
+    }
+    // GEMINI-MYTJ-END: Restore the complete admin workspace URL API.
+
     public static function admin_landing_url()
     {
         $admin = auth('admin')->user();
