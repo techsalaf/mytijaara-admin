@@ -75,6 +75,7 @@ use App\Exceptions\ZoneModuleException;
 use App\Models\ParcelCancellation;
 use App\Models\ParcelReturnFees;
 use App\Models\VisitorLog;
+use App\Services\Zone\ZoneService;
 use Illuminate\Http\UploadedFile;
 use Modules\RideShare\Entities\ReviewModule\RideReview;
 
@@ -2368,6 +2369,14 @@ class Helpers
         }
         return false;
     }
+
+    // GEMINI-MYTJ: Preserve the 6amMart helper API used by legacy Blade
+    // templates while delegating zone filtering to the canonical service.
+    public static function zones_dropdown($activeOnly = false)
+    {
+        return app(ZoneService::class)->getDropdown((bool) $activeOnly);
+    }
+    // GEMINI-MYTJ: End zones dropdown compatibility wrapper.
 
     public static function admin_workspace_modules()
     {
