@@ -3,6 +3,12 @@
   "baseline_limit": "First repository import, not a verified licensed vendor release",
   "owner": "MyTijaara backend maintainers",
   "patches": {
+    "database/migrations/2026_08_25_000002_create_job_batches_table.php": {
+      "purpose": "Constrain the job batch primary key for legacy MySQL index compatibility",
+      "reason_in_core": "Namecheap's MySQL server rejects Laravel's default 255-character primary key under a 1000-byte index limit",
+      "marker": "GEMINI-MYTJ",
+      "owner": "MyTijaara backend maintainers"
+    },
     "app/Providers/RouteServiceProvider.php": {
       "purpose": "Restore canonical application routing after an accidental wizard-mode runtime provider",
       "reason_in_core": "The deployment runtime must register web, panel, and API routes so isolation gates and production POST endpoints do not return 405",
