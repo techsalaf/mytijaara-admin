@@ -2387,6 +2387,34 @@ class Helpers
     }
     // GEMINI-MYTJ: End ride-share module compatibility wrapper.
 
+    // GEMINI-MYTJ-START: Preserve the legacy header and breadcrumb workspace
+    // helper while using the generated navigation map as the source of truth.
+    public static function admin_workspace_for_path(?string $path = null)
+    {
+        $path = trim($path ?? request()->path(), '/');
+
+        foreach (config('navigation-map.nodes', []) as $node) {
+            if (isset($node['pattern'], $node['scope']) && Str::is($node['pattern'], $path)) {
+                return $node['scope'];
+            }
+        }
+
+        foreach ([
+            'admin/users' => 'users',
+            'admin/dispatch' => 'dispatch',
+            'admin/transactions/report' => 'reports',
+            'admin/transactions' => 'finance',
+            'admin/business-settings' => 'settings',
+        ] as $prefix => $workspace) {
+            if (Str::startsWith($path, $prefix)) {
+                return $workspace;
+            }
+        }
+
+        return 'module';
+    }
+    // GEMINI-MYTJ-END: Preserve the legacy admin workspace helper.
+
     public static function admin_workspace_modules()
     {
         return [

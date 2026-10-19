@@ -15,6 +15,12 @@
       "marker": "GEMINI-MYTJ",
       "owner": "MyTijaara backend maintainers"
     },
+    "app/CentralLogics/Helpers.php": {
+      "purpose": "Restore legacy workspace lookup compatibility for the admin header and breadcrumbs",
+      "reason_in_core": "Existing 6amMart layouts and breadcrumb services call the helper while the generated navigation map remains the canonical workspace source",
+      "marker": "GEMINI-MYTJ",
+      "owner": "MyTijaara backend maintainers"
+    },
     "app/Providers/RouteServiceProvider.php": {
       "purpose": "Restore canonical application routing after an accidental wizard-mode runtime provider",
       "reason_in_core": "The deployment runtime must register web, panel, and API routes so isolation gates and production POST endpoints do not return 405",
