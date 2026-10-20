@@ -11,6 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
+// GEMINI-MYTJ: begin ETA backfill command for restoring missing zone/module configurations.
 /**
  * Reproduce standard ETA configurations per (zone, module) for all ETA-capable modules
  * and optionally reactivate zones that become ready.
@@ -51,6 +52,7 @@ class BackfillEtaConfigurations extends Command
                 ];
             }
         }
+        // GEMINI-MYTJ: end ETA backfill command.
 
         if (empty($plans)) {
             $this->info('No connected (zone, module) pairs without an active ETA configuration. Nothing to do.');

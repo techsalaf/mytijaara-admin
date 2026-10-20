@@ -31,6 +31,12 @@
       "reason_in_core": "Install/update recovery must restore normal application routes rather than the wizard stub",
       "marker": "GEMINI-MYTJ"
     },
+    "app/Console/Commands/BackfillEtaConfigurations.php": {
+      "purpose": "Provide an idempotent command to restore missing ETA configurations and activate ready zones",
+      "reason_in_core": "Production zones can be connected to ETA-capable modules without the required configuration after an incomplete update",
+      "marker": "GEMINI-MYTJ",
+      "owner": "MyTijaara backend maintainers"
+    },
     "app/Http/Controllers/Admin/VendorController.php": {
       "purpose": "Authoritative route decisions and generic application/status event integration",
       "upstream_behavior": "Same admin success redirect and mail preference checks; intentional POST/idempotency safety correction",
