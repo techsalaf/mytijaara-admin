@@ -7,5 +7,6 @@
     "RideShare": true,
     "ReelsModule": true,
     "Builder": false,
-    "Service": true
+    "Service": true,
+    "WhatsAppVendorConcierge": true
 }

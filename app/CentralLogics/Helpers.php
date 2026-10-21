@@ -77,6 +77,10 @@ use App\Models\ParcelReturnFees;
 use App\Models\VisitorLog;
 use App\Services\Zone\ZoneService;
 use App\Services\System\ModuleService;
+use App\Services\System\DataSettingService;
+use App\Services\System\FaqService;
+use App\Services\System\SocialMediaService;
+use App\Services\Customer\UserService;
 use Illuminate\Http\UploadedFile;
 use Modules\RideShare\Entities\ReviewModule\RideReview;
 
@@ -2377,7 +2381,37 @@ class Helpers
     {
         return app(ZoneService::class)->getDropdown((bool) $activeOnly);
     }
-    // GEMINI-MYTJ: End zones dropdown compatibility wrapper.
+
+    public static function landing_meta_data()
+    {
+        return app(DataSettingService::class)->getLandingMetaData();
+    }
+
+    public static function faqs_by_user_type(string $userType, int $limit = 5)
+    {
+        return app(FaqService::class)->getCachedByUserType($userType, $limit);
+    }
+
+    public static function landing_policy_statuses()
+    {
+        return app(DataSettingService::class)->getLandingPolicyStatuses();
+    }
+
+    public static function social_media_active()
+    {
+        return app(SocialMediaService::class)->getActiveCached();
+    }
+
+    public static function customers_by_ids($ids)
+    {
+        return app(UserService::class)->getBasicByIds($ids);
+    }
+
+    public static function modules_list()
+    {
+        return app(ModuleService::class)->getCachedList();
+    }
+    // GEMINI-MYTJ: End zones and landing compatibility wrappers.
 
     // GEMINI-MYTJ: Preserve the legacy layout helper while delegating module
     // lookup and caching to the canonical module service.
