@@ -21,6 +21,12 @@
       "marker": "GEMINI-MYTJ",
       "owner": "MyTijaara backend maintainers"
     },
+    "app/Http/Controllers/RiderRegistrationController.php": {
+      "purpose": "Safely resolve optional RideShare driverLevelService dependency without breaking container DI",
+      "reason_in_core": "Controller constructor typehints an optional module interface that may not be loaded when RideShare is inactive or absent",
+      "marker": "GEMINI-MYTJ",
+      "owner": "MyTijaara backend maintainers"
+    },
     "app/Providers/RouteServiceProvider.php": {
       "purpose": "Restore canonical application routing after an accidental wizard-mode runtime provider",
       "reason_in_core": "The deployment runtime must register web, panel, and API routes so isolation gates and production POST endpoints do not return 405",

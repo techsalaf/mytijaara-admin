@@ -96,4 +96,24 @@ class VendorRegistrationPortalTest extends TestCase
 
         $this->assertSame('food', $store->module_type);
     }
+
+    public function test_helpers_cached_list_returns_cached_collection(): void
+    {
+        $expected = collect([(object) ['id' => 1, 'currency_code' => 'USD']]);
+        \App\Support\Cache\ApiCache::put('reference_list', [\App\Models\Currency::class, [], 'currency_code', ['*'], false, app()->getLocale()], $expected);
+
+        $result = Helpers::cached_list(\App\Models\Currency::class, orderBy: 'currency_code');
+        $this->assertSame($expected, $result);
+    }
+
+    public function test_helpers_clear_reference_lookup_memo_runs_without_error(): void
+    {
+        Helpers::clearReferenceLookupMemo();
+        $this->assertTrue(true);
+    }
+
+    public function test_helpers_bogo_offer_duration_returns_na_for_null_dates(): void
+    {
+        $this->assertSame('N/A', Helpers::bogo_offer_duration(null));
+    }
 }

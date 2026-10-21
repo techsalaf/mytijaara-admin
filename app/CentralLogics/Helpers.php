@@ -83,6 +83,14 @@ use App\Services\System\SocialMediaService;
 use App\Services\Customer\UserService;
 use App\Services\Store\StoreCategoryService;
 use App\Services\Payment\SubscriptionPackageService;
+use App\Services\Item\AddonService;
+use App\Services\Item\TagService;
+use App\Services\Item\CategoryService;
+use App\Services\System\BusinessSettingService;
+use App\Services\System\DistanceService;
+use App\Support\Cache\ApiCache;
+use App\Support\Notification\StoreNotificationSettings;
+use App\Traits\Model\HasStorageTrait;
 use Illuminate\Http\UploadedFile;
 use Modules\RideShare\Entities\ReviewModule\RideReview;
 
@@ -2485,6 +2493,148 @@ class Helpers
     public static function subscriptionPackageType($store)
     {
         return app(SubscriptionPackageService::class)->typeFor($store);
+    }
+
+    public static function clearReferenceLookupMemo(): void
+    {
+        foreach ([ModuleService::class, AddonService::class, TagService::class, CategoryService::class] as $service) {
+            $service::forgetMemo();
+        }
+    }
+
+    public static function clearBusinessSettingsCache(): void
+    {
+        BusinessSettingService::forgetCache();
+        BusinessSettingService::forgetModelMemo();
+        self::deleteCacheData('business_settings_all_data');
+
+        // The distance unit is memoised per request inside DistanceService; drop it here so a
+        // save-then-render request cannot keep quoting the old unit. This method is already
+        // called from BusinessSetting::saved(), so every write path is covered.
+        app(DistanceService::class)->forgetUnit();
+    }
+
+    public static function addons_by_ids($ids)
+    {
+        return app(AddonService::class)->getMemoizedActiveByIds($ids);
+    }
+
+    public static function tags_by_ids($ids)
+    {
+        return app(TagService::class)->getMemoizedByIds($ids);
+    }
+
+    public static function store_addons($storeId = null)
+    {
+        return app(AddonService::class)->getCachedForStore($storeId);
+    }
+
+    public static function cached_list(string $model, array $conditions = [], ?string $orderBy = null, array $columns = ['*'])
+    {
+        // Models with a storage relation append *_full_url attributes that read it, so the
+        // cached rows have to arrive with storage already loaded — every caller renders them
+        // in a view, and lazy loading throws outside production. The flag is part of the key
+        // so entries cached before this eager load are not handed back without the relation.
+        $withStorage = in_array(HasStorageTrait::class, class_uses_recursive($model), true)
+            && (in_array('*', $columns, true) || in_array('id', $columns, true));
+
+        $context = [$model, $conditions, $orderBy, $columns, $withStorage, app()->getLocale()];
+
+        return ApiCache::remember('reference_list', $context, function () use ($model, $conditions, $orderBy, $columns, $withStorage) {
+            $query = $model::query();
+            if ($withStorage) {
+                $query->withStorage();
+            }
+            foreach ($conditions as $column => $value) {
+                $query->where($column, $value);
+            }
+            if ($orderBy) {
+                $query->orderBy($orderBy);
+            }
+
+            return $query->get($columns);
+        });
+    }
+
+    public static function active_extra_languages(): array
+    {
+        $activeCodes = collect(self::get_business_settings('system_language') ?? [])
+            ->where('status', 1)
+            ->pluck('code')
+            ->all();
+
+        return array_values(array_intersect(self::get_business_settings('language') ?? [], $activeCodes));
+    }
+
+    public static function bulkDataSummary($query): array
+    {
+        $summary = $query
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('MIN(id) as min_id, MAX(id) as max_id')
+            ->selectRaw('MIN(created_at) as first_created_at, MAX(created_at) as last_created_at')
+            ->first();
+
+        return [
+            'total' => (int) ($summary?->total ?? 0),
+            'min_id' => $summary?->min_id,
+            'max_id' => $summary?->max_id,
+            'first_created_at' => $summary?->first_created_at,
+            'last_created_at' => $summary?->last_created_at,
+        ];
+    }
+
+    public static function bogo_offer_duration($offer): string
+    {
+        if (! $offer?->start_date || ! $offer?->end_date) {
+            return 'N/A';
+        }
+
+        $hours = (int) round($offer->start_date->diffInHours($offer->end_date));
+
+        if ($hours < 24) {
+            return max(1, $hours).' '.translate('messages.Hours');
+        }
+
+        return ($offer->start_date->copy()->startOfDay()->diffInDays($offer->end_date->copy()->startOfDay()) + 1)
+            .' '.translate('messages.Days');
+    }
+
+    public static function storeServiceNotificationDataSetup($id)
+    {
+        return StoreNotificationSettings::install($id, 'service');
+    }
+
+    public static function setEnvironmentValueIfMissing($envKey, $envValue)
+    {
+        $envFile = app()->environmentFilePath();
+
+        if (! file_exists($envFile) || ! is_writable($envFile)) {
+            return null;
+        }
+
+        $contents = file_get_contents($envFile);
+
+        if (preg_match('/^\s*'.preg_quote($envKey, '/').'\s*=/m', $contents) === 1) {
+            return null;
+        }
+
+        file_put_contents($envFile, rtrim($contents, "\r\n")."\n".$envKey.'='.$envValue."\n", LOCK_EX);
+    }
+
+    public static function is_wizard_route_provider(string $path): bool
+    {
+        if (!is_readable($path)) {
+            return false;
+        }
+
+        $contents = file_get_contents($path);
+
+        if ($contents === false) {
+            return false;
+        }
+
+        return (str_contains($contents, 'routes/install.php') || str_contains($contents, 'routes/update.php'))
+            && !str_contains($contents, 'routes/web.php');
     }
     // GEMINI-MYTJ: End zones, module, and vendor compatibility wrappers.
 
@@ -5156,6 +5306,11 @@ class Helpers
     public static function resolve_reel_vehicle_id(?int $reelId, ?int $vehicleId): ?int
     {
         return self::resolve_reel_id_for_product($reelId, 'Modules\\Rental\\Entities\\Vehicle', $vehicleId);
+    }
+
+    public static function resolve_reel_id_for_service(?int $reelId, ?int $serviceId): ?int
+    {
+        return self::resolve_reel_id_for_product($reelId, 'Modules\\Service\\Entities\\Service', $serviceId);
     }
 
     public static function seoPageList()

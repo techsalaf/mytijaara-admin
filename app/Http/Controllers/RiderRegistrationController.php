@@ -21,9 +21,8 @@ use Illuminate\Support\Facades\Log;
 
 class RiderRegistrationController extends Controller
 {
-    public function __construct(
-        protected DriverLevelServiceInterface $driverLevelService,
-    )
+    // GEMINI-MYTJ: Avoid required typehints in constructor for optional module interfaces
+    public function __construct()
     {
     }
 
@@ -123,7 +122,9 @@ class RiderRegistrationController extends Controller
             $identity_image = json_encode([]);
         }
 
-        $firstLevel = $this->driverLevelService->findOneBy(criteria: ['user_type' => DRIVER, 'sequence' => 1]);
+        $firstLevel = interface_exists(DriverLevelServiceInterface::class) && app()->bound(DriverLevelServiceInterface::class)
+            ? app(DriverLevelServiceInterface::class)->findOneBy(criteria: ['user_type' => DRIVER, 'sequence' => 1])
+            : null;
         if (!$firstLevel) {
             Toastr::error(translate('messages.Rider level not found'));
             return back()->withInput();
