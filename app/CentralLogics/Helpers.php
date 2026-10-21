@@ -81,6 +81,8 @@ use App\Services\System\DataSettingService;
 use App\Services\System\FaqService;
 use App\Services\System\SocialMediaService;
 use App\Services\Customer\UserService;
+use App\Services\Store\StoreCategoryService;
+use App\Services\Payment\SubscriptionPackageService;
 use Illuminate\Http\UploadedFile;
 use Modules\RideShare\Entities\ReviewModule\RideReview;
 
@@ -2411,7 +2413,80 @@ class Helpers
     {
         return app(ModuleService::class)->getCachedList();
     }
-    // GEMINI-MYTJ: End zones and landing compatibility wrappers.
+
+    public static function module_type_by_id($module_id): ?string
+    {
+        return app(ModuleService::class)->memoizedTypeById($module_id);
+    }
+
+    public static function moduleTypeById(?int $moduleId): ?string
+    {
+        return app(ModuleService::class)->memoizedTypeById($moduleId);
+    }
+
+    public static function get_business_settings_many(array $keys, $json_decode = false): array
+    {
+        $data = [];
+        foreach ($keys as $key) {
+            $data[$key] = self::get_business_settings($key, $json_decode);
+        }
+
+        return $data;
+    }
+
+    private static function resolved_module_type(?string $moduleType = null): ?string
+    {
+        return $moduleType
+            ?? config('module.current_module_type')
+            ?? self::get_store_data()?->module?->module_type;
+    }
+
+    public static function moduleItemLabel(?string $moduleType = null): string
+    {
+        return self::resolved_module_type($moduleType) === 'service' ? translate('Service') : translate('item');
+    }
+
+    public static function moduleStoreLabel(?string $moduleType = null): string
+    {
+        return self::resolved_module_type($moduleType) === 'service' ? translate('messages.Provider') : translate('messages.Store');
+    }
+
+    public static function serviceProviderVerifiedBadgeStatus(): bool
+    {
+        return app(DataSettingService::class)->serviceProviderVerifiedBadgeStatus();
+    }
+
+    public static function serviceProviderCategoryStatus(): bool
+    {
+        return app(DataSettingService::class)->serviceProviderCategoryStatus();
+    }
+
+    public static function serviceProviderHasAnyCategory(?int $storeId = null): bool
+    {
+        return self::serviceProviderCategoryStatus()
+            && app(StoreCategoryService::class)->existsForResolvedStore($storeId);
+    }
+
+    public static function vendorCategoryStatus(): bool
+    {
+        return (self::get_store_data()?->module?->module_type === 'service')
+            ? self::serviceProviderCategoryStatus()
+            : self::storeCategoryStatus();
+    }
+
+    public static function variationType($match): ?string
+    {
+        $match = is_array($match) ? $match : [];
+        $type = $match['type'] ?? implode('-', (array) data_get($match, 'values.label', []));
+
+        return $type === '' ? null : $type;
+    }
+
+    public static function subscriptionPackageType($store)
+    {
+        return app(SubscriptionPackageService::class)->typeFor($store);
+    }
+    // GEMINI-MYTJ: End zones, module, and vendor compatibility wrappers.
 
     // GEMINI-MYTJ: Preserve the legacy layout helper while delegating module
     // lookup and caching to the canonical module service.

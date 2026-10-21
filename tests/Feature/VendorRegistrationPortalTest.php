@@ -66,4 +66,34 @@ class VendorRegistrationPortalTest extends TestCase
         $this->assertTrue(Route::has('whatsapp.webhook.handle'));
         $this->assertTrue(Route::has('whatsapp.webhook.health'));
     }
+
+    public function test_helpers_module_type_by_id_delegates_to_module_service(): void
+    {
+        $moduleMock = $this->createMock(ModuleService::class);
+        $moduleMock->expects($this->exactly(2))
+            ->method('memoizedTypeById')
+            ->with(5)
+            ->willReturn('grocery');
+
+        $this->app->instance(ModuleService::class, $moduleMock);
+
+        $this->assertSame('grocery', Helpers::module_type_by_id(5));
+        $this->assertSame('grocery', Helpers::moduleTypeById(5));
+    }
+
+    public function test_store_module_type_attribute_returns_type_without_throwing_undefined_method(): void
+    {
+        $moduleMock = $this->createMock(ModuleService::class);
+        $moduleMock->expects($this->once())
+            ->method('memoizedTypeById')
+            ->with(99)
+            ->willReturn('food');
+
+        $this->app->instance(ModuleService::class, $moduleMock);
+
+        $store = new \App\Models\Store();
+        $store->module_id = 99;
+
+        $this->assertSame('food', $store->module_type);
+    }
 }
