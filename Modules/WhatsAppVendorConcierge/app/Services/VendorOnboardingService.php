@@ -88,24 +88,26 @@ return;
 
             return;
         }
+        $rawText = trim((string) ($message->raw_text ?? ($message->content['text'] ?? '')));
+
         // Special handling when currently on review_submit
         if ($step === 'review_submit') {
-            $rawText = strtolower(trim((string) ($message->raw_text ?? ($message->content['text'] ?? ''))));
+            $lowerText = strtolower($rawText);
 
-            if (in_array($rawText, ['submit', 'yes', 'confirm', 'proceed', 'done', 'ok', 'okay', 'correct'])) {
+            if (in_array($lowerText, ['submit', 'yes', 'confirm', 'proceed', 'done', 'ok', 'okay', 'correct'])) {
                 $this->submitApplication($conversation, $contact, $session, $gateway);
 
                 return;
             }
 
-            if (in_array($rawText, ['cancel', 'stop', 'abort'])) {
+            if (in_array($lowerText, ['cancel', 'stop', 'abort'])) {
                 $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
                 $conversationManager->handleCancelApplication($conversation, $contact, $gateway);
 
                 return;
             }
 
-            if (in_array($rawText, ['edit', 'change', 'modify', 'update'])) {
+            if (in_array($lowerText, ['edit', 'change', 'modify', 'update'])) {
                 $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
                 $conversationManager->handleEditApplication($conversation, $contact, $gateway);
 
@@ -154,7 +156,7 @@ return;
             ];
 
             foreach ($editKeywordMap as $keyword => $targetStep) {
-                if (str_contains($rawText, $keyword)) {
+                if (str_contains($lowerText, $keyword)) {
                     $conversationManager = app(\Modules\WhatsAppVendorConcierge\app\Services\ConversationManager::class);
                     $conversationManager->handleEditSection($conversation, $contact, $targetStep, $gateway);
 
@@ -178,11 +180,30 @@ return;
 
         $data = $this->extractStepData($message, $step, $contact);
 
+        if ($step === 'subscription_package') {
+            $hasActivePackages = SubscriptionPackage::where('status', 1)->exists();
+            if (!empty($data['switch_to_commission']) || !$hasActivePackages) {
+                $session = OnboardingSession::find($conversation->onboarding_session_id);
+                if ($session) {
+                    $collected = $session->collected_data ?? [];
+                    $collected['business_plan'] = 'commission-base';
+                    unset($collected['package_id']);
+                    $session->update(['collected_data' => $collected, 'current_step' => 'subscription_package']);
+                }
+                $gateway->sendTextMessage($contact->phone_number, "✅ Got it! Your store is set to *Commission-Based* (0 upfront fee). Let's continue!");
+                $this->advanceToNextStep($conversation, $contact, $session, $gateway);
+                return;
+            }
+        }
+
         // Validate step data
         $validation = $this->validateStep($step, $data);
 
         if (! $validation['valid']) {
-            $this->sendValidationErrors($conversation, $contact, $validation['errors'], $gateway);
+            $handledHelp = $this->handleConversationalQuestion($conversation, $contact, $step, $rawText, $gateway);
+            if (! $handledHelp) {
+                $this->sendValidationErrors($conversation, $contact, $validation['errors'], $gateway);
+            }
 
             $sanitizedData = $data;
             unset($sanitizedData['password']);
@@ -444,9 +465,19 @@ return;
                 ];
             })(),
             'subscription_package' => (function () use ($content, $rawText) {
+                $btnId = $content['interactive']['button_reply']['id'] ?? null;
                 $value = $content['interactive']['list_reply']['id']
-                    ?? $content['interactive']['button_reply']['id'] ?? $rawText;
-                $id = preg_match('/^pkg_(\d+)$/', (string) $value, $matches) ? (int) $matches[1] : null;
+                    ?? $btnId ?? $rawText;
+                $lower = strtolower(trim((string) $value));
+
+                if ($btnId === 'switch_to_commission' || str_contains($lower, 'commission') || str_contains($lower, 'free') || str_contains($lower, 'switch') || str_contains($lower, 'skip') || str_contains($lower, 'no package') || str_contains($lower, 'which list') || str_contains($lower, 'where') || str_contains($lower, 'wahala') || str_contains($lower, 'understand')) {
+                    return [
+                        'package_id' => null,
+                        'switch_to_commission' => true,
+                    ];
+                }
+
+                $id = preg_match('/^pkg_(\d+)$/', (string) $value, $matches) ? (int) $matches[1] : (ctype_digit((string) $value) ? (int) $value : null);
                 return ['package_id' => $id];
             })(),
             'pickup_zone_selection' => (function () use ($content, $rawText) {
@@ -747,9 +778,9 @@ return;
             'business_plan' => [
                 'business_plan' => 'required|string|in:commission-base,subscription-base',
             ],
-            'subscription_package' => [
-                'package_id' => ['required', 'integer', Rule::exists('subscription_packages', 'id')->where('status', 1)],
-            ],
+            'subscription_package' => (!empty($data['switch_to_commission']) || !SubscriptionPackage::where('status', 1)->exists())
+                ? []
+                : ['package_id' => ['required', 'integer', Rule::exists('subscription_packages', 'id')->where('status', 1)]],
             'terms_acceptance' => [
                 'terms_accepted' => 'required|accepted',
             ],
@@ -774,6 +805,55 @@ return;
             'valid' => !$validator->fails(),
             'errors' => $validator->errors()->toArray(),
         ];
+    }
+
+    /**
+     * Handle conversational questions or expressions of confusion during onboarding.
+     */
+    protected function handleConversationalQuestion(
+        WhatsAppConversation $conversation,
+        WhatsAppContact $contact,
+        string $step,
+        string $rawText,
+        \Modules\WhatsAppVendorConcierge\app\Services\WhatsAppGateway $gateway
+    ): bool {
+        $text = strtolower(trim($rawText));
+        if ($text === '') {
+            return false;
+        }
+
+        $isQuestion = preg_match('/\b(why|how|what|which|where|when|explain|understand|meaning|difference|confused|wahala|help me|can i|is it|cost|price|fee)\b|\?/i', $text);
+        if (! $isQuestion) {
+            return false;
+        }
+
+        $helpMessage = match ($step) {
+            'business_basics' => "💡 *Shop Name*: Enter the name customers will see when ordering from you (e.g. *Bello Fresh Foods* or *DLC Luxe*).",
+            'module_selection' => "💡 *Store Type*: Choose the main category of products you sell (e.g. Food, Grocery, Fashion, Pharmacy) so customers can easily find you in the app.",
+            'category_selection' => "💡 *Category*: Select the specific product category that best fits your shop.",
+            'location' => "💡 *Store Location*: To help delivery drivers and nearby customers find your shop, tap 📎 (attachment) -> Location -> Send your current location, or type your street address.",
+            'operating_hours' => "💡 *Opening Hours*: This lets customers know when your store is open to accept orders. Select one of the presets or reply with your hours (e.g. 08:00 - 20:00).",
+            'delivery_time' => "💡 *Delivery Window*: This is the estimated time to prepare and deliver an order to nearby customers. Tap one of the options below (e.g. 20-40 min).",
+            'owner_info' => "💡 *Owner Name*: Enter your first and last name as the primary manager of the store account.",
+            'contact_info' => "💡 *Email Address*: We use your email to send you order confirmations, sales reports, and your login credentials.",
+            'store_branding' => "📸 *Store Logo*: Your logo appears on your shop profile. If you don't have a designed logo yet, don't worry! You can upload a photo of your storefront, sign, business card, or main product. You can update it anytime in your dashboard.\n\nTap 📎 or camera to send your photo:",
+            'cover_branding' => "🏞️ *Cover Photo*: This is the banner image shown at the top of your store page. Tap 📎 or camera to send an image, or reply *Skip* to add it later in your dashboard.",
+            'business_plan' => "💼 *Business Plans*:\n• *Commission-Based*: 0% upfront, you only pay a small fee per completed order. Recommended for new stores!\n• *Subscription Plan*: Fixed monthly fee with 0% order commission.\n\nTap one of the buttons below to choose:",
+            'subscription_package' => "💡 *Subscription*: Subscription packages are currently updating, so we recommend starting with our *0-upfront Commission-Based* model! Tap below to continue:",
+            'terms_acceptance' => "📜 *Terms & Conditions*: Please tap *✅ Accept Terms* below to confirm and move to the final step.",
+            'privacy_acceptance' => "🔒 *Privacy Policy*: Please tap *✅ Accept Privacy* below to protect your account.",
+            'kyc_documents' => "📑 *Verification*: You can send your TIN, CAC, or NIN number to speed up account approval, or reply *Skip* to verify later in your dashboard.",
+            'review_submit' => "✅ *Review & Submit*: You're at the final step! Please tap *✅ Submit Application* to finish, or reply *Edit* to change any information.",
+            default => null,
+        };
+
+        if ($helpMessage) {
+            $gateway->sendTextMessage($contact->phone_number, $helpMessage);
+            $this->sendStepPrompt($conversation, $contact, $step, $gateway);
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -802,18 +882,18 @@ return;
             'contact_info' => isset($errors['email']) && in_array('The email has already been taken.', $errors['email'])
                 ? "This email address is already registered to another vendor account. Please provide a different email address."
                 : (isset($errors['phone']) && in_array('The phone has already been taken.', $errors['phone'])
-                    ? "This phone number is already registered to an approved vendor account. Reply *Support* if you need assistance."
+                    ? "This phone number is already registered to an approved vendor account. Reply *Edit Phone* to provide a different number."
                     : "Please enter a valid email address for account notifications (e.g. *yourshop@gmail.com*)."),
             'account_password' => 'Passwords cannot be entered in WhatsApp. Reply Resend Link for a new secure link.',
-            'store_branding' => "⚠️ *Store Logo is Required*\n\nYour store logo is mandatory (matching web application requirements).\n\nSpecifications:\n• Allowed Formats: JPG, JPEG, PNG, GIF, WEBP\n• File Size: Max 2 MB\n\n*(Skip is not permitted)*\n\nPlease tap 📎 or camera to upload your store logo photo:",
-            'cover_branding' => "Please upload your required store cover photo (maximum 2 MB). Reply Support if you need help.",
-            'business_plan' => "Please choose a valid business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
-            'subscription_package' => "Please select one of the active subscription packages shown in the list.",
+            'store_branding' => "📸 *Store Logo Photo Required*\n\nTo display your shop to customers on MyTijaara, please upload an image of your logo, store sign, or your main product.\n\n• Formats: JPG, JPEG, PNG, WEBP\n• Max Size: 2 MB\n\n💡 *Tip: If you don't have an official logo yet, simply snap or upload a clear photo of your storefront, business card, or product! You can always update it later in your dashboard.*\n\nPlease tap 📎 or camera to send your photo:",
+            'cover_branding' => "Please upload your store cover photo (maximum 2 MB), or reply *Skip* to continue without a cover photo.",
+            'business_plan' => "Please choose a business plan. Tap *💼 Commission-Based* or *📅 Subscription Plan*.",
+            'subscription_package' => "Please select an active package from the list, or reply *Commission* to start with our free 0-upfront plan.",
             'terms_acceptance' => "You must accept MyTijaara's Vendor Terms and Conditions (https://mytijaara.com/terms) to proceed. Tap *✅ Accept Terms* or reply *Accept*.",
             'privacy_acceptance' => "You must accept MyTijaara's Merchant Privacy Policy (https://www.mytijaara.com/privacy/) to proceed. Tap *✅ Accept Privacy* or reply *Accept*.",
             'kyc_documents' => "Please provide a valid TIN / CAC / NIN number, upload a document (max 2MB), or reply *Skip* to complete verification later in your dashboard.",
             'documents' => "Please upload a photo or document of your ID or business registration, or reply *Skip* to continue.",
-            default => "Please check your input and try again, or reply *Support* if you need help.",
+            default => "Please check your input and try again. Reply *Edit* if you would like to modify any previously entered details.",
         };
 
         if ($step === 'account_password' && $session) {
@@ -885,8 +965,22 @@ return;
 
         $nextStep = $session?->getNextStep();
         if ($session?->current_step === 'business_plan') {
-            $nextStep = ($session->collected_data['business_plan'] ?? null) === 'subscription-base'
-                ? 'subscription_package' : 'terms_acceptance';
+            $plan = $session->collected_data['business_plan'] ?? null;
+            $hasActivePackages = SubscriptionPackage::where('status', 1)->exists();
+            if ($plan === 'subscription-base' && ! $hasActivePackages) {
+                // Auto fallback to commission-base if no subscription packages exist
+                $collected = $session->collected_data ?? [];
+                $collected['business_plan'] = 'commission-base';
+                unset($collected['package_id']);
+                $session->update(['collected_data' => $collected]);
+                $gateway->sendTextMessage(
+                    $contact->phone_number,
+                    "ℹ️ *Plan Notice*: Subscription packages are currently updating, so we've set your plan to *0-upfront Commission-Based* (pay 0% upfront, start selling for free). You can upgrade to a subscription anytime from your merchant dashboard! 🚀"
+                );
+                $nextStep = 'terms_acceptance';
+            } else {
+                $nextStep = $plan === 'subscription-base' ? 'subscription_package' : 'terms_acceptance';
+            }
         } elseif ($session?->current_step === 'subscription_package') {
             $nextStep = 'terms_acceptance';
         } elseif ($session?->current_step === 'zone_selection'
@@ -1121,12 +1215,20 @@ return;
                         'description' => '₦' . number_format((float) $package->price, 2) . ' / ' . $package->validity . ' days',
                     ])->values()->all();
 
+                if (empty($rows)) {
+                    return [
+                        'type' => 'button',
+                        'body' => "[Section 5 of 5: Business Plan] 💼\n\nSubscription packages are currently offline for updates. You can start selling immediately with our *0-upfront Commission-Based* model (pay 0% upfront, only small fee on successful orders) and upgrade anytime from your merchant dashboard! 🚀\n\nTap below to continue with Commission-Based:",
+                        'buttons' => [
+                            ['id' => 'switch_to_commission', 'title' => '💼 Commission-Based'],
+                        ],
+                    ];
+                }
+
                 return [
-                    'type' => empty($rows) ? 'text' : 'list',
-                    'body' => empty($rows)
-                        ? 'There are no active subscription packages for this module. Reply Support for help choosing a plan.'
-                        : "Choose the subscription package for your store. You will complete payment securely after submitting your application.",
-                    'text' => 'There are no active subscription packages for this module. Reply Support for help choosing a plan.',
+                    'type' => 'list',
+                    'body' => "Choose the subscription package for your store. You will complete payment securely after submitting your application.",
+                    'button' => 'Select Package',
                     'sections' => [['title' => 'Active packages', 'rows' => $rows]],
                 ];
             })(),
@@ -1405,6 +1507,7 @@ return;
             Log::error('Application submission failed', [
                 'contact_id' => $contact->id,
                 'exception' => $e::class,
+                'message' => $e->getMessage(),
             ]);
 
             $gateway->sendTextMessage(

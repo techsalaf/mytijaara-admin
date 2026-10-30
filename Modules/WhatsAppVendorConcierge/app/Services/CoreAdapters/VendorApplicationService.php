@@ -83,7 +83,7 @@ class VendorApplicationService
         if ($value instanceof UploadedFile || $value === null) {
             return $value;
         }
-        $media = ctype_digit($value) ? WhatsAppMedia::find($value) : null;
+        $media = ctype_digit((string) $value) ? WhatsAppMedia::find((int) $value) : null;
         $contactId = $dto->metadata['contact_id'] ?? null;
         $sessionId = $dto->metadata['session_id'] ?? null;
         $owned = $media && $contactId && $sessionId && WhatsAppMessage::where('media_id', $media->id)
@@ -92,11 +92,15 @@ class VendorApplicationService
             ->where('metadata->registration_contact_id', $contactId)
             ->whereHas('conversation', fn ($query) => $query
                 ->where('contact_id', $contactId)->where('onboarding_session_id', $sessionId))->exists();
-        if (! $owned || $media->status !== 'processed' || ! $media->file_path || $media->storage_disk !== 'local'
-            || ! Storage::disk('local')->exists($media->file_path) || ($media->expires_at && $media->expires_at->isPast())) {
+
+        $diskName = $media?->storage_disk ?: config('whatsapp-vendor-concierge.media.storage_disk', 'public');
+        $disk = Storage::disk($diskName);
+        $validStatus = $media && in_array($media->status, ['processed', 'downloaded'], true);
+
+        if (! $owned || ! $validStatus || ! $media?->file_path
+            || ! $disk->exists($media->file_path) || ($media->expires_at && $media->expires_at->isPast())) {
             throw ValidationException::withMessages([$field => 'Upload a valid file for this application and wait for processing.']);
         }
-        $disk = Storage::disk('local');
         if ($disk->size($media->file_path) > 2 * 1024 * 1024) {
             throw ValidationException::withMessages([$field => 'Files must be at most 2 MB.']);
         }
