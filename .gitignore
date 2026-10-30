@@ -49,3 +49,4 @@ storage/app/dummy-service-seed.json
 # carries its own .gitignore, but a dump is the entire platform in one file
 # and must never depend on a nested rule to stay out of the repository.
 /storage/app/backups
+/storage/app/*.csv

@@ -26,6 +26,7 @@ use Modules\WhatsAppVendorConcierge\app\Console\Commands\RefreshAiModelsCommand;
 use Modules\WhatsAppVendorConcierge\app\Console\Commands\ReplayInboundCommand;
 use Modules\WhatsAppVendorConcierge\app\Console\Commands\ReviewInboundCommand;
 use Modules\WhatsAppVendorConcierge\app\Console\Commands\SendActiveStoreOutreachCommand;
+use Modules\WhatsAppVendorConcierge\app\Console\Commands\SendResumeNudgesCommand;
 use Modules\WhatsAppVendorConcierge\app\Console\Commands\SyncVendorFlow;
 use Modules\WhatsAppVendorConcierge\app\Console\Commands\ValidateVendorFlow;
 use Modules\WhatsAppVendorConcierge\app\Console\Commands\VendorAccessNoticeCommand;
@@ -117,6 +118,7 @@ class WhatsAppVendorConciergeServiceProvider extends ServiceProvider
             ConciergeHealthCheckCommand::class,
             RefreshAiModelsCommand::class,
             SendActiveStoreOutreachCommand::class,
+            SendResumeNudgesCommand::class,
         ]);
     }
 

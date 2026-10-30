@@ -229,7 +229,7 @@ return [
     'templates' => [
         'vendor_approved' => 'vendor_approved_notification',
         'vendor_rejected' => 'vendor_rejected_notification',
-        'onboarding_resume' => 'onboarding_resume_reminder',
+        'onboarding_resume' => env('WHATSAPP_TEMPLATE_ONBOARDING_RESUME', 'vendor_onboarding_resume'),
         'document_request' => 'document_upload_request',
         'order_notification' => 'vendor_order_notification',
     ],
