@@ -86,8 +86,26 @@ class SendResumeNudgesCommand extends Command
             }
 
             $collected = $session?->collected_data ?? [];
-            $businessName = $collected['business_name'] ?? $contact->display_name ?? 'Your Store';
-            $ownerName = trim(($collected['f_name'] ?? '') . ' ' . ($collected['l_name'] ?? '')) ?: $contact->display_name ?: 'Business Owner';
+            $rawBusiness = $collected['business_name'] ?? $contact->display_name ?? 'Your Store';
+            $businessName = trim(preg_replace('/\s+/', ' ', (string) $rawBusiness));
+            if (mb_strlen($businessName) > 60) {
+                $businessName = mb_substr($businessName, 0, 57) . '...';
+            }
+            if ($businessName === '') {
+                $businessName = 'Your Store';
+            }
+
+            $rawOwner = trim(($collected['f_name'] ?? '') . ' ' . ($collected['l_name'] ?? ''));
+            if ($rawOwner === '') {
+                $rawOwner = $contact->display_name ?: 'Business Owner';
+            }
+            $ownerName = trim(preg_replace('/\s+/', ' ', (string) $rawOwner));
+            if (mb_strlen($ownerName) > 40) {
+                $ownerName = mb_substr($ownerName, 0, 37) . '...';
+            }
+            if ($ownerName === '') {
+                $ownerName = 'Business Owner';
+            }
 
             $this->line("Targeting {$contact->phone_number} ({$businessName})...");
 
@@ -117,6 +135,7 @@ class SendResumeNudgesCommand extends Command
 
                 $this->info("  -> Template sent to {$contact->phone_number}!");
                 $sentCount++;
+                usleep(150000);
             } catch (\Throwable $e) {
                 $this->error("  -> Failed sending to {$contact->phone_number}: " . $e->getMessage());
                 $failedCount++;
